@@ -61,7 +61,8 @@ export async function GET(
 
   const endpoints = [
     `${siteConfig.apiUrl}/wp-json/sasanperfumes/v1/pages/${encodeURIComponent(slug)}`,
-    `${siteConfig.apiUrl}/wp-json/sasanperfumes/v1/pages/${encodeURIComponent(slug)}`,
+    `${siteConfig.apiUrl}/wp-json/fnf/v1/pages/${encodeURIComponent(slug)}`,
+    `${siteConfig.apiUrl}/wp-json/Anbar/v1/pages/${encodeURIComponent(slug)}`,
   ];
 
   for (const endpoint of endpoints) {

@@ -23,6 +23,11 @@ const fallbackHomeSettings = {
     fallback: "category",
   },
 };
+const homeSettingsEndpoints = [
+  `${API_BASE}/wp-json/sasanperfumes/v1/home-settings`,
+  `${API_BASE}/wp-json/fnf/v1/home-settings`,
+  `${API_BASE}/wp-json/Anbar/v1/home-settings`,
+];
 
 function fallbackResponse() {
   return NextResponse.json(fallbackHomeSettings, {
@@ -34,40 +39,34 @@ function fallbackResponse() {
 
 export async function GET() {
   try {
-    const response = await fetchBackend(`${API_BASE}/wp-json/sasanperfumes/v1/home-settings`, {
-      headers: backendHeaders(),
-    });
-    let data = await safeJsonResponse(response);
+    for (const endpoint of homeSettingsEndpoints) {
+      const response = await fetchBackend(endpoint, {
+        headers: backendHeaders(),
+      });
+      const data = await safeJsonResponse(response);
 
-    if (!response.ok && (response.status === 403 || response.status === 404)) {
-      const legacy = await fetch(`${API_BASE}/wp-json/sasanperfumes/v1/home-settings`);
-      const legacyData = await safeJsonResponse(legacy);
-      if (legacy.ok) {
-        return NextResponse.json(legacyData, {
+      if (response.ok) {
+        return NextResponse.json(data, {
           headers: {
             "Cache-Control": "no-store, max-age=0",
           },
         });
       }
-      return fallbackResponse();
-    }
 
-    if (!response.ok && data.code === "invalid_response") {
-      const retry = await fetchBackend(`${API_BASE}/wp-json/sasanperfumes/v1/home-settings`);
-      data = await safeJsonResponse(retry);
-
-      if (!retry.ok) {
-        return fallbackResponse();
+      if (data.code === "invalid_response") {
+        const retry = await fetchBackend(endpoint);
+        const retryData = await safeJsonResponse(retry);
+        if (retry.ok) {
+          return NextResponse.json(retryData, {
+            headers: {
+              "Cache-Control": "no-store, max-age=0",
+            },
+          });
+        }
       }
-    } else if (!response.ok) {
-      return fallbackResponse();
     }
 
-    return NextResponse.json(data, {
-      headers: {
-        "Cache-Control": "no-store, max-age=0",
-      },
-    });
+    return fallbackResponse();
   } catch (error) {
     console.warn("Home settings fallback used:", error instanceof Error ? error.message : error);
     return fallbackResponse();

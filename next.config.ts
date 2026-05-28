@@ -21,6 +21,11 @@ const nextConfig: NextConfig = {
         pathname: "/wp-content/uploads/**",
       },
       {
+        protocol: "https",
+        hostname: "cms.fragrancenetwork.ae",
+        pathname: "/wp-content/uploads/**",
+      },
+      {
         protocol: "http",
         hostname: "cms.shapehive.com",
         pathname: "/wp-content/uploads/**",
@@ -44,6 +49,7 @@ const nextConfig: NextConfig = {
     removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error", "warn"] } : false,
   },
   experimental: {
+    cpus: 2,
     ...(disableRuntimeCache ? {} : {
       staleTimes: {
         dynamic: 300,

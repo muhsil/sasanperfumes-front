@@ -32,6 +32,7 @@ const WP_API_HEADERS: HeadersInit = {
   Accept: "application/json",
   "User-Agent": WP_API_USER_AGENT,
 };
+const WP_NAMESPACE_FALLBACKS = ["sasanperfumes/v1", "fnf/v1", "Anbar/v1"];
 
 function formatFetchError(error: unknown): string {
   if (!(error instanceof Error)) {
@@ -47,6 +48,27 @@ function formatFetchError(error: unknown): string {
   }
 
   return error.message;
+}
+
+function buildWPAPIUrls(endpoint: string, locale?: Locale): string[] {
+  const withLocale = (baseEndpoint: string): string => {
+    let url = `${WP_API_BASE}${baseEndpoint}`;
+    if (locale) {
+      const separator = baseEndpoint.includes("?") ? "&" : "?";
+      url = `${url}${separator}lang=${locale}`;
+    }
+    return url;
+  };
+
+  const urls = [withLocale(endpoint)];
+
+  if (endpoint.includes("/sasanperfumes/v1/")) {
+    for (const namespace of WP_NAMESPACE_FALLBACKS.slice(1)) {
+      urls.push(withLocale(endpoint.replace("/sasanperfumes/v1/", `/${namespace}/`)));
+    }
+  }
+
+  return urls;
 }
 
 const legacyBrandNames = [
@@ -590,17 +612,11 @@ async function fetchWPAPI<T>(
   options: FetchOptions = {}
 ): Promise<T | null> {
   const { revalidate = 60, tags, locale, noCache = false } = options;
-
-  let url = `${WP_API_BASE}${endpoint}`;
-
-  if (locale) {
-    const separator = endpoint.includes("?") ? "&" : "?";
-    url = `${url}${separator}lang=${locale}`;
-  }
+  const urls = buildWPAPIUrls(endpoint, locale);
 
   try {
-  const shouldBypassCache = disableRuntimeCache || noCache;
-  const fetchOptions: RequestInit = shouldBypassCache
+    const shouldBypassCache = disableRuntimeCache || noCache;
+    const fetchOptions: RequestInit = shouldBypassCache
       ? { headers: WP_API_HEADERS, cache: "no-store" }
       : {
           headers: WP_API_HEADERS,
@@ -610,36 +626,37 @@ async function fetchWPAPI<T>(
           },
         };
 
-    let response = await fetch(url, fetchOptions);
+    for (const url of urls) {
+      let response = await fetch(url, fetchOptions);
 
-    if (response.status === 403) {
-      response = await fetch(url);
-    }
-
-    if (!response.ok) {
-      if (response.status === 404) {
-        return null;
-      }
       if (response.status === 403) {
+        response = await fetch(url);
+      }
+
+      if (!response.ok) {
+        if (response.status === 404 || response.status === 403) {
+          continue;
+        }
+        console.warn(`WordPress API Error: ${response.status} ${response.statusText} (${url})`);
         return null;
       }
-      console.warn(`WordPress API Error: ${response.status} ${response.statusText} (${url})`);
-      return null;
+
+      const text = await response.text();
+      if (!text.trim()) {
+        return null;
+      }
+
+      try {
+        return JSON.parse(text) as T;
+      } catch {
+        console.warn(`WordPress API returned invalid JSON (${url})`);
+        return null;
+      }
     }
 
-    const text = await response.text();
-    if (!text.trim()) {
-      return null;
-    }
-
-    try {
-      return JSON.parse(text) as T;
-    } catch {
-      console.warn(`WordPress API returned invalid JSON (${url})`);
-      return null;
-    }
+    return null;
   } catch (error) {
-    console.warn(`WordPress API fetch failed (${url}): ${formatFetchError(error)}`);
+    console.warn(`WordPress API fetch failed (${urls[0]}): ${formatFetchError(error)}`);
     return null;
   }
 }

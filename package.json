@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/build-preserve-chunks.js",
+    "build": "next build --webpack",
     "start": "next start -H 0.0.0.0 -p ${PORT:-3000}",
     "lint": "eslint"
   },
@@ -38,5 +38,19 @@
     "eslint-config-next": "16.1.1",
     "tailwindcss": "^4",
     "typescript": "^5"
-  }
+  },
+  "description": "A modern, bilingual (English/Arabic) headless e-commerce frontend built with Next.js 15, Tailwind CSS, and WordPress/WooCommerce REST API.",
+  "main": "screenshot.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/muhsiltomsher-cloud/sasanperfumes-front.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/muhsiltomsher-cloud/sasanperfumes-front/issues"
+  },
+  "homepage": "https://github.com/muhsiltomsher-cloud/sasanperfumes-front#readme"
 }
