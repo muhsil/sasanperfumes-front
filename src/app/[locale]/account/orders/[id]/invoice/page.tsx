@@ -236,7 +236,7 @@ export default function InvoicePage({ params }: InvoicePageProps) {
                   <div className={`relative h-16 w-40 mb-2 ${isRTL ? "" : "ml-auto"}`}>
                     <Image
                       src={logoUrl}
-                      alt="Sasan Perfumes"
+                      alt="ShapeHive"
                       fill
                       className="object-contain"
                       unoptimized

@@ -201,7 +201,7 @@ export default async function BrandDetailPage({ params }: BrandPageProps) {
               {brand.notes.map((note, idx) => {
                 const noteTitle = decodeHtmlEntities(pickLocale(note.title, locale, ""));
                 const noteDesc = decodeHtmlEntities(pickLocale(note.description, locale, ""));
-                const noteImage = note.image?.trim() || "/images/sasanperfumes-placeholder.svg";
+                const noteImage = note.image?.trim() || "/images/shapehive-placeholder.svg";
                 return (
                   <div
                     key={idx}

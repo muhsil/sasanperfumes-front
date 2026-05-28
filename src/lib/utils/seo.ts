@@ -161,7 +161,7 @@ export function generateOrganizationJsonLd() {
     name: siteConfig.name,
     url: siteConfig.url,
     logo: `${siteConfig.url}/logo.png`,
-    description: "Sasan Perfumes is a UAE-based luxury perfume house offering handcrafted premium fragrances, Arabian oud, body care products, home fragrances, and aromatic oils. Free delivery across the UAE.",
+    description: "ShapeHive is a UAE-based luxury perfume house offering handcrafted premium fragrances, Arabian oud, body care products, home fragrances, and aromatic oils. Free delivery across the UAE.",
     foundingDate: "2014",
     foundingLocation: "Dubai, UAE",
     contactPoint: {
@@ -206,7 +206,7 @@ export function generateWebSiteJsonLd() {
  */
 const STORE_LOCATIONS = [
   {
-    name: "Sasan Perfumes - Yas Mall",
+    name: "ShapeHive - Yas Mall",
     streetAddress: "Yas Mall, Ground Floor",
     city: "Abu Dhabi",
     region: "Abu Dhabi",
@@ -216,7 +216,7 @@ const STORE_LOCATIONS = [
     mapsUrl: "https://maps.google.com/?q=Yas+Mall+Abu+Dhabi",
   },
   {
-    name: "Sasan Perfumes - Bawabat Al Sharq Mall",
+    name: "ShapeHive - Bawabat Al Sharq Mall",
     streetAddress: "Bawabat Al Sharq Mall, First Floor",
     city: "Abu Dhabi",
     region: "Abu Dhabi",
@@ -226,7 +226,7 @@ const STORE_LOCATIONS = [
     mapsUrl: "https://maps.google.com/?q=Bawabat+Al+Sharq+Mall+Abu+Dhabi",
   },
   {
-    name: "Sasan Perfumes - Bawadi Mall",
+    name: "ShapeHive - Bawadi Mall",
     streetAddress: "Bawadi Mall, Ground Floor",
     city: "Al Ain",
     region: "Abu Dhabi",
@@ -236,7 +236,7 @@ const STORE_LOCATIONS = [
     mapsUrl: "https://maps.google.com/?q=Bawadi+Mall+Al+Ain",
   },
   {
-    name: "Sasan Perfumes - Makani Zakher Mall",
+    name: "ShapeHive - Makani Zakher Mall",
     streetAddress: "Makani Zakher Mall, Ground Floor",
     city: "Al Ain",
     region: "Abu Dhabi",
@@ -246,7 +246,7 @@ const STORE_LOCATIONS = [
     mapsUrl: "https://maps.google.com/?q=Makani+Zakher+Mall+Al+Ain",
   },
   {
-    name: "Sasan Perfumes - Fujairah City Centre",
+    name: "ShapeHive - Fujairah City Centre",
     streetAddress: "Fujairah City Centre, Ground Floor",
     city: "Fujairah",
     region: "Fujairah",
@@ -256,7 +256,7 @@ const STORE_LOCATIONS = [
     mapsUrl: "https://maps.google.com/?q=Fujairah+City+Centre",
   },
   {
-    name: "Sasan Perfumes - Oman Mall",
+    name: "ShapeHive - Oman Mall",
     streetAddress: "Oman Mall, Ground Floor",
     city: "Muscat",
     region: "Muscat",
@@ -370,7 +370,7 @@ export function generateStoreJsonLd(stores: {
   return stores.map((store) => ({
     "@context": "https://schema.org",
     "@type": "Store",
-    name: `Sasan Perfumes - ${store.name}`,
+    name: `ShapeHive - ${store.name}`,
     address: {
       "@type": "PostalAddress",
       streetAddress: store.address,
@@ -408,7 +408,7 @@ export function generateContactPageJsonLd(params: {
   return {
     "@context": "https://schema.org",
     "@type": "ContactPage",
-    name: "Contact Sasan Perfumes",
+    name: "Contact ShapeHive",
     url: params.url,
     mainEntity: {
       "@type": "Organization",

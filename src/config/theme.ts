@@ -1,5 +1,5 @@
 /**
- * Theme Configuration — Sasan Perfumes Premium Black & White Luxury Palette
+ * Theme Configuration — ShapeHive Premium Black & White Luxury Palette
  * Single source of truth for all brand colors.
  * globals.css maps Tailwind color tokens to the CSS variables injected from here.
  *

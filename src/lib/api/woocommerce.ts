@@ -817,7 +817,7 @@ export interface SlotConfig {
   exclude_products?: number[];
 }
 
-// Bundle Configuration API (from Sasan Perfumes Bundles Creator plugin)
+// Bundle Configuration API (from ShapeHive Bundles Creator plugin)
 export interface BundleConfig {
   product_id: number;
   bundle_id?: string;
@@ -1188,7 +1188,7 @@ export async function getNewProducts(params?: {
 }
 
 export const BESTSELLER_PRODUCT_IDS = [
-  9732, // Sasan Perfumes Ramadan Gift Set (latest added - keep first)
+  9732, // ShapeHive Ramadan Gift Set (latest added - keep first)
   8004, // Dark Musk Perfume
   8009, // Velvet Amber Perfume
   8007, // Secret Leather Perfume
@@ -1203,7 +1203,7 @@ export const BESTSELLER_PRODUCT_IDS = [
 // Slug-based bestseller matching for WPML multi-locale support
 // Product IDs differ across locales (EN vs AR), but slugs remain the same
 export const BESTSELLER_PRODUCT_SLUGS = [
-  "sasanperfumes-ramadan-box",                // Sasan Perfumes Ramadan Gift Set (latest added - keep first)
+  "sasanperfumes-ramadan-box",                // ShapeHive Ramadan Gift Set (latest added - keep first)
   "dark-musk-perfume",              // Dark Musk Perfume
   "velvet-amber-perfume",           // Velvet Amber Perfume
   "secret-leather-perfume",         // Secret Leather Perfume

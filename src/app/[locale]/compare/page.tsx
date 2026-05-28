@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { siteConfig, type Locale } from "@/config/site";
 import { CompareClient } from "./CompareClient";
 
-export const metadata: Metadata = { title: "Compare Products | Sasan Perfumes", robots: { index: false } };
+export const metadata: Metadata = { title: "Compare Products | ShapeHive", robots: { index: false } };
 
 export default async function ComparePage({
   params,

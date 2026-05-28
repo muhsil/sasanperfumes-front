@@ -189,11 +189,11 @@
     },
     "ourStory": {
       "title": "Our Story",
-      "description1": "At Sasan Perfumes, we believe that fragrance is an art. Founded in the UAE, we handcraft premium perfumes, oud oils, body care products, and home fragrances using the finest natural ingredients sourced from around the world — including authentic Arabian oud, French rose, Indian sandalwood, musk, and amber.",
-      "description2": "Our mission is to deliver a unique aromatic experience that lasts long and leaves an unforgettable impression. From luxury perfume gift sets to reed diffusers, candles, and hair mists, every Sasan Perfumes creation is designed to captivate your senses and elevate your everyday moments."
+      "description1": "At ShapeHive, we believe that fragrance is an art. Founded in the UAE, we handcraft premium perfumes, oud oils, body care products, and home fragrances using the finest natural ingredients sourced from around the world — including authentic Arabian oud, French rose, Indian sandalwood, musk, and amber.",
+      "description2": "Our mission is to deliver a unique aromatic experience that lasts long and leaves an unforgettable impression. From luxury perfume gift sets to reed diffusers, candles, and hair mists, every ShapeHive creation is designed to captivate your senses and elevate your everyday moments."
     },
     "whyChooseUs": {
-      "title": "Why Choose Sasan Perfumes",
+      "title": "Why Choose ShapeHive",
       "subtitle": "Discover what makes our fragrances stand out",
       "items": [
         {
@@ -219,8 +219,8 @@
       "subtitle": "Everything you need to know about our fragrances",
       "items": [
         {
-          "question": "What types of perfumes does Sasan Perfumes offer?",
-          "answer": "Sasan Perfumes offers a wide range of premium fragrances including Arabian oud perfumes, eau de parfum, body mists, aromatic oils, home fragrances, bakhoor incense, and curated gift sets. Our collections cater to both men and women with long-lasting scents crafted in the UAE."
+          "question": "What types of perfumes does ShapeHive offer?",
+          "answer": "ShapeHive offers a wide range of premium fragrances including Arabian oud perfumes, eau de parfum, body mists, aromatic oils, home fragrances, bakhoor incense, and curated gift sets. Our collections cater to both men and women with long-lasting scents crafted in the UAE."
         },
         {
           "question": "Do you offer free shipping in the UAE?",
@@ -344,7 +344,7 @@
       "agreement": "By using our website, you agree to these terms and conditions",
       "seo": {
         "title": "Terms & Conditions",
-        "description": "Read the terms and conditions for using Sasan Perfumes website"
+        "description": "Read the terms and conditions for using ShapeHive website"
       },
       "sections": []
     },
@@ -355,7 +355,7 @@
       "contactCta": "If you have any questions or concerns, don't hesitate to contact us",
       "seo": {
         "title": "Privacy Policy",
-        "description": "Learn how Sasan Perfumes protects your privacy and personal data"
+        "description": "Learn how ShapeHive protects your privacy and personal data"
       },
       "sections": []
     },
@@ -366,7 +366,7 @@
       "needHelpText": "Our customer service team is ready to help you with any return inquiries",
       "seo": {
         "title": "Return Policy",
-        "description": "Learn about Sasan Perfumes's return and exchange policy"
+        "description": "Learn about ShapeHive's return and exchange policy"
       },
       "features": [],
       "processTitle": "Return Process",
@@ -427,7 +427,7 @@
       "contentUnavailable": "Content is not available at the moment",
       "seo": {
         "title": "Shipping Information",
-        "description": "Learn about Sasan Perfumes's shipping and delivery policy. We deliver perfumes and fragrances across UAE, Saudi Arabia, Bahrain, Kuwait, Oman and internationally."
+        "description": "Learn about ShapeHive's shipping and delivery policy. We deliver perfumes and fragrances across UAE, Saudi Arabia, Bahrain, Kuwait, Oman and internationally."
       },
       "shippingRates": {
         "title": "Shipping Rates by Destination",
@@ -454,7 +454,7 @@
       "expertPicks": "Expert Picks",
       "ctaTitle": "Ready to Find Your Perfect Scent?",
       "ctaDescription": "Browse our full collection of premium, handcrafted fragrances made in the UAE. Free delivery on orders over 500 AED.",
-      "ctaShopButton": "Shop Sasan Perfumes Fragrances",
+      "ctaShopButton": "Shop ShapeHive Fragrances",
       "ctaBrowseButton": "Browse Perfumes",
       "contactUs": "Contact Us"
     },
@@ -478,12 +478,12 @@
       "waitingSubtitle": ""
     },
     "about": {
-      "title": "Sasan Perfumes",
+      "title": "ShapeHive",
       "heroSubtitle": "",
       "heroDescription": "",
       "contentUnavailable": "Content is not available at the moment",
       "seo": {
-        "title": "About Us - Sasan Perfumes",
+        "title": "About Us - ShapeHive",
         "description": ""
       },
       "cta": {

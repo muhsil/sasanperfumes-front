@@ -23,7 +23,7 @@ export interface CurrencyData {
 // GET - Retrieve all currencies from WordPress API
 export async function GET() {
   try {
-    // Try to fetch currencies from WordPress REST API (Sasan Perfumes Currencies plugin)
+    // Try to fetch currencies from WordPress REST API (ShapeHive Currencies plugin)
     const wpApiUrl = `${siteConfig.apiUrl}/wp-json/sasanperfumes/v1/currencies`;
     
     const response = await fetch(wpApiUrl, {

@@ -28,7 +28,7 @@ function BannerSkeleton() {
       <Skeleton className="absolute inset-0" />
       <div className="absolute inset-0 flex items-center justify-center">
         <Image
-          src="/images/sasanperfumes-placeholder.svg"
+          src="/images/shapehive-placeholder.svg"
           alt="Loading"
           width={150}
           height={150}
@@ -137,8 +137,8 @@ export function BannersSection({
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center bg-stone-200">
                     <Image
-                      src="/images/sasanperfumes-placeholder.svg"
-                      alt="Sasan Perfumes"
+                      src="/images/shapehive-placeholder.svg"
+                      alt="ShapeHive"
                       width={150}
                       height={150}
                       className="object-contain opacity-20"

@@ -76,15 +76,24 @@ const legacyBrandNames = [
   ["Aromatics", "Scents", "Lab"].join(" "),
   ["aromatic", "scents", "lab"].join(" "),
   ["Emirates", "Pride"].join(" "),
+  ["Fragrance", "Network"].join(" "),
   "أروماتيك سينتس لاب",
-  "Sasan Perfumes",
+  ["Sasan", "Perfumes"].join(" "),
   "sasanperfumes",
 ];
+const legacyMediaHosts = [["cms", "fragrancenetwork", "ae"].join(".")];
 
 function rebrandText(value: string): string {
+  const withoutOldMediaHost = legacyMediaHosts.reduce(
+    (text, host) => text
+      .replaceAll(`https://${host}`, siteConfig.apiUrl)
+      .replaceAll(`http://${host}`, siteConfig.apiUrl),
+    value
+  );
+
   return legacyBrandNames.reduce(
     (text, legacyBrandName) => text.replaceAll(legacyBrandName, siteConfig.name),
-    value
+    withoutOldMediaHost
   );
 }
 
@@ -783,7 +792,7 @@ export async function getSiteSettings(locale?: Locale): Promise<SiteSettings> {
   }
 
   if (!logoUrl) {
-    logoUrl = siteConfig.logoUrl || "/images/logo-sasanperfumes.svg";
+    logoUrl = siteConfig.logoUrl || "/images/logo-shapehive.svg";
   }
 
   if (logoUrl && logoId != null && !String(logoUrl).includes("v=")) {
@@ -1256,11 +1265,11 @@ export async function getTopbarSettings(locale?: Locale): Promise<TopbarSettings
 // ─── Footer Settings ───
 const defaultFooterSettings: FooterSettings = {
   description: {
-    en: "Sasan Perfumes is a luxury fragrance house dedicated to crafting unique, high-quality perfumes that captivate the senses.",
+    en: "ShapeHive is a luxury fragrance house dedicated to crafting unique, high-quality perfumes that captivate the senses.",
     ar: "معمل العطور الفاخرة مكرس لصناعة عطور فريدة وعالية الجودة تأسر الحواس.",
   },
   copyright: {
-    en: "© 2025 Sasan Perfumes. All rights reserved.",
+    en: "© 2025 ShapeHive. All rights reserved.",
     ar: "© 2025 معمل العطور. جميع الحقوق محفوظة.",
   },
   newsletter: {

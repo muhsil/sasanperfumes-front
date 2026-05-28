@@ -6,7 +6,7 @@ import { useCart } from "./CartContext";
 import { useCurrency, type CurrencyData } from "./CurrencyContext";
 
 // Event for notifying when a new gift is added (used by MiniCartDrawer)
-export const NEW_GIFT_ADDED_EVENT = "Sasan Perfumes:new-gift-added";
+export const NEW_GIFT_ADDED_EVENT = "ShapeHive:new-gift-added";
 
 const RULES_CACHE_KEY = "sasanperfumes_free_gift_rules_cache";
 const RULES_CACHE_TTL = 5 * 60 * 1000;

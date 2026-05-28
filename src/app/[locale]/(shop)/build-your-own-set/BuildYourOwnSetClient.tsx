@@ -502,7 +502,7 @@ export function BuildYourOwnSetClient({
     en: {
       title: "Build Your Own Set",
       description:
-        "Whether you're treating yourself or surprising someone special, our Sasan Perfumes Bundle Boxes bring together the finest in fragrance and body care.",
+        "Whether you're treating yourself or surprising someone special, our ShapeHive Bundle Boxes bring together the finest in fragrance and body care.",
       instructions:
         "Create a set that's as unique as your fragrance personality. Pick 3 or more products of your choice.",
       yourBox: "Your Box",
@@ -547,7 +547,7 @@ export function BuildYourOwnSetClient({
             ar:{
       title: "اصنع مجموعتك الخاصة",
       description:
-        "سواء كنت تدلل نفسك أو تفاجئ شخصًا مميزًا، فإن صناديق Sasan Perfumes تجمع أفضل العطور ومنتجات العناية بالجسم.",
+        "سواء كنت تدلل نفسك أو تفاجئ شخصًا مميزًا، فإن صناديق ShapeHive تجمع أفضل العطور ومنتجات العناية بالجسم.",
       instructions:
         "أنشئ مجموعة فريدة مثل شخصيتك العطرية. اختر 3 منتجات أو أكثر من اختيارك.",
       yourBox: "صندوقك",

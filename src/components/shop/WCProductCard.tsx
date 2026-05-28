@@ -217,8 +217,8 @@ export function WCProductCard({
                 ) : (
                   <div className="flex h-full items-center justify-center bg-brand-beige">
                     <Image
-                      src="/images/sasanperfumes-placeholder.svg"
-                      alt="Sasan Perfumes"
+                      src="/images/shapehive-placeholder.svg"
+                      alt="ShapeHive"
                       width={120}
                       height={120}
                       className="object-contain opacity-30"

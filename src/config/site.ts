@@ -1,7 +1,7 @@
 /**
  * Site Configuration
  * 
- * Main configuration file for the Sasan Perfumes frontend.
+ * Main configuration file for the ShapeHive frontend.
  * These values are read from environment variables when available,
  * with fallbacks for local development.
  */

@@ -187,7 +187,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                 />
               ) : logoError ? (
                 <Image
-                  src="/images/logo-sasanperfumes.svg"
+                  src="/images/logo-shapehive.svg"
                   alt={siteSettings?.site_name || siteConfig.name}
                   width={140}
                   height={90}

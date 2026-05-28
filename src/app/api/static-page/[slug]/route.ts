@@ -2,6 +2,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { NextResponse } from "next/server";
 import { siteConfig } from "@/config/site";
+import { sanitizeBackendContent } from "@/lib/utils/backendFetch";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -68,7 +69,7 @@ export async function GET(
   for (const endpoint of endpoints) {
     const data = await fetchJson(endpoint) || await fetchJsonWithCurl(endpoint);
     if (data) {
-      return NextResponse.json(data);
+      return NextResponse.json(sanitizeBackendContent(data));
     }
   }
 

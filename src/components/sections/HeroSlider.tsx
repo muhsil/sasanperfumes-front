@@ -37,7 +37,7 @@ type HeroImageProps =
 
 function HeroImage(props: HeroImageProps) {
   const { src, alt, priority, loading, fetchPriority, sizes, className } = props;
-  const fallbackSrc = "/images/sasanperfumes-placeholder.svg";
+  const fallbackSrc = "/images/shapehive-placeholder.svg";
   const [currentSrc, setCurrentSrc] = useState(src);
 
   useEffect(() => {
@@ -205,8 +205,8 @@ function SlideContent({ slide, index, locale }: { slide: HeroSliderSettings["sli
       ) : (
         <div className="flex h-full w-full items-center justify-center bg-gray-200">
           <Image
-            src="/images/sasanperfumes-placeholder.svg"
-            alt="Sasan Perfumes"
+            src="/images/shapehive-placeholder.svg"
+            alt="ShapeHive"
             width={200}
             height={200}
             className="object-contain opacity-20"

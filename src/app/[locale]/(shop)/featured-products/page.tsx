@@ -19,8 +19,8 @@ interface FeaturedProductsPageProps {
 const defaultSeo = {
   title: { en: "Best Sellers | Top Rated Luxury Perfumes & Oud Fragrances", ar: "الأكثر مبيعاً | أفضل العطور الفاخرة والمميزة" },
   description: {
-    en: "Shop our best-selling luxury perfumes, Arabian oud & aromatic oils from Sasan Perfumes. Handcrafted in the UAE. Free delivery on orders over 500 AED.",
-    ar: "تسوق أفضل العطور المميزة والأكثر مبيعاً من Sasan Perfumes. عطور فاخرة وعود عربي وزيوت عطرية مصنوعة يدوياً في الإمارات. توصيل مجاني للطلبات فوق 500 درهم.",
+    en: "Shop our best-selling luxury perfumes, Arabian oud & aromatic oils from ShapeHive. Handcrafted in the UAE. Free delivery on orders over 500 AED.",
+    ar: "تسوق أفضل العطور المميزة والأكثر مبيعاً من ShapeHive. عطور فاخرة وعود عربي وزيوت عطرية مصنوعة يدوياً في الإمارات. توصيل مجاني للطلبات فوق 500 درهم.",
   },
   keywords: {
     en: ["featured perfumes", "best sellers", "top fragrances", "luxury perfume", "Arabian perfume", "fragrance gifts", "popular Dubai perfume", "best UAE perfume", "top rated oud", "luxury gift sets", "bestselling cologne", "best musk perfume", "best amber perfume", "top Arabian fragrance", "luxury perfume online", "trending perfume", "premium Dubai fragrance", "aromatic bestsellers", "top aromatic perfumes UAE", "most popular aromatic scents", "best aromatic fragrance"],

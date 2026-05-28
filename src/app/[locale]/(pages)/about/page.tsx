@@ -20,7 +20,7 @@ interface AboutPageProps {
 
 const defaultKeywords = {
   en: [
-    "about Sasan Perfumes",
+    "about ShapeHive",
     "UAE perfumery",
     "fragrance crafting",
     "premium perfumes",
@@ -34,7 +34,7 @@ const defaultKeywords = {
     "Dubai fragrance house",
   ],
   ar: [
-    "عن Sasan Perfumes",
+    "عن ShapeHive",
     "عطور إماراتية",
     "صناعة العطور",
     "عطور فاخرة",
@@ -50,7 +50,7 @@ const defaultKeywords = {
 };
 
 const arabicKeywords = [
-  "عن Sasan Perfumes",
+  "عن ShapeHive",
   "عطور إماراتية",
   "صناعة العطور",
   "عطور فاخرة",
@@ -69,7 +69,7 @@ const arabicKeywords = [
     heroSubtitle: "بيت عطور في الإمارات",
     title: "نصنع عطوراً مميزة بدقة وعناية وذوق عربي معاصر.",
     heroDescription:
-      "تجمع Sasan Perfumes بين المكونات المختارة والتركيبات المتقنة وخدمات الإنتاج الموثوقة للعملاء والعلامات التجارية في الإمارات.",
+      "تجمع ShapeHive بين المكونات المختارة والتركيبات المتقنة وخدمات الإنتاج الموثوقة للعملاء والعلامات التجارية في الإمارات.",
     stats: ["من الإمارات", "عطور فاخرة", "علامات خاصة", "تركيبات مخصصة"],
     mainTitle: "شريك عطري يركز على الجودة.",
     mainParagraphs: [

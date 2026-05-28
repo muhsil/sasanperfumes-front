@@ -33,7 +33,7 @@ export async function GET() {
 > Premium handcrafted fragrances made in the UAE
 
 ## About
-Sasan Perfumes is a luxury fragrance house based in the United Arab Emirates. We specialize in creating handcrafted perfumes, ouds, and personal care products that blend traditional Arabian fragrance artistry with modern techniques.
+ShapeHive is a luxury fragrance house based in the United Arab Emirates. We specialize in creating handcrafted perfumes, ouds, and personal care products that blend traditional Arabian fragrance artistry with modern techniques.
 
 Our products are made locally in the UAE using premium ingredients. We offer free delivery on orders over 500 AED within the UAE, and ship internationally to Oman and other GCC countries.
 

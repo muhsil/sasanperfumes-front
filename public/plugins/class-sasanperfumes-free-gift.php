@@ -1,9 +1,9 @@
 <?php
 /**
- * Sasan Perfumes Free Gift - Free Gift Rules Functionality
+ * ShapeHive Free Gift - Free Gift Rules Functionality
  * 
  * Handles admin page, REST API endpoints, and product hiding
- * for the Sasan Perfumes Free Gift feature.
+ * for the ShapeHive Free Gift feature.
  * 
  * @package sasanperfumes_Frontend_Settings
  * @since 5.9.0
@@ -12,7 +12,7 @@
 if (!defined('ABSPATH')) exit;
 
 /**
- * Initialize Sasan Perfumes Free Gift
+ * Initialize ShapeHive Free Gift
  */
 function sasanperfumes_free_gift_init() {
     add_action('admin_menu', 'sasanperfumes_free_gift_register_menu', 99);

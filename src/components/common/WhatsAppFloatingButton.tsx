@@ -59,7 +59,7 @@ export function WhatsAppFloatingButton({
 
   const defaultMessage = locale === "ar"
     ? "مرحباً، أود معرفة المزيد عن منتجاتكم وخدماتكم."
-    : "Hello Sasan Perfumes, I would like to know more about your products and services.";
+    : "Hello ShapeHive, I would like to know more about your products and services.";
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message || defaultMessage)}`;
 
   const isCartPage = pathname?.includes("/cart");

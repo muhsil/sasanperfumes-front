@@ -161,12 +161,12 @@ export default async function GuidePage({ params }: GuidePageProps) {
     dateModified: guide.updatedAt,
     author: {
       "@type": "Organization",
-      name: "Sasan Perfumes",
+      name: "ShapeHive",
       url: siteConfig.url,
     },
     publisher: {
       "@type": "Organization",
-      name: "Sasan Perfumes",
+      name: "ShapeHive",
       url: siteConfig.url,
       logo: {
         "@type": "ImageObject",
