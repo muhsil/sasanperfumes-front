@@ -24,7 +24,7 @@ export function SeoContentSection({ title, paragraphs, backgroundImage, isRTL = 
   return (
     <section
       data-section="seo-content"
-      className="relative overflow-hidden bg-[linear-gradient(135deg,#1a1a2e_0%,#16213e_50%,#0f3460_100%)] py-16 md:py-20 lg:py-24"
+      className="home-view-section relative overflow-hidden bg-brand-primary py-14 md:py-16 lg:py-20"
       dir={isRTL ? "rtl" : "ltr"}
     >
       {backgroundImage && (
@@ -39,19 +39,18 @@ export function SeoContentSection({ title, paragraphs, backgroundImage, isRTL = 
           unoptimized={shouldUseUnoptimizedImage(backgroundImage)}
         />
       )}
-      {/* Dark overlay */}
-      <div className="absolute inset-0 bg-brand-primary/55" />
+      <div className="absolute inset-0 bg-brand-primary/72" />
 
       {/* Decorative top accent */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand-gold/40 to-transparent" />
 
       {/* Content - Title top, content mirrored at bottom for RTL */}
-      <div className="relative w-full px-5 md:px-7 lg:px-12 py-8 md:py-10 lg:py-12">
-        <div className="flex flex-col min-h-90 lg:min-h-110">
+      <div className="home-view-section__inner relative px-5 py-8 md:px-7 md:py-10 lg:px-12 lg:py-12">
+        <div className="flex flex-col gap-12 lg:min-h-[72svh] lg:flex-row lg:items-center lg:justify-between">
           {title && (
             <div
               className={cn(
-                "flex flex-col justify-start pt-2 pb-6 lg:pt-3 lg:pb-8",
+                "flex flex-col justify-start pt-2 pb-0 lg:max-w-xl lg:pt-0",
                 isRTL ? "items-end" : "items-start"
               )}
             >
@@ -60,7 +59,7 @@ export function SeoContentSection({ title, paragraphs, backgroundImage, isRTL = 
               <h2
                 aria-label={title}
                 className={cn(
-                  "max-w-xl text-3xl font-semibold leading-tight tracking-wide text-white sm:text-4xl md:text-5xl lg:text-6xl",
+                  "max-w-xl font-title text-3xl leading-tight text-white sm:text-4xl md:text-5xl lg:text-6xl",
                   isRTL ? "text-right" : "text-left"
                 )}
               >
@@ -80,7 +79,7 @@ export function SeoContentSection({ title, paragraphs, backgroundImage, isRTL = 
 
           <div
             className={cn(
-              "flex max-w-xl flex-col justify-end space-y-0 pb-4 lg:pb-6",
+              "flex max-w-xl flex-col justify-end space-y-0 pb-4 lg:pb-0",
               isRTL ? "mr-auto items-start" : "ml-auto items-end"
             )}
           >
@@ -108,13 +107,6 @@ export function SeoContentSection({ title, paragraphs, backgroundImage, isRTL = 
             ))}
           </div>
         </div>
-
-        <div
-          className={cn(
-            "pointer-events-none absolute bottom-0 h-40 w-40 rounded-full bg-brand-gold/5 blur-3xl",
-            isRTL ? "left-0" : "right-0"
-          )}
-        />
       </div>
     </section>
   );

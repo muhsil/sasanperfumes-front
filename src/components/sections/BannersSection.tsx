@@ -24,7 +24,7 @@ interface BannersSectionProps {
 
 function BannerSkeleton() {
   return (
-    <div className="relative min-h-[320px] w-full overflow-hidden sm:min-h-[380px] lg:min-h-[520px]">
+    <div className="relative min-h-[70svh] w-full overflow-hidden rounded-lg sm:min-h-[72svh] lg:min-h-[82svh]">
       <Skeleton className="absolute inset-0" />
       <div className="absolute inset-0 flex items-center justify-center">
         <Image
@@ -48,9 +48,9 @@ export function BannersSectionSkeleton({ count = 2 }: { count?: number }) {
   };
 
   return (
-    <section className="bg-brand-beige py-0">
-      <div className="w-full">
-        <div className={`grid gap-0 ${getGridClass()}`}>
+    <section className="home-view-section bg-brand-beige py-14 md:py-16 lg:py-20">
+      <div className="home-view-section__inner">
+        <div className={`grid gap-4 px-5 md:px-7 lg:px-12 ${getGridClass()}`}>
           {Array.from({ length: count }).map((_, i) => (
             <BannerSkeleton key={i} />
           ))}
@@ -101,12 +101,12 @@ export function BannersSection({
   };
 
   return (
-    <section className={`bg-white py-0 ${className} ${getVisibilityClass()}`}>
-      <div className="w-full">
-        <div className={`grid gap-0 ${getGridClass()}`}>
+    <section className={`home-view-section bg-brand-beige py-14 md:py-16 lg:py-20 ${className} ${getVisibilityClass()}`}>
+      <div className="home-view-section__inner">
+        <div className={`grid gap-4 px-5 md:px-7 lg:px-12 ${getGridClass()}`}>
           {banners.map((banner, index) => {
             const BannerContent = (
-              <div className="group relative min-h-[320px] overflow-hidden bg-stone-200 sm:min-h-[380px] lg:min-h-[520px]">
+              <div className="group relative min-h-[70svh] overflow-hidden rounded-lg border border-brand-border/70 bg-stone-200 shadow-[0_20px_48px_rgba(20,15,10,0.1)] sm:min-h-[72svh] lg:min-h-[82svh]">
                 {banner.image?.url ? (
                   <>
                       <Image
@@ -150,14 +150,14 @@ export function BannersSection({
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent transition-opacity duration-700 group-hover:opacity-90" />
                     <div className="absolute inset-x-0 bottom-0 p-5 text-white sm:p-7 lg:p-10">
                       {banner.title && (
-                        <h3 className="max-w-[14ch] text-2xl font-normal leading-none text-white sm:text-3xl lg:text-4xl">
+                        <h3 className="max-w-[14ch] font-title text-3xl leading-none text-white sm:text-4xl lg:text-5xl">
                           {decodeHtmlEntities(banner.title)}
                         </h3>
                       )}
                       {banner.subtitle && (
                         <div className="mt-4 max-w-md opacity-100 transition-all duration-500 ease-out">
                           <div className="mb-3 h-px w-10 bg-white/80" />
-                          <p className="text-lg leading-relaxed text-white/90 md:text-xl">
+                          <p className="text-sm leading-relaxed text-white/90 md:text-base">
                             {decodeHtmlEntities(banner.subtitle)}
                           </p>
                         </div>

@@ -94,6 +94,7 @@ async function NewProductsSection({ locale, isRTL, dictionary, homeSettings }: {
       locale={locale}
       isRTL={isRTL}
       viewAllText={dictionary.common.viewAll}
+      fullView
       bundleProductSlugs={bundleProductSlugs}
       englishProductSlugs={newProductEnglishSlugs}
     />
@@ -143,6 +144,7 @@ async function FeaturedSection({ locale, isRTL, dictionary, homeSettings }: {
       locale={locale}
       isRTL={isRTL}
       viewAllText={dictionary.common.viewAll}
+      fullView
       bundleProductSlugs={bundleProductSlugs}
       englishProductSlugs={featuredProductEnglishSlugs}
     />
@@ -177,14 +179,14 @@ export default async function HomePage({ params }: HomePageProps) {
   const h1Text = isRTL ? "ساسان للعطور" : siteConfig.name;
 
   return (
-    <div className="flex flex-col pb-6 md:pb-10">
+    <div className="flex flex-col">
       <h1 className="sr-only">{h1Text}</h1>
 
       <HeroSlider settings={homeSettings.hero_slider} />
       <BrandsSlider locale={validLocale} />
 
-      <div className="relative border-b border-brand-border/45 bg-transparent">
-        <Suspense fallback={<ProductSectionSkeleton />}>
+      <div className="relative bg-transparent">
+        <Suspense fallback={<ProductSectionSkeleton fullView />}>
           <NewProductsSection
             locale={validLocale}
             isRTL={isRTL}
@@ -195,7 +197,7 @@ export default async function HomePage({ params }: HomePageProps) {
 
         <CollectionsSection settings={collectionsSettings} />
 
-        <Suspense fallback={<ProductSectionSkeleton />}>
+        <Suspense fallback={<ProductSectionSkeleton fullView />}>
           <FeaturedSection
             locale={validLocale}
             isRTL={isRTL}

@@ -173,6 +173,42 @@ a {
     linear-gradient(180deg, color-mix(in srgb, var(--color-ivory) 84%, white 16%) 0%, color-mix(in srgb, var(--background) 96%, white 4%) 100%);
 }
 
+.home-view-section {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  min-height: 100svh;
+  flex-direction: column;
+  justify-content: center;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 68%, transparent);
+}
+
+.home-view-section > * {
+  width: 100%;
+}
+
+.home-view-section--compact {
+  min-height: clamp(560px, 78svh, 860px);
+}
+
+.home-view-section--media {
+  min-height: 100svh;
+}
+
+.home-view-section__inner {
+  width: 100%;
+}
+
+@media (width < 48rem) {
+  .home-view-section {
+    min-height: auto;
+  }
+
+  .home-view-section--media {
+    min-height: 100svh;
+  }
+}
+
 [class*="tracking-"] {
   letter-spacing: 0 !important;
 }

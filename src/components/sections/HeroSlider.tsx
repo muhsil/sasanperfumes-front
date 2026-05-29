@@ -173,7 +173,7 @@ function SlideContent({ slide, index, locale }: { slide: HeroSliderSettings["sli
   ) : null;
 
   const mediaContent = (
-    <div className="relative w-full overflow-hidden aspect-[768/600] bg-[#1a1714] md:aspect-[1920/800]">
+    <div className="home-view-section--media relative min-h-[calc(100svh-72px)] w-full overflow-hidden bg-[#1a1714] md:min-h-[calc(100svh-88px)]">
       {isVideo ? (
         <>
           {renderVideo(true)}
@@ -213,7 +213,7 @@ function SlideContent({ slide, index, locale }: { slide: HeroSliderSettings["sli
           />
         </div>
       )}
-      <div className="absolute inset-0 bg-gradient-to-r from-black/48 via-black/15 to-black/30" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/52 via-black/18 to-black/32" />
       {textOverlay}
     </div>
   );

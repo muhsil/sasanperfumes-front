@@ -29,20 +29,19 @@ export function OurStorySection({
   if (!hasText && !image) return null;
 
   return (
-    <section className="bg-white pt-10 pb-0 md:pt-12 lg:pt-16">
-      <div className="mx-4 sm:mx-6 lg:mx-8">
-        <div className="relative overflow-hidden border-y border-[#e5e5e5] bg-[#f7f7f5]">
-          <div className={`grid ${image ? "lg:grid-cols-12" : ""}`}>
+    <section className="home-view-section section-band py-14 md:py-16 lg:py-20">
+      <div className="home-view-section__inner px-5 md:px-7 lg:px-12">
+          <div className={`grid gap-8 lg:items-center ${image ? "lg:grid-cols-12" : ""}`}>
             {hasText && (
-              <div className={`${image ? "lg:col-span-5" : "mx-auto max-w-4xl"} px-6 py-10 md:px-10 md:py-14 lg:px-14 xl:px-16`}>
+              <div className={`${image ? "lg:col-span-5" : "mx-auto max-w-4xl"}`}>
                 {eyebrow && (
-                  <p className="mb-5 max-w-fit border-b border-brand-gold/50 pb-2 text-[11px] font-normal uppercase tracking-[0.22em] text-brand-primary/55">
+                  <p className="mb-5 max-w-fit border-b border-brand-gold/50 pb-2 text-[11px] font-semibold uppercase text-brand-gold">
                     {eyebrow}
                   </p>
                 )}
 
                 {title && (
-                  <h2 className="max-w-xl text-3xl font-normal leading-[1.08] text-brand-primary md:text-4xl lg:text-[2.75rem]">
+                  <h2 className="max-w-xl font-title text-3xl leading-[1.08] text-brand-primary md:text-4xl lg:text-[2.75rem]">
                     {title}
                   </h2>
                 )}
@@ -63,11 +62,11 @@ export function OurStorySection({
                 )}
 
                 {visibleStats.length > 0 && (
-                  <div className="mt-9 grid overflow-hidden border border-[#dedede] bg-white/70 sm:grid-cols-3">
+                  <div className="mt-9 grid overflow-hidden rounded-lg border border-brand-border/70 bg-brand-ivory/80 sm:grid-cols-3">
                     {visibleStats.map((stat, i) => (
                       <div
                         key={`${stat.value}-${stat.label}-${i}`}
-                        className="border-b border-[#dedede] px-4 py-5 text-start last:border-b-0 sm:border-b-0 sm:border-e sm:last:border-e-0"
+                        className="border-b border-brand-border/70 px-4 py-5 text-start last:border-b-0 sm:border-b-0 sm:border-e sm:last:border-e-0"
                       >
                         {stat.value && (
                           <p className="text-2xl font-normal leading-none text-brand-primary md:text-3xl">
@@ -87,8 +86,8 @@ export function OurStorySection({
             )}
 
             {image && (
-              <div className={`${hasText ? "lg:col-span-7" : ""} relative px-4 pb-4 md:px-8 md:pb-8 lg:p-8`}>
-                <div className="relative min-h-[360px] overflow-hidden border border-white bg-white shadow-[0_24px_70px_rgba(0,0,0,0.12)] md:min-h-[480px] lg:min-h-[560px]">
+              <div className={`${hasText ? "lg:col-span-7" : ""} relative`}>
+                <div className="relative min-h-[68svh] overflow-hidden rounded-lg border border-brand-border/70 bg-brand-ivory shadow-[0_24px_70px_rgba(20,15,10,0.12)] md:min-h-[72svh]">
                   <Image
                     src={image}
                     alt={title || ""}
@@ -103,7 +102,6 @@ export function OurStorySection({
               </div>
             )}
           </div>
-        </div>
       </div>
     </section>
   );

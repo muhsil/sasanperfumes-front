@@ -36,13 +36,14 @@ interface ProductSectionProps {
   viewAllText?: string;
   className?: string;
   isLoading?: boolean;
+  fullView?: boolean;
   bundleProductSlugs?: string[];
   englishProductSlugs?: Record<number, string>;
 }
 
-export function ProductSectionSkeleton({ count = 5 }: { count?: number }) {
+export function ProductSectionSkeleton({ count = 5, fullView = false }: { count?: number; fullView?: boolean }) {
   return (
-    <section className="bg-transparent pb-0 pt-10 md:pt-12 lg:pt-14">
+    <section className={fullView ? "home-view-section bg-transparent py-14 md:py-16 lg:py-20" : "bg-transparent pb-0 pt-10 md:pt-12 lg:pt-14"}>
       <div className="px-5 md:px-7 lg:px-12">
         <div className="mb-6 md:mb-8">
           <SectionHeaderSkeleton />
@@ -61,11 +62,12 @@ export function ProductSection({
   viewAllText = "View All",
   className = "",
   isLoading = false,
+  fullView = false,
   bundleProductSlugs = [],
   englishProductSlugs = {},
 }: ProductSectionProps) {
   if (isLoading) {
-    return <ProductSectionSkeleton count={settings.products_count || 4} />;
+    return <ProductSectionSkeleton count={settings.products_count || 4} fullView={fullView} />;
   }
 
   if (!settings.enabled || products.length === 0) {
@@ -107,8 +109,12 @@ export function ProductSection({
   const isGrid = settings.display === 'grid';
   const sliderNavPrefix = settings.section_title?.replace(/\s+/g, '-').toLowerCase() || 'default';
 
+  const sectionClass = fullView
+    ? `home-view-section bg-transparent py-14 md:py-16 lg:py-20 ${className} ${getVisibilityClass()}`
+    : `bg-transparent pb-0 pt-10 md:pt-12 lg:pt-14 ${className} ${getVisibilityClass()}`;
+
   return (
-    <section className={`bg-transparent pb-0 pt-10 md:pt-12 lg:pt-14 ${className} ${getVisibilityClass()}`}>
+    <section className={sectionClass}>
       <div className="px-5 md:px-7 lg:px-12">
         <div className="mb-6 flex flex-col gap-4 md:mb-8 md:flex-row md:items-end md:justify-between">
           <div className={isRTL ? "text-right" : "text-left"}>

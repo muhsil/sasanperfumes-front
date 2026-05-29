@@ -32,8 +32,8 @@ function CollectionCardSkeleton() {
 
 export function CollectionsSectionSkeleton({ count = 3 }: { count?: number }) {
   return (
-    <section className="bg-white pb-0">
-      <div className="grid grid-cols-1 gap-0 md:grid-cols-2 lg:grid-cols-3">
+    <section className="home-view-section bg-brand-primary py-14 md:py-16 lg:py-20">
+      <div className="grid grid-cols-1 gap-4 px-5 md:grid-cols-2 md:px-7 lg:grid-cols-3 lg:px-12">
         {Array.from({ length: count }).map((_, i) => (
           <CollectionCardSkeleton key={i} />
         ))}
@@ -64,14 +64,30 @@ export function CollectionsSection({
 
   const cols = settings.responsive_columns ?? { desktop: 3, tablet: 2, mobile: 1 };
   const gridClass = [
-    "grid gap-0",
+    "grid gap-4 px-5 md:px-7 lg:px-12",
     MOBILE_COLS[cols.mobile] ?? "grid-cols-1",
     TABLET_COLS[cols.tablet] ?? "md:grid-cols-2",
     DESKTOP_COLS[cols.desktop] ?? "lg:grid-cols-3",
   ].join(" ");
 
   return (
-    <section className={`bg-[#eee] pb-0 ${className} ${getVisibilityClass()}`}>
+    <section className={`home-view-section bg-brand-primary py-14 text-brand-ivory md:py-16 lg:py-20 ${className} ${getVisibilityClass()}`}>
+      <div className="home-view-section__inner">
+        {(settings.section_title || settings.section_subtitle) && (
+          <div className="mb-8 px-5 md:mb-10 md:px-7 lg:px-12">
+            {settings.section_title && (
+              <h2 className="font-title text-3xl text-brand-ivory md:text-4xl">
+                {decodeHtmlEntities(settings.section_title)}
+              </h2>
+            )}
+            {settings.section_subtitle && (
+              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-brand-ivory/70 md:text-base">
+                {decodeHtmlEntities(settings.section_subtitle)}
+              </p>
+            )}
+          </div>
+        )}
+
       <div className={gridClass}>
         {settings.collections.map((collection, index) => (
           <Link
@@ -80,7 +96,7 @@ export function CollectionsSection({
             target={collection.link?.target || "_self"}
             className="group relative flex flex-col overflow-hidden"
           >
-            <div className="relative aspect-[3/4] overflow-hidden bg-brand-beige">
+            <div className="relative min-h-[68svh] overflow-hidden rounded-lg border border-brand-ivory/15 bg-brand-beige md:min-h-[64svh] lg:min-h-[68svh]">
               {collection.image?.url ? (
                 <Image
                   src={collection.image.url}
@@ -96,19 +112,19 @@ export function CollectionsSection({
               ) : (
                 <div className="absolute inset-0 bg-stone-200" />
               )}
-              <div className="absolute inset-0 z-10 bg-black/35 transition-colors duration-700 ease-out group-hover:bg-black/80" />
-              <div className="absolute inset-x-0 bottom-0 z-10 h-1/2 bg-linear-to-t from-black/70 to-transparent transition-opacity duration-700 ease-out group-hover:opacity-100" />
+              <div className="absolute inset-0 z-10 bg-black/38 transition-colors duration-700 ease-out group-hover:bg-black/68" />
+              <div className="absolute inset-x-0 bottom-0 z-10 h-1/2 bg-linear-to-t from-black/72 to-transparent transition-opacity duration-700 ease-out group-hover:opacity-100" />
               <div className="absolute inset-0 z-20 flex flex-col justify-between p-6 md:p-8">
-                <h3 className="max-w-[12ch] text-2xl font-normal leading-tight text-white drop-shadow-md md:text-3xl lg:text-4xl">
+                <h3 className="max-w-[12ch] font-title text-3xl leading-tight text-white drop-shadow-md md:text-4xl">
                   {decodeHtmlEntities(collection.title)}
                 </h3>
                 <div className="translate-y-0 transition-transform duration-700 ease-out group-hover:translate-y-0">
                   {collection.description && (
-                    <p className="max-w-md text-lg leading-relaxed text-white/90 line-clamp-3 opacity-100 transition-all duration-700 ease-out group-hover:opacity-100 md:text-xl">
+                    <p className="line-clamp-3 max-w-md text-sm leading-relaxed text-white/90 opacity-100 transition-all duration-700 ease-out group-hover:opacity-100 md:text-base">
                       {decodeHtmlEntities(collection.description)}
                     </p>
                   )}
-                  <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-medium tracking-wide text-brand-primary shadow-lg shadow-black/20 transition-all duration-500 ease-out group-hover:-translate-y-1 group-hover:bg-white group-hover:text-brand-primary group-hover:shadow-xl group-hover:shadow-black/30 hover:bg-brand-primary hover:text-white hover:border hover:border-white md:text-base">
+                  <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-brand-ivory px-5 py-2.5 text-xs font-semibold uppercase text-brand-primary shadow-lg shadow-black/20 transition-all duration-500 ease-out group-hover:-translate-y-1 group-hover:bg-white group-hover:text-brand-primary group-hover:shadow-xl group-hover:shadow-black/30 hover:border hover:border-white hover:bg-brand-primary hover:text-white md:text-sm">
                     <span>Explore</span>
                     <svg className="h-4 w-4 transition-transform duration-500 ease-out group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -119,6 +135,7 @@ export function CollectionsSection({
             </div>
           </Link>
         ))}
+      </div>
       </div>
     </section>
   );
