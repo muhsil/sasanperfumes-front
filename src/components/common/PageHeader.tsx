@@ -24,33 +24,33 @@ export function PageHeader({
   return (
     <section
       className={cn(
-        "bg-[#f8f3ef] px-5 pb-6 pt-8 text-brand-primary md:px-7 md:pb-8 md:pt-10 lg:px-12",
+        "section-band px-5 pb-8 pt-10 text-brand-primary md:px-7 md:pb-10 md:pt-12 lg:px-12",
         className,
       )}
     >
       {image && (
-        <div className="mb-6 max-w-[280px]">
+        <div className="mb-7 max-w-[280px] overflow-hidden rounded-lg border border-brand-border/70 bg-brand-ivory p-2 shadow-[0_16px_34px_rgba(20,15,10,0.1)]">
           <Image
             src={image}
             alt={decodeHtmlEntities(title)}
             width={280}
             height={280}
-            className="rounded-lg object-cover"
+            className="rounded-md object-cover"
             unoptimized={shouldUseUnoptimizedImage(image)}
           />
         </div>
       )}
-      <div className="max-w-[760px]">
-        <h1 className="text-[36px] font-normal leading-none tracking-normal md:text-[48px]">
+      <div className={cn("max-w-[820px]", isRTL && "ms-auto text-right")}>
+        <h1 className="font-title text-[38px] leading-none text-brand-primary md:text-[54px]">
           {decodeHtmlEntities(title)}
         </h1>
         {subtitle && (
-          <p className="mt-2 text-lg font-normal tracking-normal text-brand-primary/60">
+          <p className="mt-3 text-base font-semibold text-brand-gold md:text-lg">
             {subtitle}
           </p>
         )}
         {description && (
-          <p className="mt-4 max-w-[620px] text-[15px] leading-6 tracking-normal text-brand-primary md:text-base">
+          <p className={cn("mt-5 max-w-[660px] text-[15px] leading-7 text-brand-muted md:text-base", isRTL && "ms-auto")}>
             {description}
           </p>
         )}

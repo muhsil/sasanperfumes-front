@@ -177,13 +177,13 @@ export default async function HomePage({ params }: HomePageProps) {
   const h1Text = isRTL ? "ساسان للعطور" : siteConfig.name;
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col pb-6 md:pb-10">
       <h1 className="sr-only">{h1Text}</h1>
 
       <HeroSlider settings={homeSettings.hero_slider} />
       <BrandsSlider locale={validLocale} />
 
-      <div className="bg-transparent border-b border-[#e7ded7]">
+      <div className="relative border-b border-brand-border/45 bg-transparent">
         <Suspense fallback={<ProductSectionSkeleton />}>
           <NewProductsSection
             locale={validLocale}

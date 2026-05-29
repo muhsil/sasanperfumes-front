@@ -11,9 +11,9 @@ export function ProductCardSkeleton({ placeholderLogo: _placeholderLogo }: { pla
 
   return (
     <article className="flex h-full flex-col">
-      <div className="flex h-full flex-col overflow-hidden border-r border-b border-[#e7ded7] bg-transparent shadow-[0_4px_20px_rgba(74,22,51,0.06)]">
+      <div className="flex h-full flex-col overflow-hidden rounded-lg border border-brand-border/70 bg-brand-ivory shadow-[0_16px_34px_rgba(20,15,10,0.08)]">
         <div className="relative">
-          <div className="relative aspect-[4/5] overflow-hidden bg-[#F8F5F0]">
+          <div className="relative aspect-[4/5] overflow-hidden bg-brand-beige">
             <Skeleton className="absolute inset-0 rounded-none" />
           </div>
           <div className="absolute left-3 top-3 flex max-w-[60%] flex-col gap-1">
@@ -26,11 +26,11 @@ export function ProductCardSkeleton({ placeholderLogo: _placeholderLogo }: { pla
           <Skeleton className="absolute bottom-3 right-3 h-9 w-9 rounded-full" />
         </div>
 
-        <div className="relative flex min-h-20 flex-1 items-center justify-center overflow-hidden p-2 text-center">
+        <div className="relative flex min-h-28 flex-1 items-center justify-center overflow-hidden p-4 text-center">
           <div className="flex w-full flex-col items-center">
             <div className="mb-1 flex justify-center gap-1">
-              <Skeleton className="h-4 w-12 rounded-sm" />
-              <Skeleton className="h-4 w-10 rounded-sm" />
+              <Skeleton className="h-4 w-12 rounded-full" />
+              <Skeleton className="h-4 w-10 rounded-full" />
             </div>
             <Skeleton className="h-3.5 w-3/4" />
             <Skeleton className="mt-1 h-3.5 w-1/2" />
@@ -62,7 +62,7 @@ export function ProductGridSkeleton({
   };
 
   return (
-    <div className={cn("grid gap-0", gridCols[columns], className)}>
+    <div className={cn("grid gap-4 px-5 md:px-7 lg:px-12", gridCols[columns], className)}>
       {Array.from({ length: count }).map((_, i) => (
         <ProductCardSkeleton key={i} placeholderLogo={placeholderLogo} />
       ))}
@@ -89,7 +89,7 @@ export function CartItemSkeleton() {
 
 export function CartItemsSkeleton({ count = 2 }: { count?: number }) {
   return (
-    <div className="divide-y">
+    <div className="divide-y divide-brand-border/60">
       {Array.from({ length: count }).map((_, i) => (
         <CartItemSkeleton key={i} />
       ))}

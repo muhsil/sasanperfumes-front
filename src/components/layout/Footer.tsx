@@ -141,17 +141,20 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
   return (
     <>
     <SocialIconLinks links={socialLinks} variant="dark" />
-    <footer className="main-footer bg-[#1a1a1a] pb-20 text-white md:pb-0">
-      <div className="w-full px-5 md:px-7 lg:px-12 py-6 md:py-16">
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-4 md:gap-12">
+    <footer className="main-footer relative overflow-hidden bg-[#16120f] pb-20 text-[#f6eee4] md:pb-0">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#b98a49]/55 to-transparent" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.045)_0_1px,transparent_1px_18px)]" />
+
+      <div className="w-full px-5 py-8 md:px-7 md:py-16 lg:px-12">
+        <div className="grid grid-cols-2 gap-5 md:grid-cols-2 md:gap-10 lg:grid-cols-4 lg:gap-12">
           {/* Brand description section */}
-          <div className="col-span-2 space-y-3 md:space-y-6 text-center md:col-span-1 md:text-left">
-            <p className="text-xs leading-relaxed text-white/50">{description}</p>
+          <div className="col-span-2 space-y-3 text-center md:col-span-1 md:space-y-6 md:text-left">
+            <p className="text-xs leading-relaxed text-[#f6eee4]/72">{description}</p>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h3 className="mb-6 text-xs font-semibold uppercase tracking-wider text-white/70">
+            <h3 className="mb-6 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#f6eee4]/60">
               {quickLinksHeading}
             </h3>
             <ul className="space-y-3">
@@ -159,7 +162,7 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
                 <li key={link.name}>
                   <Link
                     href={link.href}
-                    className="text-xs text-white/50 transition-colors hover:text-white"
+                    className="text-xs text-[#f6eee4]/74 transition-colors hover:text-[#f6eee4]"
                   >
                     {link.name}
                   </Link>
@@ -170,7 +173,7 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
 
           {/* Customer Service */}
           <div>
-            <h3 className="mb-6 text-xs font-semibold uppercase tracking-wider text-white/70">
+            <h3 className="mb-6 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#f6eee4]/60">
               {csHeading}
             </h3>
             <ul className="space-y-3">
@@ -178,7 +181,7 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
                 <li key={link.name}>
                   <Link
                     href={link.href}
-                    className="text-xs text-white/50 transition-colors hover:text-white"
+                    className="text-xs text-[#f6eee4]/74 transition-colors hover:text-[#f6eee4]"
                   >
                     {link.name}
                   </Link>
@@ -188,11 +191,11 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
           </div>
 
           {/* Newsletter - Full width on mobile */}
-          <div className="col-span-2 md:col-span-1">
-            <h3 className="mb-6 text-xs font-semibold uppercase tracking-wider text-white/70">
+          <div className="col-span-2 rounded-lg border border-white/15 bg-white/5 p-5 shadow-[0_20px_40px_rgba(0,0,0,0.22)] backdrop-blur-md md:col-span-1 md:p-6">
+            <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#f6eee4]/60">
               {newsletterTitle}
             </h3>
-            <p className="mb-5 text-xs leading-relaxed text-white/50">
+            <p className="mb-5 text-xs leading-relaxed text-[#f6eee4]/72">
               {newsletterSubtitle}
             </p>
             <NewsletterForm
@@ -206,19 +209,19 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-10 flex flex-col items-center gap-3 border-t border-white/10 pt-6 md:mt-12 md:flex-row md:justify-between md:pt-8">
-          <p className="text-center text-xs text-white/40 md:text-left">
+        <div className="mt-10 flex flex-col items-center gap-3 border-t border-white/15 pt-6 md:mt-12 md:flex-row md:justify-between md:pt-8">
+          <p className="text-center text-xs text-[#f6eee4]/58 md:text-left">
             &copy; {currentYear} {siteConfig.name}. {copyrightText}
           </p>
           {poweredByText && poweredByName && (
-            <p className="text-center text-xs text-white/40">
+            <p className="text-center text-xs text-[#f6eee4]/58">
               {poweredByText}{" "}
               {poweredByUrl ? (
                 <a
                   href={poweredByUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-white/40 transition-colors hover:text-white underline"
+                  className="text-[#f6eee4]/74 underline transition-colors hover:text-[#f6eee4]"
                 >
                   {poweredByName}
                 </a>

@@ -165,7 +165,7 @@ export function ShopClient({
       
       <div ref={loadMoreRef} className="py-8 flex justify-center">
         {isLoading && (
-          <div className="flex items-center gap-2 text-gray-500">
+          <div className="flex items-center gap-2 text-brand-muted">
             <svg
               className="animate-spin h-5 w-5"
               xmlns="http://www.w3.org/2000/svg"
@@ -192,7 +192,7 @@ export function ShopClient({
 
         {loadError && !isLoading && (
           <div className="flex flex-col items-center gap-2">
-            <p className="text-gray-500 text-sm">
+            <p className="text-sm text-brand-muted">
               {locale === "ar" ? "حدث خطأ أثناء تحميل المنتجات" : "Failed to load more products"}
             </p>
             <button
@@ -205,7 +205,7 @@ export function ShopClient({
         )}
         
         {!hasMore && products.length > 0 && (
-          <p className="text-gray-500 text-sm">
+          <p className="text-sm text-brand-muted">
             {locale === "ar" 
               ? `عرض جميع المنتجات (${products.length})` 
               : `Showing all ${products.length} products`}

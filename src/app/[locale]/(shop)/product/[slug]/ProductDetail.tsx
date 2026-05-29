@@ -97,9 +97,9 @@ interface AccordionSectionProps {
 
 function AccordionSection({ title, children }: AccordionSectionProps) {
   return (
-    <div className="border-b border-[#e7ded7]">
+    <div className="border-b border-brand-border/70">
       <div className="flex w-full items-center justify-between py-5 text-left">
-        <span className="text-[14px] font-normal tracking-normal text-brand-primary">
+        <span className="text-[14px] font-semibold text-brand-primary">
           {title}
         </span>
         <ChevronDown className="h-4 w-4 rotate-180 text-brand-primary" />
@@ -1201,7 +1201,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
   };
 
   return (
-    <div className="bg-[#f8f3ef] text-brand-primary">
+    <div className="bg-transparent text-brand-primary">
       <div className="w-full px-5 pb-3 pt-4 md:px-7 md:pb-4 md:pt-6 lg:px-12">
         <div className="flex items-center justify-between gap-3">
           <Breadcrumbs items={breadcrumbItems} locale={locale} contained={false} />
@@ -1215,21 +1215,22 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
       </div>
 
       <div className="w-full px-0">
-        <div className="grid w-full gap-y-7 gap-x-6 lg:grid-cols-[minmax(0,1.12fr)_minmax(360px,0.88fr)] xl:grid-cols-[minmax(0,1.08fr)_minmax(430px,0.92fr)]">
+        <div className="grid w-full gap-x-6 gap-y-7 px-5 md:px-7 lg:grid-cols-[minmax(0,1.12fr)_minmax(360px,0.88fr)] lg:px-12 xl:grid-cols-[minmax(0,1.08fr)_minmax(430px,0.92fr)]">
         {/* Product Gallery */}
-        <div className="min-w-0 bg-[#f8f3ef]">
+        <div className="min-w-0">
           {renderImageGallery()}
         </div>
 
         {/* Product Info - Sticky on desktop */}
-        <aside className="min-w-0 bg-[#f8f3ef] px-5 pb-10 pt-2 text-brand-primary md:px-7 md:pb-12 md:pt-8 lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:self-start lg:overflow-y-auto lg:px-10 lg:pt-10 xl:px-12">
+        <aside className="min-w-0 pb-10 pt-2 text-brand-primary md:pb-12 md:pt-8 lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:self-start lg:overflow-y-auto lg:pt-10">
+          <div className="luxury-panel p-5 md:p-7 lg:p-8">
           <div className="mx-auto flex w-full max-w-[560px] flex-col items-stretch space-y-0 lg:ml-0 lg:mr-auto">
           {/* Category + Brand row */}
           <div className="mb-5 flex w-full flex-wrap items-center gap-x-3 gap-y-2 self-start">
             {primaryCategory && categorySlugForUrl && (
               <Link
                 href={`/${locale}/category/${categorySlugForUrl}`}
-                className="bg-white px-2 py-1 text-[10px] font-semibold uppercase leading-none tracking-normal text-brand-primary transition-opacity hover:opacity-70"
+                className="rounded-full border border-brand-border/70 bg-brand-ivory px-3 py-1.5 text-[10px] font-semibold uppercase leading-none text-brand-primary transition-colors hover:border-brand-primary/45 hover:bg-brand-beige"
               >
                 {decodeHtmlEntities(primaryCategory.name)}
               </Link>
@@ -1239,7 +1240,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                 {primaryCategory && categorySlugForUrl && (
                   <span className="text-[11px] text-brand-primary/30">/</span>
                 )}
-                <span className="text-[11px] font-normal uppercase tracking-normal text-brand-primary/60">
+                <span className="text-[11px] font-semibold uppercase text-brand-muted">
                   {product.brands.map(b => decodeHtmlEntities(b.name)).join(", ")}
                 </span>
               </>
@@ -1247,7 +1248,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           </div>
 
           {/* Title */}
-          <h1 className="w-full text-[28px] font-normal leading-tight tracking-tight text-brand-primary sm:text-[32px] md:text-[38px] lg:text-[46px]">
+          <h1 className="font-title w-full text-[32px] leading-tight text-brand-primary sm:text-[36px] md:text-[44px] lg:text-[52px]">
             {productDisplayName}
           </h1>
 
@@ -1272,7 +1273,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           )}
 
           {/* Price and stock indicator */}
-          <div className="mt-5 border-b border-[#e7ded7] pb-6">
+          <div className="mt-5 border-b border-brand-border/70 pb-6">
             {(() => {
               const displayPrice = getDisplayPrice(product, selectedVariation);
               const isOnSale = selectedVariation?.sale_price || product.on_sale;
@@ -1285,7 +1286,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                   <div className="flex flex-wrap items-end gap-4">
                     <FormattedPrice
                       price={parseInt(displayPrice.price) / Math.pow(10, displayPrice.currency_minor_unit)}
-                      className="text-3xl font-normal text-brand-primary sm:text-[2rem]"
+                      className="text-3xl font-semibold text-brand-primary sm:text-[2rem]"
                       iconSize="sm"
                     />
                     {isOnSale && (
@@ -1356,8 +1357,8 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
             </div>
           )}
           {!isOutOfStock && product.low_stock_remaining && product.low_stock_remaining < 10 && (
-            <div className="mt-7 border-b border-[#e7ded7] pb-6">
-              <div className="flex items-center gap-2 text-[14px] font-normal tracking-normal text-[#f28c00]">
+            <div className="mt-7 border-b border-brand-border/70 pb-6">
+              <div className="flex items-center gap-2 text-[14px] font-semibold text-[#b36b00]">
                 <span className="h-2 w-2 rounded-full bg-[#f28c00]" />
                 <span>
                   {isRTL
@@ -1365,15 +1366,15 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                     : `Only ${product.low_stock_remaining} left`}
                 </span>
               </div>
-              <div className="mt-3 h-0.5 w-56 bg-[#e7ded7]">
-                <div className="h-full w-8 bg-[#f28c00]" />
+              <div className="mt-3 h-0.5 w-56 bg-brand-border">
+                <div className="h-full w-8 bg-[#b36b00]" />
               </div>
             </div>
           )}
 
           {/* Product Addons - WCPA Integration */}
           {addonForms && addonForms.length > 0 && (
-            <div className="mt-6 border-t border-[#e7ded7] pt-5">
+            <div className="mt-6 border-t border-brand-border/70 pt-5">
               <ProductAddons
                 forms={addonForms}
                 locale={locale}
@@ -1390,13 +1391,13 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           )}
 
           {product.type === "variable" && variationAttributes.length > 0 && (
-            <div className="mt-6 space-y-5 border-t border-[#e7ded7] pt-5">
+            <div className="mt-6 space-y-5 border-t border-brand-border/70 pt-5">
               {variationAttributes.map((attr) => {
                 const key = attr.taxonomy || attr.name;
                 const selectedSlug = selectedVariations[key];
                 return (
                   <div key={key}>
-                    <p className="mb-2.5 text-[12px] font-normal tracking-normal text-brand-primary/60">
+                    <p className="mb-2.5 text-[12px] font-semibold text-brand-muted">
                       {decodeHtmlEntities(attr.name)}
                     </p>
                     <div className="flex flex-wrap gap-2.5">
@@ -1453,12 +1454,12 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                               }
                             }}
                             className={cn(
-                              "rounded-full border px-4 py-2 text-xs font-normal tracking-normal transition-colors",
+                              "rounded-full border px-4 py-2 text-xs font-semibold transition-colors",
                               isOutOfStock
-                                ? "cursor-not-allowed border-[#e7ded7] bg-transparent text-brand-primary/30 line-through opacity-50"
+                                ? "cursor-not-allowed border-brand-border/70 bg-transparent text-brand-primary/30 line-through opacity-50"
                                 : isSelected
                                 ? "border-brand-primary bg-brand-primary text-white"
-                                : "border-[#e7ded7] bg-transparent text-brand-primary hover:border-brand-primary"
+                                : "border-brand-border/80 bg-brand-ivory text-brand-primary hover:border-brand-primary"
                             )}
                           >
                             {decodeHtmlEntities(term.name)}
@@ -1487,7 +1488,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           {/* Add to Cart Section */}
           <div ref={addToCartRef} className="flex flex-col gap-4 pt-5">
             <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-              <div className="flex h-12 items-center justify-between overflow-hidden rounded-full border border-brand-primary bg-transparent">
+              <div className="flex h-12 items-center justify-between overflow-hidden rounded-full border border-brand-border/80 bg-brand-ivory">
                 <button
                   type="button"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -1525,7 +1526,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                 type="button"
                 onClick={handleWishlistToggle}
                 disabled={isAddingToWishlist}
-                className={`flex h-12 min-w-[56px] items-center justify-center rounded-full border border-[#d9d0c7] bg-transparent text-sm font-normal text-brand-primary transition-colors duration-300 hover:border-black hover:bg-black hover:text-white ${isAddingToWishlist ? "cursor-not-allowed opacity-50" : ""}`}
+                className={`flex h-12 min-w-[56px] items-center justify-center rounded-full border border-brand-border/80 bg-brand-ivory text-sm font-semibold text-brand-primary transition-colors duration-300 hover:border-brand-primary hover:bg-brand-primary hover:text-white ${isAddingToWishlist ? "cursor-not-allowed opacity-50" : ""}`}
                 aria-label={isWishlisted ? (isRTL ? "إزالة من المفضلة" : "Remove from wishlist") : (isRTL ? "أضف إلى المفضلة" : "Add to wishlist")}
               >
                 <Heart className={`h-5 w-5 ${isWishlisted ? "fill-current" : ""}`} />
@@ -1539,7 +1540,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               isAdded={isAddedToCart}
               isLoading={isAddingToCart}
               showIcon
-              className="h-12 w-full text-xs font-bold uppercase tracking-[0.1em]"
+              className="h-12 w-full text-xs font-bold uppercase"
             >
               {isAddedToCart ? (
                 <><Check className="h-4 w-4" />{isRTL ? "تمت الإضافة!" : "added"}</>
@@ -1564,8 +1565,8 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           </div>
 
           {detailsMounted && (
-            <div className="mt-8 border-t border-[#e7ded7] pt-6">
-              <div className="mt-0 border-t border-[#e7ded7] pt-0">
+            <div className="mt-8 border-t border-brand-border/70 pt-6">
+              <div className="mt-0 border-t border-brand-border/70 pt-0">
                 <AccordionSection title={isRTL ? "الوصف" : "Description"}>
                   {descriptionHtml ? (
                     <div
@@ -1584,27 +1585,27 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                   <div className="space-y-2 text-sm">
                     {primaryCategory && (
                       <div className="flex justify-between gap-4">
-                        <span className="text-gray-500 shrink-0">{isRTL ? "الفئة" : "Category"}</span>
-                        <span className="text-gray-900 text-right">{decodeHtmlEntities(primaryCategory.name)}</span>
+                        <span className="shrink-0 text-brand-muted">{isRTL ? "الفئة" : "Category"}</span>
+                        <span className="text-right text-brand-primary">{decodeHtmlEntities(primaryCategory.name)}</span>
                       </div>
                     )}
                     {product.sku && (
                       <div className="flex justify-between gap-4">
-                        <span className="text-gray-500 shrink-0">{isRTL ? "رمز المنتج" : "SKU"}</span>
-                        <span className="text-gray-900 text-right">{product.sku}</span>
+                        <span className="shrink-0 text-brand-muted">{isRTL ? "رمز المنتج" : "SKU"}</span>
+                        <span className="text-right text-brand-primary">{product.sku}</span>
                       </div>
                     )}
                     {characteristicAttributes.length > 0 && (
                       characteristicAttributes.map((attr) => (
                         <div key={attr.id} className="flex justify-between gap-4">
-                          <span className="text-gray-500 shrink-0">{decodeHtmlEntities(attr.name)}</span>
-                          <span className="text-gray-900 text-right">{attr.terms?.map(t => decodeHtmlEntities(t.name)).join(", ")}</span>
+                          <span className="shrink-0 text-brand-muted">{decodeHtmlEntities(attr.name)}</span>
+                          <span className="text-right text-brand-primary">{attr.terms?.map(t => decodeHtmlEntities(t.name)).join(", ")}</span>
                         </div>
                       ))
                     )}
                     {productTags.length > 0 && (
-                      <div className="pt-3 mt-1 border-t border-gray-100">
-                        <span className="block mb-3 text-gray-500">{isRTL ? "الوسوم" : "Tags"}</span>
+                      <div className="mt-1 border-t border-brand-border/70 pt-3">
+                        <span className="mb-3 block text-brand-muted">{isRTL ? "الوسوم" : "Tags"}</span>
                         <div className="flex flex-wrap gap-2">
                           {productTags.map(t => (
                             <span
@@ -1622,6 +1623,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               </div>
             </div>
           )}
+          </div>
           </div>
         </aside>
       </div>

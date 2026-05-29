@@ -138,7 +138,7 @@ export function WCProductCard({
 
   const showAsVariable = hasVariations || isBundleProduct;
   const actionControlClassName =
-    "flex h-11 w-full items-center justify-center gap-2 rounded-full bg-black px-4 text-center !text-[11px] font-bold uppercase tracking-[0.14em] text-white shadow-[0_12px_24px_rgba(0,0,0,0.18)] transition-all duration-300 hover:bg-brand-primary disabled:opacity-50";
+    "flex h-11 w-full items-center justify-center gap-2 rounded-full bg-brand-primary px-4 text-center !text-[11px] font-bold uppercase text-white shadow-[0_12px_24px_rgba(0,0,0,0.18)] transition-all duration-300 hover:bg-brand-primary-dark disabled:opacity-50";
 
   const renderActionControl = (className?: string) => {
     if (showAsVariable) {
@@ -182,11 +182,11 @@ export function WCProductCard({
   return (
     <>
       <article className={cn("group flex h-full flex-col", className)}>
-        <div className="flex h-full flex-col overflow-hidden border-r border-b border-[#e7ded7] bg-transparent shadow-[0_4px_20px_rgba(74,22,51,0.06)]">
+        <div className="flex h-full flex-col overflow-hidden rounded-lg border border-brand-border/70 bg-brand-ivory shadow-[0_16px_34px_rgba(20,15,10,0.08)] transition-all duration-300 hover:-translate-y-1 hover:border-brand-gold/45 hover:shadow-[0_22px_48px_rgba(20,15,10,0.12)]">
           {/* Image */}
           <div className="relative">
             <Link href={productHref} className="block" aria-label={productName}>
-              <div className="relative aspect-[4/5] overflow-hidden bg-[#F8F5F0]">
+              <div className="relative aspect-[4/5] overflow-hidden bg-brand-beige">
                 {mainImage && !imageError ? (
                   <>
                     <Image
@@ -245,7 +245,7 @@ export function WCProductCard({
               <button
                 type="button"
                 onClick={() => setQuickViewOpen(true)}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-brand-primary shadow-md backdrop-blur-sm transition-all hover:bg-brand-primary hover:text-white hover:scale-110"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-brand-border/60 bg-brand-ivory/95 text-brand-primary shadow-md backdrop-blur-sm transition-all hover:scale-110 hover:bg-brand-primary hover:text-white"
                 aria-label={labels.quickView}
               >
                 <Search className="h-3.5 w-3.5" />
@@ -255,7 +255,7 @@ export function WCProductCard({
                 onClick={handleWishlistToggle}
                 disabled={isAddingToWishlist}
                 className={cn(
-                  "flex h-8 w-8 items-center justify-center rounded-full border border-brand-primary/10 bg-white/95 text-brand-primary shadow-md backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-brand-primary hover:text-white",
+                  "flex h-8 w-8 items-center justify-center rounded-full border border-brand-border/60 bg-brand-ivory/95 text-brand-primary shadow-md backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-brand-primary hover:text-white",
                   isWishlisted && "border-brand-primary bg-brand-primary text-white",
                   isAddingToWishlist && "opacity-50"
                 )}
@@ -270,7 +270,7 @@ export function WCProductCard({
               <Link
                 href={productHref}
                 className={cn(
-                  "absolute bottom-3 flex h-9 w-9 items-center justify-center rounded-full bg-white text-brand-primary shadow-lg opacity-0 transition-all duration-300 group-hover:opacity-100 hover:scale-110 hover:bg-brand-primary hover:text-white",
+                  "absolute bottom-3 flex h-9 w-9 items-center justify-center rounded-full border border-brand-border/60 bg-brand-ivory text-brand-primary shadow-lg opacity-0 transition-all duration-300 group-hover:opacity-100 hover:scale-110 hover:bg-brand-primary hover:text-white",
                   isRTL ? "left-3" : "right-3"
                 )}
                 aria-label={isBundleProduct ? labels.customize : labels.chooseOptions}
@@ -283,7 +283,7 @@ export function WCProductCard({
                 onClick={handleAddToCart}
                 disabled={!canPurchase || isAddingToCart}
                 className={cn(
-                  "absolute bottom-3 flex h-9 w-9 items-center justify-center rounded-full bg-white text-brand-primary shadow-lg opacity-0 transition-all duration-300 group-hover:opacity-100 hover:scale-110 hover:bg-brand-primary hover:text-white disabled:opacity-50",
+                  "absolute bottom-3 flex h-9 w-9 items-center justify-center rounded-full border border-brand-border/60 bg-brand-ivory text-brand-primary shadow-lg opacity-0 transition-all duration-300 group-hover:opacity-100 hover:scale-110 hover:bg-brand-primary hover:text-white disabled:opacity-50",
                   isRTL ? "left-3" : "right-3"
                 )}
                 aria-label={labels.addToCart}
@@ -295,18 +295,18 @@ export function WCProductCard({
           </div>
 
           {/* Info */}
-          <div className="relative flex min-h-20 flex-1 items-center justify-center overflow-hidden p-2 text-center">
-            <div className="flex w-full flex-col items-center">
+          <div className="relative flex min-h-28 flex-1 items-center justify-center overflow-hidden p-4 text-center">
+            <div className="flex w-full flex-col items-center gap-1">
             {/* Variation terms */}
             {hasVariations && visibleVariationTerms.length > 0 && (
               <div className="flex flex-wrap justify-center gap-1">
                 {visibleVariationTerms.map((term) => (
-                  <span key={term} className="max-w-20 truncate rounded-sm bg-brand-beige px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-brand-primary/60">
+                  <span key={term} className="max-w-20 truncate rounded-full bg-brand-beige px-2 py-0.5 text-[9px] font-semibold uppercase text-brand-primary/60">
                     {term}
                   </span>
                 ))}
                 {extraVariationCount > 0 && (
-                  <span className="rounded-sm bg-brand-primary px-1.5 py-0.5 text-[9px] font-semibold text-white">
+                  <span className="rounded-full bg-brand-primary px-2 py-0.5 text-[9px] font-semibold text-white">
                     +{extraVariationCount}
                   </span>
                 )}
@@ -315,7 +315,7 @@ export function WCProductCard({
 
             <Link href={productHref} className="block w-full">
               <h3 className={cn(
-                "text-[12px] font-bold leading-tight text-brand-primary-dark",
+                "text-[13px] font-semibold leading-snug text-brand-primary-dark",
                 productNameLines === 1 ? "line-clamp-1" : "line-clamp-2"
               )}>
                 {productName}

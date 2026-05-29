@@ -145,8 +145,8 @@ export function MobileBottomBar({ locale, settings, dictionary, menuItems, mobil
 
   return (
     <>
-      <nav className={`mobile-bottom-bar fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl border-t border-gray-100 bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.08)] xl:hidden transition-all duration-200 ${isKeyboardVisible || isGalleryFullscreenOpen ? "pointer-events-none translate-y-full opacity-0" : "translate-y-0 opacity-100"}`}>
-        <div className="flex items-center justify-around px-3 py-2 pb-safe">
+      <nav className={`mobile-bottom-bar fixed bottom-0 left-0 right-0 z-50 border-t border-[#f6eee4]/18 bg-[#1a1510]/94 shadow-[0_-12px_36px_rgba(0,0,0,0.35)] backdrop-blur-xl xl:hidden transition-all duration-200 ${isKeyboardVisible || isGalleryFullscreenOpen ? "pointer-events-none translate-y-full opacity-0" : "translate-y-0 opacity-100"}`}>
+        <div className="flex items-center justify-around px-2.5 py-2 pb-safe">
           {effectiveSettings.items.map((item, index) => {
             const IconComponent = iconMap[item.icon] || Home;
             // Override "Categories" label with "Menu" / "القائمة"
@@ -166,9 +166,9 @@ export function MobileBottomBar({ locale, settings, dictionary, menuItems, mobil
             const isDrawerItem = item.icon === "grid" || item.icon === "search" || item.icon === "user" || 
                                  item.url.includes("categories") || item.url.includes("account");
 
-            const activeClasses = isActive 
-              ? "text-brand-gold" 
-              : "text-gray-600";
+            const activeClasses = isActive
+              ? "bg-white/12 text-brand-gold shadow-[0_10px_25px_rgba(0,0,0,0.22)]"
+              : "text-[#f6eee4]/70 hover:bg-white/8 hover:text-[#f6eee4]";
 
             if (isDrawerItem) {
               return (
@@ -176,13 +176,13 @@ export function MobileBottomBar({ locale, settings, dictionary, menuItems, mobil
                   key={index}
                   type="button"
                   onClick={(e) => handleItemClick(item, e)}
-                  className={`relative flex flex-1 flex-col items-center justify-center gap-1 py-2 mx-1 transition-all hover:text-brand-gold active:scale-95 ${activeClasses}`}
+                  className={`relative mx-1 flex flex-1 flex-col items-center justify-center gap-1 rounded-xl py-2 transition-all active:scale-95 ${activeClasses}`}
                 >
                   <div className="relative">
                     <IconComponent className="h-5 w-5" />
                   </div>
                   {label && (
-                    <span className="text-[9px] font-medium leading-tight">{label}</span>
+                    <span className="text-[9px] font-semibold uppercase leading-tight tracking-[0.09em]">{label}</span>
                   )}
                 </button>
               );
@@ -192,18 +192,18 @@ export function MobileBottomBar({ locale, settings, dictionary, menuItems, mobil
               <Link
                 key={index}
                 href={href}
-                className={`relative flex flex-1 flex-col items-center justify-center gap-1 py-2 mx-1 transition-all hover:text-brand-gold active:scale-95 ${activeClasses}`}
+                className={`relative mx-1 flex flex-1 flex-col items-center justify-center gap-1 rounded-xl py-2 transition-all active:scale-95 ${activeClasses}`}
               >
                 <div className="relative">
                   <IconComponent className="h-5 w-5" />
                   {showBadge && (
-                    <span className="absolute -right-2 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-gold text-[10px] font-medium text-white">
+                    <span className="absolute -right-2 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-gold text-[10px] font-semibold text-[#1a1510]">
                       {wishlistItemsCount > 9 ? "9+" : wishlistItemsCount}
                     </span>
                   )}
                 </div>
                 {label && (
-                  <span className="text-[9px] font-medium leading-tight">{label}</span>
+                  <span className="text-[9px] font-semibold uppercase leading-tight tracking-[0.09em]">{label}</span>
                 )}
               </Link>
             );

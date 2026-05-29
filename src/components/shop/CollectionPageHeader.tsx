@@ -35,11 +35,11 @@ export function CollectionPageHeader({
 
   return (
     <section
-      className={cn("bg-[#f8f3ef] text-brand-primary", className)}
+      className={cn("section-band text-brand-primary", className)}
       dir={isRTL ? "rtl" : "ltr"}
     >
       {visibleCategories.length > 0 && (
-        <div className="mb-0 bg-[#f7f7f5] px-5 py-6 md:px-7 lg:px-12">
+        <div className="mb-0 border-b border-brand-border/70 bg-brand-beige/45 px-5 py-6 md:px-7 lg:px-12">
           <div className="md:hidden">
             <CategoriesCarousel categories={visibleCategories} locale={locale as Locale} />
           </div>
@@ -51,7 +51,7 @@ export function CollectionPageHeader({
               href={`/${locale}/category/${category.slug}`}
               className="group flex shrink-0 flex-col items-center gap-3 text-center"
             >
-              <span className="relative block h-[72px] w-[72px] overflow-hidden rounded-full bg-[#e6ddd6] ring-1 ring-[#e7ded7] transition-all duration-300 group-hover:ring-brand-primary/20 md:h-[78px] md:w-[78px]">
+              <span className="relative block h-[72px] w-[72px] overflow-hidden rounded-full bg-brand-beige ring-1 ring-brand-border transition-all duration-300 group-hover:ring-brand-primary/30 md:h-[78px] md:w-[78px]">
                 {category.image?.src ? (
                   <Image
                     src={category.image.src}
@@ -66,7 +66,7 @@ export function CollectionPageHeader({
                   </span>
                 )}
               </span>
-              <span className="max-w-[92px] text-[12px] font-normal leading-tight tracking-normal text-brand-primary">
+              <span className="max-w-[92px] text-[12px] font-semibold leading-tight text-brand-primary">
                 {decodeHtmlEntities(category.name)}
               </span>
               </Link>
@@ -83,21 +83,21 @@ export function CollectionPageHeader({
               alt={decodeHtmlEntities(title)}
               width={320}
               height={320}
-              className="h-[280px] w-[280px] rounded-full object-cover md:h-[320px] md:w-[320px]"
+              className="h-[280px] w-[280px] rounded-lg border border-brand-border/70 object-cover shadow-[0_18px_44px_rgba(20,15,10,0.1)] md:h-[320px] md:w-[320px]"
             />
           </div>
         )}
         <div className="flex-1">
-          <h1 className="text-[36px] font-normal leading-none tracking-normal md:text-[48px]">
+          <h1 className="font-title text-[38px] leading-none text-brand-primary md:text-[54px]">
             {decodeHtmlEntities(title)}
           </h1>
           {subtitle && (
-            <p className="mt-2 text-lg font-normal tracking-normal text-brand-primary/60">
+            <p className="mt-3 text-base font-semibold text-brand-gold md:text-lg">
               {subtitle}
             </p>
           )}
           {cleanDescription && (
-            <p className="mt-4 max-w-[620px] text-[15px] leading-6 tracking-normal text-brand-primary md:text-base">
+            <p className="mt-5 max-w-[660px] text-[15px] leading-7 text-brand-muted md:text-base">
               {cleanDescription}
             </p>
           )}

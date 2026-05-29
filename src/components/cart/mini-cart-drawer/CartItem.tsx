@@ -22,10 +22,10 @@ export function CartItem({
 }: CartItemProps) {
   return (
     <li 
-      className={`p-4 transition-all duration-500 ${isGiftItem ? "bg-gradient-to-r from-brand-beige to-orange-50" : ""} ${isNewlyAddedGift ? "animate-pulse ring-2 ring-brand-primary ring-inset" : ""}`}
+      className={`p-4 transition-all duration-500 ${isGiftItem ? "bg-brand-beige/70" : ""} ${isNewlyAddedGift ? "animate-pulse ring-2 ring-brand-primary ring-inset" : ""}`}
     >
       <div className="flex gap-4">
-        <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden bg-gray-100">
+        <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-md bg-brand-beige">
           {item.featured_image ? (
             <Image
               src={item.featured_image}
@@ -37,11 +37,11 @@ export function CartItem({
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center">
-              <ShoppingBag className="h-8 w-8 text-gray-400" />
+              <ShoppingBag className="h-8 w-8 text-brand-muted" />
             </div>
           )}
           {isGiftItem && (
-            <div className="absolute top-0 left-0 bg-gradient-to-r from-brand-primary to-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-br-lg flex items-center gap-0.5">
+            <div className="absolute left-0 top-0 flex items-center gap-0.5 rounded-br-lg bg-brand-primary px-1.5 py-0.5 text-[10px] font-bold text-white">
               <Gift className="h-3 w-3" />
               FREE
             </div>
@@ -51,11 +51,11 @@ export function CartItem({
         <div className="flex flex-1 flex-col">
           <div className="flex justify-between">
             <div className="min-w-0 flex-1">
-              <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
+              <h3 className="line-clamp-2 text-sm font-semibold text-brand-primary">
                 {decodeHtmlEntities(item.name)}
               </h3>
               {categoryName && (
-                <p className="font-medium uppercase tracking-wider text-brand-gold mt-0.5" style={{ fontSize: '9px' }}>
+                <p className="mt-0.5 font-semibold uppercase text-brand-gold" style={{ fontSize: '9px' }}>
                   {categoryName}
                 </p>
               )}
@@ -63,7 +63,7 @@ export function CartItem({
             {!isGiftItem && (
               <button
                 onClick={() => onRemove(item.item_key)}
-                className="text-gray-400 hover:text-red-500 transition-colors"
+                className="text-brand-muted transition-colors hover:text-red-500"
                 aria-label={dictionary.remove}
                 disabled={isLoading}
               >
@@ -78,7 +78,7 @@ export function CartItem({
               {locale === "ar" ? "هدية مجانية" : "Free Gift"}
             </p>
           ) : (
-            <p className="mt-1 text-sm font-medium text-gray-900 inline-flex items-center gap-1">
+            <p className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-brand-primary">
               <FormattedPrice
                 price={parseFloat(item.price) / divisor}
                 iconSize="xs"
@@ -97,14 +97,14 @@ export function CartItem({
                     item.quantity.value - 1
                   )
                 }
-                className="flex h-8 w-8 items-center justify-center rounded-full border hover:bg-brand-primary hover:text-white hover:border-brand-primary disabled:opacity-50 transition-colors"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-brand-border/70 bg-brand-ivory transition-colors hover:border-brand-primary hover:bg-brand-primary hover:text-white disabled:opacity-50"
                 disabled={isLoading || isUpdating || item.quantity.value <= 1}
               >
                 <Minus className="h-4 w-4" />
               </button>
               <span className="w-8 text-center text-sm font-medium relative">
                 {isUpdating ? (
-                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-brand-primary"></span>
+                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-brand-border border-t-brand-primary"></span>
                 ) : (
                   item.quantity.value
                 )}
@@ -116,7 +116,7 @@ export function CartItem({
                     item.quantity.value + 1
                   )
                 }
-                className="flex h-8 w-8 items-center justify-center rounded-full border hover:bg-brand-primary hover:text-white hover:border-brand-primary disabled:opacity-50 transition-colors"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-brand-border/70 bg-brand-ivory transition-colors hover:border-brand-primary hover:bg-brand-primary hover:text-white disabled:opacity-50"
                 disabled={isLoading || isUpdating}
               >
                 <Plus className="h-4 w-4" />

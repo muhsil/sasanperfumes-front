@@ -51,11 +51,11 @@ function CategoryCardSkeleton() {
 
 export function CategorySectionSkeleton({ count = 6 }: { count?: number }) {
   return (
-    <section className="bg-[#f8f3ef] pt-8 md:pt-10 lg:pt-12 pb-0">
+    <section className="bg-transparent pb-0 pt-10 md:pt-12 lg:pt-14">
       <div className="mb-8 px-5 md:px-7 lg:px-12 md:mb-10">
         <SectionHeaderSkeleton />
       </div>
-      <div className="grid grid-cols-2 gap-0 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-4 px-5 md:px-7 lg:px-12 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {Array.from({ length: count }).map((_, i) => (
           <CategoryCardSkeleton key={i} />
         ))}
@@ -117,14 +117,14 @@ export function CategorySection({
   };
 
   return (
-    <section className={`bg-[#f8f3ef] pt-8 md:pt-10 lg:pt-12 pb-0 ${className} ${getVisibilityClass()}`}>
+    <section className={`bg-transparent pb-0 pt-10 md:pt-12 lg:pt-14 ${className} ${getVisibilityClass()}`}>
       <div className="mb-6 flex items-end justify-between gap-4 px-5 md:px-7 lg:px-12 md:mb-8">
         <div className={`${isRTL ? "text-right" : "text-left"}`}>
-          <h2 className="font-normal text-2xl text-brand-primary md:text-3xl">
+          <h2 className="font-title text-3xl text-brand-primary md:text-4xl">
             {settings.section_title}
           </h2>
           {settings.section_subtitle && (
-            <p className="mt-2 max-w-2xl text-sm text-brand-primary/70 md:text-base">
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-brand-muted md:text-base">
               {settings.section_subtitle}
             </p>
           )}
@@ -135,14 +135,14 @@ export function CategorySection({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              className={`${navPrefix}-prev flex h-9 w-9 items-center justify-center border border-[#e7ded7] bg-white text-brand-primary transition-colors hover:bg-brand-primary hover:text-white md:h-10 md:w-10`}
+              className={`${navPrefix}-prev flex h-9 w-9 items-center justify-center rounded-full border border-brand-border/70 bg-brand-ivory text-brand-primary shadow-[0_8px_20px_rgba(20,15,10,0.1)] transition-colors hover:border-brand-primary/45 hover:bg-brand-primary hover:text-white md:h-10 md:w-10`}
               aria-label="Previous"
             >
               <ChevronLeft className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />
             </button>
             <button
               type="button"
-              className={`${navPrefix}-next flex h-9 w-9 items-center justify-center border border-[#e7ded7] bg-white text-brand-primary transition-colors hover:bg-brand-primary hover:text-white md:h-10 md:w-10`}
+              className={`${navPrefix}-next flex h-9 w-9 items-center justify-center rounded-full border border-brand-border/70 bg-brand-ivory text-brand-primary shadow-[0_8px_20px_rgba(20,15,10,0.1)] transition-colors hover:border-brand-primary/45 hover:bg-brand-primary hover:text-white md:h-10 md:w-10`}
               aria-label="Next"
             >
               <ChevronRight className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />
@@ -152,10 +152,10 @@ export function CategorySection({
       </div>
 
       {/* Swiper Slider */}
-      <div className="relative category-section-slider">
+      <div className="relative category-section-slider px-5 md:px-7 lg:px-12">
           <Swiper
             modules={[Navigation, Pagination]}
-            spaceBetween={0}
+            spaceBetween={16}
             slidesPerView={cols.mobile}
             navigation={{
               prevEl: `.${navPrefix}-prev`,
@@ -167,9 +167,9 @@ export function CategorySection({
               bulletActiveClass: "swiper-pagination-bullet-active swiper-bullet-brown-active",
             }}
             breakpoints={{
-              640:  { slidesPerView: cols.mobile,  spaceBetween: 0 },
-              768:  { slidesPerView: cols.tablet,  spaceBetween: 0 },
-              1024: { slidesPerView: cols.desktop, spaceBetween: 0 },
+              640:  { slidesPerView: cols.mobile,  spaceBetween: 16 },
+              768:  { slidesPerView: cols.tablet,  spaceBetween: 16 },
+              1024: { slidesPerView: cols.desktop, spaceBetween: 16 },
             }}
             loop={allItems.length > 5}
             className="!pb-12"
@@ -188,14 +188,14 @@ export function CategorySection({
                       href={`/${locale}/category/${categorySlugForUrl}`}
                       className="group flex flex-col"
                     >
-                      <div className="relative aspect-[3/4] overflow-hidden bg-white border border-[#e7ded7]">
+                      <div className="relative aspect-[3/4] overflow-hidden rounded-lg border border-brand-border/70 bg-brand-ivory shadow-[0_16px_34px_rgba(20,15,10,0.08)]">
                         {categoryImage?.src ? (
                           <Image
                             src={categoryImage.src}
                             alt={categoryImage.alt || decodeHtmlEntities(category.name)}
                             fill
                             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
-                            className="object-cover"
+                            className="object-cover transition-transform duration-500 group-hover:scale-105"
                             loading="lazy"
                             placeholder="blur"
                             blurDataURL={BLUR_DATA_URL}
@@ -207,7 +207,7 @@ export function CategorySection({
                         )}
                       </div>
                       <div className="mt-3">
-                        <h3 className="text-sm font-normal text-brand-primary lowercase">
+                        <h3 className="text-sm font-semibold text-brand-primary lowercase">
                           {decodeHtmlEntities(category.name)}
                         </h3>
                       </div>
@@ -220,14 +220,14 @@ export function CategorySection({
               return (
                 <SwiperSlide key={extra.id}>
                   <Link href={extra.href} className="group flex flex-col">
-                    <div className="relative aspect-[3/4] overflow-hidden bg-white border border-[#e7ded7]">
+                    <div className="relative aspect-[3/4] overflow-hidden rounded-lg border border-brand-border/70 bg-brand-ivory shadow-[0_16px_34px_rgba(20,15,10,0.08)]">
                       {extra.image ? (
                         <Image
                           src={extra.image}
                           alt={extra.name[locale]}
                           fill
                           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
-                          className="object-cover"
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
                           loading="lazy"
                           placeholder="blur"
                           blurDataURL={BLUR_DATA_URL}
@@ -239,7 +239,7 @@ export function CategorySection({
                       )}
                     </div>
                     <div className="mt-3">
-                      <h3 className="text-sm font-normal text-brand-primary lowercase">
+                        <h3 className="text-sm font-semibold text-brand-primary lowercase">
                         {extra.name[locale]}
                       </h3>
                     </div>

@@ -196,18 +196,18 @@ export default function CartPage() {
   };
 
   return (
-    <div className="min-h-screen pb-32 md:pb-8" style={{ backgroundColor: 'var(--color-beige)' }}>
+    <div className="min-h-screen bg-transparent pb-32 md:pb-8">
       <div className="container mx-auto px-5 md:px-7 lg:px-12 py-3">
         <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} contained={false} />
 
         {/* Login Status Indicator */}
         {!isEmpty && (
-          <div className="mb-6 flex items-center gap-3 border border-gray-100 bg-white p-4">
+          <div className="luxury-panel mb-6 flex items-center gap-3 p-4">
             {isAuthenticated ? (
               <>
                 <UserCheck className="h-5 w-5 text-green-600" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-800">
+                  <p className="text-sm font-medium text-brand-primary">
                     {texts.loggedInAs} <span className="font-semibold">{user?.user_email}</span>
                   </p>
                 </div>
@@ -216,8 +216,8 @@ export default function CartPage() {
               <>
                 <User className="h-5 w-5 text-brand-gold" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-800">{texts.guestCheckout}</p>
-                  <Link href={`/${locale}/login`} className="text-sm text-gray-600 underline hover:text-gray-900">
+                  <p className="text-sm font-medium text-brand-primary">{texts.guestCheckout}</p>
+                  <Link href={`/${locale}/login`} className="text-sm text-brand-muted underline hover:text-brand-primary">
                     {texts.loginForBenefits}
                   </Link>
                 </div>
@@ -226,22 +226,22 @@ export default function CartPage() {
           </div>
         )}
 
-        <h1 className="mb-5 text-xl md:text-3xl font-bold text-gray-900">
+        <h1 className="mb-5 font-title text-4xl text-brand-primary md:text-5xl">
           {texts.cart}
         </h1>
 
       {isInitialCartLoading ? (
         <div className="py-16 text-center">
-          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-gray-200 border-t-brand-primary" />
-          <p className="text-gray-600">Loading your cart...</p>
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-brand-border border-t-brand-primary" />
+          <p className="text-brand-muted">Loading your cart...</p>
         </div>
       ) : isEmpty ? (
         <div className="py-16 text-center">
-          <ShoppingBag className="mx-auto mb-4 h-16 w-16 text-gray-300" />
-          <h2 className="mb-2 text-xl font-semibold text-gray-900">
+          <ShoppingBag className="mx-auto mb-4 h-16 w-16 text-brand-muted/45" />
+          <h2 className="mb-2 font-title text-3xl text-brand-primary">
             {texts.emptyCart}
           </h2>
-          <p className="mb-8 text-gray-600">{texts.emptyCartDesc}</p>
+          <p className="mb-8 text-brand-muted">{texts.emptyCartDesc}</p>
           <Button asChild>
             <Link href={`/${locale}/shop`}>{texts.continueShopping}</Link>
           </Button>
@@ -249,12 +249,12 @@ export default function CartPage() {
       ) : (
         <>
         {/* Free Gift Progress & Messages Section - At Top */}
-        <div className="mb-6 bg-gradient-to-r from-brand-beige to-orange-50 border border-brand-primary overflow-hidden">
+        <div className="luxury-panel mb-6 overflow-hidden">
           {/* Gift Progress - Show how much more to spend */}
           {giftProgress.hasNextGift && (
-            <div className="p-4 border-b border-brand-primary bg-white/50">
+            <div className="border-b border-brand-border/70 bg-brand-beige/55 p-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-brand-primary to-orange-400 flex-shrink-0">
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-brand-primary">
                   <Gift className="h-5 w-5 text-white" />
                 </div>
                 <div className="flex-1">
@@ -288,7 +288,7 @@ export default function CartPage() {
           {activeGifts.length > 0 && (
             <div className="p-4">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-brand-primary to-orange-500 flex-shrink-0">
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-brand-primary">
                   <Gift className="h-5 w-5 text-white" />
                 </div>
                 <div className="flex-1">
@@ -297,7 +297,7 @@ export default function CartPage() {
                   </h3>
                   <div className="space-y-2">
                     {activeGifts.map((gift, index) => (
-                      <div key={index} className="flex items-center gap-2 bg-white/60 px-3 py-2">
+                      <div key={index} className="flex items-center gap-2 rounded-lg border border-brand-border/60 bg-brand-ivory/75 px-3 py-2">
                         <div className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-beige">
                           <Gift className="h-3 w-3 text-brand-gold" />
                         </div>
@@ -326,7 +326,7 @@ export default function CartPage() {
           {activeGifts.length === 0 && hasGiftItemsInCart && (
             <div className="p-4">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-brand-primary to-orange-500 flex-shrink-0">
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-brand-primary">
                   <Gift className="h-5 w-5 text-white" />
                 </div>
                 <div className="flex-1">
@@ -351,27 +351,27 @@ export default function CartPage() {
 
         <div className="grid gap-3 lg:grid-cols-3 lg:items-start lg:gap-3">
           <div className="lg:col-span-2">
-            <div className="bg-white border border-gray-100">
-              <div className="hidden border-b p-4 md:grid md:grid-cols-12 md:gap-4">
-                <div className="col-span-6 text-sm font-medium text-gray-500">
+            <div className="luxury-panel overflow-hidden">
+              <div className="hidden border-b border-brand-border/70 bg-brand-beige/45 p-4 md:grid md:grid-cols-12 md:gap-4">
+                <div className="col-span-6 text-sm font-semibold text-brand-muted">
                   {texts.product}
                 </div>
-                <div className="col-span-2 text-center text-sm font-medium text-gray-500">
+                <div className="col-span-2 text-center text-sm font-semibold text-brand-muted">
                   {texts.price}
                 </div>
-                <div className="col-span-2 text-center text-sm font-medium text-gray-500">
+                <div className="col-span-2 text-center text-sm font-semibold text-brand-muted">
                   {texts.quantity}
                 </div>
-                <div className="col-span-2 text-center text-sm font-medium text-gray-500">
+                <div className="col-span-2 text-center text-sm font-semibold text-brand-muted">
                   {texts.total}
                 </div>
               </div>
 
-                            <ul className="divide-y">
+                            <ul className="divide-y divide-brand-border/60">
                               {cartItems.map((item) => {
                                 const isGiftItem = isFreeGiftItem(item.item_key);
                                 return (
-                                <li key={item.item_key} className={`p-4 ${isGiftItem ? "bg-gradient-to-r from-brand-beige to-orange-50" : ""}`}>
+                                <li key={item.item_key} className={`p-4 ${isGiftItem ? "bg-brand-beige/70" : ""}`}>
                                   <div className="grid items-center gap-4 md:grid-cols-12">
                                     <div className="flex gap-4 md:col-span-6">
                                       <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden bg-gray-100">
@@ -386,7 +386,7 @@ export default function CartPage() {
                                           />
                                         ) : (
                                           <div className="flex h-full w-full items-center justify-center">
-                                            <ShoppingBag className="h-8 w-8 text-gray-400" />
+                                            <ShoppingBag className="h-8 w-8 text-brand-muted" />
                                           </div>
                                         )}
                                         {isGiftItem && (
@@ -569,16 +569,16 @@ export default function CartPage() {
           </div>
 
           <div className="lg:col-span-1 lg:sticky lg:top-24 lg:self-start">
-            <div className="border border-gray-100 bg-white p-6">
-              <h2 className="mb-4 text-lg font-semibold text-gray-900">
+            <div className="luxury-panel p-6">
+              <h2 className="mb-4 font-title text-2xl text-brand-primary">
                 {texts.orderSummary}
               </h2>
 
               {/* Coupon Code Section */}
               {featureFlags.enableCoupons && (
-              <div className="border-b border-gray-100 pb-4 mb-4">
+              <div className="mb-4 border-b border-brand-border/70 pb-4">
                 <div className="mb-3">
-                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+                  <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-brand-primary">
                     <Tag className="h-4 w-4" />
                     {texts.couponCode}
                   </label>
@@ -641,8 +641,8 @@ export default function CartPage() {
               </div>
               )}
 
-              <div className="space-y-3 border-b border-gray-100 pb-4">
-                <div className="flex justify-between text-gray-600">
+              <div className="space-y-3 border-b border-brand-border/70 pb-4">
+                <div className="flex justify-between text-brand-muted">
                   <span>{texts.subtotal}</span>
                   <FormattedPrice
                     price={parseFloat(cartSubtotal) / divisor}
@@ -660,7 +660,7 @@ export default function CartPage() {
                       </span>
                     </div>
                   )}
-                              <div className="flex justify-between text-gray-600">
+                              <div className="flex justify-between text-brand-muted">
                                 <span>{texts.shipping}</span>
                                 <span>
                                   {cart?.totals?.shipping_total &&
@@ -674,7 +674,7 @@ export default function CartPage() {
                               </div>
                               {/* Customs Fees */}
                               {cart?.fees && cart.fees.length > 0 && cart.fees.map((fee, index) => (
-                                <div key={index} className="flex justify-between text-gray-600">
+                                <div key={index} className="flex justify-between text-brand-muted">
                                   <span>{isRTL ? "رسوم جمركية" : fee.name}</span>
                                   <FormattedPrice
                                     price={parseFloat(fee.fee) / divisor}
@@ -684,7 +684,7 @@ export default function CartPage() {
                               ))}
                             </div>
 
-                            <div className="flex justify-between py-4 text-lg font-semibold text-gray-900">
+                            <div className="flex justify-between py-4 text-lg font-semibold text-brand-primary">
                 <span>{texts.orderTotal}</span>
                 <FormattedPrice
                   price={parseFloat(cartTotal) / divisor}
@@ -698,7 +698,7 @@ export default function CartPage() {
                 divisor={divisor}
               />
 
-              <p className="text-xs text-gray-500 text-center mb-3">
+              <p className="mb-3 text-center text-xs text-brand-muted">
                 {isRTL ? "جميع الأسعار شاملة ضريبة القيمة المضافة" : "All prices are inclusive of VAT"}
               </p>
 
@@ -708,7 +708,7 @@ export default function CartPage() {
 
               <Link
                 href={`/${locale}/shop`}
-                className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-600 hover:text-gray-900"
+                className="mt-4 flex items-center justify-center gap-2 text-sm text-brand-muted hover:text-brand-primary"
               >
                 <ArrowLeft className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />
                 {texts.backToShop}
@@ -716,7 +716,7 @@ export default function CartPage() {
 
               {/* WhatsApp Help */}
               <div className="mt-6 border border-green-200 bg-green-50 p-4 text-center">
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-brand-primary">
                   {isRTL ? "هل تحتاج مساعدة في طلبك؟" : "Need help with your order?"}
                 </p>
                 <a
@@ -749,13 +749,13 @@ export default function CartPage() {
 
       {/* Mobile Sticky Order Summary - positioned above bottom nav bar */}
       {!isEmpty && (
-        <div className="fixed bottom-16 left-0 right-0 z-40 border-t border-gray-100 bg-white px-4 py-3 lg:hidden" style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="fixed bottom-16 left-0 right-0 z-40 border-t border-brand-border/70 bg-brand-ivory/95 px-4 py-3 shadow-[0_-14px_34px_rgba(20,15,10,0.12)] backdrop-blur-xl lg:hidden" style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}>
           <div className="flex items-center justify-between gap-4">
             <div className="flex flex-col">
-              <span className="text-xs text-gray-500">{texts.orderTotal}</span>
+              <span className="text-xs text-brand-muted">{texts.orderTotal}</span>
               <FormattedPrice
                 price={parseFloat(cartTotal) / divisor}
-                className="text-lg font-bold text-gray-900"
+                className="text-lg font-bold text-brand-primary"
                 iconSize="sm"
               />
             </div>

@@ -37,27 +37,27 @@ export function RelatedProducts({
   }
 
   return (
-    <section className="mt-16 border-t border-brand-primary/15 pt-12">
+    <section className="mt-16 border-t border-brand-border/70 pt-12">
       <div className="mb-8 flex items-center justify-between px-5 md:px-7 lg:px-12">
         <div>
-          <h2 className="text-2xl font-bold text-brand-primary">
+          <h2 className="font-title text-3xl text-brand-primary">
             {title || (isRTL ? "منتجات ذات صلة" : "Related Products")}
           </h2>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-brand-muted">
             {subtitle || (isRTL ? "قد يعجبك أيضاً" : "You may also like")}
           </p>
         </div>
         <div className="flex gap-2">
           <button
             type="button"
-            className="related-slider-prev border border-brand-border/40 bg-white p-2 text-brand-primary transition-all hover:border-brand-border/60 hover:bg-brand-primary hover:text-white disabled:opacity-40 disabled:cursor-not-allowed"
+            className="related-slider-prev rounded-full border border-brand-border/70 bg-brand-ivory p-2 text-brand-primary shadow-[0_8px_20px_rgba(20,15,10,0.1)] transition-all hover:border-brand-primary/45 hover:bg-brand-primary hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
             aria-label={isRTL ? "التالي" : "Previous"}
           >
             {isRTL ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </button>
           <button
             type="button"
-            className="related-slider-next border border-brand-border/40 bg-white p-2 text-brand-primary transition-all hover:border-brand-border/60 hover:bg-brand-primary hover:text-white disabled:opacity-40 disabled:cursor-not-allowed"
+            className="related-slider-next rounded-full border border-brand-border/70 bg-brand-ivory p-2 text-brand-primary shadow-[0_8px_20px_rgba(20,15,10,0.1)] transition-all hover:border-brand-primary/45 hover:bg-brand-primary hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
             aria-label={isRTL ? "السابق" : "Next"}
           >
             {isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
@@ -65,10 +65,10 @@ export function RelatedProducts({
         </div>
       </div>
 
-      <div className="relative overflow-hidden border-t border-l border-[#e7ded7]">
+      <div className="relative overflow-hidden px-5 md:px-7 lg:px-12">
         <Swiper
           modules={[Navigation, FreeMode]}
-          spaceBetween={0}
+          spaceBetween={16}
           slidesPerView={1.5}
           freeMode={{
             enabled: true,
@@ -83,19 +83,19 @@ export function RelatedProducts({
           breakpoints={{
             480: {
               slidesPerView: 2,
-              spaceBetween: 0,
+              spaceBetween: 16,
             },
             640: {
               slidesPerView: 2.5,
-              spaceBetween: 0,
+              spaceBetween: 16,
             },
             768: {
               slidesPerView: 3,
-              spaceBetween: 0,
+              spaceBetween: 16,
             },
             1024: {
               slidesPerView: 4,
-              spaceBetween: 0,
+              spaceBetween: 16,
             },
           }}
           className="related-products-slider"

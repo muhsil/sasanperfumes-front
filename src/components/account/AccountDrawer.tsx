@@ -143,17 +143,17 @@ export function AccountDrawer({
 
   const renderAuthenticatedContent = () => (
     <>
-      <div className="border-b p-6">
+      <div className="border-b border-brand-border/70 bg-brand-beige/45 p-6">
         <div className="flex items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-gray-100 to-gray-200">
-            <User className="h-8 w-8 text-gray-600" />
+          <div className="flex h-16 w-16 items-center justify-center rounded-full border border-brand-border/70 bg-brand-ivory shadow-[0_12px_28px_rgba(20,15,10,0.08)]">
+            <User className="h-8 w-8 text-brand-primary" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-gray-500">{dictionary.welcome}</p>
-            <p className="text-lg font-semibold text-gray-900 truncate">
+            <p className="text-sm text-brand-muted">{dictionary.welcome}</p>
+            <p className="truncate font-title text-xl text-brand-primary">
               {user?.user_display_name}
             </p>
-            <p className="text-sm text-gray-500 truncate">{user?.user_email}</p>
+            <p className="truncate text-sm text-brand-muted">{user?.user_email}</p>
           </div>
         </div>
       </div>
@@ -165,7 +165,7 @@ export function AccountDrawer({
               <Link
                 href={item.href}
                 onClick={onClose}
-                className="flex items-center gap-3 rounded-lg px-4 py-3 text-gray-700 transition-all hover:bg-gray-100 hover:text-gray-900 active:scale-[0.98]"
+                className="flex items-center gap-3 rounded-full px-4 py-3 text-brand-primary transition-all hover:bg-brand-beige active:scale-[0.98]"
               >
                 <item.icon className="h-5 w-5 flex-shrink-0" />
                 <span className="font-medium">{item.label}</span>
@@ -175,18 +175,18 @@ export function AccountDrawer({
         </ul>
       </nav>
 
-      <div className="border-t p-4 space-y-2">
+      <div className="space-y-2 border-t border-brand-border/70 p-4">
         <Link
           href={`/${locale}/account`}
           onClick={onClose}
-          className="flex w-full items-center justify-between rounded-lg px-4 py-3 text-gray-700 transition-all hover:bg-gray-100 hover:text-gray-900 active:scale-[0.98]"
+          className="flex w-full items-center justify-between rounded-full px-4 py-3 text-brand-primary transition-all hover:bg-brand-beige active:scale-[0.98]"
         >
           <span className="font-medium">{dictionary.more || "More"}</span>
           <ChevronRight className={`h-5 w-5 flex-shrink-0 ${isRTL ? "rotate-180" : ""}`} />
         </Link>
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-red-600 transition-all hover:bg-red-50 active:scale-[0.98]"
+          className="flex w-full items-center gap-3 rounded-full px-4 py-3 text-red-600 transition-all hover:bg-red-50 active:scale-[0.98]"
         >
           <LogOut className="h-5 w-5 flex-shrink-0" />
           <span className="font-medium">{dictionary.logout}</span>
@@ -197,13 +197,13 @@ export function AccountDrawer({
 
   const renderGuestContent = () => (
     <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
-      <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-gray-100 to-gray-200">
-        <User className="h-12 w-12 text-gray-400" />
+      <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full border border-brand-border/70 bg-brand-beige shadow-[0_12px_28px_rgba(20,15,10,0.08)]">
+        <User className="h-12 w-12 text-brand-primary" />
       </div>
-      <h3 className="mb-2 text-lg font-semibold text-gray-900">
+      <h3 className="mb-2 font-title text-2xl text-brand-primary">
         {dictionary.myAccount}
       </h3>
-      <p className="mb-8 text-gray-500">{dictionary.notLoggedIn}</p>
+      <p className="mb-8 text-brand-muted">{dictionary.notLoggedIn}</p>
       <div className="flex w-full flex-col gap-3">
         <Button asChild variant="primary" size="lg" className="w-full">
           <Link href={`/${locale}/login`} onClick={onClose}>
@@ -221,21 +221,21 @@ export function AccountDrawer({
 
 
   const renderSettingsSection = () => (
-    <div className="border-t border-gray-200">
+    <div className="border-t border-brand-border/70 bg-brand-beige/30">
       {/* Language Switcher Row */}
       <Link
         href={alternateHref}
         onClick={onClose}
-        className="flex items-center justify-between px-5 py-4 border-b border-gray-100 hover:bg-gray-50 transition-colors"
+        className="flex items-center justify-between border-b border-brand-border/60 px-5 py-4 transition-colors hover:bg-brand-beige"
         hrefLang={localeConfig[alternateLocale].hrefLang}
       >
         <div className="flex items-center gap-3">
-          <Globe className="h-5 w-5 text-gray-400" />
-          <span className="text-sm font-medium text-gray-700">
+          <Globe className="h-5 w-5 text-brand-muted" />
+          <span className="text-sm font-semibold text-brand-primary">
             {locale === "en" ? "Language" : "اللغة"}
           </span>
         </div>
-        <span className="rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-600">
+        <span className="rounded-full border border-brand-border/70 bg-brand-ivory px-3 py-1.5 text-sm font-semibold text-brand-primary">
           {localeConfig[alternateLocale].name}
         </span>
       </Link>
@@ -245,26 +245,26 @@ export function AccountDrawer({
         <button
           type="button"
           onClick={() => setIsCurrencyDropdownOpen(!isCurrencyDropdownOpen)}
-          className="flex w-full items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors"
+          className="flex w-full items-center justify-between px-5 py-4 transition-colors hover:bg-brand-beige"
         >
           <div className="flex items-center gap-3">
-            <Coins className="h-5 w-5 text-gray-400" />
-            <span className="text-sm font-medium text-gray-700">
+            <Coins className="h-5 w-5 text-brand-muted" />
+            <span className="text-sm font-semibold text-brand-primary">
               {locale === "en" ? "Currency" : "العملة"}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-600">
+            <span className="rounded-full border border-brand-border/70 bg-brand-ivory px-3 py-1.5 text-sm font-semibold text-brand-primary">
               {currentCurrency?.symbol} {currentCurrency?.code}
             </span>
-            <ChevronDown className={cn("h-4 w-4 text-gray-400 transition-transform", isCurrencyDropdownOpen && "rotate-180")} />
+            <ChevronDown className={cn("h-4 w-4 text-brand-muted transition-transform", isCurrencyDropdownOpen && "rotate-180")} />
           </div>
         </button>
 
         {isCurrencyDropdownOpen && (
-          <div className="border-t border-gray-100 bg-white">
-            <div className="px-5 py-3 border-b border-gray-100">
-              <p className="text-xs font-medium uppercase tracking-wider text-gray-400">
+          <div className="border-t border-brand-border/60 bg-brand-ivory">
+            <div className="border-b border-brand-border/60 px-5 py-3">
+              <p className="text-xs font-semibold uppercase text-brand-muted">
                 {locale === "en" ? "Select Currency" : "اختر العملة"}
               </p>
             </div>
@@ -275,8 +275,8 @@ export function AccountDrawer({
                     type="button"
                     onClick={() => handleCurrencyChange(curr.code as Currency)}
                     className={cn(
-                      "flex w-full items-center gap-3 px-5 py-3 text-sm transition-colors hover:bg-gray-50",
-                      currency === curr.code && "bg-gray-50"
+                      "flex w-full items-center gap-3 px-5 py-3 text-sm transition-colors hover:bg-brand-beige",
+                      currency === curr.code && "bg-brand-beige"
                     )}
                     role="option"
                     aria-selected={currency === curr.code}
@@ -285,7 +285,7 @@ export function AccountDrawer({
                       "flex h-8 w-8 items-center justify-center rounded-full overflow-hidden border",
                       currency === curr.code 
                         ? "border-brand-primary ring-2 ring-brand-primary" 
-                        : "border-gray-200"
+                        : "border-brand-border/70"
                     )}>
                       <Image
                         src={`https://flagcdn.com/w40/${currencyCountryCodes[curr.code] || "un"}.png`}
@@ -299,11 +299,11 @@ export function AccountDrawer({
                     <div className="flex flex-1 flex-col items-start">
                       <span className={cn(
                         "font-medium",
-                        currency === curr.code ? "text-brand-primary" : "text-gray-900"
+                        currency === curr.code ? "text-brand-primary" : "text-brand-primary"
                       )}>
                         {curr.code}
                       </span>
-                      <span className="text-xs text-gray-500">{curr.label.replace(` (${curr.code})`, "")}</span>
+                      <span className="text-xs text-brand-muted">{curr.label.replace(` (${curr.code})`, "")}</span>
                     </div>
                     {currency === curr.code && (
                       <Check className="h-4 w-4 text-brand-primary" />
@@ -327,6 +327,10 @@ export function AccountDrawer({
         sx: {
           width: { xs: "100%", sm: 320 },
           maxWidth: "100%",
+          backgroundColor: "var(--color-ivory)",
+          color: "var(--color-primary)",
+          borderLeft: isRTL ? "none" : "1px solid var(--color-border)",
+          borderRight: isRTL ? "1px solid var(--color-border)" : "none",
         },
       }}
     >
@@ -344,7 +348,8 @@ export function AccountDrawer({
             alignItems: "center",
             justifyContent: "space-between",
             borderBottom: "1px solid",
-            borderColor: "divider",
+            borderColor: "var(--color-border)",
+            backgroundColor: "color-mix(in srgb, var(--color-beige) 55%, white 45%)",
             px: 2,
             py: 2,
           }}

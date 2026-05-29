@@ -57,7 +57,7 @@ export function NewsletterForm({ locale, dictionary }: NewsletterFormProps) {
 
   if (isSubmitted) {
     return (
-      <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">
+      <div className="rounded-2xl border border-emerald-200 bg-emerald-50/95 p-3 text-sm text-emerald-700">
         {isRTL
           ? "شكراً لاشتراكك في نشرتنا الإخبارية!"
           : "Thank you for subscribing to our newsletter!"}
@@ -78,12 +78,12 @@ export function NewsletterForm({ locale, dictionary }: NewsletterFormProps) {
           }}
           placeholder={dictionary.emailPlaceholder}
           required
-          className="flex-1 border border-white/30 px-3 py-2.5 text-sm bg-white/5 text-white placeholder:text-white/50 focus:border-white focus:outline-none focus:ring-1 focus:ring-white/50"
+          className="flex-1 rounded-full border border-white/25 bg-white/8 px-4 py-2.5 text-sm text-white placeholder:text-white/55 focus:border-[#b98a49] focus:outline-none focus:ring-1 focus:ring-[#b98a49]/60"
         />
         <button
           type="submit"
           disabled={isSubmitting}
-          className="bg-white px-4 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-full bg-[#b98a49] px-5 py-2.5 text-sm font-semibold text-[#1a1613] transition-colors hover:bg-[#c79956] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isSubmitting
             ? isRTL
@@ -93,7 +93,7 @@ export function NewsletterForm({ locale, dictionary }: NewsletterFormProps) {
         </button>
       </div>
       {error && (
-        <div className="rounded-md bg-red-50 p-2 text-sm text-red-600">
+        <div className="rounded-xl border border-red-300/65 bg-red-50 p-2 text-sm text-red-600">
           {error}
         </div>
       )}

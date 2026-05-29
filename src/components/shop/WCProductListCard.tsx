@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ShoppingBag, Heart, Eye, Star } from "lucide-react";
-import { Button } from "@/components/common/Button";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { ProductBadges } from "@/components/shop/ProductBadges";
 import { cn, decodeHtmlEntities, getProductSlugFromPermalink } from "@/lib/utils";
@@ -98,10 +97,10 @@ export function WCProductListCard({
     <article className={cn("group relative", className)}>
       <Link
         href={`/${locale}/product/${productSlug}`}
-        className="flex gap-4 border border-brand-border/30 bg-transparent p-4 md:gap-6 md:p-6"
+        className="flex gap-4 rounded-lg border border-brand-border/70 bg-brand-ivory p-4 shadow-[0_16px_34px_rgba(20,15,10,0.08)] transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-gold/45 hover:shadow-[0_22px_48px_rgba(20,15,10,0.12)] md:gap-6 md:p-6"
       >
         {/* Product Image */}
-        <div className="relative h-40 w-32 flex-shrink-0 overflow-hidden bg-[#f8f5f0] md:h-52 md:w-40">
+        <div className="relative h-40 w-32 flex-shrink-0 overflow-hidden rounded-md bg-brand-beige md:h-52 md:w-40">
           {mainImage ? (
             <Image
               src={mainImage.src}
@@ -135,13 +134,13 @@ export function WCProductListCard({
           <div>
             {/* Category */}
             {product.categories?.[0] && (
-              <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-primary/70">
+              <p className="mb-1 text-[10px] font-semibold uppercase text-brand-gold">
                 {decodeHtmlEntities(product.categories[0].name)}
               </p>
             )}
 
             {/* Name */}
-            <h3 className="mb-2 text-sm font-medium uppercase tracking-[0.08em] text-brand-primary md:text-base">
+            <h3 className="mb-2 text-sm font-semibold uppercase text-brand-primary md:text-base">
               {decodeHtmlEntities(product.name)}
             </h3>
 
@@ -199,7 +198,7 @@ export function WCProductListCard({
             {isBundleProduct ? (
               <Link
                 href={`/${locale}/product/${productSlug}`}
-                className="inline-flex items-center gap-2 border border-brand-border/40 bg-white px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-brand-primary transition-all hover:border-brand-border/60 hover:bg-gray-900 hover:text-white"
+                className="inline-flex items-center gap-2 rounded-full border border-brand-border/70 bg-brand-ivory px-4 py-2 text-xs font-semibold uppercase text-brand-primary transition-all hover:border-brand-primary/45 hover:bg-brand-primary hover:text-white"
               >
                 <Eye className="h-3.5 w-3.5" />
                 {isRTL ? "تخصيص" : "Customize"}
@@ -208,7 +207,7 @@ export function WCProductListCard({
               <button
                 onClick={handleAddToCart}
                 disabled={isAddingToCart}
-                className="inline-flex items-center gap-2 border border-brand-border/40 bg-white px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-brand-primary transition-all disabled:opacity-50 hover:border-brand-border/60 hover:bg-gray-900 hover:text-white"
+                className="inline-flex items-center gap-2 rounded-full border border-brand-border/70 bg-brand-ivory px-4 py-2 text-xs font-semibold uppercase text-brand-primary transition-all disabled:opacity-50 hover:border-brand-primary/45 hover:bg-brand-primary hover:text-white"
               >
                 <ShoppingBag className={cn("h-3.5 w-3.5", isAddingToCart && "animate-pulse")} />
                 {isRTL ? "أضف للسلة" : "Add to Cart"}
@@ -219,7 +218,7 @@ export function WCProductListCard({
               onClick={handleWishlistToggle}
               disabled={isAddingToWishlist}
               className={cn(
-                "inline-flex items-center justify-center border bg-white p-2 transition-all hover:bg-gray-900 hover:text-white",
+                "inline-flex items-center justify-center rounded-full border bg-brand-ivory p-2 transition-all hover:bg-brand-primary hover:text-white",
                 isWishlisted
                   ? "border-brand-primary bg-brand-primary text-white"
                   : "border-brand-border/40 text-brand-primary hover:border-brand-border/60",

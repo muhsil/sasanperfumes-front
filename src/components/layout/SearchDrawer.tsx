@@ -141,10 +141,13 @@ export function SearchDrawer({
       onClose={handleClose}
       PaperProps={{
         sx: {
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
+          borderTopLeftRadius: 8,
+          borderTopRightRadius: 8,
           width: "100%",
           maxHeight: "85vh",
+          backgroundColor: "var(--color-ivory)",
+          color: "var(--color-primary)",
+          borderTop: "1px solid var(--color-border)",
         },
       }}
     >
@@ -157,7 +160,7 @@ export function SearchDrawer({
         dir={isRTL ? "rtl" : "ltr"}
       >
         <div className="flex justify-center pt-3 pb-1">
-          <div className="h-1 w-10 rounded-full bg-gray-300" />
+          <div className="h-1 w-10 rounded-full bg-brand-border" />
         </div>
 
         <Box
@@ -166,7 +169,7 @@ export function SearchDrawer({
             alignItems: "center",
             justifyContent: "space-between",
             borderBottom: "1px solid",
-            borderColor: "divider",
+            borderColor: "var(--color-border)",
             px: 2,
             py: 1.5,
           }}
@@ -194,12 +197,12 @@ export function SearchDrawer({
                 value={query}
                 onChange={handleInputChange}
                 placeholder={dictionary.common.searchPlaceholder || "Search products..."}
-                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 pl-12 text-base outline-none transition-all focus:border-black focus:ring-1 focus:ring-black"
+                className="w-full rounded-full border border-brand-border/80 bg-brand-beige/70 px-5 py-3 pl-12 text-base text-brand-primary outline-none transition-all placeholder:text-brand-muted focus:border-brand-primary/55 focus:ring-2 focus:ring-brand-gold/15"
                 autoFocus
               />
-              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-brand-muted" />
               {loading && (
-                <Loader2 className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-gray-400" />
+                <Loader2 className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-brand-muted" />
               )}
             </div>
           </form>
@@ -208,12 +211,12 @@ export function SearchDrawer({
         <Box sx={{ flex: 1, overflow: "auto", px: 2, pb: 2 }}>
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-black" />
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-border border-t-brand-primary" />
             </div>
           ) : hasSearched && results.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
-              <Search className="mb-4 h-12 w-12 text-gray-300" />
-              <p className="text-gray-500">{dictionary.common.noResults || "No products found"}</p>
+              <Search className="mb-4 h-12 w-12 text-brand-muted/45" />
+              <p className="text-brand-muted">{dictionary.common.noResults || "No products found"}</p>
             </div>
           ) : results.length > 0 ? (
             <div className="space-y-2">
@@ -224,10 +227,10 @@ export function SearchDrawer({
                     key={product.id}
                     href={`/${locale}/product/${productSlug}`}
                     onClick={handleClose}
-                    className="flex items-center gap-3 rounded-lg p-3 transition-all hover:bg-gray-100 active:scale-[0.98]"
+                    className="flex items-center gap-3 rounded-lg border border-transparent p-3 transition-all hover:border-brand-border/60 hover:bg-brand-beige active:scale-[0.98]"
                   >
                     {product.images[0] ? (
-                      <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                      <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-md bg-brand-beige">
                         <Image
                           src={product.images[0].src}
                           alt={product.name}
@@ -238,24 +241,24 @@ export function SearchDrawer({
                         />
                       </div>
                     ) : (
-                      <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100">
-                        <Search className="h-6 w-6 text-gray-400" />
+                      <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-md bg-brand-beige">
+                        <Search className="h-6 w-6 text-brand-muted" />
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
                       {product.categories?.[0] && (
-                        <p className="text-[10px] font-medium uppercase tracking-wider text-brand-gold truncate">
+                        <p className="truncate text-[10px] font-semibold uppercase text-brand-gold">
                           {decodeHtmlEntities(product.categories[0].name)}
                         </p>
                       )}
-                      <h3 className="font-medium text-gray-900 truncate uppercase">{decodeHtmlEntities(product.name)}</h3>
+                      <h3 className="truncate font-semibold uppercase text-brand-primary">{decodeHtmlEntities(product.name)}</h3>
                       <FormattedPrice
                         price={parseInt(product.prices.price) / Math.pow(10, product.prices.currency_minor_unit)}
-                        className="text-sm font-semibold text-gray-700"
+                        className="text-sm font-semibold text-brand-primary"
                         iconSize="xs"
                       />
                       {product.attributes && product.attributes.length > 0 && (
-                        <p className="text-[10px] text-gray-500 truncate mt-0.5">
+                        <p className="mt-0.5 truncate text-[10px] text-brand-muted">
                           {product.attributes.slice(0, 2).map((attr) => 
                             `${attr.name}: ${attr.terms?.map(t => t.name).join(", ")}`
                           ).join(" | ")}
@@ -270,7 +273,7 @@ export function SearchDrawer({
                 <button
                   type="button"
                   onClick={handleViewAllResults}
-                  className="mt-4 flex w-full items-center justify-center rounded-lg bg-black px-4 py-3 font-medium text-white transition-all hover:bg-gray-800 active:scale-[0.98]"
+                  className="mt-4 flex w-full items-center justify-center rounded-full bg-brand-primary px-4 py-3 font-semibold text-white transition-all hover:bg-brand-primary-dark active:scale-[0.98]"
                 >
                   {dictionary.common.viewAllResults || "View all results"}
                 </button>

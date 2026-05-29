@@ -152,17 +152,17 @@ function SlideContent({ slide, index, locale }: { slide: HeroSliderSettings["sli
   const textOverlay = hasTextOverlay ? (
     <div className="absolute inset-0 z-10 flex items-center">
       <div className="container mx-auto px-6 md:px-12">
-        <div className="max-w-lg">
+        <div className="max-w-xl">
           {slideTitle && (
-            <h2 className="text-2xl font-bold text-white drop-shadow-lg md:text-4xl lg:text-5xl">{slideTitle}</h2>
+            <h2 className="font-title text-3xl text-white drop-shadow-[0_10px_24px_rgba(0,0,0,0.35)] md:text-5xl lg:text-6xl">{slideTitle}</h2>
           )}
           {slideSubtitle && (
-            <p className="mt-2 text-sm text-white/90 drop-shadow md:mt-3 md:text-base lg:text-lg">{slideSubtitle}</p>
+            <p className="mt-3 max-w-lg text-sm text-white/90 drop-shadow md:mt-4 md:text-base lg:text-lg">{slideSubtitle}</p>
           )}
           {slideCta && slideLinkUrl && (
             <Link
               href={slideLinkUrl.startsWith("/") && !slideLinkUrl.startsWith(`/${locale}/`) ? `/${locale}${slideLinkUrl}` : slideLinkUrl}
-              className="mt-4 inline-block rounded bg-white px-6 py-2.5 text-sm font-semibold text-brand-primary shadow-md transition hover:bg-brand-primary hover:text-white md:mt-5 md:px-8 md:py-3"
+              className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/30 bg-[#b98a49] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-[#1a1714] shadow-[0_18px_32px_rgba(0,0,0,0.25)] transition-all hover:-translate-y-0.5 hover:bg-[#c99a58] md:mt-6 md:px-8 md:py-3"
             >
               {slideCta}
             </Link>
@@ -173,7 +173,7 @@ function SlideContent({ slide, index, locale }: { slide: HeroSliderSettings["sli
   ) : null;
 
   const mediaContent = (
-    <div className="relative w-full overflow-hidden aspect-[768/600] md:aspect-[1920/800] bg-black">
+    <div className="relative w-full overflow-hidden aspect-[768/600] bg-[#1a1714] md:aspect-[1920/800]">
       {isVideo ? (
         <>
           {renderVideo(true)}
@@ -213,6 +213,7 @@ function SlideContent({ slide, index, locale }: { slide: HeroSliderSettings["sli
           />
         </div>
       )}
+      <div className="absolute inset-0 bg-gradient-to-r from-black/48 via-black/15 to-black/30" />
       {textOverlay}
     </div>
   );
@@ -294,7 +295,7 @@ export function HeroSlider({ settings }: HeroSliderProps) {
   // Single slide or Swiper not loaded yet — render first slide statically (instant LCP, zero CLS)
   if (!hasMultipleSlides || !swiperReady || !SwiperComponents) {
     return (
-      <section className={`relative w-full ${getVisibilityClass()}`}>
+      <section className={`relative w-full overflow-hidden border-b border-brand-border/35 ${getVisibilityClass()}`}>
         <SlideContent slide={activeSlides[0]} index={0} locale={locale} />
       </section>
     );
@@ -310,7 +311,7 @@ export function HeroSlider({ settings }: HeroSliderProps) {
   };
 
   return (
-    <section className={`relative w-full ${getVisibilityClass()}`}>
+    <section className={`relative w-full overflow-hidden border-b border-brand-border/35 ${getVisibilityClass()}`}>
       <Swiper
         modules={modules}
         spaceBetween={0}
@@ -347,9 +348,9 @@ export function HeroSlider({ settings }: HeroSliderProps) {
           height: 6px;
           margin: 0 !important;
           overflow: hidden;
-          border: 1px solid rgba(255, 255, 255, 0.72);
+          border: 1px solid rgba(255, 255, 255, 0.64);
           border-radius: 0;
-          background: rgba(255, 255, 255, 0.36);
+          background: rgba(255, 255, 255, 0.22);
           opacity: 1;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
           transition: width 0.25s ease, background 0.25s ease, border-color 0.25s ease;
@@ -358,7 +359,7 @@ export function HeroSlider({ settings }: HeroSliderProps) {
           content: "";
           position: absolute;
           inset: 0;
-          background: #ffffff;
+          background: #f5d3a0;
           opacity: 0;
           transform: scaleX(0);
           transform-origin: left center;
@@ -370,8 +371,8 @@ export function HeroSlider({ settings }: HeroSliderProps) {
         }
         .hero-slider .swiper-pagination-bullet-active {
           width: 34px;
-          border-color: #ffffff;
-          background: rgba(255, 255, 255, 0.24);
+          border-color: #f5d3a0;
+          background: rgba(245, 211, 160, 0.16);
           opacity: 1;
         }
         .hero-slider .swiper-pagination-bullet-active::after {
@@ -394,19 +395,19 @@ export function HeroSlider({ settings }: HeroSliderProps) {
           display: none;
           width: 30px;
           height: 30px;
-          background: rgba(255, 255, 255, 0.95);
+          background: rgba(251, 246, 239, 0.95);
           border-radius: 50%;
-          color: #4A1633;
-          box-shadow: 0 3px 14px rgba(0, 0, 0, 0.16);
+          color: #1a1714;
+          box-shadow: 0 7px 18px rgba(0, 0, 0, 0.2);
           transition: all 0.25s ease;
           top: 50%;
           margin-top: -15px;
         }
         .hero-slider .swiper-button-prev:hover,
         .hero-slider .swiper-button-next:hover {
-          background: rgba(255, 255, 255, 0.95);
-          color: #4A1633;
-          box-shadow: 0 3px 14px rgba(0, 0, 0, 0.16);
+          background: rgba(185, 138, 73, 0.96);
+          color: #15120e;
+          box-shadow: 0 9px 20px rgba(0, 0, 0, 0.24);
         }
         .hero-slider .swiper-button-prev::after,
         .hero-slider .swiper-button-next::after {

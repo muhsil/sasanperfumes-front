@@ -230,7 +230,7 @@ export function DesktopSearchDropdown({
   const modalContent = (
     <div
       className={cn(
-        "fixed inset-0 z-[9999] flex flex-col items-center overflow-y-auto bg-white/95 backdrop-blur-md transition-opacity duration-300",
+        "fixed inset-0 z-[9999] flex flex-col items-center overflow-y-auto bg-brand-ivory/95 backdrop-blur-md transition-opacity duration-300",
         isVisible ? "opacity-100" : "opacity-0"
       )}
       onClick={handleClose}
@@ -241,7 +241,7 @@ export function DesktopSearchDropdown({
         type="button"
         onClick={handleClose}
         className={cn(
-          "absolute top-4 p-2 text-gray-400 transition-colors hover:text-gray-800 md:top-6",
+          "absolute top-4 rounded-full border border-brand-border/70 bg-brand-ivory p-2 text-brand-muted transition-colors hover:bg-brand-primary hover:text-white md:top-6",
           isRTL ? "left-4 md:left-8" : "right-4 md:right-8"
         )}
         aria-label="Close"
@@ -261,7 +261,7 @@ export function DesktopSearchDropdown({
           <div className="relative">
             <Search
               className={cn(
-                "absolute top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400",
+                "absolute top-1/2 h-5 w-5 -translate-y-1/2 text-brand-muted",
                 isRTL ? "right-5" : "left-5"
               )}
             />
@@ -273,7 +273,7 @@ export function DesktopSearchDropdown({
               onKeyDown={handleInputKeyDown}
               placeholder={dictionary.common.searchPlaceholder || "Search products..."}
               className={cn(
-                "w-full rounded-full border border-gray-200 bg-gray-50 py-4 text-base text-gray-900 placeholder-gray-400 shadow-sm transition-all focus:border-brand-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 md:py-5 md:text-lg",
+                "w-full rounded-full border border-brand-border/80 bg-brand-beige/70 py-4 text-base text-brand-primary placeholder:text-brand-muted shadow-sm transition-all focus:border-brand-primary/55 focus:bg-brand-ivory focus:outline-none focus:ring-2 focus:ring-brand-gold/15 md:py-5 md:text-lg",
                 isRTL ? "pr-14 pl-14" : "pl-14 pr-14"
               )}
               dir={isRTL ? "rtl" : "ltr"}
@@ -283,7 +283,7 @@ export function DesktopSearchDropdown({
                 type="button"
                 onClick={handleClear}
                 className={cn(
-                  "absolute top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600",
+                  "absolute top-1/2 -translate-y-1/2 p-1 text-brand-muted hover:text-brand-primary",
                   isRTL ? "left-4" : "right-4"
                 )}
               >
@@ -293,7 +293,7 @@ export function DesktopSearchDropdown({
             {loading && (
               <Loader2
                 className={cn(
-                  "absolute top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-gray-400",
+                  "absolute top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-brand-muted",
                   isRTL ? "left-12" : "right-12"
                 )}
               />
@@ -303,31 +303,31 @@ export function DesktopSearchDropdown({
 
         {/* Search Results */}
         {query.trim().length > 0 && (
-          <div className="mt-6 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-2xl">
+          <div className="mt-6 overflow-hidden rounded-lg border border-brand-border/70 bg-brand-ivory shadow-2xl">
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="flex flex-col items-center gap-3">
-                  <div className="h-8 w-8 animate-spin rounded-full border-3 border-gray-200 border-t-brand-primary" />
-                  <p className="text-sm text-gray-500">
+                  <div className="h-8 w-8 animate-spin rounded-full border-3 border-brand-border border-t-brand-primary" />
+                  <p className="text-sm text-brand-muted">
                     {isRTL ? "جاري البحث..." : "Searching..."}
                   </p>
                 </div>
               </div>
             ) : hasSearched && results.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="mb-4 rounded-full bg-gray-100 p-4">
-                  <Search className="h-8 w-8 text-gray-400" />
+                <div className="mb-4 rounded-full bg-brand-beige p-4">
+                  <Search className="h-8 w-8 text-brand-muted" />
                 </div>
-                <p className="text-base font-medium text-gray-900">
+                <p className="text-base font-semibold text-brand-primary">
                   {dictionary.common.noResults || "No products found"}
                 </p>
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-brand-muted">
                   {isRTL
                     ? `لا توجد نتائج لـ "${query}"`
                     : `No results for "${query}"`
                   }
                 </p>
-                <p className="mt-3 text-xs text-gray-400">
+                <p className="mt-3 text-xs text-brand-muted/70">
                   {isRTL
                     ? "جرب كلمات بحث مختلفة"
                     : "Try different search terms"
@@ -336,8 +336,8 @@ export function DesktopSearchDropdown({
               </div>
             ) : results.length > 0 ? (
               <div>
-                <div className="border-b border-gray-100 bg-gray-50 px-6 py-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-400">
+                <div className="border-b border-brand-border/70 bg-brand-beige/45 px-6 py-3">
+                  <p className="text-[11px] font-semibold uppercase text-brand-muted">
                     {isRTL ? "المنتجات" : "Products"}
                   </p>
                 </div>
@@ -350,13 +350,13 @@ export function DesktopSearchDropdown({
                         href={`/${locale}/product/${productSlug}`}
                         onClick={handleProductClick}
                         className={cn(
-                          "group flex items-center gap-5 px-6 py-5 transition-all hover:bg-gray-50",
-                          index !== results.length - 1 && "border-b border-gray-50",
+                          "group flex items-center gap-5 px-6 py-5 transition-all hover:bg-brand-beige/60",
+                          index !== results.length - 1 && "border-b border-brand-border/45",
                           highlightedIndex === index && "bg-brand-beige"
                         )}
                       >
                         {product.images[0]?.src ? (
-                          <div className="relative h-[72px] w-[72px] flex-shrink-0 overflow-hidden rounded-xl bg-gray-100">
+                          <div className="relative h-[72px] w-[72px] flex-shrink-0 overflow-hidden rounded-md bg-brand-beige">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={product.images[0].src}
@@ -369,8 +369,8 @@ export function DesktopSearchDropdown({
                             />
                           </div>
                         ) : (
-                          <div className="flex h-[72px] w-[72px] flex-shrink-0 items-center justify-center rounded-xl bg-gray-100">
-                            <Search className="h-5 w-5 text-gray-400" />
+                          <div className="flex h-[72px] w-[72px] flex-shrink-0 items-center justify-center rounded-md bg-brand-beige">
+                            <Search className="h-5 w-5 text-brand-muted" />
                           </div>
                         )}
                         <div className="flex-1 min-w-0 py-0.5">
@@ -379,7 +379,7 @@ export function DesktopSearchDropdown({
                               {decodeHtmlEntities(product.categories[0].name)}
                             </p>
                           )}
-                          <h3 className="text-sm font-semibold text-gray-900 truncate uppercase tracking-wide">
+                          <h3 className="truncate text-sm font-semibold uppercase text-brand-primary">
                             {decodeHtmlEntities(product.name)}
                           </h3>
                           <div className="mt-1.5">
@@ -390,21 +390,21 @@ export function DesktopSearchDropdown({
                             />
                           </div>
                           {product.attributes && product.attributes.length > 0 && (
-                            <p className="mt-1.5 text-[10px] text-gray-400 truncate leading-relaxed">
+                            <p className="mt-1.5 truncate text-[10px] leading-relaxed text-brand-muted">
                               {product.attributes.slice(0, 2).map((attr) =>
                                 `${attr.name}: ${attr.terms?.map(t => t.name).join(", ")}`
                               ).join(" | ")}
                             </p>
                           )}
                         </div>
-                        <ArrowIcon className="h-4 w-4 flex-shrink-0 text-gray-300 transition-colors group-hover:text-brand-primary" />
+                        <ArrowIcon className="h-4 w-4 flex-shrink-0 text-brand-muted/45 transition-colors group-hover:text-brand-primary" />
                       </Link>
                     );
                   })}
                 </div>
 
                 {/* View All Results */}
-                <div className="border-t border-gray-100 bg-gray-50 p-5">
+                <div className="border-t border-brand-border/70 bg-brand-beige/45 p-5">
                   <button
                     type="button"
                     onClick={handleViewAllResults}
@@ -425,8 +425,8 @@ export function DesktopSearchDropdown({
             "mt-8 text-center transition-all duration-500",
             isVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
           )}>
-            <Search className="mx-auto mb-3 h-10 w-10 text-gray-200" />
-            <p className="text-sm text-gray-400">
+            <Search className="mx-auto mb-3 h-10 w-10 text-brand-muted/35" />
+            <p className="text-sm text-brand-muted">
               {isRTL ? "اكتب للبحث عن منتجاتك المفضلة" : "Type to search for your favorite products"}
             </p>
           </div>

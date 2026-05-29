@@ -597,6 +597,9 @@ export default function CheckoutClient() {
     { name: isRTL ? "الدفع" : "Checkout", href: `/${locale}/checkout` },
   ];
 
+  const checkoutTitle = breadcrumbItems[1]?.name || "Checkout";
+  const checkoutSubtitle = isRTL ? "" : "Review your details and complete your order securely.";
+
   const isNumericOnly = (value: string): boolean => {
     return /^[\d\s.,/-]+$/.test(value.trim());
   };
@@ -1344,20 +1347,20 @@ export default function CheckoutClient() {
   };
 
   return (
-                <div className="min-h-screen pb-32 md:pb-8 overflow-x-clip" style={{ backgroundColor: '#FAFAFA' }}>
+                <div className="min-h-screen overflow-x-clip bg-transparent pb-32 md:pb-8">
                   <div className="container mx-auto px-5 md:px-7 lg:px-12 py-6 md:py-8">
 
         {/* Modern User Status Card */}
-        <div className="mb-6 flex items-center justify-between rounded-2xl bg-white p-4 shadow-sm">
+        <div className="luxury-panel mb-6 flex items-center justify-between p-4">
           <div className="flex items-center gap-3">
-            <div className={`flex h-10 w-10 items-center justify-center rounded-full text-white text-sm font-semibold ${isAuthenticated ? 'bg-gradient-to-br from-emerald-400 to-emerald-600' : 'bg-gradient-to-br from-brand-primary to-brand-primary'}`}>
+            <div className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold text-white ${isAuthenticated ? 'bg-emerald-600' : 'bg-brand-primary'}`}>
               {isAuthenticated ? (user?.user_email?.charAt(0).toUpperCase() || 'U') : 'G'}
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-900">
+              <p className="text-sm font-semibold text-brand-primary">
                 {isAuthenticated ? user?.user_email : (isRTL ? "ضيف" : "Guest")}
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-brand-muted">
                 {isAuthenticated 
                   ? (isRTL ? "حساب مسجل" : "Registered account")
                   : (isRTL ? "الدفع كضيف" : "Checkout as guest")}
@@ -1374,8 +1377,19 @@ export default function CheckoutClient() {
 
         <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} contained={false} />
 
+        <div className="mb-6 border-b border-brand-border/70 pb-6">
+          <h1 className="font-title text-[34px] leading-none text-brand-primary md:text-[46px]">
+            {checkoutTitle}
+          </h1>
+          {checkoutSubtitle && (
+            <p className="mt-3 max-w-xl text-sm leading-6 text-brand-muted md:text-base">
+              {checkoutSubtitle}
+            </p>
+          )}
+        </div>
+
         {error && (
-          <div className="mb-6 rounded-lg border border-gray-100 bg-white p-4 text-red-600">
+          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-600">
             {error}
           </div>
         )}
@@ -1424,8 +1438,8 @@ export default function CheckoutClient() {
 
               {isLoadingCustomer && (
                 <div className="mb-6 flex items-center justify-center py-4">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900"></div>
-                  <span className="ml-2 text-gray-600">{isRTL ? "جاري تحميل بياناتك..." : "Loading your data..."}</span>
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-border border-t-brand-primary"></div>
+                  <span className="ml-2 text-brand-muted">{isRTL ? "جاري تحميل بياناتك..." : "Loading your data..."}</span>
                 </div>
               )}
 
@@ -1437,10 +1451,10 @@ export default function CheckoutClient() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>
                   </div>
-                  <h2 className="mb-2 text-xl font-semibold text-gray-900">
+                  <h2 className="mb-2 font-title text-2xl text-brand-primary">
                     {isRTL ? "سلة التسوق فارغة" : "Your cart is empty"}
                   </h2>
-                  <p className="mb-4 text-gray-600">
+                  <p className="mb-4 text-brand-muted">
                     {isRTL 
                       ? "لا يمكنك المتابعة للدفع بدون منتجات في السلة." 
                       : "You cannot proceed to checkout without any products in your cart."}
@@ -1453,7 +1467,7 @@ export default function CheckoutClient() {
                   <button
                     type="button"
                     onClick={() => router.push(`/${locale}`)}
-                    className="mt-4 inline-flex items-center rounded-lg bg-gray-900 px-6 py-2 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
+                    className="mt-4 inline-flex items-center rounded-full bg-brand-primary px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-primary-dark"
                   >
                     {isRTL ? "العودة للرئيسية الآن" : "Go to Home Now"}
                   </button>
@@ -1465,8 +1479,8 @@ export default function CheckoutClient() {
         <div className="grid gap-3 lg:grid-cols-3 lg:items-start lg:gap-3">
           <div className="space-y-3 lg:col-span-2">
             {/* Contact Information */}
-            <div className="border border-gray-100 bg-white p-5 md:p-6">
-                            <h2 className="mb-5 text-base md:text-lg font-semibold text-gray-900">
+            <div className="luxury-panel p-5 md:p-6">
+                            <h2 className="mb-5 font-title text-2xl text-brand-primary">
                               {isRTL ? "معلومات الاتصال" : "Contact Information"}
                             </h2>
               <div className={`grid gap-4 ${isAuthenticated ? "sm:grid-cols-1" : "sm:grid-cols-2"}`}>
@@ -1537,7 +1551,7 @@ export default function CheckoutClient() {
               
               {/* Create Account Option - Only for guest users with unregistered email */}
               {!isAuthenticated && !isEmailRegistered && (
-                <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <div className="mt-4 rounded-lg border border-brand-border/70 bg-brand-beige/55 p-4">
                   <div className="flex items-start gap-3">
                     <Checkbox
                       id="create-account"
@@ -1553,17 +1567,17 @@ export default function CheckoutClient() {
                       }}
                     />
                     <div className="flex-1">
-                      <label htmlFor="create-account" className="cursor-pointer text-sm font-medium text-gray-900">
+                      <label htmlFor="create-account" className="cursor-pointer text-sm font-semibold text-brand-primary">
                         {isRTL ? "إنشاء حساب لتتبع طلباتك" : "Create an account to track your orders"}
                       </label>
-                      <p className="mt-0.5 text-xs text-gray-500">
+                      <p className="mt-0.5 text-xs text-brand-muted">
                         {isRTL ? "يمكنك تتبع طلباتك وحفظ عناوينك" : "Track your orders and save your addresses"}
                       </p>
                     </div>
                   </div>
                   
                   {createAccount && (
-                    <div className="mt-4 space-y-3 border-t border-gray-200 pt-4">
+                    <div className="mt-4 space-y-3 border-t border-brand-border/70 pt-4">
                       {passwordError && (
                         <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">
                           {passwordError}
@@ -1606,8 +1620,8 @@ export default function CheckoutClient() {
             </div>
 
             {/* Shipping Address */}
-            <div className="border border-gray-100 bg-white p-5 md:p-6">
-                            <h2 className="mb-5 text-base md:text-lg font-semibold text-gray-900">
+            <div className="luxury-panel p-5 md:p-6">
+                            <h2 className="mb-5 font-title text-2xl text-brand-primary">
                               {isRTL ? "عنوان الشحن" : "Delivery"}
                             </h2>
 
@@ -1617,20 +1631,20 @@ export default function CheckoutClient() {
                   <div className="relative">
                     <button
                       type="button"
-                      className="w-full rounded-lg border border-gray-100 bg-gray-50 p-4 text-left hover:bg-gray-100 hover:border-gray-300 transition-colors"
+                      className="w-full rounded-lg border border-brand-border/70 bg-brand-beige/55 p-4 text-left transition-colors hover:border-brand-primary/35 hover:bg-brand-beige"
                       onClick={() => setShowAddressSelector(!showAddressSelector)}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-start gap-3">
-                          <MapPin className="mt-0.5 h-5 w-5 text-gray-600" />
+                          <MapPin className="mt-0.5 h-5 w-5 text-brand-muted" />
                           <div>
-                            <p className="font-medium text-gray-900">
+                            <p className="font-semibold text-brand-primary">
                               {selectedAddressId 
                                 ? savedAddresses.find(a => a.id === selectedAddressId)?.label || (isRTL ? "العنوان المحدد" : "Selected Address")
                                 : (isRTL ? "اختر عنوان محفوظ" : "Select a saved address")}
                             </p>
                             {selectedAddressId && (
-                              <p className="mt-1 text-sm text-gray-600">
+                              <p className="mt-1 text-sm text-brand-muted">
                                 {(() => {
                                   const addr = savedAddresses.find(a => a.id === selectedAddressId);
                                   if (!addr) return "";
@@ -1641,15 +1655,15 @@ export default function CheckoutClient() {
                           </div>
                         </div>
                         {showAddressSelector ? (
-                          <ChevronUp className="h-5 w-5 text-gray-600" />
+                          <ChevronUp className="h-5 w-5 text-brand-muted" />
                         ) : (
-                          <ChevronDown className="h-5 w-5 text-gray-600" />
+                          <ChevronDown className="h-5 w-5 text-brand-muted" />
                         )}
                       </div>
                     </button>
                     
                     {showAddressSelector && (
-                      <div className="absolute z-10 mt-1 w-full rounded-lg border border-gray-100 bg-white shadow-lg max-h-64 overflow-y-auto">
+                      <div className="absolute z-10 mt-1 max-h-64 w-full overflow-y-auto rounded-lg border border-brand-border/70 bg-brand-ivory shadow-lg">
                         {savedAddresses.map((address) => (
                           <button
                             key={address.id}
@@ -1749,15 +1763,15 @@ export default function CheckoutClient() {
             </div>
 
             {/* Shipping Method Selection */}
-            <div className="border border-gray-100 bg-white p-5 md:p-6">
-              <h2 className="mb-5 text-base md:text-lg font-semibold text-gray-900">
+            <div className="luxury-panel p-5 md:p-6">
+              <h2 className="mb-5 font-title text-2xl text-brand-primary">
                 {isRTL ? "طريقة الشحن" : "Shipping Method"}
               </h2>
               
               {isLoadingShipping ? (
                 <div className="flex items-center justify-center py-4">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900"></div>
-                  <span className="ml-2 text-gray-600">{isRTL ? "جاري تحميل طرق الشحن..." : "Loading shipping methods..."}</span>
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-border border-t-brand-primary"></div>
+                  <span className="ml-2 text-brand-muted">{isRTL ? "جاري تحميل طرق الشحن..." : "Loading shipping methods..."}</span>
                 </div>
               ) : shippingPackages.length === 0 || shippingPackages.every(pkg => !pkg.shipping_rates || pkg.shipping_rates.length === 0) ? (
                 <div className="rounded-lg border border-brand-primary bg-brand-beige p-4">
@@ -1782,8 +1796,8 @@ export default function CheckoutClient() {
                               rate.method_id === "free_shipping" && rate.free_shipping_eligible === false
                                 ? "border-black/5 bg-gray-50/50 opacity-60"
                                 : isSelected
-                                  ? "border-gray-900 bg-gray-50 cursor-pointer"
-                                  : "border-gray-100 hover:bg-gray-50 cursor-pointer"
+                                  ? "border-brand-primary bg-brand-beige cursor-pointer"
+                                  : "border-brand-border/70 hover:bg-brand-beige cursor-pointer"
                             }`}
                             onClick={() => {
                               if (rate.method_id === "free_shipping" && rate.free_shipping_eligible === false) return;
@@ -1792,7 +1806,7 @@ export default function CheckoutClient() {
                           >
                             <div className="flex items-center gap-3">
                               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
-                                <Truck className="h-5 w-5 text-gray-600" />
+                                <Truck className="h-5 w-5 text-brand-muted" />
                               </div>
                               <div className="flex-1">
                                 <Radio
@@ -1849,22 +1863,22 @@ export default function CheckoutClient() {
             </div>
 
             {/* Billing Address */}
-            <div className="border border-gray-100 bg-white p-5 md:p-6">
+            <div className="luxury-panel p-5 md:p-6">
               <div className="mb-4 flex items-center justify-between">
-                                <h2 className="text-base md:text-lg font-semibold text-gray-900">
+                                <h2 className="font-title text-2xl text-brand-primary">
                                   {isRTL ? "عنوان الفاتورة" : "Billing Address"}
                                 </h2>
                 <button
                   type="button"
                   onClick={() => setShowBillingSection(!showBillingSection)}
-                  className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
+                  className="flex items-center gap-1 text-sm text-brand-muted hover:text-brand-primary"
                 >
                   {showBillingSection ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </button>
               </div>
 
               {/* Same as shipping checkbox */}
-              <div className="rounded-lg border border-gray-100 p-4 hover:bg-gray-50 transition-colors">
+              <div className="rounded-lg border border-brand-border/70 p-4 transition-colors hover:bg-brand-beige/55">
                 <Checkbox
                   checked={formData.sameAsShipping}
                   onChange={(e) => handleSameAsShippingChange(e.target.checked)}
@@ -1946,8 +1960,8 @@ export default function CheckoutClient() {
             </div>
 
                         {/* Payment Method */}
-                        <div className="border border-gray-100 bg-white p-5 md:p-6">
-                                        <h2 className="mb-5 text-base md:text-lg font-semibold text-gray-900">
+                        <div className="luxury-panel p-5 md:p-6">
+                                        <h2 className="mb-5 font-title text-2xl text-brand-primary">
                                           {isRTL ? "طريقة الدفع" : "Payment Method"}
                                         </h2>
                           
@@ -1968,11 +1982,11 @@ export default function CheckoutClient() {
                           <div className="space-y-3">
                             {isLoadingGateways ? (
                               <div className="flex items-center justify-center py-4">
-                                <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900"></div>
-                                <span className="ml-2 text-gray-600">{isRTL ? "جاري تحميل طرق الدفع..." : "Loading payment methods..."}</span>
+                                <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-border border-t-brand-primary"></div>
+                                <span className="ml-2 text-brand-muted">{isRTL ? "جاري تحميل طرق الدفع..." : "Loading payment methods..."}</span>
                               </div>
                             ) : filteredPaymentGateways.length === 0 ? (
-                              <div className="text-center py-4 text-gray-500">
+                              <div className="py-4 text-center text-brand-muted">
                                 {isRTL ? "لا توجد طرق دفع متاحة" : "No payment methods available"}
                               </div>
                             ) : (
@@ -2059,8 +2073,8 @@ export default function CheckoutClient() {
                                     );
                                   }
                                   return (
-                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
-                                      <svg className="h-5 w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-beige">
+                                      <svg className="h-5 w-5 text-brand-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                                       </svg>
                                     </div>
@@ -2072,8 +2086,8 @@ export default function CheckoutClient() {
                                     key={gateway.id}
                                     className={`rounded-lg border p-4 transition-colors cursor-pointer ${
                                       formData.paymentMethod === gateway.id
-                                        ? "border-gray-900 bg-gray-50"
-                                        : "border-gray-900/15 hover:border-gray-900 hover:bg-gray-50"
+                                        ? "border-brand-primary bg-brand-beige"
+                                        : "border-brand-border/70 hover:border-brand-primary/45 hover:bg-brand-beige/55"
                                     }`}
                                     onClick={() => handlePaymentChange(gateway.id)}
                                   >
@@ -2100,12 +2114,12 @@ export default function CheckoutClient() {
             <GiftWrapOption locale={locale as Locale} onChange={setGiftWrap} />
 
             {/* Order Notes */}
-            <div className="border border-gray-100 bg-white p-5 md:p-6">
-                            <h2 className="mb-5 text-base md:text-lg font-semibold text-gray-900">
+            <div className="luxury-panel p-5 md:p-6">
+                            <h2 className="mb-5 font-title text-2xl text-brand-primary">
                               {isRTL ? "ملاحظات الطلب" : "Order Notes"}
                             </h2>
               <textarea
-                className="w-full rounded-lg border border-gray-900/20 p-3 text-sm transition-colors hover:border-gray-900 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900/15"
+                className="w-full rounded-lg border border-brand-border/80 bg-brand-beige/50 p-3 text-sm text-brand-primary transition-colors hover:border-brand-primary/45 focus:border-brand-primary/55 focus:outline-none focus:ring-2 focus:ring-brand-gold/15"
                 rows={4}
                 placeholder={
                   isRTL
@@ -2120,18 +2134,18 @@ export default function CheckoutClient() {
 
           {/* Order Summary */}
           <div className="lg:col-span-1 lg:sticky lg:top-24 lg:self-start">
-            <div className="border border-gray-100 bg-white p-5 md:p-6">
-                            <h2 className="mb-5 text-base md:text-lg font-semibold text-gray-900">
+            <div className="luxury-panel p-5 md:p-6">
+                            <h2 className="mb-5 font-title text-2xl text-brand-primary">
                               {isRTL ? "ملخص الطلب" : "Order Summary"}
                             </h2>
 
                             {/* Cart Items with Thumbnails */}
-                            <div className="space-y-4 border-b border-gray-100 pb-4 md:max-h-80 md:overflow-y-auto">
+                            <div className="space-y-4 border-b border-brand-border/70 pb-4 md:max-h-80 md:overflow-y-auto">
                                 {cartItems.map((item) => (
                                   <div key={item.item_key} className="flex items-center gap-3">
                                     {/* Product Thumbnail */}
                                     <div className="relative h-16 w-16 flex-shrink-0">
-                                      <div className="h-full w-full overflow-hidden rounded-xl border border-gray-100 bg-gray-50">
+                                      <div className="h-full w-full overflow-hidden rounded-md border border-brand-border/70 bg-brand-beige">
                                       {item.featured_image ? (
                                         <Image
                                           src={item.featured_image}
@@ -2141,7 +2155,7 @@ export default function CheckoutClient() {
                                           sizes="64px"
                                         />
                                       ) : (
-                                        <div className="flex h-full w-full items-center justify-center text-gray-400">
+                                        <div className="flex h-full w-full items-center justify-center text-brand-muted">
                                           <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                           </svg>
@@ -2151,28 +2165,28 @@ export default function CheckoutClient() {
                                     </div>
                                   {/* Product Info */}
                                   <div className="flex-1 min-w-0">
-                                    <p className="truncate text-sm font-medium text-gray-900">{decodeHtmlEntities(item.name)}</p>
+                                    <p className="truncate text-sm font-semibold text-brand-primary">{decodeHtmlEntities(item.name)}</p>
                                     {(productBrands[getItemLookupId(item)] || productCategories[getItemLookupId(item)]) && (
                                       <p className="font-medium uppercase tracking-wider text-brand-gold mt-0.5" style={{ fontSize: '9px' }}>
                                         {productBrands[getItemLookupId(item)] && <span>{decodeHtmlEntities(productBrands[getItemLookupId(item)])}</span>}
-                                        {productBrands[getItemLookupId(item)] && productCategories[getItemLookupId(item)] && <span className="text-gray-300 mx-1">/</span>}
-                                        {productCategories[getItemLookupId(item)] && <span className="text-gray-500">{decodeHtmlEntities(productCategories[getItemLookupId(item)])}</span>}
+                                        {productBrands[getItemLookupId(item)] && productCategories[getItemLookupId(item)] && <span className="mx-1 text-brand-muted/45">/</span>}
+                                        {productCategories[getItemLookupId(item)] && <span className="text-brand-muted">{decodeHtmlEntities(productCategories[getItemLookupId(item)])}</span>}
                                       </p>
                                     )}
                                     {item.meta?.sku && (
-                                      <p className="mt-0.5 text-[10px] text-gray-400 uppercase tracking-wider">
+                                      <p className="mt-0.5 text-[10px] uppercase text-brand-muted">
                                         SKU: {item.meta.sku}
                                       </p>
                                     )}
                                     {item.meta?.variation && Object.keys(item.meta.variation).length > 0 && (
-                                      <p className="text-xs text-gray-500 mt-0.5">
+                                      <p className="mt-0.5 text-xs text-brand-muted">
                                         {Object.entries(item.meta.variation)
                                           .filter(([key]) => key.toLowerCase() !== "parent_id")
                                           .map(([key, value]) => `${key.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}: ${value}`)
                                           .join(", ")}
                                       </p>
                                     )}
-                                    <p className="text-xs text-gray-500">
+                                    <p className="text-xs text-brand-muted">
                                       {isRTL ? "الكمية:" : "Qty:"} {item.quantity.value}
                                     </p>
                                     <BundleItemsList item={item} locale={locale} compact />
@@ -2204,9 +2218,9 @@ export default function CheckoutClient() {
 
                             {/* Coupon Code Section - Read-only display only */}
                             {featureFlags.enableCoupons && (
-                            <div className="border-b border-gray-100 py-4">
+                            <div className="border-b border-brand-border/70 py-4">
                               {selectedCoupons.length === 0 && (
-                                <p className="text-sm text-gray-500 mb-3">
+                                <p className="mb-3 text-sm text-brand-muted">
                                   {isRTL ? "لا توجد كوبونات مطبقة. العودة إلى السلة لإضافة كود خصم." : "No coupons applied. Go back to cart to add a coupon code."}
                                 </p>
                               )}
@@ -2250,8 +2264,8 @@ export default function CheckoutClient() {
                             )}
 
                                           {/* Totals */}
-                            <div className="space-y-3 border-b border-gray-100 py-4">
-                              <div className="flex justify-between text-sm text-gray-600">
+                            <div className="space-y-3 border-b border-brand-border/70 py-4">
+                              <div className="flex justify-between text-sm text-brand-muted">
                                 <span>{isRTL ? "المجموع الفرعي" : "Subtotal"}</span>
                                 <FormattedPrice
                                   price={parseFloat(cartSubtotal) / divisor}
@@ -2274,7 +2288,7 @@ export default function CheckoutClient() {
                                 isRTL={isRTL}
                                 divisor={divisor}
                               />
-                              <div className="flex justify-between text-sm text-gray-600">
+                              <div className="flex justify-between text-sm text-brand-muted">
                                 <span>{isRTL ? "الشحن" : "Shipping"}</span>
                                 {parseFloat(shippingTotal) > 0 ? (
                                   <FormattedPrice
@@ -2294,7 +2308,7 @@ export default function CheckoutClient() {
                               {cart?.fees && cart.fees.length > 0 && cart.fees
                                 .filter(fee => fee.name.toLowerCase() !== "customs fees")
                                 .map((fee, index) => (
-                                <div key={`cart-fee-${index}`} className="flex justify-between text-sm text-gray-600">
+                                <div key={`cart-fee-${index}`} className="flex justify-between text-sm text-brand-muted">
                                   <span>{isRTL ? fee.name : fee.name}</span>
                                   <FormattedPrice
                                     price={parseFloat(fee.fee) / divisor}
@@ -2303,7 +2317,7 @@ export default function CheckoutClient() {
                                 </div>
                               ))}
                               {customsFee ? (
-                                <div className="flex justify-between text-sm text-gray-600">
+                                <div className="flex justify-between text-sm text-brand-muted">
                                   <span>{isRTL ? "رسوم جمركية" : customsFee.name}</span>
                                   <FormattedPrice
                                     price={parseFloat(customsFee.fee) / divisor}
@@ -2313,7 +2327,7 @@ export default function CheckoutClient() {
                               ) : cart?.fees && cart.fees.length > 0 && cart.fees
                                 .filter(fee => fee.name.toLowerCase() === "customs fees")
                                 .map((fee, index) => (
-                                <div key={`customs-fee-${index}`} className="flex justify-between text-sm text-gray-600">
+                                <div key={`customs-fee-${index}`} className="flex justify-between text-sm text-brand-muted">
                                   <span>{isRTL ? "رسوم جمركية" : fee.name}</span>
                                   <FormattedPrice
                                     price={parseFloat(fee.fee) / divisor}
@@ -2323,7 +2337,7 @@ export default function CheckoutClient() {
                               ))}
                             </div>
 
-              <div className="hidden py-4 text-lg font-bold text-gray-900 lg:flex lg:justify-between">
+              <div className="hidden py-4 text-lg font-bold text-brand-primary lg:flex lg:justify-between">
                 <span>{isRTL ? "الإجمالي" : "Total"}</span>
                 <FormattedPrice
                   price={checkoutTotal / divisor}

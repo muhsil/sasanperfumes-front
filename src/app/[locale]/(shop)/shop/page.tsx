@@ -93,7 +93,7 @@ export default async function ShopPage({ params }: ShopPageProps) {
   const rootCategories = categories.filter((category) => category.parent === 0);
 
   return (
-    <div className="bg-[#f8f3ef] text-brand-primary">
+    <div className="bg-transparent text-brand-primary">
       <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} className="sr-only" />
 
       <CollectionPageHeader

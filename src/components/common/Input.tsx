@@ -18,7 +18,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label htmlFor={inputId} className="mb-2 block text-sm font-medium text-foreground">
+          <label htmlFor={inputId} className="mb-2 block text-sm font-semibold text-brand-primary">
             {label}
             {required && <span className="ml-1 text-red-600">*</span>}
           </label>
@@ -30,10 +30,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             required={required}
             className={cn(
-              "flex h-10 w-full rounded border bg-brand-ivory px-4 py-2.5 text-sm transition-all duration-200",
+              "flex h-12 w-full rounded-full border bg-brand-ivory/95 px-5 py-3 text-sm text-brand-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] transition-all duration-200",
               "placeholder:text-brand-muted",
-              "border-black/20 hover:border-black",
-              "focus:border-black focus:outline-none focus:ring-1 focus:ring-black/15",
+              "border-brand-border/80 hover:border-brand-primary/45",
+              "focus:border-brand-primary/55 focus:outline-none focus:ring-2 focus:ring-brand-gold/15",
               "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-brand-beige",
               error && "border-red-500 hover:border-red-500 focus:border-red-500 focus:ring-red-500/20",
               isPasswordField && "pr-10",
@@ -47,7 +47,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-muted hover:text-brand-primary transition-colors focus:outline-none"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-muted transition-colors hover:text-brand-primary focus:outline-none"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? (

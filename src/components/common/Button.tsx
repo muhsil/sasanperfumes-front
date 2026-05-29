@@ -11,20 +11,20 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "md", isLoading, disabled, children, asChild = false, ...props }, ref) => {
     const baseStyles =
-      "inline-flex items-center justify-center font-medium transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 cursor-pointer";
+      "inline-flex items-center justify-center rounded-full font-semibold transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/55 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 cursor-pointer";
 
     const variants = {
-      primary: "bg-brand-primary text-white border border-brand-primary hover:bg-brand-primary-dark active:bg-brand-primary-dark focus-visible:ring-brand-primary",
-      secondary: "bg-brand-beige text-brand-primary border border-brand-border hover:bg-brand-beige-dark active:bg-brand-beige-dark focus-visible:ring-brand-primary",
-      outline: "border border-brand-primary bg-transparent text-brand-primary hover:bg-brand-primary hover:text-white active:bg-brand-primary-dark focus-visible:ring-brand-primary",
-      ghost: "text-brand-primary border border-transparent hover:bg-brand-beige active:bg-brand-beige-dark focus-visible:ring-brand-primary",
-      link: "text-brand-primary underline-offset-4 hover:underline border-0 bg-transparent hover:text-brand-primary-dark focus-visible:ring-brand-primary",
+      primary: "border border-brand-primary bg-brand-primary text-white shadow-[0_14px_28px_rgba(20,15,10,0.16)] hover:-translate-y-0.5 hover:bg-brand-primary-dark active:translate-y-0 active:bg-brand-primary-dark",
+      secondary: "border border-brand-border/70 bg-brand-ivory text-brand-primary shadow-[0_10px_22px_rgba(20,15,10,0.08)] hover:border-brand-primary/35 hover:bg-brand-beige active:bg-brand-beige-dark",
+      outline: "border border-brand-primary/45 bg-transparent text-brand-primary hover:-translate-y-0.5 hover:bg-brand-primary hover:text-white active:translate-y-0 active:bg-brand-primary-dark",
+      ghost: "border border-transparent text-brand-primary hover:bg-brand-beige active:bg-brand-beige-dark",
+      link: "border-0 bg-transparent text-brand-primary underline-offset-4 hover:underline hover:text-brand-primary-dark",
     };
 
     const sizes = {
-      sm: "h-9 px-3.5 text-xs gap-1.5",
-      md: "h-10 px-5 text-sm gap-2",
-      lg: "h-12 px-7 text-base gap-2",
+      sm: "h-9 px-4 text-xs gap-1.5",
+      md: "h-11 px-6 text-sm gap-2",
+      lg: "h-12 px-8 text-base gap-2",
     };
 
     const combinedClassName = cn(baseStyles, variants[variant], sizes[size], className);

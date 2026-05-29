@@ -92,7 +92,7 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
   const cartFooter = cartItems.length > 0 ? (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <span className="text-gray-600">{dictionary.subtotal}</span>
+        <span className="text-brand-muted">{dictionary.subtotal}</span>
         <FormattedPrice
           price={parseFloat(cartSubtotal) / divisor}
           className="text-lg font-semibold"
@@ -114,7 +114,7 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
       {/* Customs Fees */}
       {cart?.fees && cart.fees.length > 0 && cart.fees.map((fee, index) => (
         <div key={index} className="flex items-center justify-between">
-          <span className="text-sm text-gray-600">{isRTL ? "رسوم جمركية" : fee.name}</span>
+          <span className="text-sm text-brand-muted">{isRTL ? "رسوم جمركية" : fee.name}</span>
           <FormattedPrice
             price={parseFloat(fee.fee) / divisor}
             className="text-sm font-medium"
@@ -142,7 +142,7 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
   const productCategories = useProductCategories(productIds);
 
   const renderCartItems = () => (
-    <ul className="divide-y">
+    <ul className="divide-y divide-brand-border/60">
       {cartItems.map((item) => {
         const isAddingItem = item.item_key.startsWith("temp-");
         const isGiftItem = isFreeGiftItem(item.item_key);
@@ -185,6 +185,10 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
         sx: {
           width: { xs: "100%", sm: 400 },
           maxWidth: "100%",
+          backgroundColor: "var(--color-ivory)",
+          color: "var(--color-primary)",
+          borderLeft: isRTL ? "none" : "1px solid var(--color-border)",
+          borderRight: isRTL ? "1px solid var(--color-border)" : "none",
         },
       }}
     >
@@ -202,7 +206,8 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
             alignItems: "center",
             justifyContent: "space-between",
             borderBottom: "1px solid",
-            borderColor: "divider",
+            borderColor: "var(--color-border)",
+            backgroundColor: "color-mix(in srgb, var(--color-beige) 55%, white 45%)",
             px: 2,
             py: 2,
           }}
@@ -249,7 +254,7 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
         </Box>
 
         {cartFooter && (
-          <Box sx={{ borderTop: "1px solid", borderColor: "divider", p: 2 }}>
+          <Box sx={{ borderTop: "1px solid", borderColor: "var(--color-border)", backgroundColor: "color-mix(in srgb, var(--color-beige) 45%, white 55%)", p: 2 }}>
             {cartFooter}
           </Box>
         )}

@@ -46,7 +46,8 @@ export default async function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
         <style dangerouslySetInnerHTML={{ __html: `
           :root {
-            --font-jost: "Jost", "Segoe UI", Arial, Helvetica, sans-serif;
+            --font-jost: "Manrope", "Segoe UI", Arial, Helvetica, sans-serif;
+            --font-display: "Cormorant Garamond", "Times New Roman", serif;
             --font-noto-sans-arabic: "IBM Plex Sans Arabic", "Noto Sans Arabic", "Segoe UI", Arial, Helvetica, sans-serif;
             --background: ${themeConfig.colors.background};
             --foreground: ${themeConfig.colors.foreground};

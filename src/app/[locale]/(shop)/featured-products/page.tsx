@@ -73,11 +73,11 @@ export default async function FeaturedProductsPage({ params }: FeaturedProductsP
     <div className="container mx-auto px-5 md:px-7 lg:px-12 py-3">
       <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} contained={false} />
 
-      <div className="mb-3">
-        <h1 className="text-3xl font-bold text-gray-900">
+      <div className="mb-6">
+        <h1 className="font-title text-4xl text-brand-primary md:text-5xl">
           {dictionary.sections.featuredProducts.title}
         </h1>
-        <p className="mt-2 text-gray-600">
+        <p className="mt-3 text-brand-muted">
           {isRTL
             ? "اكتشف منتجاتنا المميزة"
             : "Discover our best sellers"}

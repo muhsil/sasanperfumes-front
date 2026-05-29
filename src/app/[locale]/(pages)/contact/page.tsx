@@ -104,6 +104,7 @@ export default async function ContactPage({ params }: ContactPageProps) {
   const breadcrumbItems = [
     { name: content.heroTitle || dictionary.common.contact, href: `/${locale}/contact` },
   ];
+  const pageTitle = content.heroTitle || dictionary.common.contact;
 
   return (
     <div className="flex flex-col">
@@ -114,31 +115,31 @@ export default async function ContactPage({ params }: ContactPageProps) {
         address: siteConfig.contact.address,
       })} />
 
-      <PageHeader title={content.heroTitle} subtitle={content.heroSubtitle} description={content.heroDescription} isRTL={isRTL} />
+      <PageHeader title={pageTitle} subtitle={content.heroSubtitle} description={content.heroDescription} isRTL={isRTL} />
       <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} />
 
       {/* Contact Form & Info Section */}
-      <section className="bg-white py-16 md:py-24">
+      <section className="bg-transparent py-16 md:py-24">
         <div className="px-5 md:px-7 lg:px-12 max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-3 gap-16">
             {/* Form Column */}
             <div className="lg:col-span-2">
-              <h2 className="mb-2 text-3xl md:text-4xl font-normal text-brand-primary">{sendMessage}</h2>
-              {sendMessageSub && <p className="mb-12 text-sm text-brand-primary/60">{sendMessageSub}</p>}
+              <h2 className="mb-2 font-title text-3xl text-brand-primary md:text-4xl">{sendMessage}</h2>
+              {sendMessageSub && <p className="mb-8 text-sm leading-relaxed text-brand-muted">{sendMessageSub}</p>}
               <ContactForm locale={locale} />
             </div>
 
             {/* Info Cards Column */}
-            <div className="space-y-6">
+            <div className="space-y-4">
               {contactInfoItems.map((item, index) => (
-                <div key={index} className="border-b border-brand-primary/10 pb-8 last:border-b-0">
-                  <h3 className="mb-3 text-xs text-brand-primary/50 uppercase tracking-widest font-normal">{item.title}</h3>
+                <div key={index} className="luxury-panel p-5">
+                  <h3 className="mb-3 text-xs font-semibold uppercase text-brand-gold">{item.title}</h3>
                   {item.key === "phone" || item.key === "callPhone" ? (
-                    <a href={`tel:${item.content.replace(/\s/g, "")}`} className="text-sm text-brand-primary hover:text-brand-primary/70 transition-colors block">{item.content}</a>
+                    <a href={`tel:${item.content.replace(/\s/g, "")}`} className="block text-sm text-brand-primary transition-colors hover:text-brand-gold">{item.content}</a>
                   ) : item.key === "email" ? (
-                    <a href={`mailto:${item.content}`} className="text-sm text-brand-primary hover:text-brand-primary/70 transition-colors block break-all">{item.content}</a>
+                    <a href={`mailto:${item.content}`} className="block break-all text-sm text-brand-primary transition-colors hover:text-brand-gold">{item.content}</a>
                   ) : item.key === "address" ? (
-                    <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.content)}`} target="_blank" rel="noopener noreferrer" className="text-sm text-brand-primary hover:text-brand-primary/70 transition-colors block">{item.content}</a>
+                    <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.content)}`} target="_blank" rel="noopener noreferrer" className="block text-sm text-brand-primary transition-colors hover:text-brand-gold">{item.content}</a>
                   ) : (
                     <p className="text-sm text-brand-primary">{item.content}</p>
                   )}
@@ -152,11 +153,11 @@ export default async function ContactPage({ params }: ContactPageProps) {
 
       {/* Benefits Section */}
       {trustIndicators.length > 0 && (
-      <section className="bg-[#f7f7f5] py-16 md:py-20">
+      <section className="section-band py-16 md:py-20">
         <div className="px-5 md:px-7 lg:px-12 max-w-6xl mx-auto">
           <div className="grid gap-8 md:grid-cols-3">
             {trustIndicators.map((item, index) => (
-              <div key={index}>
+              <div key={index} className="luxury-panel p-5">
                 <div className="mb-4 flex">
                   <svg className="h-5 w-5 text-brand-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     {item.icon === 'check' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />}
@@ -165,8 +166,8 @@ export default async function ContactPage({ params }: ContactPageProps) {
                     {item.icon === 'star' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />}
                   </svg>
                 </div>
-                <h4 className="mb-2 text-sm font-normal text-brand-primary">{item.title}</h4>
-                <p className="text-xs text-brand-primary/60 leading-relaxed">{item.description}</p>
+                <h4 className="mb-2 text-sm font-semibold text-brand-primary">{item.title}</h4>
+                <p className="text-xs leading-relaxed text-brand-muted">{item.description}</p>
               </div>
             ))}
           </div>
@@ -176,13 +177,13 @@ export default async function ContactPage({ params }: ContactPageProps) {
 
       {/* CTA Section */}
       {content.ctaTitle && (
-      <section className="bg-[#e5e5e5] py-16 md:py-24">
+      <section className="bg-brand-primary py-16 text-brand-ivory md:py-24">
         <div className="px-5 md:px-7 lg:px-12 max-w-4xl mx-auto text-center">
-          <h2 className="mb-4 text-3xl md:text-4xl font-normal text-brand-primary">{content.ctaTitle}</h2>
-          {content.ctaSubtitle && <p className="mb-8 text-sm text-brand-primary/60">{content.ctaSubtitle}</p>}
+          <h2 className="mb-4 font-title text-3xl text-brand-ivory md:text-4xl">{content.ctaTitle}</h2>
+          {content.ctaSubtitle && <p className="mb-8 text-sm text-brand-ivory/70">{content.ctaSubtitle}</p>}
           <Link
             href={`/${locale}/private-labeling`}
-            className="inline-block px-8 py-3 border border-brand-primary text-brand-primary text-xs tracking-widest uppercase font-normal hover:bg-brand-primary hover:text-white transition-colors"
+            className="inline-flex rounded-full border border-brand-gold bg-brand-gold px-8 py-3 text-xs font-semibold uppercase text-brand-primary transition-colors hover:bg-brand-ivory"
           >
             {content.ctaButton}
           </Link>

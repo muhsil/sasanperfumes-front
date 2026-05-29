@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Menu, X, ShoppingBag, User, Heart, Search } from "lucide-react";
+import { Menu, X, ShoppingBag, User, Heart } from "lucide-react";
 import { LanguageSwitcher } from "@/components/common/LanguageSwitcher";
 import { CurrencySwitcher } from "@/components/common/CurrencySwitcher";
 import { useCart } from "@/contexts/CartContext";
@@ -100,30 +100,39 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
   const topbarText = rawTopbarText
     .replace(/\{\{amount\}\}/g, String(topbarSettings?.freeShippingThreshold ?? 500))
     .replace(/\{\{currency\}\}/g, currency);
+  const mobileDrawerOffsetClass = topbarText && !topbarDismissed
+    ? "top-[108px] h-[calc(100vh-108px)]"
+    : "top-[72px] h-[calc(100vh-72px)]";
 
   return (
     <>
-      <header className={cn(headerSettings?.sticky !== false ? "sticky top-0 z-50" : "relative z-50", "w-full border-b border-gray-100 bg-white transition-shadow duration-300", isScrolled && "shadow-lg")}>
+      <header
+        className={cn(
+          headerSettings?.sticky !== false ? "sticky top-0 z-50" : "relative z-50",
+          "w-full border-b border-brand-border/50 bg-brand-ivory/88 backdrop-blur-xl transition-all duration-300",
+          isScrolled && "shadow-[0_18px_48px_rgba(20,15,10,0.18)]"
+        )}
+      >
         {/* Top promotional bar */}
         {topbarText && !topbarDismissed && (
           <div
-            className="border-b border-gray-100"
+            className="border-b border-brand-border/40"
             style={{
-              backgroundColor: topbarSettings?.bgColor || "#f3f4f6",
-              color: topbarSettings?.textColor || "#4b5563",
+              backgroundColor: topbarSettings?.bgColor || "#f2e7d7",
+              color: topbarSettings?.textColor || "#3f352b",
             }}
           >
-            <div className="flex h-8 w-full items-center justify-center gap-2 px-5 md:px-7 lg:px-12">
+            <div className="flex h-9 w-full items-center justify-center gap-2 px-5 md:px-7 lg:px-12">
               {topbarSettings?.link ? (
                 <a
                   href={topbarSettings.link}
-                  className="text-xs font-medium tracking-wide hover:underline"
+                  className="text-[11px] font-semibold uppercase tracking-[0.18em] hover:underline"
                   style={{ color: "inherit" }}
                 >
                   {topbarText}
                 </a>
               ) : (
-                <span className="text-xs font-medium tracking-wide">{topbarText}</span>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.18em]">{topbarText}</span>
               )}
               {topbarSettings?.dismissible && (
                 <button
@@ -142,13 +151,13 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
 
         {/* Row 1: Search/Currency/Language — Logo — Account/Cart */}
         <div className="w-full px-5 md:px-7 lg:px-12">
-          <div className="relative flex h-16 items-center justify-between md:h-18">
+          <div className="relative flex h-[4.5rem] items-center justify-between md:h-20">
             {/* Left: Search + Currency + Language (desktop) / Mobile menu button */}
-            <div className="flex items-center gap-1 md:gap-3">
+            <div className="flex items-center gap-1.5 md:gap-3.5">
               {/* Mobile menu button */}
               <button
                 type="button"
-                className="inline-flex items-center justify-center rounded-md p-2 text-brand-primary hover:bg-gray-50 xl:hidden"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-brand-border/45 bg-brand-ivory/90 text-brand-primary transition-colors hover:border-brand-primary/40 hover:bg-brand-beige xl:hidden"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               >
                 <span className="sr-only">{dictionary.navigation.menu}</span>
@@ -179,7 +188,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                   alt={siteSettings.logo.alt || siteSettings.site_name || "Logo"}
                   width={140}
                   height={90}
-                  className="h-11 w-auto md:h-[52px]"
+                  className="h-11 w-auto md:h-[54px]"
                   style={{ width: "auto" }}
                   priority
                   unoptimized={shouldUseUnoptimizedImage(siteSettings.logo.url)}
@@ -191,20 +200,20 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                   alt={siteSettings?.site_name || siteConfig.name}
                   width={140}
                   height={90}
-                  className="h-11 w-auto md:h-[52px]"
+                  className="h-11 w-auto md:h-[54px]"
                   style={{ width: "auto" }}
                   priority
                   unoptimized
                 />
               ) : (
-                <span className="text-xl font-bold tracking-tight text-brand-primary md:text-2xl">
+                <span className="font-title text-2xl tracking-[0.12em] text-brand-primary md:text-3xl">
                   {siteSettings?.site_name || siteConfig.name}
                 </span>
               )}
             </Link>
 
             {/* Right: Search + Cart (mobile) / Account + Wishlist + Cart (desktop) */}
-            <div className="flex items-center gap-1 md:gap-2">
+            <div className="flex items-center gap-1.5 md:gap-2.5">
               {/* Mobile search */}
               <div className="xl:hidden">
                 <DesktopSearchDropdown locale={locale} dictionary={dictionary} />
@@ -214,7 +223,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
               <button
                 type="button"
                 onClick={() => setIsAccountDrawerOpen(true)}
-                className="relative hidden p-2 text-brand-primary transition-colors hover:text-brand-primary-dark md:block"
+                className="relative hidden h-10 w-10 items-center justify-center rounded-full border border-brand-border/45 bg-brand-ivory/90 text-brand-primary transition-all hover:border-brand-primary/40 hover:bg-brand-beige md:flex"
                 aria-label={dictionary.account.myAccount}
               >
                 <User className="h-5 w-5" />
@@ -223,12 +232,12 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
               {/* Desktop wishlist */}
               <Link
                 href={`/${locale}/wishlist`}
-                className="relative hidden p-2 text-brand-primary transition-colors hover:text-brand-primary-dark md:block"
+                className="relative hidden h-10 w-10 items-center justify-center rounded-full border border-brand-border/45 bg-brand-ivory/90 text-brand-primary transition-all hover:border-brand-primary/40 hover:bg-brand-beige md:flex"
                 aria-label={dictionary.account.wishlist}
               >
                 <Heart className="h-5 w-5" />
                 {wishlistItemsCount > 0 && (
-                  <span className="absolute right-0 top-0 flex h-4 w-4 items-center justify-center rounded-full bg-brand-primary text-[10px] font-bold text-white">
+                  <span className="absolute right-0 top-0 flex h-4 w-4 items-center justify-center rounded-full bg-brand-primary text-[10px] font-bold text-white shadow">
                     {wishlistItemsCount}
                   </span>
                 )}
@@ -237,7 +246,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
               {/* Cart (all screens) */}
               <button
                 type="button"
-                className="relative p-2 text-brand-primary transition-colors hover:text-brand-primary-dark"
+                className="relative flex h-10 w-10 items-center justify-center rounded-full border border-brand-border/45 bg-brand-ivory/90 text-brand-primary transition-all hover:border-brand-primary/40 hover:bg-brand-beige"
                 onClick={() => setIsCartOpen(true)}
                 aria-label={dictionary.common.cart}
               >
@@ -253,17 +262,18 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
         </div>
 
         {/* Row 2: Desktop Navigation (centered) + MegaMenu */}
-        <nav className="relative hidden border-t border-gray-50 xl:block">
-          <div className="flex w-full items-center justify-center gap-8 px-5 md:px-7 lg:px-12 py-3">
+        <nav className="relative hidden border-t border-brand-border/45 xl:block">
+          <div className="flex w-full items-center justify-center gap-9 px-5 py-3 md:px-7 lg:px-12">
             {navigation.map((item) => {
               if (item.hasMegaMenu) {
                 return (
                   <Link
                     key={item.name}
                     href={item.href}
-                    className="text-xs font-bold uppercase tracking-[0.12em] text-brand-primary/80 transition-colors hover:text-brand-primary"
+                    className="group relative text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-primary/70 transition-colors hover:text-brand-primary"
                   >
                     {item.name}
+                    <span className="absolute inset-x-0 -bottom-1 h-px origin-left scale-x-0 bg-brand-gold transition-transform duration-300 group-hover:scale-x-100" />
                   </Link>
                 );
               }
@@ -279,7 +289,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                       href={item.href}
                       onClick={handleBrandsMegaMenuClose}
                       className={cn(
-                        "flex items-center gap-1 text-xs font-bold uppercase tracking-[0.12em] text-brand-primary/80 transition-colors hover:text-brand-primary",
+                        "group relative flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-primary/70 transition-colors hover:text-brand-primary",
                         isBrandsMegaMenuOpen && "text-brand-primary"
                       )}
                     >
@@ -290,6 +300,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                       >
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
+                      <span className="absolute inset-x-0 -bottom-1 h-px origin-left scale-x-0 bg-brand-gold transition-transform duration-300 group-hover:scale-x-100" />
                     </Link>
                   </div>
                 );
@@ -298,9 +309,10 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="text-xs font-bold uppercase tracking-[0.12em] text-brand-primary/80 transition-colors hover:text-brand-primary"
+                  className="group relative text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-primary/70 transition-colors hover:text-brand-primary"
                 >
                   {item.name}
+                  <span className="absolute inset-x-0 -bottom-1 h-px origin-left scale-x-0 bg-brand-gold transition-transform duration-300 group-hover:scale-x-100" />
                 </Link>
               );
             })}
@@ -317,19 +329,19 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
           <>
             {/* Overlay */}
             <div
-              className="fixed inset-0 top-16 z-40 bg-black/30 xl:hidden"
+              className={cn("fixed inset-x-0 bottom-0 z-40 bg-black/40 backdrop-blur-[2px] xl:hidden", mobileDrawerOffsetClass)}
               onClick={() => setIsMobileMenuOpen(false)}
             />
             {/* Drawer sidebar */}
-            <div className="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 z-40 overflow-y-auto bg-white xl:hidden">
-              <div className="px-4 py-4">
+            <div className={cn("fixed left-0 z-40 w-72 overflow-y-auto border-r border-brand-border/55 bg-brand-ivory/97 px-5 py-6 shadow-[0_28px_60px_rgba(20,15,10,0.28)] xl:hidden", mobileDrawerOffsetClass)}>
+              <div>
                 {/* Mobile nav links */}
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   {mobileNavigation.map((item) => (
                     <Link
                       key={item.name}
                       href={item.href}
-                      className="block rounded-md px-3 py-2.5 text-sm font-bold text-brand-primary hover:bg-gray-50"
+                      className="block rounded-full border border-transparent px-4 py-2.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-brand-primary/80 transition-colors hover:border-brand-border/55 hover:bg-brand-beige hover:text-brand-primary"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       {item.name}
@@ -337,7 +349,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                   ))}
                 </div>
                 {/* Mobile utilities */}
-                <div className="mt-6 flex items-center gap-4 border-t border-gray-100 pt-4">
+                <div className="mt-7 flex items-center gap-4 border-t border-brand-border/45 pt-5">
                   <LanguageSwitcher locale={locale} />
                   <CurrencySwitcher locale={locale} />
                 </div>

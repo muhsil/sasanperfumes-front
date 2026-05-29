@@ -157,7 +157,7 @@ export default async function LocaleLayout({
               <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[9999] focus:rounded-lg focus:bg-brand-primary focus:px-6 focus:py-3 focus:text-white focus:shadow-lg focus:outline-none">
                 {validLocale === "ar" ? "انتقل إلى المحتوى الرئيسي" : "Skip to main content"}
               </a>
-              <div dir={dir} lang={validLocale} className="flex min-h-screen flex-col bg-brand-beige overflow-x-clip max-w-full">
+              <div dir={dir} lang={validLocale} className="site-shell flex min-h-screen max-w-full flex-col overflow-x-clip text-brand-primary">
                 <nav className="print:hidden" aria-label={validLocale === "ar" ? "التنقل الرئيسي" : "Main navigation"}>
                   <Header
                     locale={validLocale}
@@ -170,7 +170,7 @@ export default async function LocaleLayout({
                     topbarSettings={topbarSettings}
                   />
                 </nav>
-                <main id="main-content" className="flex-1" role="main">
+                <main id="main-content" className="section-reveal flex-1" role="main">
                   <MobileEnhancements>{children}</MobileEnhancements>
                 </main>
                 <Footer locale={validLocale} dictionary={dictionary} siteSettings={siteSettings} footerSettings={footerSettings} featureToggles={featureToggles} footerTopSocialLinks={footerTopSocialLinks} />

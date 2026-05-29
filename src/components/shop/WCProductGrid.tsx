@@ -30,7 +30,7 @@ export function WCProductGrid({
   if (products.length === 0) {
     return (
       <div className="py-12 text-center">
-        <p className="text-gray-500">No products found</p>
+        <p className="text-brand-muted">No products found</p>
       </div>
     );
   }
@@ -44,7 +44,7 @@ export function WCProductGrid({
   };
 
   return (
-    <div className={cn("grid gap-0", gridCols[columns], className)}>
+    <div className={cn("grid gap-4 px-5 md:px-7 lg:px-12", gridCols[columns], className)}>
       {products.map((product) => (
         <WCProductCard
           key={product.id}

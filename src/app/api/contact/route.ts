@@ -4,30 +4,65 @@ import { siteConfig } from "@/config/site";
 const API_BASE = `${siteConfig.apiUrl}/wp-json/sasanperfumes/v1`;
 
 interface ContactFormData {
-  firstName: string;
-  lastName: string;
-  email: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
   phone?: string;
   subject?: string;
-  message: string;
+  message?: string;
+}
+
+function parseJsonResponse(text: string) {
+  try {
+    return text ? JSON.parse(text) : {};
+  } catch {
+    return null;
+  }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body: ContactFormData = await request.json();
+    const fullName =
+      body.name?.trim() ||
+      [body.firstName, body.lastName]
+        .filter((part): part is string => Boolean(part?.trim()))
+        .join(" ")
+        .trim();
+    const email = body.email?.trim() || "";
+    const message = body.message?.trim() || "";
 
-    if (!body.firstName || !body.lastName || !body.email || !body.message) {
+    if (!fullName || !email || !message) {
       return NextResponse.json(
         {
           success: false,
           error: {
             code: "missing_fields",
-            message: "First name, last name, email, and message are required.",
+            message: "Name, email, and message are required.",
           },
         },
         { status: 400 }
       );
     }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "invalid_email",
+            message: "Please enter a valid email address.",
+          },
+        },
+        { status: 400 }
+      );
+    }
+
+    const nameParts = fullName.split(/\s+/);
+    const firstName = body.firstName?.trim() || nameParts[0] || fullName;
+    const lastName = body.lastName?.trim() || nameParts.slice(1).join(" ");
 
     const url = `${API_BASE}/contact`;
 
@@ -37,16 +72,30 @@ export async function POST(request: NextRequest) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        first_name: body.firstName,
-        last_name: body.lastName,
-        email: body.email,
+        first_name: firstName,
+        last_name: lastName,
+        email,
         phone: body.phone || "",
         subject: body.subject || "General Inquiry",
-        message: body.message,
+        message,
       }),
     });
 
-    const data = await response.json();
+    const responseText = await response.text();
+    const data = parseJsonResponse(responseText);
+
+    if (!data) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "invalid_backend_response",
+            message: "Contact service returned an invalid response. Please try again.",
+          },
+        },
+        { status: response.ok ? 502 : response.status }
+      );
+    }
 
     if (data.success) {
       return NextResponse.json({

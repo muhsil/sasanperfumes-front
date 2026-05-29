@@ -84,7 +84,7 @@ export function Drawer({
     <>
       <div
         className={cn(
-          "fixed inset-0 z-50 bg-black/50 transition-opacity duration-300",
+          "fixed inset-0 z-50 bg-brand-dark-brown/48 backdrop-blur-[2px] transition-opacity duration-300",
           isOpen ? "opacity-100" : "pointer-events-none opacity-0",
           overlayClassName
         )}
@@ -94,9 +94,9 @@ export function Drawer({
 
       <div
         className={cn(
-          "fixed top-0 z-50 h-full w-full bg-background shadow-lg transition-transform duration-300 ease-in-out",
+          "fixed top-0 z-50 h-full w-full border-brand-border/70 bg-brand-ivory shadow-[0_28px_70px_rgba(20,15,10,0.22)] transition-transform duration-300 ease-in-out",
           sizeClasses[size],
-          effectivePosition === "left" ? "left-0" : "right-0",
+          effectivePosition === "left" ? "left-0 border-r" : "right-0 border-l",
           getTransformClass(),
           className
         )}
@@ -109,14 +109,14 @@ export function Drawer({
           {(title || showCloseButton) && (
             <div
               className={cn(
-                "flex items-center justify-between border-b border-brand-border px-5 py-4",
+                "flex items-center justify-between border-b border-brand-border/70 bg-brand-beige/55 px-5 py-4",
                 headerClassName
               )}
             >
               <div className="flex items-center gap-2">
                 {titleIcon}
                 {title && (
-                  <h2 id="drawer-title" className="text-base font-medium">
+                  <h2 id="drawer-title" className="font-title text-xl text-brand-primary">
                     {title}
                   </h2>
                 )}
@@ -124,7 +124,7 @@ export function Drawer({
               {showCloseButton && (
                 <button
                   onClick={onClose}
-                  className="rounded-full p-2 text-brand-muted transition-colors hover:bg-brand-beige hover:text-brand-primary"
+                  className="rounded-full border border-brand-border/60 bg-brand-ivory p-2 text-brand-muted transition-colors hover:border-brand-primary/35 hover:bg-brand-primary hover:text-white"
                   aria-label="Close drawer"
                 >
                   <X className="h-5 w-5" />
@@ -138,7 +138,7 @@ export function Drawer({
           </div>
 
           {footer && (
-            <div className={cn("border-t border-brand-border p-5", footerClassName)}>{footer}</div>
+            <div className={cn("border-t border-brand-border/70 bg-brand-beige/40 p-5", footerClassName)}>{footer}</div>
           )}
         </div>
       </div>
@@ -153,7 +153,7 @@ export interface DrawerHeaderProps {
 
 export function DrawerHeader({ children, className }: DrawerHeaderProps) {
   return (
-    <div className={cn("border-b border-brand-border p-5", className)}>
+    <div className={cn("border-b border-brand-border/70 bg-brand-beige/45 p-5", className)}>
       {children}
     </div>
   );
@@ -179,7 +179,7 @@ export interface DrawerFooterProps {
 
 export function DrawerFooter({ children, className }: DrawerFooterProps) {
   return (
-    <div className={cn("border-t border-brand-border p-5", className)}>
+    <div className={cn("border-t border-brand-border/70 bg-brand-beige/40 p-5", className)}>
       {children}
     </div>
   );

@@ -89,14 +89,14 @@ export function ProductViewToggle({
     <>
       <div
         className={cn(
-          "relative flex items-center justify-between gap-4 border-y border-[#e7ded7] bg-[#f8f3ef] px-5 py-3 text-brand-primary md:px-7 lg:px-12",
+          "section-band relative flex items-center justify-between gap-4 px-5 py-3 text-brand-primary md:px-7 lg:px-12",
           className
         )}
         dir={isRTL ? "rtl" : "ltr"}
       >
         <div className="hidden items-center md:flex">
           {productCount !== undefined && (
-            <span className="text-[13px] font-normal tracking-normal text-brand-primary">
+            <span className="text-[13px] font-semibold text-brand-muted">
               {productCount} {productCount === 1 ? t.product : t.products}
             </span>
           )}
@@ -106,7 +106,7 @@ export function ProductViewToggle({
           type="button"
           onClick={() => setIsDrawerOpen(true)}
           className={cn(
-            "flex items-center gap-3 text-[13px] font-normal lowercase tracking-normal text-brand-primary transition-opacity hover:opacity-70 md:hidden",
+            "flex items-center gap-3 rounded-full border border-brand-border/70 bg-brand-ivory px-4 py-2 text-[13px] font-semibold lowercase text-brand-primary shadow-[0_8px_20px_rgba(20,15,10,0.06)] transition-colors hover:border-brand-primary/35 md:hidden",
             isRTL && "flex-row-reverse"
           )}
         >
@@ -129,8 +129,10 @@ export function ProductViewToggle({
                     onGridColumnsChange(option.columns);
                   }}
                   className={cn(
-                    "flex h-6 w-6 items-center justify-center transition-opacity hover:opacity-70",
-                    gridColumns === option.columns ? "text-brand-primary" : "text-brand-primary/35"
+                    "flex h-8 w-8 items-center justify-center rounded-full border transition-colors",
+                    gridColumns === option.columns
+                      ? "border-brand-primary bg-brand-primary text-white"
+                      : "border-brand-border/70 bg-brand-ivory text-brand-primary/45 hover:border-brand-primary/35 hover:text-brand-primary"
                   )}
                   aria-label={`${option.columns} ${t.columns}`}
                   title={`${option.columns} ${t.columns}`}
@@ -141,13 +143,13 @@ export function ProductViewToggle({
             </div>
           )}
 
-          <span className="hidden h-5 w-px bg-[#e7ded7] md:block" aria-hidden="true" />
+          <span className="hidden h-5 w-px bg-brand-border/80 md:block" aria-hidden="true" />
 
           <button
             type="button"
             onClick={() => setIsDrawerOpen(true)}
             className={cn(
-              "hidden items-center gap-3 text-[13px] font-normal lowercase tracking-normal text-brand-primary transition-opacity hover:opacity-70 md:flex",
+              "hidden items-center gap-3 rounded-full border border-brand-border/70 bg-brand-ivory px-4 py-2 text-[13px] font-semibold lowercase text-brand-primary shadow-[0_8px_20px_rgba(20,15,10,0.06)] transition-colors hover:border-brand-primary/35 md:flex",
               isRTL && "flex-row-reverse"
             )}
           >
@@ -167,7 +169,7 @@ export function ProductViewToggle({
         bodyClassName="p-0"
       >
         <div className="border-b border-brand-border/40 p-5">
-          <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-brand-primary/50">
+          <p className="mb-3 text-[11px] font-semibold uppercase text-brand-primary/50">
             {t.sortBy}
           </p>
           <div className="space-y-1">
@@ -177,9 +179,9 @@ export function ProductViewToggle({
                 type="button"
                 onClick={() => handleSortClick(option.value)}
                 className={cn(
-                  "flex w-full items-center justify-between rounded-md px-3 py-2.5 text-[13px] font-normal tracking-normal transition-colors hover:bg-[#f8f3ef]",
+                  "flex w-full items-center justify-between rounded-full px-4 py-2.5 text-[13px] font-semibold transition-colors hover:bg-brand-beige",
                   sortBy === option.value
-                    ? "bg-[#f8f3ef] text-brand-primary"
+                    ? "bg-brand-beige text-brand-primary"
                     : "text-brand-primary/65"
                 )}
               >
@@ -191,7 +193,7 @@ export function ProductViewToggle({
         </div>
 
         <div className="p-5">
-          <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-brand-primary/50">
+          <p className="mb-3 text-[11px] font-semibold uppercase text-brand-primary/50">
             {t.columns}
           </p>
           <div className="flex gap-2">
@@ -205,7 +207,7 @@ export function ProductViewToggle({
                   setIsDrawerOpen(false);
                 }}
                 className={cn(
-                  "flex h-10 w-10 items-center justify-center rounded-md border text-sm transition-all",
+                  "flex h-10 w-10 items-center justify-center rounded-full border text-sm transition-all",
                   gridColumns === option.columns
                     ? "border-brand-primary bg-brand-primary text-white"
                     : "border-brand-border/40 text-brand-primary hover:border-brand-primary/40"

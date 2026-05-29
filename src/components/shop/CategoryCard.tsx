@@ -21,7 +21,7 @@ export function CategoryCard({
     <Link
       href={`/${locale}/category/${category.slug}`}
       className={cn(
-        "group relative block overflow-hidden",
+        "group relative block overflow-hidden rounded-lg border border-brand-border/70 bg-brand-ivory shadow-[0_16px_34px_rgba(20,15,10,0.08)] transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-gold/45",
         variant === "featured" ? "aspect-[4/3]" : "aspect-square",
         className
       )}
@@ -37,17 +37,17 @@ export function CategoryCard({
                   loading="lazy"
                 />
       ) : (
-        <div className="h-full w-full bg-gray-200" />
+        <div className="h-full w-full bg-brand-beige" />
       )}
 
       {/* Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-brand-dark-brown/72 via-brand-dark-brown/18 to-transparent" />
 
       {/* Content */}
       <div className="absolute bottom-0 left-0 right-0 p-4">
                 <h3
                   className={cn(
-                    "font-semibold text-white",
+                    "font-title font-semibold text-white",
                     variant === "featured" ? "text-xl md:text-2xl" : "text-lg"
                   )}
                 >

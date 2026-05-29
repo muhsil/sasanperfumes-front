@@ -42,7 +42,7 @@ interface ProductSectionProps {
 
 export function ProductSectionSkeleton({ count = 5 }: { count?: number }) {
   return (
-    <section className="bg-white pt-8 md:pt-10 lg:pt-12 pb-0">
+    <section className="bg-transparent pb-0 pt-10 md:pt-12 lg:pt-14">
       <div className="px-5 md:px-7 lg:px-12">
         <div className="mb-6 md:mb-8">
           <SectionHeaderSkeleton />
@@ -108,15 +108,15 @@ export function ProductSection({
   const sliderNavPrefix = settings.section_title?.replace(/\s+/g, '-').toLowerCase() || 'default';
 
   return (
-    <section className={`bg-white pt-8 md:pt-10 lg:pt-12 pb-0 ${className} ${getVisibilityClass()}`}>
+    <section className={`bg-transparent pb-0 pt-10 md:pt-12 lg:pt-14 ${className} ${getVisibilityClass()}`}>
       <div className="px-5 md:px-7 lg:px-12">
         <div className="mb-6 flex flex-col gap-4 md:mb-8 md:flex-row md:items-end md:justify-between">
           <div className={isRTL ? "text-right" : "text-left"}>
-            <h2 className="text-2xl md:text-3xl font-normal text-brand-primary">
+            <h2 className="font-title text-3xl text-brand-primary md:text-4xl">
               {settings.section_title}
             </h2>
             {settings.section_subtitle && (
-              <p className="mt-2 max-w-2xl text-sm text-brand-muted leading-relaxed">
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-brand-muted">
                 {settings.section_subtitle}
               </p>
             )}
@@ -124,7 +124,7 @@ export function ProductSection({
           {settings.show_view_all && (
             <Link
               href={viewAllLink}
-              className="hidden text-sm text-brand-primary underline underline-offset-4 hover:no-underline md:inline-block"
+              className="hidden rounded-full border border-brand-border/70 bg-brand-ivory px-5 py-2 text-[11px] font-semibold uppercase text-brand-primary transition-colors hover:border-brand-primary/45 hover:bg-brand-beige md:inline-flex"
             >
               {viewAllText}
             </Link>
@@ -134,17 +134,17 @@ export function ProductSection({
 
       {isGrid ? (
         /* Grid layout */
-        <div className={`grid gap-0 border-t border-l border-[#e7ded7] ${MOBILE_COLS[cols.mobile] ?? "grid-cols-2"} ${TABLET_COLS[cols.tablet] ?? "sm:grid-cols-3"} ${DESKTOP_COLS[cols.desktop] ?? "lg:grid-cols-5"}`}>
+        <div className={`grid gap-4 px-5 pb-1 md:px-7 lg:px-12 ${MOBILE_COLS[cols.mobile] ?? "grid-cols-2"} ${TABLET_COLS[cols.tablet] ?? "sm:grid-cols-3"} ${DESKTOP_COLS[cols.desktop] ?? "lg:grid-cols-5"}`}>
           {displayProducts.map((product) => (
             <WCProductCard key={product.id} product={product} locale={locale} bundleProductSlugs={bundleProductSlugs} englishSlug={englishProductSlugs[product.id]} />
           ))}
         </div>
       ) : (
         /* Slider layout */
-        <div className="relative product-section-slider border-t border-l border-[#e7ded7]">
+        <div className="relative product-section-slider px-5 md:px-7 lg:px-12">
           <Swiper
             modules={[Autoplay, Navigation]}
-            spaceBetween={0}
+            spaceBetween={16}
             slidesPerView={cols.mobile}
             loop={settings.autoplay && displayProducts.length > cols.desktop}
             autoplay={
@@ -161,10 +161,10 @@ export function ProductSection({
             }}
 
             breakpoints={{
-              640:  { slidesPerView: cols.tablet,  spaceBetween: 0 },
-              768:  { slidesPerView: cols.tablet,  spaceBetween: 0 },
-              1024: { slidesPerView: cols.desktop, spaceBetween: 0 },
-              1280: { slidesPerView: cols.desktop, spaceBetween: 0 },
+              640:  { slidesPerView: cols.tablet,  spaceBetween: 16 },
+              768:  { slidesPerView: cols.tablet,  spaceBetween: 16 },
+              1024: { slidesPerView: cols.desktop, spaceBetween: 16 },
+              1280: { slidesPerView: cols.desktop, spaceBetween: 16 },
             }}
             className=""
             dir={isRTL ? "rtl" : "ltr"}
@@ -181,17 +181,17 @@ export function ProductSection({
             <>
               <button
                 type="button"
-                className={`product-slider-prev-${sliderNavPrefix} absolute ${isRTL ? 'right-0' : 'left-0'} top-[32%] z-10 -translate-y-1/2 -translate-x-2 h-10 w-10 border border-brand-primary/20 bg-white hidden md:flex items-center justify-center hover:bg-brand-primary hover:text-white transition-colors disabled:opacity-50`}
+                className={`product-slider-prev-${sliderNavPrefix} absolute ${isRTL ? "right-0" : "left-0"} top-[32%] z-10 hidden h-10 w-10 -translate-x-2 -translate-y-1/2 items-center justify-center rounded-full border border-brand-border/70 bg-brand-ivory text-brand-primary shadow-[0_8px_20px_rgba(20,15,10,0.12)] transition-colors hover:border-brand-primary/45 hover:bg-brand-primary hover:text-white disabled:opacity-50 md:flex`}
                 aria-label="Previous"
               >
-                <ChevronLeft className={`h-4 w-4 text-brand-primary ${isRTL ? 'rotate-180' : ''}`} />
+                <ChevronLeft className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />
               </button>
               <button
                 type="button"
-                className={`product-slider-next-${sliderNavPrefix} absolute ${isRTL ? 'left-0' : 'right-0'} top-[32%] z-10 -translate-y-1/2 translate-x-2 h-10 w-10 border border-brand-primary/20 bg-white hidden md:flex items-center justify-center hover:bg-brand-primary hover:text-white transition-colors disabled:opacity-50`}
+                className={`product-slider-next-${sliderNavPrefix} absolute ${isRTL ? "left-0" : "right-0"} top-[32%] z-10 hidden h-10 w-10 translate-x-2 -translate-y-1/2 items-center justify-center rounded-full border border-brand-border/70 bg-brand-ivory text-brand-primary shadow-[0_8px_20px_rgba(20,15,10,0.12)] transition-colors hover:border-brand-primary/45 hover:bg-brand-primary hover:text-white disabled:opacity-50 md:flex`}
                 aria-label="Next"
               >
-                <ChevronRight className={`h-4 w-4 text-brand-primary ${isRTL ? 'rotate-180' : ''}`} />
+                <ChevronRight className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />
               </button>
             </>
           )}

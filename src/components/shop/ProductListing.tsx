@@ -158,8 +158,8 @@ export function ProductListing({
 
   if (products.length === 0) {
     return (
-      <div className="bg-[#f8f3ef] py-14 text-center">
-        <p className="text-sm font-normal tracking-normal text-brand-primary/60">
+      <div className="section-band py-14 text-center">
+        <p className="text-sm font-semibold text-brand-muted">
           {locale === "ar" ? "\u0644\u0627 \u062a\u0648\u062c\u062f \u0645\u0646\u062a\u062c\u0627\u062a" : "No products found"}
         </p>
       </div>
@@ -167,7 +167,7 @@ export function ProductListing({
   }
 
   return (
-    <div className={cn("bg-[#f8f3ef]", className)}>
+    <div className={cn("bg-transparent pb-4", className)}>
       {showToolbar && (
         <div className={cn("mb-0", toolbarClassName)}>
           <ProductViewToggle
