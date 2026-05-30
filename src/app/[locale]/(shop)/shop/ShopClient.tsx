@@ -5,11 +5,8 @@ import { ProductListing } from "@/components/shop/ProductListing";
 import type { WCProduct, WCProductsResponse } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
 
-// DEV MODE: Cache disabled for faster development - uncomment when done
-// const PRODUCTS_CACHE_KEY = "sasanperfumes_products_cache";
-// const CACHE_TTL_MS = 5 * 60 * 1000;
-// Match the initial SSR fetch size (per_page: 15 in page.tsx) to avoid overlap on page 2
-const PER_PAGE = 15;
+const PER_PAGE = 30;
+const LOAD_AHEAD_MARGIN = "1200px 0px";
 
 // Interface kept for type safety even when cache is disabled
 interface CachedProducts {
@@ -103,11 +100,13 @@ export function ShopClient({
           (product: WCProduct) => !giftIdsSet.has(product.id) && !giftSlugsSet.has(product.slug)
         );
         
-        const newProducts = [...products, ...filteredNewProducts];
-        const uniqueProducts = newProducts.filter(
-          (product, index, self) =>
-            index === self.findIndex((p) => p.id === product.id)
-        );
+        const seenProductIds = new Set(products.map((product) => product.id));
+        const uniqueNewProducts = filteredNewProducts.filter((product) => {
+          if (seenProductIds.has(product.id)) return false;
+          seenProductIds.add(product.id);
+          return true;
+        });
+        const uniqueProducts = [...products, ...uniqueNewProducts];
         
         setProducts(uniqueProducts);
         setCurrentPage(nextPage);
@@ -136,7 +135,7 @@ export function ShopClient({
       },
       {
         root: null,
-        rootMargin: "200px",
+        rootMargin: LOAD_AHEAD_MARGIN,
         threshold: 0,
       }
     );
@@ -163,7 +162,7 @@ export function ShopClient({
         totalCount={total}
       />
       
-      <div ref={loadMoreRef} className="py-8 flex justify-center">
+      <div ref={loadMoreRef} className="flex min-h-12 justify-center py-5">
         {isLoading && (
           <div className="flex items-center gap-2 text-brand-muted">
             <svg

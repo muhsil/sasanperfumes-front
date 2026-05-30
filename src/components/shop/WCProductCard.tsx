@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -48,6 +48,7 @@ export function WCProductCard({
   const { addToWishlist, removeFromWishlist, isInWishlist, getWishlistItemId } = useWishlist();
   const { isAuthenticated } = useAuth();
   const router = useRouter();
+  const prefetchedHrefRef = useRef<string | null>(null);
   const isRTL = locale === "ar";
 
   const labels = {
@@ -106,13 +107,17 @@ export function WCProductCard({
 
   const isOutOfStock = !product.is_in_stock;
   const mainImage = product.images[0];
-  const secondaryImage = product.images[1] || null;
   const rating = Number(product.average_rating || 0);
   const reviewCount = Number(product.review_count || 0);
 
   const productSlug = englishSlug || getProductSlugFromPermalink(product.permalink, product.slug);
   const isBundleProduct = bundleProductSlugs.includes(productSlug) || bundleProductSlugs.includes(product.slug);
   const productHref = `/${locale}/product/${productSlug}`;
+  const prefetchProduct = useCallback(() => {
+    if (prefetchedHrefRef.current === productHref) return;
+    prefetchedHrefRef.current = productHref;
+    router.prefetch(productHref);
+  }, [productHref, router]);
   const productName = decodeHtmlEntities(product.name);
   const extraBadgeSlugs = BESTSELLER_PRODUCT_SLUGS.includes(productSlug) || BESTSELLER_PRODUCT_SLUGS.includes(product.slug)
     ? ["bestseller"]
@@ -185,35 +190,27 @@ export function WCProductCard({
         <div className="flex h-full flex-col overflow-hidden rounded-md border border-brand-border/70 bg-white shadow-[0_8px_24px_rgba(20,15,10,0.05)] transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-gold/45 hover:shadow-[0_16px_34px_rgba(20,15,10,0.1)]">
           {/* Image */}
           <div className="relative">
-            <Link href={productHref} className="block" aria-label={productName}>
+            <Link
+              href={productHref}
+              className="block"
+              aria-label={productName}
+              onFocus={prefetchProduct}
+              onMouseEnter={prefetchProduct}
+              onTouchStart={prefetchProduct}
+            >
               <div className="relative aspect-[4/5] overflow-hidden bg-[#fbf8f4]">
                 {mainImage && !imageError ? (
-                  <>
-                    <Image
-                      src={mainImage.src}
-                      alt={mainImage.alt || product.name}
-                      fill
-                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                      className="object-contain p-3 transition-transform duration-700 ease-out group-hover:scale-[1.035] sm:p-4"
-                      loading="lazy"
-                      placeholder="blur"
-                      blurDataURL={BLUR_DATA_URL}
-                      onError={() => setImageError(true)}
-                    />
-                    {secondaryImage && (
-                      <Image
-                        src={secondaryImage.src}
-                        alt={secondaryImage.alt || product.name}
-                        fill
-                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                        className="object-contain p-3 opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100 sm:p-4"
-                        loading="lazy"
-                        placeholder="blur"
-                        blurDataURL={BLUR_DATA_URL}
-                      />
-                    )}
-
-                  </>
+                  <Image
+                    src={mainImage.src}
+                    alt={mainImage.alt || product.name}
+                    fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                    className="object-contain p-3 transition-transform duration-700 ease-out group-hover:scale-[1.035] sm:p-4"
+                    loading="lazy"
+                    placeholder="blur"
+                    blurDataURL={BLUR_DATA_URL}
+                    onError={() => setImageError(true)}
+                  />
                 ) : (
                   <div className="flex h-full items-center justify-center bg-brand-beige">
                     <Image
@@ -269,6 +266,9 @@ export function WCProductCard({
             {showAsVariable ? (
               <Link
                 href={productHref}
+                onFocus={prefetchProduct}
+                onMouseEnter={prefetchProduct}
+                onTouchStart={prefetchProduct}
                 className={cn(
                   "absolute bottom-2 flex h-9 w-9 items-center justify-center rounded-full border border-brand-border/60 bg-white text-brand-primary shadow-lg opacity-100 transition-all duration-300 hover:scale-110 hover:bg-brand-primary hover:text-white sm:bottom-3 sm:opacity-0 sm:group-hover:opacity-100",
                   isRTL ? "left-2 sm:left-3" : "right-2 sm:right-3"
@@ -313,7 +313,13 @@ export function WCProductCard({
               </div>
             )}
 
-            <Link href={productHref} className="block w-full">
+            <Link
+              href={productHref}
+              className="block w-full"
+              onFocus={prefetchProduct}
+              onMouseEnter={prefetchProduct}
+              onTouchStart={prefetchProduct}
+            >
               <h3 className={cn(
                 "text-[12px] font-semibold leading-snug text-brand-primary-dark sm:text-[13px]",
                 productNameLines === 1 ? "line-clamp-1" : "line-clamp-2"

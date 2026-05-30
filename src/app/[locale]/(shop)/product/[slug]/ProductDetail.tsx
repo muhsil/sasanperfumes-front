@@ -1601,7 +1601,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
 
       {/* Sticky Add to Cart Bar */}
       <div
-        className={`fixed bottom-24 left-1/2 z-40 w-[calc(100%-2rem)] max-w-[680px] -translate-x-1/2 border border-[#d9d0c7] bg-[#f8f3ef]/95 p-3 shadow-2xl shadow-black/10 backdrop-blur-md transition-transform duration-300 sm:bottom-6 sm:p-4 ${(!isMobileViewport || hasAddedToCartOnce) && showStickyBar && !isOutOfStock && !isFullscreen ? "translate-y-0" : "translate-y-[calc(100%+2rem)]"}`}
+        className={`fixed bottom-4 left-1/2 z-40 w-[calc(100%-2rem)] max-w-[680px] -translate-x-1/2 border border-[#d9d0c7] bg-[#f8f3ef]/95 p-3 shadow-2xl shadow-black/10 backdrop-blur-md transition-transform duration-300 sm:bottom-6 sm:p-4 ${(!isMobileViewport || hasAddedToCartOnce) && showStickyBar && !isOutOfStock && !isFullscreen ? "translate-y-0" : "translate-y-[calc(100%+2rem)]"}`}
       >
         <div className="grid items-center gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
           <div className="flex min-w-0 items-center gap-3">

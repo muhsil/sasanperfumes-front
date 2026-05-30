@@ -4,7 +4,6 @@ import dynamic from "next/dynamic";
 import NextTopLoader from "nextjs-toploader";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { MobileBottomBar } from "@/components/layout/MobileBottomBar";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
@@ -16,7 +15,7 @@ import { getDictionary } from "@/i18n";
 import { siteConfig, localeConfig, type Locale } from "@/config/site";
 import { INDEX_NOFOLLOW_ROBOTS, generateOrganizationJsonLd, generateWebSiteJsonLd, generateLocalBusinessJsonLd } from "@/lib/utils/seo";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { getSiteSettings, getHeaderSettings, getMobileBarSettings, getPrimaryMenu, getMobileHeaderMenu, getMobileBottomBarMenu, getCategoriesDrawerMenu, getTopbarSettings, getSeoSettings, getFooterSettings, getWhatsAppSettings, getFeatureToggles, getStaticPageContent, mapRepeater, pickLocale } from "@/lib/api/wordpress";
+import { getSiteSettings, getHeaderSettings, getPrimaryMenu, getMobileHeaderMenu, getMobileBottomBarMenu, getCategoriesDrawerMenu, getTopbarSettings, getSeoSettings, getFooterSettings, getWhatsAppSettings, getFeatureToggles, getStaticPageContent, mapRepeater, pickLocale } from "@/lib/api/wordpress";
 import { TrackingScripts } from "@/components/tracking";
 import { Suspense } from "react";
 
@@ -94,11 +93,10 @@ export default async function LocaleLayout({
   const dictionary = await getDictionary(validLocale);
   const { dir } = localeConfig[validLocale];
 
-  // Fetch site settings, header settings, mobile bar settings, topbar settings, menu, and SEO settings in parallel
-  const [siteSettings, headerSettings, mobileBarSettings, topbarSettings, menuItems, mobileMenuItems, mobileBottomBarMenu, categoriesDrawerMenu, seoSettings, footerSettings, whatsAppSettings, featureToggles, contactPageContent] = await Promise.all([
+  // Fetch site settings, header settings, topbar settings, menu, and SEO settings in parallel
+  const [siteSettings, headerSettings, topbarSettings, menuItems, mobileMenuItems, mobileBottomBarMenu, categoriesDrawerMenu, seoSettings, footerSettings, whatsAppSettings, featureToggles, contactPageContent] = await Promise.all([
     getSiteSettings(validLocale),
     getHeaderSettings(),
-    getMobileBarSettings(validLocale),
     getTopbarSettings(validLocale),
     getPrimaryMenu(validLocale),
     getMobileHeaderMenu(validLocale),
@@ -167,6 +165,7 @@ export default async function LocaleLayout({
                     headerSettings={headerSettings}
                     menuItems={menuItems?.items}
                     mobileMenuItems={mobileMenuItems?.items}
+                    mobileBottomBarMenuItems={mobileBottomBarMenu?.items}
                     categoriesDrawerMenuItems={categoriesDrawerMenu?.items}
                     topbarSettings={topbarSettings}
                   />
@@ -175,17 +174,6 @@ export default async function LocaleLayout({
                   <MobileEnhancements>{children}</MobileEnhancements>
                 </main>
                 <Footer locale={validLocale} dictionary={dictionary} siteSettings={siteSettings} footerSettings={footerSettings} featureToggles={featureToggles} footerTopSocialLinks={footerTopSocialLinks} />
-                <div className="print:hidden">
-                  <MobileBottomBar
-                    locale={validLocale}
-                    settings={mobileBarSettings}
-                    dictionary={dictionary}
-                    menuItems={menuItems?.items}
-                    mobileMenuItems={mobileMenuItems?.items}
-                    mobileBottomBarMenuItems={mobileBottomBarMenu?.items}
-                    categoriesDrawerMenuItems={categoriesDrawerMenu?.items}
-                  />
-                </div>
               </div>
               <MiniCartDrawer
                 locale={validLocale}

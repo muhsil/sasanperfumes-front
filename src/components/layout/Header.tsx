@@ -20,7 +20,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { CategoriesDrawer } from "@/components/layout/CategoriesDrawer";
 import { DesktopSearchDropdown } from "@/components/layout/DesktopSearchDropdown";
 import { BrandsMegaMenu } from "@/components/layout/BrandsMegaMenu";
-import { getHeaderCategoryLinks, getDynamicNavigationItems } from "@/config/menu";
+import { getHeaderCategoryLinks, getDynamicNavigationItems, type DynamicNavigationItem } from "@/config/menu";
 
 interface HeaderProps {
   locale: Locale;
@@ -29,11 +29,28 @@ interface HeaderProps {
   headerSettings?: HeaderSettings | null;
   menuItems?: WPMenuItem[] | null;
   mobileMenuItems?: WPMenuItem[] | null;
+  mobileBottomBarMenuItems?: WPMenuItem[] | null;
   categoriesDrawerMenuItems?: WPMenuItem[] | null;
   topbarSettings?: TopbarSettings | null;
 }
 
-export function Header({ locale, dictionary, siteSettings, headerSettings, menuItems, mobileMenuItems, categoriesDrawerMenuItems, topbarSettings }: HeaderProps) {
+function mergeMobileNavigation(
+  primaryItems: DynamicNavigationItem[],
+  secondaryItems: DynamicNavigationItem[]
+) {
+  const merged: DynamicNavigationItem[] = [];
+  const seenHrefs = new Set<string>();
+
+  for (const item of [...primaryItems, ...secondaryItems]) {
+    if (seenHrefs.has(item.href)) continue;
+    seenHrefs.add(item.href);
+    merged.push(item);
+  }
+
+  return merged;
+}
+
+export function Header({ locale, dictionary, siteSettings, headerSettings, menuItems, mobileMenuItems, mobileBottomBarMenuItems, categoriesDrawerMenuItems, topbarSettings }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const [isBrandsMegaMenuOpen, setIsBrandsMegaMenuOpen] = useState(false);
@@ -87,9 +104,13 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
     ? getDynamicNavigationItems(menuItems, locale)
     : getHeaderCategoryLinks(locale);
 
-  const mobileNavigation = mobileMenuItems && mobileMenuItems.length > 0
+  const baseMobileNavigation = mobileMenuItems && mobileMenuItems.length > 0
     ? getDynamicNavigationItems(mobileMenuItems, locale)
     : navigation;
+  const mobileBottomNavigation = mobileBottomBarMenuItems && mobileBottomBarMenuItems.length > 0
+    ? getDynamicNavigationItems(mobileBottomBarMenuItems, locale)
+    : [];
+  const mobileNavigation = mergeMobileNavigation(baseMobileNavigation, mobileBottomNavigation);
 
   const { currency } = useCurrency();
 
@@ -150,8 +171,8 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
         )}
 
         {/* Row 1: Search/Currency/Language — Logo — Account/Cart */}
-        <div className="w-full px-3 py-2 md:px-5 lg:px-8">
-          <div className="relative flex h-[4.25rem] items-center justify-between rounded-full border border-brand-border/70 bg-brand-ivory/96 px-3 shadow-[0_16px_40px_rgba(20,15,10,0.12)] md:h-[4.75rem] md:px-5">
+        <div className="relative w-full px-3 py-2 md:px-5 lg:px-8">
+          <div className="relative flex h-[4.25rem] items-center justify-between rounded-full border border-brand-border/70 bg-brand-ivory/96 px-3 shadow-[0_16px_40px_rgba(20,15,10,0.12)] md:h-[4.75rem] md:px-5 xl:grid xl:grid-cols-[auto_minmax(0,1fr)_auto] xl:gap-5 xl:px-6">
             {/* Left: Search + Currency + Language (desktop) / Mobile menu button */}
             <div className="flex items-center gap-1.5 md:gap-3.5">
               {/* Mobile menu button */}
@@ -164,31 +185,15 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                 {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
 
-              {/* Desktop search icon */}
-              <div className="hidden xl:block">
-                <DesktopSearchDropdown locale={locale} dictionary={dictionary} />
-              </div>
-
-              {/* Desktop language */}
-              <div className="hidden xl:block">
-                <LanguageSwitcher locale={locale} />
-              </div>
-
-              {/* Desktop currency */}
-              <div className="hidden xl:block">
-                <CurrencySwitcher locale={locale} />
-              </div>
-            </div>
-
-            {/* Center: Logo */}
-            <Link href={`/${locale}`} className="absolute left-1/2 -translate-x-1/2">
+              {/* Logo */}
+              <Link href={`/${locale}`} className="absolute left-1/2 -translate-x-1/2 xl:static xl:left-auto xl:shrink-0 xl:translate-x-0">
               {siteSettings?.logo?.url && !logoError ? (
                 <Image
                   src={siteSettings.logo.url}
                   alt={siteSettings.logo.alt || siteSettings.site_name || "Logo"}
                   width={140}
                   height={90}
-                  className="h-11 w-auto md:h-[54px]"
+                  className="h-11 w-auto md:h-[54px] xl:h-[50px]"
                   style={{ width: "auto" }}
                   priority
                   unoptimized={shouldUseUnoptimizedImage(siteSettings.logo.url)}
@@ -200,7 +205,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                   alt={siteSettings?.site_name || siteConfig.name}
                   width={140}
                   height={90}
-                  className="h-11 w-auto md:h-[54px]"
+                  className="h-11 w-auto md:h-[54px] xl:h-[50px]"
                   style={{ width: "auto" }}
                   priority
                   unoptimized
@@ -210,13 +215,70 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                   {siteSettings?.site_name || siteConfig.name}
                 </span>
               )}
-            </Link>
+              </Link>
+            </div>
+
+            <nav className="hidden min-w-0 items-center justify-center gap-5 overflow-x-auto px-4 xl:flex">
+              {navigation.map((item) => {
+                if (item.hasBrandsMegaMenu) {
+                  return (
+                    <div
+                      key={item.name}
+                      className="relative shrink-0"
+                      onMouseEnter={handleBrandsMouseEnter}
+                      onMouseLeave={handleBrandsMouseLeave}
+                    >
+                      <Link
+                        href={item.href}
+                        onClick={handleBrandsMegaMenuClose}
+                        className={cn(
+                          "group relative flex items-center gap-1 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-primary/70 transition-colors hover:text-brand-primary",
+                          isBrandsMegaMenuOpen && "text-brand-primary"
+                        )}
+                      >
+                        {item.name}
+                        <svg
+                          className={cn("h-3 w-3 transition-transform duration-200", isBrandsMegaMenuOpen && "rotate-180")}
+                          fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                        <span className="absolute inset-x-0 -bottom-1 h-px origin-left scale-x-0 bg-brand-gold transition-transform duration-300 group-hover:scale-x-100" />
+                      </Link>
+                    </div>
+                  );
+                }
+
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className="group relative shrink-0 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-primary/70 transition-colors hover:text-brand-primary"
+                  >
+                    {item.name}
+                    <span className="absolute inset-x-0 -bottom-1 h-px origin-left scale-x-0 bg-brand-gold transition-transform duration-300 group-hover:scale-x-100" />
+                  </Link>
+                );
+              })}
+            </nav>
 
             {/* Right: Search + Cart (mobile) / Account + Wishlist + Cart (desktop) */}
             <div className="flex items-center gap-1.5 md:gap-2.5">
               {/* Mobile search */}
               <div className="xl:hidden">
                 <DesktopSearchDropdown locale={locale} dictionary={dictionary} />
+              </div>
+
+              <div className="hidden xl:block">
+                <DesktopSearchDropdown locale={locale} dictionary={dictionary} />
+              </div>
+
+              <div className="hidden xl:block">
+                <LanguageSwitcher locale={locale} />
+              </div>
+
+              <div className="hidden xl:block">
+                <CurrencySwitcher locale={locale} />
               </div>
 
               {/* Desktop account button */}
@@ -261,8 +323,12 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
           </div>
         </div>
 
+        <div onMouseEnter={handleBrandsMegaMenuMouseEnter} onMouseLeave={handleBrandsMouseLeave}>
+          <BrandsMegaMenu isOpen={isBrandsMegaMenuOpen} onClose={handleBrandsMegaMenuClose} locale={locale} />
+        </div>
+
         {/* Row 2: Desktop Navigation (centered) + MegaMenu */}
-        <nav className="relative hidden px-3 pb-2 md:px-5 lg:px-8 xl:block">
+        <nav className="hidden">
           <div className="flex w-full items-center justify-center gap-9 rounded-full border border-brand-border/65 bg-brand-ivory/86 px-5 py-3 shadow-[0_10px_28px_rgba(20,15,10,0.08)] md:px-7 lg:px-12">
             {navigation.map((item) => {
               if (item.hasMegaMenu) {

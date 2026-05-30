@@ -747,9 +747,9 @@ export default function CartPage() {
       )}
       </div>
 
-      {/* Mobile Sticky Order Summary - positioned above bottom nav bar */}
+      {/* Mobile Sticky Order Summary */}
       {!isEmpty && (
-        <div className="fixed bottom-16 left-0 right-0 z-40 border-t border-brand-border/70 bg-brand-ivory/95 px-4 py-3 shadow-[0_-14px_34px_rgba(20,15,10,0.12)] backdrop-blur-xl lg:hidden" style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-brand-border/70 bg-brand-ivory/95 px-4 py-3 shadow-[0_-14px_34px_rgba(20,15,10,0.12)] backdrop-blur-xl lg:hidden" style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}>
           <div className="flex items-center justify-between gap-4">
             <div className="flex flex-col">
               <span className="text-xs text-brand-muted">{texts.orderTotal}</span>

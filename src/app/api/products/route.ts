@@ -6,7 +6,7 @@ import type { WCProduct, WCProductLightweight } from "@/types/woocommerce";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-const PRODUCTS_CACHE_TTL = 0;
+const PRODUCTS_CACHE_TTL = 60 * 1000;
 interface CachedProducts {
   data: { products: WCProduct[]; total: number; totalPages: number };
   timestamp: number;
@@ -34,7 +34,7 @@ function toProductLightweight(product: WCProduct): WCProductLightweight {
       currency_minor_unit: product.prices.currency_minor_unit,
       price_range: product.prices.price_range ?? null,
     },
-    images: product.images.slice(0, 2).map((img) => ({
+    images: product.images.slice(0, 1).map((img) => ({
       id: img.id,
       src: img.src,
       thumbnail: img.thumbnail,
@@ -131,7 +131,11 @@ export async function GET(request: NextRequest) {
         }
       : result;
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, {
+      headers: {
+        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+      },
+    });
   } catch (error) {
     console.error("Error fetching products:", error);
     return NextResponse.json(
