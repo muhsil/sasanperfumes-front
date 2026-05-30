@@ -141,11 +141,10 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   }
 
   // Fetch products, gift product info (IDs and slugs), bundle product slugs, and subtitle in parallel
-  const [{ products: allProducts }, giftProductInfo, bundleProductSlugs, allCategories, categorySubtitle] = await Promise.all([
+  const [{ products: allProducts }, giftProductInfo, bundleProductSlugs, categorySubtitle] = await Promise.all([
     getProductsByCategory(slug, { per_page: 24, locale: locale as Locale }),
     getFreeGiftProductInfo(),
     getBundleEnabledProductSlugs(),
-    getCategories(locale as Locale),
     getCategorySubtitle(slug),
   ]);
 
@@ -214,7 +213,6 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     { name: categoryName, url: categoryUrl },
   ]);
 
-  const rootCategories = allCategories.filter((item) => item.parent === 0);
   const categoryDescriptionText = category.description
     ? decodeHtmlEntities(category.description.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()).slice(0, 240)
     : "";
@@ -232,7 +230,6 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         description={categoryDescriptionText}
         image={category.image?.src}
         locale={locale as Locale}
-        categories={rootCategories}
       />
 
       <Suspense fallback={<ProductGridSkeleton count={12} />}>

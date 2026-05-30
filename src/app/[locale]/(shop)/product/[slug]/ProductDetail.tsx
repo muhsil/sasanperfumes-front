@@ -14,7 +14,6 @@ import { BackInStockAlert } from "@/components/common/BackInStockAlert";
 import { ClothingSizeGuideModal } from "@/components/common/ClothingSizeGuideModal";
 import { ScentGuideContent } from "@/components/shop/ScentGuideContent";
 import { RelatedProducts } from "@/components/shop/RelatedProducts";
-import { BrandProducts } from "@/components/shop/BrandProducts";
 import { RecentlyViewed } from "@/components/shop/RecentlyViewed";
 import { ProductAddons } from "@/components/shop/ProductAddons";
 import { ProductAddToCartButton } from "@/components/shop/ProductAddToCartButton";
@@ -942,38 +941,8 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
 
     const showThumbnails = imageCount > 1;
 
-    const renderGalleryTile = (image: typeof images[number], index: number, className = "") => (
-      <button
-        key={`${image.id}-${index}`}
-        type="button"
-        onClick={() => {
-          setSelectedImage(index);
-          setIsFullscreen(true);
-        }}
-        className={cn(
-          "group relative block w-full cursor-zoom-in overflow-hidden bg-white",
-          className
-        )}
-        aria-label={isRTL ? `عرض الصورة ${index + 1}` : `View image ${index + 1}`}
-      >
-        <Image
-          src={image.src}
-          alt={image.alt || `${productDisplayName} image ${index + 1}`}
-          fill
-          sizes={index === 0 ? "(max-width: 1023px) 100vw, 55vw" : "(max-width: 1023px) 50vw, 28vw"}
-          className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-          priority={index === 0}
-          placeholder="blur"
-          blurDataURL={BLUR_DATA_URL}
-          unoptimized={shouldUseUnoptimizedImage(image.src)}
-        />
-        <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all duration-300 group-hover:bg-black/10 group-hover:opacity-100">
-          <ZoomIn className="h-7 w-7 text-white drop-shadow-lg" />
-        </div>
-      </button>
-    );
 
-    const activeImage = images[selectedImage];
+    const activeImage = images[selectedImage] ?? images[0];
     const goToPreviousImage = () => {
       setSelectedImage((prev) => (prev <= 0 ? imageCount - 1 : prev - 1));
     };
@@ -1061,76 +1030,67 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
       );
     }
 
-    const secondaryImages = images.slice(1, 3);
-    const remainingImages = images.slice(3);
-    const visibleRemainingImages = remainingImages.slice(0, 3);
-    const hiddenRemainingCount = Math.max(remainingImages.length - visibleRemainingImages.length, 0);
-    const remainingGridClass =
-      visibleRemainingImages.length === 1
-        ? "grid-cols-1"
-        : visibleRemainingImages.length === 2
-        ? "grid-cols-2"
-        : "grid-cols-3";
     const activeImageSrc = activeImage.src;
 
     return (
-      <div>
-        <div className="block">
-          {renderGalleryTile(images[0], 0, "aspect-[10/11]")}
-          {secondaryImages.length > 0 && (
-            <div className={cn("grid gap-0", secondaryImages.length === 1 ? "grid-cols-1" : "grid-cols-2")}>
-              {secondaryImages.map((image, index) => renderGalleryTile(image, index + 1, "aspect-square"))}
-            </div>
-          )}
-          {visibleRemainingImages.length > 0 && (
-            <div className={cn("grid gap-0", remainingGridClass)}>
-              {visibleRemainingImages.map((image, index) => {
-                const imageIndex = index + 3;
-                const isLastVisible = index === visibleRemainingImages.length - 1 && hiddenRemainingCount > 0;
-                return (
-                  <div key={`${image.id}-${imageIndex}`} className="relative">
-                    {renderGalleryTile(image, imageIndex, "aspect-square")}
-                    {isLastVisible && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedImage(imageIndex);
-                          setIsFullscreen(true);
-                        }}
-                        className="absolute inset-0 flex items-center justify-center bg-black/45 text-2xl font-medium text-white transition-colors hover:bg-black/55"
-                        aria-label={isRTL ? "عرض المزيد من الصور" : "View more images"}
-                      >
-                        +{hiddenRemainingCount}
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+      <div className={cn("grid gap-3", showThumbnails && "lg:grid-cols-[82px_minmax(0,1fr)]")}>
+        {showThumbnails && (
+          <div className="order-2 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] lg:order-1 lg:max-h-[calc(100vh-8rem)] lg:flex-col lg:overflow-y-auto lg:pb-0 lg:pr-1 [&::-webkit-scrollbar]:hidden">
+            {images.map((image, index) => (
+              <button
+                key={`${image.id}-thumb-${index}`}
+                type="button"
+                onClick={() => setSelectedImage(index)}
+                className={cn(
+                  "relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-md border bg-white transition-all lg:h-[86px] lg:w-full",
+                  selectedImage === index
+                    ? "border-brand-primary ring-2 ring-brand-primary/10"
+                    : "border-brand-border/70 opacity-70 hover:border-brand-primary/45 hover:opacity-100"
+                )}
+                aria-label={isRTL ? `عرض الصورة ${index + 1}` : `View image ${index + 1}`}
+                aria-current={selectedImage === index ? "true" : "false"}
+              >
+                <Image
+                  src={image.src}
+                  alt={image.alt || `${productDisplayName} thumbnail ${index + 1}`}
+                  fill
+                  sizes="86px"
+                  className="object-contain p-1.5"
+                  placeholder="blur"
+                  blurDataURL={BLUR_DATA_URL}
+                  unoptimized={shouldUseUnoptimizedImage(image.src)}
+                />
+              </button>
+            ))}
+          </div>
+        )}
 
-        <div className="hidden">
+        <div className="relative order-1 lg:order-2">
           <button
             type="button"
             onClick={() => setIsFullscreen(true)}
-            className="relative h-[300px] w-full cursor-zoom-in overflow-hidden min-[430px]:h-[350px] sm:h-auto sm:aspect-[10/11]"
+            className="group relative aspect-[4/5] w-full cursor-zoom-in overflow-hidden rounded-lg border border-brand-border/70 bg-white shadow-[0_18px_42px_rgba(20,15,10,0.08)]"
           >
             <Image
               key={activeImage.id}
               src={activeImageSrc}
               alt={activeImage.alt || productDisplayName}
               fill
-              sizes="100vw"
-              className="object-cover transition-transform duration-500 hover:scale-105"
+              sizes="(max-width: 1023px) 100vw, 54vw"
+              className="object-contain p-4 transition-transform duration-500 group-hover:scale-[1.025] sm:p-6 lg:p-8"
               priority={selectedImage === 0}
               placeholder="blur"
               blurDataURL={BLUR_DATA_URL}
               unoptimized={shouldUseUnoptimizedImage(activeImageSrc)}
             />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all duration-300 hover:bg-black/10 hover:opacity-100">
+            <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all duration-300 group-hover:bg-black/10 group-hover:opacity-100">
               <ZoomIn className="h-7 w-7 text-white drop-shadow-lg" />
             </div>
+            {showThumbnails && (
+              <span className="absolute left-4 top-4 rounded-full bg-black/55 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
+                {selectedImage + 1} / {imageCount}
+              </span>
+            )}
           </button>
 
           {showThumbnails && (
@@ -1138,7 +1098,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               <button
                 type="button"
                 onClick={goToPreviousImage}
-                className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white p-2 shadow-md transition hover:bg-white/90"
+                className="absolute left-3 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/95 p-2 shadow-md ring-1 ring-black/5 transition hover:bg-white"
                 aria-label={isRTL ? "الصورة السابقة" : "Previous image"}
               >
                 <ChevronLeft className="h-5 w-5 text-gray-700" />
@@ -1146,14 +1106,11 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               <button
                 type="button"
                 onClick={goToNextImage}
-                className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white p-2 shadow-md transition hover:bg-white/90"
+                className="absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/95 p-2 shadow-md ring-1 ring-black/5 transition hover:bg-white"
                 aria-label={isRTL ? "الصورة التالية" : "Next image"}
               >
                 <ChevronRight className="h-5 w-5 text-gray-700" />
               </button>
-              <div className="absolute left-4 top-4 rounded-full bg-black/50 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
-                {selectedImage + 1} / {imageCount}
-              </div>
             </>
           )}
 
@@ -1166,36 +1123,6 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
             <ZoomIn className="h-4 w-4 text-gray-700" />
           </button>
         </div>
-
-        {showThumbnails && (
-          <div className="hidden">
-            {images.map((image, index) => (
-              <button
-                key={image.id}
-                type="button"
-                onClick={() => setSelectedImage(index)}
-                className={`relative aspect-square min-w-[52px] overflow-hidden border bg-white transition-all duration-200 focus:outline-none sm:min-w-[72px] ${
-                  selectedImage === index
-                    ? "border-brand-primary ring-2 ring-brand-primary/10"
-                    : "border-[#e7ded7] hover:border-brand-primary"
-                }`}
-                aria-label={isRTL ? `عرض الصورة ${index + 1}` : `View image ${index + 1}`}
-                aria-current={selectedImage === index ? "true" : "false"}
-              >
-                <Image
-                  src={image.src}
-                  alt={image.alt || `${productDisplayName} thumbnail ${index + 1}`}
-                  fill
-                  sizes="72px"
-                  className="object-contain"
-                  placeholder="blur"
-                  blurDataURL={BLUR_DATA_URL}
-                  unoptimized={shouldUseUnoptimizedImage(image.src)}
-                />
-              </button>
-            ))}
-          </div>
-        )}
       </div>
     );
   };
@@ -1632,17 +1559,6 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
         <div id="reviews">
           <ProductReviews productId={product.id} locale={locale} />
         </div>
-      )}
-
-      {/* Brand-wise Product Slider */}
-      {(product.brands?.[0] || product.categories?.[0]) && (
-        <BrandProducts
-          brandName={product.brands?.[0]?.name ?? product.categories?.[0]?.name ?? ""}
-          brandSlug={product.brands?.[0]?.slug ?? ""}
-          currentProductId={product.id}
-          locale={locale}
-          categorySlug={product.categories?.[0]?.slug}
-        />
       )}
 
       {/* Upsell Products (from WooCommerce Linked Products) */}
