@@ -32,7 +32,7 @@ function CollectionCardSkeleton() {
 
 export function CollectionsSectionSkeleton({ count = 3 }: { count?: number }) {
   return (
-    <section className="home-view-section bg-brand-primary py-14 md:py-16 lg:py-20">
+    <section className="bg-brand-primary py-8 md:py-10 lg:py-12">
       <div className="grid grid-cols-1 gap-4 px-5 md:grid-cols-2 md:px-7 lg:grid-cols-3 lg:px-12">
         {Array.from({ length: count }).map((_, i) => (
           <CollectionCardSkeleton key={i} />
@@ -71,17 +71,17 @@ export function CollectionsSection({
   ].join(" ");
 
   return (
-    <section className={`home-view-section bg-brand-primary py-14 text-brand-ivory md:py-16 lg:py-20 ${className} ${getVisibilityClass()}`}>
-      <div className="home-view-section__inner">
+    <section className={`bg-brand-primary py-8 text-brand-ivory md:py-10 lg:py-12 ${className} ${getVisibilityClass()}`}>
+      <div>
         {(settings.section_title || settings.section_subtitle) && (
-          <div className="mb-8 px-5 md:mb-10 md:px-7 lg:px-12">
+          <div className="mb-5 px-5 md:mb-6 md:px-7 lg:px-12">
             {settings.section_title && (
               <h2 className="font-title text-3xl text-brand-ivory md:text-4xl">
                 {decodeHtmlEntities(settings.section_title)}
               </h2>
             )}
             {settings.section_subtitle && (
-              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-brand-ivory/70 md:text-base">
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-brand-ivory/70 md:text-base">
                 {decodeHtmlEntities(settings.section_subtitle)}
               </p>
             )}
@@ -96,7 +96,7 @@ export function CollectionsSection({
             target={collection.link?.target || "_self"}
             className="group relative flex flex-col overflow-hidden"
           >
-            <div className="relative min-h-[68svh] overflow-hidden rounded-lg border border-brand-ivory/15 bg-brand-beige md:min-h-[64svh] lg:min-h-[68svh]">
+            <div className="relative min-h-[52svh] overflow-hidden rounded-lg bg-brand-beige md:min-h-[50svh] lg:min-h-[54svh]">
               {collection.image?.url ? (
                 <Image
                   src={collection.image.url}

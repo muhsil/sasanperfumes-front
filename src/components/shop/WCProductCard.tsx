@@ -183,6 +183,8 @@ export function WCProductCard({
     );
   };
   void renderActionControl;
+  const quickActionClassName =
+    "absolute inset-x-2 bottom-2 z-10 flex h-9 items-center justify-center gap-1.5 rounded-md bg-brand-primary px-2 text-center text-[10px] font-bold uppercase text-white shadow-[0_12px_24px_rgba(20,15,10,0.22)] transition-all duration-300 hover:bg-brand-primary-dark disabled:cursor-not-allowed disabled:bg-brand-primary/70 sm:inset-x-3 sm:bottom-3 sm:translate-y-2 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100";
 
   return (
     <>
@@ -198,14 +200,14 @@ export function WCProductCard({
               onMouseEnter={prefetchProduct}
               onTouchStart={prefetchProduct}
             >
-              <div className="relative aspect-[4/5] overflow-hidden bg-[#fbf8f4]">
+              <div className="relative aspect-square overflow-hidden bg-[#fbf8f4]">
                 {mainImage && !imageError ? (
                   <Image
                     src={mainImage.src}
                     alt={mainImage.alt || product.name}
                     fill
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-                    className="object-contain p-3 transition-transform duration-700 ease-out group-hover:scale-[1.035] sm:p-4"
+                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
                     loading="lazy"
                     placeholder="blur"
                     blurDataURL={BLUR_DATA_URL}
@@ -269,34 +271,43 @@ export function WCProductCard({
                 onFocus={prefetchProduct}
                 onMouseEnter={prefetchProduct}
                 onTouchStart={prefetchProduct}
-                className={cn(
-                  "absolute bottom-2 flex h-9 w-9 items-center justify-center rounded-full border border-brand-border/60 bg-white text-brand-primary shadow-lg opacity-100 transition-all duration-300 hover:scale-110 hover:bg-brand-primary hover:text-white sm:bottom-3 sm:opacity-0 sm:group-hover:opacity-100",
-                  isRTL ? "left-2 sm:left-3" : "right-2 sm:right-3"
-                )}
+                className={quickActionClassName}
                 aria-label={isBundleProduct ? labels.customize : labels.chooseOptions}
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{isBundleProduct ? labels.customize : labels.chooseOptions}</span>
               </Link>
             ) : (
               <button
                 type="button"
                 onClick={handleAddToCart}
                 disabled={!canPurchase || isAddingToCart}
-                className={cn(
-                  "absolute bottom-2 flex h-9 w-9 items-center justify-center rounded-full border border-brand-border/60 bg-white text-brand-primary shadow-lg opacity-100 transition-all duration-300 hover:scale-110 hover:bg-brand-primary hover:text-white disabled:opacity-50 sm:bottom-3 sm:opacity-0 sm:group-hover:opacity-100",
-                  isRTL ? "left-2 sm:left-3" : "right-2 sm:right-3"
-                )}
+                className={quickActionClassName}
                 aria-label={labels.addToCart}
               >
-                {isAddedToCart ? <Check className="h-4 w-4" /> : <Plus className={cn("h-4 w-4", isAddingToCart && "animate-pulse")} />}
+                {isAddedToCart ? (
+                  <>
+                    <Check className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">{labels.added}</span>
+                  </>
+                ) : isOutOfStock ? (
+                  <span className="truncate">{labels.outOfStock}</span>
+                ) : !canPurchase ? (
+                  <span className="truncate">{isRTL ? "ØºÙŠØ± Ù…ØªØ§Ø­" : "Unavailable"}</span>
+                ) : (
+                  <>
+                    <Plus className={cn("h-3.5 w-3.5 shrink-0", isAddingToCart && "animate-pulse")} />
+                    <span className="truncate">{labels.addToCart}</span>
+                  </>
+                )}
               </button>
             )}
 
           </div>
 
           {/* Info */}
-          <div className="relative flex min-h-[104px] flex-1 items-center justify-center overflow-hidden px-2.5 py-3 text-center sm:px-3.5">
-            <div className="flex w-full flex-col items-center gap-1">
+          <div className="relative flex min-h-[88px] flex-1 items-center justify-center overflow-hidden px-2.5 py-2.5 text-center sm:min-h-[92px] sm:px-3">
+            <div className="flex w-full flex-col items-center gap-0.5">
             {/* Variation terms */}
             {hasVariations && visibleVariationTerms.length > 0 && (
               <div className="hidden flex-wrap justify-center gap-1 sm:flex">

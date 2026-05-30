@@ -43,9 +43,9 @@ interface ProductSectionProps {
 
 export function ProductSectionSkeleton({ count = 5, fullView = false }: { count?: number; fullView?: boolean }) {
   return (
-    <section className={fullView ? "home-view-section bg-transparent py-14 md:py-16 lg:py-20" : "bg-transparent pb-0 pt-10 md:pt-12 lg:pt-14"}>
+    <section className={fullView ? "bg-transparent py-7 md:py-9 lg:py-10" : "bg-transparent pb-0 pt-8 md:pt-9 lg:pt-10"}>
       <div className="px-5 md:px-7 lg:px-12">
-        <div className="mb-6 md:mb-8">
+        <div className="mb-4 md:mb-5">
           <SectionHeaderSkeleton />
         </div>
         <ProductGridSkeleton count={count} />
@@ -110,13 +110,13 @@ export function ProductSection({
   const sliderNavPrefix = settings.section_title?.replace(/\s+/g, '-').toLowerCase() || 'default';
 
   const sectionClass = fullView
-    ? `home-view-section bg-transparent py-14 md:py-16 lg:py-20 ${className} ${getVisibilityClass()}`
-    : `bg-transparent pb-0 pt-10 md:pt-12 lg:pt-14 ${className} ${getVisibilityClass()}`;
+    ? `bg-transparent py-7 md:py-9 lg:py-10 ${className} ${getVisibilityClass()}`
+    : `bg-transparent pb-0 pt-8 md:pt-9 lg:pt-10 ${className} ${getVisibilityClass()}`;
 
   return (
     <section className={sectionClass}>
       <div className="px-5 md:px-7 lg:px-12">
-        <div className="mb-6 flex flex-col gap-4 md:mb-8 md:flex-row md:items-end md:justify-between">
+        <div className="mb-4 flex flex-col gap-3 md:mb-5 md:flex-row md:items-end md:justify-between">
           <div className={isRTL ? "text-right" : "text-left"}>
             <h2 className="font-title text-3xl text-brand-primary md:text-4xl">
               {settings.section_title}

@@ -56,19 +56,19 @@ export function BrandsSlider({ locale }: { locale: Locale }) {
   const sliderOptions = data.slider_options || { desktop_count: 5, tablet_count: 4, mobile_count: 3, autoplay: true, autoplay_speed: 2000, loop: true, arrows: false, dots: false };
 
   return (
-    <section className="home-view-section home-view-section--compact bg-brand-beige py-14 md:py-16 lg:py-20">
-      <div className="home-view-section__inner">
+    <section className="bg-brand-beige py-8 md:py-10 lg:py-12">
+      <div>
         {heading && (
           <h2 className="mb-3 text-center font-title text-3xl text-brand-primary md:text-4xl">
             {heading}
           </h2>
         )}
         {subtitle && (
-          <p className="mx-auto mb-8 max-w-2xl px-5 text-center text-sm leading-relaxed text-brand-muted md:text-base">
+          <p className="mx-auto mb-5 max-w-2xl px-5 text-center text-sm leading-relaxed text-brand-muted md:mb-6 md:text-base">
             {subtitle}
           </p>
         )}
-        {!subtitle && heading && <div className="mb-8" />}
+        {!subtitle && heading && <div className="mb-5 md:mb-6" />}
 
         <div className="relative" dir={isAr ? "rtl" : "ltr"}>
           <Swiper

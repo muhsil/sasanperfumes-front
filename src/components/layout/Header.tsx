@@ -122,8 +122,8 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
     .replace(/\{\{amount\}\}/g, String(topbarSettings?.freeShippingThreshold ?? 500))
     .replace(/\{\{currency\}\}/g, currency);
   const mobileDrawerOffsetClass = topbarText && !topbarDismissed
-    ? "top-[116px] h-[calc(100vh-116px)]"
-    : "top-[84px] h-[calc(100vh-84px)]";
+    ? "top-[120px] h-[calc(100vh-120px)]"
+    : "top-[88px] h-[calc(100vh-88px)]";
 
   return (
     <>
@@ -172,9 +172,9 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
 
         {/* Row 1: Search/Currency/Language — Logo — Account/Cart */}
         <div className="relative w-full px-3 py-2 md:px-5 lg:px-8">
-          <div className="relative flex h-[4.25rem] items-center justify-between rounded-full border border-brand-border/70 bg-brand-ivory/96 px-3 shadow-[0_16px_40px_rgba(20,15,10,0.12)] md:h-[4.75rem] md:px-5 xl:grid xl:grid-cols-[auto_minmax(0,1fr)_auto] xl:gap-5 xl:px-6">
+          <div className="relative flex h-[4.5rem] items-center justify-between rounded-full border border-brand-border/70 bg-brand-ivory/96 px-3 shadow-[0_16px_40px_rgba(20,15,10,0.12)] md:h-[5rem] md:px-5 xl:grid xl:grid-cols-[minmax(230px,1fr)_minmax(0,2fr)_minmax(230px,1fr)] xl:gap-5 xl:px-6">
             {/* Left: Search + Currency + Language (desktop) / Mobile menu button */}
-            <div className="flex items-center gap-1.5 md:gap-3.5">
+            <div className="flex items-center gap-1.5 md:gap-3.5 xl:justify-self-start">
               {/* Mobile menu button */}
               <button
                 type="button"
@@ -191,9 +191,9 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                 <Image
                   src={siteSettings.logo.url}
                   alt={siteSettings.logo.alt || siteSettings.site_name || "Logo"}
-                  width={140}
-                  height={90}
-                  className="h-11 w-auto md:h-[54px] xl:h-[50px]"
+                  width={220}
+                  height={142}
+                  className="h-14 w-auto md:h-16 xl:h-[70px]"
                   style={{ width: "auto" }}
                   priority
                   unoptimized={shouldUseUnoptimizedImage(siteSettings.logo.url)}
@@ -203,22 +203,22 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                 <Image
                   src="/images/logo-sasanperfumes.svg"
                   alt={siteSettings?.site_name || siteConfig.name}
-                  width={140}
-                  height={90}
-                  className="h-11 w-auto md:h-[54px] xl:h-[50px]"
+                  width={220}
+                  height={142}
+                  className="h-14 w-auto md:h-16 xl:h-[70px]"
                   style={{ width: "auto" }}
                   priority
                   unoptimized
                 />
               ) : (
-                <span className="font-title text-2xl tracking-[0.12em] text-brand-primary md:text-3xl">
+                <span className="font-title text-3xl tracking-[0.12em] text-brand-primary md:text-4xl">
                   {siteSettings?.site_name || siteConfig.name}
                 </span>
               )}
               </Link>
             </div>
 
-            <nav className="hidden min-w-0 items-center justify-center gap-5 overflow-x-auto px-4 xl:flex">
+            <nav className="hidden min-w-0 items-center justify-center gap-6 overflow-x-auto px-4 xl:flex [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {navigation.map((item) => {
                 if (item.hasBrandsMegaMenu) {
                   return (
@@ -263,7 +263,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
             </nav>
 
             {/* Right: Search + Cart (mobile) / Account + Wishlist + Cart (desktop) */}
-            <div className="flex items-center gap-1.5 md:gap-2.5">
+            <div className="flex items-center gap-1.5 md:gap-2.5 xl:justify-self-end">
               {/* Mobile search */}
               <div className="xl:hidden">
                 <DesktopSearchDropdown locale={locale} dictionary={dictionary} />
@@ -399,7 +399,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
               onClick={() => setIsMobileMenuOpen(false)}
             />
             {/* Drawer sidebar */}
-            <div className={cn("fixed left-0 z-40 w-72 overflow-y-auto border-r border-brand-border/55 bg-brand-ivory/97 px-5 py-6 shadow-[0_28px_60px_rgba(20,15,10,0.28)] xl:hidden", mobileDrawerOffsetClass)}>
+            <div className={cn("fixed left-1/2 z-40 w-[min(22rem,calc(100vw-2rem))] -translate-x-1/2 overflow-y-auto rounded-2xl border border-brand-border/55 bg-brand-ivory/97 px-5 py-6 text-center shadow-[0_28px_60px_rgba(20,15,10,0.28)] xl:hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", mobileDrawerOffsetClass)}>
               <div>
                 {/* Mobile nav links */}
                 <div className="space-y-1.5">
@@ -407,7 +407,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                     <Link
                       key={item.name}
                       href={item.href}
-                      className="block rounded-full border border-transparent px-4 py-2.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-brand-primary/80 transition-colors hover:border-brand-border/55 hover:bg-brand-beige hover:text-brand-primary"
+                      className="block rounded-full border border-transparent px-4 py-2.5 text-center text-[12px] font-semibold uppercase tracking-[0.14em] text-brand-primary/80 transition-colors hover:border-brand-border/55 hover:bg-brand-beige hover:text-brand-primary"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       {item.name}
@@ -415,7 +415,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                   ))}
                 </div>
                 {/* Mobile utilities */}
-                <div className="mt-7 flex items-center gap-4 border-t border-brand-border/45 pt-5">
+                <div className="mt-7 flex items-center justify-center gap-4 border-t border-brand-border/45 pt-5">
                   <LanguageSwitcher locale={locale} />
                   <CurrencySwitcher locale={locale} />
                 </div>

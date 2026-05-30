@@ -29,13 +29,13 @@ export function OurStorySection({
   if (!hasText && !image) return null;
 
   return (
-    <section className="home-view-section section-band py-14 md:py-16 lg:py-20">
-      <div className="home-view-section__inner px-5 md:px-7 lg:px-12">
-          <div className={`grid gap-8 lg:items-center ${image ? "lg:grid-cols-12" : ""}`}>
+    <section className="section-band py-8 md:py-10 lg:py-12">
+      <div className="px-5 md:px-7 lg:px-12">
+          <div className={`grid gap-6 lg:items-center ${image ? "lg:grid-cols-12" : ""}`}>
             {hasText && (
               <div className={`${image ? "lg:col-span-5" : "mx-auto max-w-4xl"}`}>
                 {eyebrow && (
-                  <p className="mb-5 max-w-fit border-b border-brand-gold/50 pb-2 text-[11px] font-semibold uppercase text-brand-gold">
+                  <p className="mb-3 max-w-fit border-b border-brand-gold/50 pb-2 text-[11px] font-semibold uppercase text-brand-gold">
                     {eyebrow}
                   </p>
                 )}
@@ -47,7 +47,7 @@ export function OurStorySection({
                 )}
 
                 {(description1 || description2) && (
-                  <div className="mt-7 space-y-4 border-s border-brand-primary/10 ps-5 md:mt-8 md:ps-6">
+                  <div className="mt-5 space-y-3 border-s border-brand-primary/10 ps-5 md:mt-6 md:ps-6">
                     {description1 && (
                       <p className="text-sm leading-7 text-brand-primary/70 md:text-[15px] md:leading-8">
                         {description1}
@@ -62,11 +62,11 @@ export function OurStorySection({
                 )}
 
                 {visibleStats.length > 0 && (
-                  <div className="mt-9 grid overflow-hidden rounded-lg border border-brand-border/70 bg-brand-ivory/80 sm:grid-cols-3">
+                  <div className="mt-6 grid overflow-hidden rounded-lg border border-brand-border/70 bg-brand-ivory/80 sm:grid-cols-3">
                     {visibleStats.map((stat, i) => (
                       <div
                         key={`${stat.value}-${stat.label}-${i}`}
-                        className="border-b border-brand-border/70 px-4 py-5 text-start last:border-b-0 sm:border-b-0 sm:border-e sm:last:border-e-0"
+                        className="border-b border-brand-border/70 px-4 py-4 text-start last:border-b-0 sm:border-b-0 sm:border-e sm:last:border-e-0"
                       >
                         {stat.value && (
                           <p className="text-2xl font-normal leading-none text-brand-primary md:text-3xl">
@@ -87,7 +87,7 @@ export function OurStorySection({
 
             {image && (
               <div className={`${hasText ? "lg:col-span-7" : ""} relative`}>
-                <div className="relative min-h-[68svh] overflow-hidden rounded-lg border border-brand-border/70 bg-brand-ivory shadow-[0_24px_70px_rgba(20,15,10,0.12)] md:min-h-[72svh]">
+                <div className="relative min-h-[46svh] overflow-hidden rounded-lg border border-brand-border/70 bg-brand-ivory shadow-[0_24px_70px_rgba(20,15,10,0.12)] md:min-h-[52svh]">
                   <Image
                     src={image}
                     alt={title || ""}

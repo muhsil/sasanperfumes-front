@@ -13,7 +13,7 @@ export function ProductCardSkeleton({ placeholderLogo: _placeholderLogo }: { pla
     <article className="flex h-full flex-col">
       <div className="flex h-full flex-col overflow-hidden rounded-lg border border-brand-border/70 bg-brand-ivory shadow-[0_16px_34px_rgba(20,15,10,0.08)]">
         <div className="relative">
-          <div className="relative aspect-[4/5] overflow-hidden bg-brand-beige">
+          <div className="relative aspect-square overflow-hidden bg-brand-beige">
             <Skeleton className="absolute inset-0 rounded-none" />
           </div>
           <div className="absolute left-3 top-3 flex max-w-[60%] flex-col gap-1">
@@ -26,7 +26,7 @@ export function ProductCardSkeleton({ placeholderLogo: _placeholderLogo }: { pla
           <Skeleton className="absolute bottom-3 right-3 h-9 w-9 rounded-full" />
         </div>
 
-        <div className="relative flex min-h-28 flex-1 items-center justify-center overflow-hidden p-4 text-center">
+        <div className="relative flex min-h-[88px] flex-1 items-center justify-center overflow-hidden px-2.5 py-2.5 text-center sm:min-h-[92px] sm:px-3">
           <div className="flex w-full flex-col items-center">
             <div className="mb-1 flex justify-center gap-1">
               <Skeleton className="h-4 w-12 rounded-full" />

@@ -171,7 +171,7 @@ export default async function HomePage({ params }: HomePageProps) {
   const h1Text = isRTL ? "ساسان للعطور" : siteConfig.name;
 
   return (
-    <div className="flex flex-col">
+    <div className="page-flush flex flex-col">
       <h1 className="sr-only">{h1Text}</h1>
 
       <HeroSlider settings={homeSettings.hero_slider} />

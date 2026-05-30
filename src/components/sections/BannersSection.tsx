@@ -24,7 +24,7 @@ interface BannersSectionProps {
 
 function BannerSkeleton() {
   return (
-    <div className="relative min-h-[70svh] w-full overflow-hidden rounded-lg sm:min-h-[72svh] lg:min-h-[82svh]">
+    <div className="relative min-h-[48svh] w-full overflow-hidden rounded-lg sm:min-h-[50svh] lg:min-h-[56svh]">
       <Skeleton className="absolute inset-0" />
       <div className="absolute inset-0 flex items-center justify-center">
         <Image
@@ -48,8 +48,8 @@ export function BannersSectionSkeleton({ count = 2 }: { count?: number }) {
   };
 
   return (
-    <section className="home-view-section bg-brand-beige py-14 md:py-16 lg:py-20">
-      <div className="home-view-section__inner">
+    <section className="bg-brand-beige py-8 md:py-10 lg:py-12">
+      <div>
         <div className={`grid gap-4 px-5 md:px-7 lg:px-12 ${getGridClass()}`}>
           {Array.from({ length: count }).map((_, i) => (
             <BannerSkeleton key={i} />
@@ -101,12 +101,12 @@ export function BannersSection({
   };
 
   return (
-    <section className={`home-view-section bg-brand-beige py-14 md:py-16 lg:py-20 ${className} ${getVisibilityClass()}`}>
-      <div className="home-view-section__inner">
+    <section className={`bg-brand-beige py-8 md:py-10 lg:py-12 ${className} ${getVisibilityClass()}`}>
+      <div>
         <div className={`grid gap-4 px-5 md:px-7 lg:px-12 ${getGridClass()}`}>
           {banners.map((banner, index) => {
             const BannerContent = (
-              <div className="group relative min-h-[70svh] overflow-hidden rounded-lg border border-brand-border/70 bg-stone-200 shadow-[0_20px_48px_rgba(20,15,10,0.1)] sm:min-h-[72svh] lg:min-h-[82svh]">
+              <div className="group relative min-h-[48svh] overflow-hidden rounded-lg border border-brand-border/70 bg-stone-200 shadow-[0_20px_48px_rgba(20,15,10,0.1)] sm:min-h-[50svh] lg:min-h-[56svh]">
                 {banner.image?.url ? (
                   <>
                       <Image
