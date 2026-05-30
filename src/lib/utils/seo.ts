@@ -17,9 +17,20 @@ interface GenerateMetadataParams {
   keywords?: string[];
 }
 
+export const INDEX_NOFOLLOW_ROBOTS = {
+  index: true,
+  follow: false,
+} satisfies Metadata["robots"];
+
+export const NOINDEX_NOFOLLOW_ROBOTS = {
+  index: false,
+  follow: false,
+} satisfies Metadata["robots"];
+
 export function generateMetadata({
   title,
   description,
+  noIndex,
 }: GenerateMetadataParams): Metadata {
   // Don't append site name here - the layout template already does this
   // Layout uses: template: `%s | ${siteConfig.name}`
@@ -30,6 +41,7 @@ export function generateMetadata({
     title: fullTitle,
     description: fullDescription,
     metadataBase: new URL(siteConfig.url),
+    robots: noIndex ? NOINDEX_NOFOLLOW_ROBOTS : INDEX_NOFOLLOW_ROBOTS,
   };
 }
 

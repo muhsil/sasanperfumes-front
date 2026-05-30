@@ -1,9 +1,13 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { siteConfig, type Locale } from "@/config/site";
+import { NOINDEX_NOFOLLOW_ROBOTS } from "@/lib/utils/seo";
 import { CompareClient } from "./CompareClient";
 
-export const metadata: Metadata = { title: "Compare Products | Sasan Perfumes", robots: { index: false } };
+export const metadata: Metadata = {
+  title: "Compare Products | Sasan Perfumes",
+  robots: NOINDEX_NOFOLLOW_ROBOTS,
+};
 
 export default async function ComparePage({
   params,

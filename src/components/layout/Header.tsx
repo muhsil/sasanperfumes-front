@@ -101,38 +101,38 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
     .replace(/\{\{amount\}\}/g, String(topbarSettings?.freeShippingThreshold ?? 500))
     .replace(/\{\{currency\}\}/g, currency);
   const mobileDrawerOffsetClass = topbarText && !topbarDismissed
-    ? "top-[108px] h-[calc(100vh-108px)]"
-    : "top-[72px] h-[calc(100vh-72px)]";
+    ? "top-[116px] h-[calc(100vh-116px)]"
+    : "top-[84px] h-[calc(100vh-84px)]";
 
   return (
     <>
       <header
         className={cn(
           headerSettings?.sticky !== false ? "sticky top-0 z-50" : "relative z-50",
-          "w-full border-b border-brand-border/50 bg-brand-ivory/88 backdrop-blur-xl transition-all duration-300",
+          "w-full bg-transparent backdrop-blur-xl transition-all duration-300",
           isScrolled && "shadow-[0_18px_48px_rgba(20,15,10,0.18)]"
         )}
       >
         {/* Top promotional bar */}
         {topbarText && !topbarDismissed && (
           <div
-            className="border-b border-brand-border/40"
+            className="bg-brand-primary text-brand-ivory"
             style={{
-              backgroundColor: topbarSettings?.bgColor || "#f2e7d7",
-              color: topbarSettings?.textColor || "#3f352b",
+              backgroundColor: topbarSettings?.bgColor || "#1b1814",
+              color: topbarSettings?.textColor || "#f8f4ec",
             }}
           >
-            <div className="flex h-9 w-full items-center justify-center gap-2 px-5 md:px-7 lg:px-12">
+            <div className="flex h-8 w-full items-center justify-center gap-2 px-5 md:px-7 lg:px-12">
               {topbarSettings?.link ? (
                 <a
                   href={topbarSettings.link}
-                  className="text-[11px] font-semibold uppercase tracking-[0.18em] hover:underline"
+                  className="text-[11px] font-semibold uppercase hover:underline"
                   style={{ color: "inherit" }}
                 >
                   {topbarText}
                 </a>
               ) : (
-                <span className="text-[11px] font-semibold uppercase tracking-[0.18em]">{topbarText}</span>
+                <span className="text-[11px] font-semibold uppercase">{topbarText}</span>
               )}
               {topbarSettings?.dismissible && (
                 <button
@@ -150,8 +150,8 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
         )}
 
         {/* Row 1: Search/Currency/Language — Logo — Account/Cart */}
-        <div className="w-full px-5 md:px-7 lg:px-12">
-          <div className="relative flex h-[4.5rem] items-center justify-between md:h-20">
+        <div className="w-full px-3 py-2 md:px-5 lg:px-8">
+          <div className="relative flex h-[4.25rem] items-center justify-between rounded-full border border-brand-border/70 bg-brand-ivory/96 px-3 shadow-[0_16px_40px_rgba(20,15,10,0.12)] md:h-[4.75rem] md:px-5">
             {/* Left: Search + Currency + Language (desktop) / Mobile menu button */}
             <div className="flex items-center gap-1.5 md:gap-3.5">
               {/* Mobile menu button */}
@@ -262,8 +262,8 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
         </div>
 
         {/* Row 2: Desktop Navigation (centered) + MegaMenu */}
-        <nav className="relative hidden border-t border-brand-border/45 xl:block">
-          <div className="flex w-full items-center justify-center gap-9 px-5 py-3 md:px-7 lg:px-12">
+        <nav className="relative hidden px-3 pb-2 md:px-5 lg:px-8 xl:block">
+          <div className="flex w-full items-center justify-center gap-9 rounded-full border border-brand-border/65 bg-brand-ivory/86 px-5 py-3 shadow-[0_10px_28px_rgba(20,15,10,0.08)] md:px-7 lg:px-12">
             {navigation.map((item) => {
               if (item.hasMegaMenu) {
                 return (

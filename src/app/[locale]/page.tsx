@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { getDictionary } from "@/i18n";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
-import { getNewProducts, getFeaturedProducts, getFreeGiftProductInfo, getBundleEnabledProductSlugs } from "@/lib/api/woocommerce";
+import { getNewProducts, getFreeGiftProductInfo, getBundleEnabledProductSlugs } from "@/lib/api/woocommerce";
 import { getHomePageSettings, getSeoSettings, getHomeSections } from "@/lib/api/wordpress";
 import {
   HeroSlider,
@@ -14,9 +14,26 @@ import {
 } from "@/components/sections";
 import { ProductSectionSkeleton } from "@/components/sections/ProductSection";
 import { siteConfig, type Locale } from "@/config/site";
+import type { Collection } from "@/types/wordpress";
 import type { Metadata } from "next";
 
 export const revalidate = 300;
+const HOME_PRODUCT_COUNT = 5;
+const HOME_DISCOVER_COUNT = 5;
+const placeholderImage = (title: string) => ({
+  id: 0,
+  url: "/images/sasanperfumes-placeholder.svg",
+  alt: title,
+  title,
+  width: 600,
+  height: 800,
+  sizes: {
+    thumbnail: "/images/sasanperfumes-placeholder.svg",
+    medium: "/images/sasanperfumes-placeholder.svg",
+    large: "/images/sasanperfumes-placeholder.svg",
+    full: "/images/sasanperfumes-placeholder.svg",
+  },
+});
 
 interface HomePageProps {
   params: Promise<{ locale: string }>;
@@ -85,6 +102,12 @@ async function NewProductsSection({ locale, isRTL, dictionary, homeSettings }: {
     ...homeSettings.new_products,
     section_title: homeSettings.new_products.section_title || dictionary.sections.newProducts.title,
     section_subtitle: homeSettings.new_products.section_subtitle || dictionary.sections.newProducts.subtitle,
+    products_count: HOME_PRODUCT_COUNT,
+    responsive_columns: {
+      desktop: HOME_PRODUCT_COUNT,
+      tablet: homeSettings.new_products.responsive_columns?.tablet ?? 3,
+      mobile: homeSettings.new_products.responsive_columns?.mobile ?? 2,
+    },
   };
 
   return (
@@ -97,56 +120,6 @@ async function NewProductsSection({ locale, isRTL, dictionary, homeSettings }: {
       fullView
       bundleProductSlugs={bundleProductSlugs}
       englishProductSlugs={newProductEnglishSlugs}
-    />
-  );
-}
-
-// ─── Async server component: Featured Products section ───
-async function FeaturedSection({ locale, isRTL, dictionary, homeSettings }: {
-  locale: Locale;
-  isRTL: boolean;
-  dictionary: Awaited<ReturnType<typeof getDictionary>>;
-  homeSettings: Awaited<ReturnType<typeof getHomePageSettings>>;
-}) {
-  const [
-    { products: featuredProductsRaw },
-    { products: featuredProductsEn },
-    giftProductInfo,
-    bundleProductSlugs,
-  ] = await Promise.all([
-    getFeaturedProducts({ per_page: 20, locale }),
-    getFeaturedProducts({ per_page: 20, locale: "en" }),
-    getFreeGiftProductInfo(),
-    getBundleEnabledProductSlugs(),
-  ]);
-
-  const featuredProductEnglishSlugs: Record<number, string> = {};
-  featuredProductsEn.forEach((product) => {
-    featuredProductEnglishSlugs[product.id] = product.slug;
-  });
-
-  const featuredProducts = featuredProductsRaw.filter(
-    (product) =>
-      !giftProductInfo.ids.includes(product.id) &&
-      !giftProductInfo.slugs.includes(product.slug)
-  );
-
-  const settings = {
-    ...homeSettings.featured_products,
-    section_title: homeSettings.featured_products.section_title || dictionary.sections.featuredProducts.title,
-    section_subtitle: homeSettings.featured_products.section_subtitle || dictionary.sections.featuredProducts.subtitle,
-  };
-
-  return (
-    <ProductSection
-      settings={settings}
-      products={featuredProducts}
-      locale={locale}
-      isRTL={isRTL}
-      viewAllText={dictionary.common.viewAll}
-      fullView
-      bundleProductSlugs={bundleProductSlugs}
-      englishProductSlugs={featuredProductEnglishSlugs}
     />
   );
 }
@@ -169,10 +142,29 @@ export default async function HomePage({ params }: HomePageProps) {
 
   const t = (bi: { en: string; ar: string }) => isRTL ? bi.ar : bi.en;
 
+  const discoverFallbacks: Collection[] = [
+    {
+      title: dictionary.common.shop,
+      description: isRTL ? "" : "Explore every fragrance, mist, and gift-ready scent in the shop.",
+      image: placeholderImage(dictionary.common.shop),
+      link: { title: dictionary.common.shop, url: `/${validLocale}/shop`, target: "_self" },
+    },
+  ];
+  const discoverCollections = [
+    ...homeSettings.collections.collections,
+    ...discoverFallbacks,
+  ].slice(0, HOME_DISCOVER_COUNT);
+
   const collectionsSettings = {
     ...homeSettings.collections,
-    section_title: homeSettings.collections.section_title || dictionary.sections.collections.title,
+    section_title: homeSettings.collections.section_title || (isRTL ? dictionary.sections.collections.title : "Discover More"),
     section_subtitle: homeSettings.collections.section_subtitle || dictionary.sections.collections.subtitle,
+    collections: discoverCollections,
+    responsive_columns: {
+      desktop: HOME_DISCOVER_COUNT,
+      tablet: homeSettings.collections.responsive_columns?.tablet ?? 2,
+      mobile: homeSettings.collections.responsive_columns?.mobile ?? 1,
+    },
   };
 
   // H1 heading text for SEO - hidden visually but read by search engines
@@ -196,15 +188,6 @@ export default async function HomePage({ params }: HomePageProps) {
         </Suspense>
 
         <CollectionsSection settings={collectionsSettings} />
-
-        <Suspense fallback={<ProductSectionSkeleton fullView />}>
-          <FeaturedSection
-            locale={validLocale}
-            isRTL={isRTL}
-            dictionary={dictionary}
-            homeSettings={homeSettings}
-          />
-        </Suspense>
 
         <BannersSection settings={homeSettings.banners} />
 

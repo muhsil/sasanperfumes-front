@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { siteConfig } from "@/config/site";
 import { themeConfig } from "@/config/theme";
+import { INDEX_NOFOLLOW_ROBOTS } from "@/lib/utils/seo";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: `${siteConfig.name} | Premium Perfumes & Fragrances in UAE`,
   description: siteConfig.description,
   metadataBase: new URL(siteConfig.url),
-  robots: { index: false, follow: false },
+  robots: INDEX_NOFOLLOW_ROBOTS,
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

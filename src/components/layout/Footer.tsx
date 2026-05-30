@@ -140,64 +140,71 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
 
   return (
     <>
-    <SocialIconLinks links={socialLinks} variant="dark" />
-    <footer className="main-footer relative overflow-hidden bg-[#16120f] pb-20 text-[#f6eee4] md:pb-0">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#b98a49]/55 to-transparent" />
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.045)_0_1px,transparent_1px_18px)]" />
+    <SocialIconLinks links={socialLinks} variant="light" className="bg-brand-ivory" />
+    <footer className="main-footer relative overflow-hidden border-t border-brand-border/70 bg-brand-ivory pb-20 text-brand-primary md:pb-0">
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(20,15,10,0.035)_0_1px,transparent_1px_20px)]" />
 
-      <div className="w-full px-5 py-8 md:px-7 md:py-16 lg:px-12">
-        <div className="grid grid-cols-2 gap-5 md:grid-cols-2 md:gap-10 lg:grid-cols-4 lg:gap-12">
-          {/* Brand description section */}
-          <div className="col-span-2 space-y-3 text-center md:col-span-1 md:space-y-6 md:text-left">
-            <p className="text-xs leading-relaxed text-[#f6eee4]/72">{description}</p>
+      <div className="relative w-full px-5 py-10 md:px-7 md:py-14 lg:px-12">
+        <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-12">
+          <div className="border-b border-brand-border/70 pb-8 lg:border-b-0 lg:border-e lg:pe-12">
+            <p className="mb-4 text-[11px] font-semibold uppercase text-brand-gold">
+              {siteSettings?.tagline || "Fragrance house"}
+            </p>
+            <h2 className="font-title text-4xl leading-none text-brand-primary md:text-5xl">
+              {siteSettings?.site_name || siteConfig.name}
+            </h2>
+            <p className="mt-5 max-w-xl text-sm leading-7 text-brand-muted">{description}</p>
           </div>
 
-          {/* Quick Links */}
+          <div className="grid gap-8 sm:grid-cols-2">
+            <div>
+              <h3 className="mb-5 text-[11px] font-semibold uppercase text-brand-gold">
+                {quickLinksHeading}
+              </h3>
+              <ul className="space-y-3">
+                {footerLinks.quickLinks.map((link) => (
+                  <li key={link.name}>
+                    <Link
+                      href={link.href}
+                      className="text-sm text-brand-muted transition-colors hover:text-brand-primary"
+                    >
+                      {link.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="mb-5 text-[11px] font-semibold uppercase text-brand-gold">
+                {csHeading}
+              </h3>
+              <ul className="space-y-3">
+                {footerLinks.customerService.map((link) => (
+                  <li key={link.name}>
+                    <Link
+                      href={link.href}
+                      className="text-sm text-brand-muted transition-colors hover:text-brand-primary"
+                    >
+                      {link.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-10 grid gap-6 rounded-lg bg-brand-primary p-5 text-brand-ivory shadow-[0_22px_54px_rgba(20,15,10,0.18)] md:grid-cols-[0.8fr_1.2fr] md:p-7">
           <div>
-            <h3 className="mb-6 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#f6eee4]/60">
-              {quickLinksHeading}
-            </h3>
-            <ul className="space-y-3">
-              {footerLinks.quickLinks.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    href={link.href}
-                    className="text-xs text-[#f6eee4]/74 transition-colors hover:text-[#f6eee4]"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Customer Service */}
-          <div>
-            <h3 className="mb-6 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#f6eee4]/60">
-              {csHeading}
-            </h3>
-            <ul className="space-y-3">
-              {footerLinks.customerService.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    href={link.href}
-                    className="text-xs text-[#f6eee4]/74 transition-colors hover:text-[#f6eee4]"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Newsletter - Full width on mobile */}
-          <div className="col-span-2 rounded-lg border border-white/15 bg-white/5 p-5 shadow-[0_20px_40px_rgba(0,0,0,0.22)] backdrop-blur-md md:col-span-1 md:p-6">
-            <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#f6eee4]/60">
+            <h3 className="font-title text-2xl text-brand-ivory">
               {newsletterTitle}
             </h3>
-            <p className="mb-5 text-xs leading-relaxed text-[#f6eee4]/72">
+            <p className="mt-3 text-sm leading-6 text-brand-ivory/70">
               {newsletterSubtitle}
             </p>
+          </div>
+          <div className="md:self-center">
             <NewsletterForm
               locale={locale}
               dictionary={{
@@ -208,20 +215,19 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
           </div>
         </div>
 
-        {/* Bottom bar */}
-        <div className="mt-10 flex flex-col items-center gap-3 border-t border-white/15 pt-6 md:mt-12 md:flex-row md:justify-between md:pt-8">
-          <p className="text-center text-xs text-[#f6eee4]/58 md:text-left">
+        <div className="mt-8 flex flex-col items-center gap-3 border-t border-brand-border/70 pt-6 md:flex-row md:justify-between">
+          <p className="text-center text-xs text-brand-muted md:text-left">
             &copy; {currentYear} {siteConfig.name}. {copyrightText}
           </p>
           {poweredByText && poweredByName && (
-            <p className="text-center text-xs text-[#f6eee4]/58">
+            <p className="text-center text-xs text-brand-muted">
               {poweredByText}{" "}
               {poweredByUrl ? (
                 <a
                   href={poweredByUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[#f6eee4]/74 underline transition-colors hover:text-[#f6eee4]"
+                  className="text-brand-primary underline transition-colors hover:text-brand-gold"
                 >
                   {poweredByName}
                 </a>
@@ -232,7 +238,6 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
           )}
         </div>
       </div>
-
     </footer>
     </>
   );
