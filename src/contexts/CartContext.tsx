@@ -59,6 +59,7 @@ function getCachedCart(locale: string): CoCartResponse | null {
 // Save cart to localStorage cache
 function setCachedCart(cart: CoCartResponse, locale: string): void {
   if (typeof window === "undefined") return;
+  if (cart.items.some((item) => item.item_key.startsWith("temp-"))) return;
   
   try {
     const data: CachedCartData = {
@@ -90,6 +91,76 @@ function isValidCartResponse(cart: unknown): cart is CoCartResponse {
     Array.isArray((cart as CoCartResponse).items) &&
     typeof (cart as CoCartResponse).item_count === "number"
   );
+}
+
+function createOptimisticCart(
+  currentCart: CoCartResponse | null | undefined,
+  optimisticItem: CoCartItem,
+  quantity: number
+): CoCartResponse {
+  if (currentCart) {
+    return {
+      ...currentCart,
+      items: [...currentCart.items, optimisticItem],
+      item_count: currentCart.item_count + quantity,
+    };
+  }
+
+  return {
+    cart_hash: "optimistic",
+    cart_key: "",
+    currency: {
+      currency_code: "AED",
+      currency_symbol: "AED",
+      currency_minor_unit: 2,
+      currency_decimal_separator: ".",
+      currency_thousand_separator: ",",
+      currency_prefix: "",
+      currency_suffix: " AED",
+    },
+    customer: {
+      billing_address: {},
+      shipping_address: {},
+    },
+    items: [optimisticItem],
+    item_count: quantity,
+    items_weight: 0,
+    coupons: [],
+    needs_payment: true,
+    needs_shipping: false,
+    shipping: {
+      total_packages: 0,
+      show_package_details: false,
+      has_calculated_shipping: false,
+      packages: {},
+    },
+    fees: [],
+    taxes: [],
+    totals: {
+      subtotal: "0",
+      subtotal_tax: "0",
+      fee_total: "0",
+      fee_tax: "0",
+      discount_total: "0",
+      discount_tax: "0",
+      shipping_total: "0",
+      shipping_tax: "0",
+      total: "0",
+      total_tax: "0",
+    },
+    removed_items: [],
+    cross_sells: [],
+    notices: [],
+  };
+}
+
+function deferCartSideEffects(callback: () => void) {
+  if (typeof window === "undefined") {
+    callback();
+    return;
+  }
+
+  window.setTimeout(callback, 0);
 }
 
 function getHeaders(): HeadersInit {
@@ -235,6 +306,7 @@ export function CartProvider({ children, locale }: CartProviderProps) {
   const addToCart = useCallback(
     async (productId: number, quantity = 1, variationId?: number, variation?: Record<string, string>, itemData?: CartItemData) => {
       setIsOperationLoading(true);
+      setIsCartOpen(true);
       
       // Optimistic update - add a placeholder item immediately
       const optimisticItem: CoCartItem = {
@@ -253,16 +325,9 @@ export function CartProvider({ children, locale }: CartProviderProps) {
       };
 
       // Optimistically update the cache
-      await mutate(
+      void mutate(
         cacheKey,
-        (currentCart: CoCartResponse | null | undefined) => {
-          if (!currentCart) return currentCart;
-          return {
-            ...currentCart,
-            items: [...currentCart.items, optimisticItem],
-            item_count: currentCart.item_count + quantity,
-          };
-        },
+        (currentCart: CoCartResponse | null | undefined) => createOptimisticCart(currentCart, optimisticItem, quantity),
         false // Don't revalidate yet
       );
 
@@ -282,36 +347,34 @@ export function CartProvider({ children, locale }: CartProviderProps) {
 
         if (!data.success) {
           // Rollback on error
-          await mutate(cacheKey);
+          void mutate(cacheKey);
           const errMsg = decodeHtmlEntities(data.error?.message || "Failed to add item to cart");
           notify("error", errMsg);
           throw new Error(errMsg);
         }
 
-        let updatedCart: CoCartResponse | null | undefined = isValidCartResponse(data.cart)
+        const updatedCart: CoCartResponse | null | undefined = isValidCartResponse(data.cart)
           ? data.cart
           : null;
 
         if (updatedCart) {
-          await mutate(cacheKey, updatedCart, false);
-        }
-        const freshCart = await mutate(cacheKey);
-        if (freshCart) {
-          updatedCart = freshCart;
+          void mutate(cacheKey, updatedCart, false);
         }
 
-        // Fire Omnisend "added product to cart" event for abandoned cart tracking
-        const addedItem = updatedCart?.items?.find(
-          (i: CoCartItem) => i.id === productId || i.variation_id === variationId
-        );
-        if (addedItem && updatedCart) {
-          const currMinorUnit = updatedCart.currency?.currency_minor_unit ?? 2;
+        if (updatedCart) {
+          const cartForTracking = updatedCart;
+          deferCartSideEffects(() => {
+            const addedItem = cartForTracking.items.find(
+              (i: CoCartItem) => i.id === productId || i.variation_id === variationId
+            );
+            if (!addedItem) return;
+          const currMinorUnit = cartForTracking.currency?.currency_minor_unit ?? 2;
           const currDivisor = Math.pow(10, currMinorUnit);
-          const cartValue = parseFloat(updatedCart.totals?.total || "0") / currDivisor;
+          const cartValue = parseFloat(cartForTracking.totals?.total || "0") / currDivisor;
           const itemPrice = parseFloat(addedItem.price || "0") / currDivisor;
 
           // Build line items for all cart items
-          const lineItems: OmnisendLineItem[] = updatedCart.items.map((ci: CoCartItem) => ({
+          const lineItems: OmnisendLineItem[] = cartForTracking.items.map((ci: CoCartItem) => ({
             productID: String(ci.id),
             productTitle: ci.name || ci.title || "",
             productPrice: parseFloat(ci.price || "0") / currDivisor,
@@ -326,7 +389,7 @@ export function CartProvider({ children, locale }: CartProviderProps) {
             productId: addedItem.id,
             productName: addedItem.name || addedItem.title || "",
             value: itemPrice * (addedItem.quantity?.value ?? quantity),
-            currency: updatedCart.currency?.currency_code || "AED",
+            currency: cartForTracking.currency?.currency_code || "AED",
             quantity: addedItem.quantity?.value ?? quantity,
           });
 
@@ -343,8 +406,8 @@ export function CartProvider({ children, locale }: CartProviderProps) {
             },
             lineItems,
             value: cartValue,
-            currency: updatedCart.currency?.currency_code || "AED",
-            cartID: updatedCart.cart_key || "",
+            currency: cartForTracking.currency?.currency_code || "AED",
+            cartID: cartForTracking.cart_key || "",
             email: user?.user_email || "",
           });
 
@@ -354,7 +417,7 @@ export function CartProvider({ children, locale }: CartProviderProps) {
           //    cart objects that the pre-built workflow monitors.
           if (user?.user_email) {
             const siteOrigin = typeof window !== "undefined" ? window.location.origin : "";
-            const omnisendProducts = updatedCart.items.map((ci: CoCartItem) => ({
+            const omnisendProducts = cartForTracking.items.map((ci: CoCartItem) => ({
               cartProductID: ci.item_key,
               productID: String(ci.id),
               variantID: String(ci.id),
@@ -371,10 +434,10 @@ export function CartProvider({ children, locale }: CartProviderProps) {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                cartID: updatedCart.cart_key || "",
+                cartID: cartForTracking.cart_key || "",
                 email: user.user_email,
-                currency: updatedCart.currency?.currency_code || "AED",
-                cartSum: Math.round(parseFloat(updatedCart.totals?.total || "0")),
+                currency: cartForTracking.currency?.currency_code || "AED",
+                cartSum: Math.round(parseFloat(cartForTracking.totals?.total || "0")),
                 cartRecoveryUrl: `${siteOrigin}/en/cart`,
                 products: omnisendProducts,
               }),
@@ -382,15 +445,14 @@ export function CartProvider({ children, locale }: CartProviderProps) {
               // Non-blocking — don't break the cart flow
               console.error("[Omnisend] Cart sync error:", err);
             });
-          }
+            }
+          });
         }
 
         notify("cart", "Item added to cart");
-        // Open cart drawer after successfully adding item
-        setIsCartOpen(true);
       } catch (error) {
         // Rollback on error
-        await mutate(cacheKey);
+        void mutate(cacheKey);
         console.error("Error adding to cart:", error);
         throw error;
       } finally {

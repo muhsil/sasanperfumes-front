@@ -5,7 +5,8 @@ import { ProductListing } from "@/components/shop/ProductListing";
 import type { WCProduct, WCProductsResponse } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
 
-const PER_PAGE = 12;
+const PER_PAGE = 30;
+const LOAD_AHEAD_MARGIN = "1200px 0px";
 
 interface FeaturedProductsClientProps {
   products: WCProduct[];
@@ -64,11 +65,13 @@ export function FeaturedProductsClient({
           (product: WCProduct) => !giftProductIds.includes(product.id)
         );
 
-        const newProducts = [...products, ...filteredNewProducts];
-        const uniqueProducts = newProducts.filter(
-          (product, index, self) =>
-            index === self.findIndex((p) => p.id === product.id)
-        );
+        const seenProductIds = new Set(products.map((product) => product.id));
+        const uniqueNewProducts = filteredNewProducts.filter((product) => {
+          if (seenProductIds.has(product.id)) return false;
+          seenProductIds.add(product.id);
+          return true;
+        });
+        const uniqueProducts = [...products, ...uniqueNewProducts];
 
         setProducts(uniqueProducts);
         setCurrentPage(nextPage);
@@ -93,7 +96,7 @@ export function FeaturedProductsClient({
       },
       {
         root: null,
-        rootMargin: "200px",
+        rootMargin: LOAD_AHEAD_MARGIN,
         threshold: 0,
       }
     );
@@ -119,7 +122,7 @@ export function FeaturedProductsClient({
         bundleProductSlugs={bundleProductSlugs}
       />
 
-      <div ref={loadMoreRef} className="flex justify-center py-8">
+      <div ref={loadMoreRef} className="flex min-h-12 justify-center py-5">
         {isLoading && (
           <div className="flex items-center gap-2 text-gray-500">
             <svg

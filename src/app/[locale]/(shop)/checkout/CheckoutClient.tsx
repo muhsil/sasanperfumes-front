@@ -2389,9 +2389,9 @@ export default function CheckoutClient() {
       )}
       </div>
 
-      {/* Mobile Sticky Order Summary - positioned above bottom nav bar */}
+      {/* Mobile Sticky Order Summary */}
       {!isEmptyCart && !isKeyboardVisible && (
-      <div className="fixed bottom-16 left-0 right-0 z-40 border-t border-gray-100 bg-white px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] lg:hidden" style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}>
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-100 bg-white px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] lg:hidden" style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}>
         <div className="flex items-center justify-between gap-4">
           <div className="flex flex-col">
             <span className="text-xs text-gray-500">{isRTL ? "الإجمالي" : "Total"}</span>

@@ -64,6 +64,7 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
 
   const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
   const divisor = Math.pow(10, currencyMinorUnit);
+  const hasOnlyPendingItems = cartItems.length > 0 && cartItems.every((item) => item.item_key.startsWith("temp-"));
 
   const handleQuantityChange = async (itemKey: string, newQuantity: number) => {
     if (newQuantity < 1) return;
@@ -89,7 +90,7 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
     }
   };
 
-  const cartFooter = cartItems.length > 0 ? (
+  const cartFooter = cartItems.length > 0 && !hasOnlyPendingItems ? (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <span className="text-brand-muted">{dictionary.subtotal}</span>

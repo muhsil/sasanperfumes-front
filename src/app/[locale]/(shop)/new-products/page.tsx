@@ -58,7 +58,7 @@ export default async function NewProductsPage({ params }: NewProductsPageProps) 
   ];
 
   const [productsResult, giftProductIds, bundleProductSlugs] = await Promise.all([
-    getNewProducts({ per_page: 24, locale: locale as Locale }),
+    getNewProducts({ per_page: 30, locale: locale as Locale }),
     getFreeGiftProductIds(),
     getBundleEnabledProductSlugs(),
   ]);
@@ -84,7 +84,7 @@ export default async function NewProductsPage({ params }: NewProductsPageProps) 
         </p>
       </div>
 
-      <Suspense fallback={<ProductGridSkeleton count={12} />}>
+      <Suspense fallback={<ProductGridSkeleton count={15} columns={5} />}>
         <NewProductsClient
           products={filteredProducts}
           locale={locale as Locale}

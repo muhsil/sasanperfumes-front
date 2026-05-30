@@ -75,7 +75,7 @@ export function SearchResultsClient({
     try {
       const response = await getProducts({
         search: searchQuery,
-        per_page: 24,
+        per_page: 40,
         locale,
       });
       const filteredProducts = response.products.filter((product) => !hiddenGiftProductIds.includes(product.id));
@@ -167,7 +167,7 @@ export function SearchResultsClient({
 
       {loading && (
         <div className="px-5 py-8 md:px-7 lg:px-12">
-          <ProductGridSkeleton count={12} />
+          <ProductGridSkeleton count={15} columns={5} />
         </div>
       )}
 

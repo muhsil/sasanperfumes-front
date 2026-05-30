@@ -142,7 +142,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
   // Fetch products, gift product info (IDs and slugs), bundle product slugs, and subtitle in parallel
   const [{ products: allProducts }, giftProductInfo, bundleProductSlugs, categorySubtitle] = await Promise.all([
-    getProductsByCategory(slug, { per_page: 24, locale: locale as Locale }),
+    getProductsByCategory(slug, { per_page: 50, locale: locale as Locale }),
     getFreeGiftProductInfo(),
     getBundleEnabledProductSlugs(),
     getCategorySubtitle(slug),
@@ -232,7 +232,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         locale={locale as Locale}
       />
 
-      <Suspense fallback={<ProductGridSkeleton count={12} />}>
+      <Suspense fallback={<ProductGridSkeleton count={15} columns={5} />}>
         <CategoryClient products={products} locale={locale as Locale} bundleProductSlugs={bundleProductSlugs} />
       </Suspense>
 

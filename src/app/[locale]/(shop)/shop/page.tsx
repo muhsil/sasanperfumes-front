@@ -13,6 +13,7 @@ import { ShopClient } from "./ShopClient";
 
 // Increased revalidate time for better cache hit rates (5 minutes instead of 60 seconds)
 export const revalidate = 300;
+const SHOP_PRODUCTS_PER_PAGE = 30;
 
 interface ShopPageProps {
   params: Promise<{ locale: string }>;
@@ -71,9 +72,9 @@ export default async function ShopPage({ params }: ShopPageProps) {
   ];
 
   // Fetch products, gift product info (IDs and slugs), and bundle product slugs in parallel
-  // Load 15 products initially to ensure enough visible products after filtering out gift products
+  // Load enough products for a full fast-feeling first screen plus several rows.
   const [productsResult, giftProductInfo, bundleProductSlugs] = await Promise.all([
-    getProducts({ per_page: 15, locale: locale as Locale }),
+    getProducts({ per_page: SHOP_PRODUCTS_PER_PAGE, locale: locale as Locale }),
     getFreeGiftProductInfo(),
     getBundleEnabledProductSlugs(),
   ]);
@@ -99,7 +100,7 @@ export default async function ShopPage({ params }: ShopPageProps) {
         locale={locale as Locale}
       />
 
-      <Suspense fallback={<ProductGridSkeleton count={12} />}>
+      <Suspense fallback={<ProductGridSkeleton count={15} columns={5} />}>
         <ShopClient
           products={filteredProducts}
           locale={locale as Locale}

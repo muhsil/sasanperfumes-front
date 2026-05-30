@@ -58,7 +58,7 @@ export default async function FeaturedProductsPage({ params }: FeaturedProductsP
   ];
 
   const [productsResult, giftProductIds, bundleProductSlugs] = await Promise.all([
-    getFeaturedProducts({ per_page: 24, locale: locale as Locale }),
+    getFeaturedProducts({ per_page: 30, locale: locale as Locale }),
     getFreeGiftProductIds(),
     getBundleEnabledProductSlugs(),
   ]);
@@ -84,7 +84,7 @@ export default async function FeaturedProductsPage({ params }: FeaturedProductsP
         </p>
       </div>
 
-      <Suspense fallback={<ProductGridSkeleton count={12} />}>
+      <Suspense fallback={<ProductGridSkeleton count={15} columns={5} />}>
         <FeaturedProductsClient
           products={filteredProducts}
           locale={locale as Locale}
