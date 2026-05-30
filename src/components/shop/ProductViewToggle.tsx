@@ -78,6 +78,7 @@ export function ProductViewToggle({
     { columns: 2, icon: <Grid2X2 className="h-4 w-4" />, label: "2" },
     { columns: 3, icon: <Grid3X3 className="h-4 w-4" />, label: "3" },
     { columns: 4, icon: <Columns4 className="h-4 w-4" />, label: "4" },
+    { columns: 5, icon: <span className="text-[11px] font-bold leading-none">5</span>, label: "5" },
   ];
 
   const handleSortClick = (value: SortOption) => {

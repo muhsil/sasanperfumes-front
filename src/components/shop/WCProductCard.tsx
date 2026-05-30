@@ -182,11 +182,11 @@ export function WCProductCard({
   return (
     <>
       <article className={cn("group flex h-full flex-col", className)}>
-        <div className="flex h-full flex-col overflow-hidden rounded-lg border border-brand-border/70 bg-brand-ivory shadow-[0_16px_34px_rgba(20,15,10,0.08)] transition-all duration-300 hover:-translate-y-1 hover:border-brand-gold/45 hover:shadow-[0_22px_48px_rgba(20,15,10,0.12)]">
+        <div className="flex h-full flex-col overflow-hidden rounded-md border border-brand-border/70 bg-white shadow-[0_8px_24px_rgba(20,15,10,0.05)] transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-gold/45 hover:shadow-[0_16px_34px_rgba(20,15,10,0.1)]">
           {/* Image */}
           <div className="relative">
             <Link href={productHref} className="block" aria-label={productName}>
-              <div className="relative aspect-[4/5] overflow-hidden bg-brand-beige">
+              <div className="relative aspect-[4/5] overflow-hidden bg-[#fbf8f4]">
                 {mainImage && !imageError ? (
                   <>
                     <Image
@@ -194,7 +194,7 @@ export function WCProductCard({
                       alt={mainImage.alt || product.name}
                       fill
                       sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                      className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                      className="object-contain p-3 transition-transform duration-700 ease-out group-hover:scale-[1.035] sm:p-4"
                       loading="lazy"
                       placeholder="blur"
                       blurDataURL={BLUR_DATA_URL}
@@ -206,7 +206,7 @@ export function WCProductCard({
                         alt={secondaryImage.alt || product.name}
                         fill
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                        className="object-cover opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100"
+                        className="object-contain p-3 opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100 sm:p-4"
                         loading="lazy"
                         placeholder="blur"
                         blurDataURL={BLUR_DATA_URL}
@@ -229,7 +229,7 @@ export function WCProductCard({
             </Link>
 
             {/* Badges */}
-            <div className={cn("absolute top-3 flex max-w-[60%] flex-col gap-1", isRTL ? "right-3 items-end" : "left-3 items-start")}>
+            <div className={cn("absolute top-2 flex max-w-[58%] flex-col gap-1 sm:top-3", isRTL ? "right-2 items-end sm:right-3" : "left-2 items-start sm:left-3")}>
               <ProductBadges
                 tags={product.tags}
                 locale={locale}
@@ -241,11 +241,11 @@ export function WCProductCard({
             </div>
 
             {/* Hover icons — top right */}
-            <div className={cn("absolute top-3 flex flex-col gap-2 opacity-0 transition-all duration-300 group-hover:opacity-100", isRTL ? "left-3" : "right-3")}>
+            <div className={cn("absolute top-2 flex flex-col gap-2 opacity-100 transition-all duration-300 sm:top-3 sm:opacity-0 sm:group-hover:opacity-100", isRTL ? "left-2 sm:left-3" : "right-2 sm:right-3")}>
               <button
                 type="button"
                 onClick={() => setQuickViewOpen(true)}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-brand-border/60 bg-brand-ivory/95 text-brand-primary shadow-md backdrop-blur-sm transition-all hover:scale-110 hover:bg-brand-primary hover:text-white"
+                className="hidden h-8 w-8 items-center justify-center rounded-full border border-brand-border/60 bg-white/95 text-brand-primary shadow-md backdrop-blur-sm transition-all hover:scale-110 hover:bg-brand-primary hover:text-white sm:flex"
                 aria-label={labels.quickView}
               >
                 <Search className="h-3.5 w-3.5" />
@@ -255,7 +255,7 @@ export function WCProductCard({
                 onClick={handleWishlistToggle}
                 disabled={isAddingToWishlist}
                 className={cn(
-                  "flex h-8 w-8 items-center justify-center rounded-full border border-brand-border/60 bg-brand-ivory/95 text-brand-primary shadow-md backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-brand-primary hover:text-white",
+                  "flex h-8 w-8 items-center justify-center rounded-full border border-brand-border/60 bg-white/95 text-brand-primary shadow-md backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-brand-primary hover:text-white",
                   isWishlisted && "border-brand-primary bg-brand-primary text-white",
                   isAddingToWishlist && "opacity-50"
                 )}
@@ -270,8 +270,8 @@ export function WCProductCard({
               <Link
                 href={productHref}
                 className={cn(
-                  "absolute bottom-3 flex h-9 w-9 items-center justify-center rounded-full border border-brand-border/60 bg-brand-ivory text-brand-primary shadow-lg opacity-0 transition-all duration-300 group-hover:opacity-100 hover:scale-110 hover:bg-brand-primary hover:text-white",
-                  isRTL ? "left-3" : "right-3"
+                  "absolute bottom-2 flex h-9 w-9 items-center justify-center rounded-full border border-brand-border/60 bg-white text-brand-primary shadow-lg opacity-100 transition-all duration-300 hover:scale-110 hover:bg-brand-primary hover:text-white sm:bottom-3 sm:opacity-0 sm:group-hover:opacity-100",
+                  isRTL ? "left-2 sm:left-3" : "right-2 sm:right-3"
                 )}
                 aria-label={isBundleProduct ? labels.customize : labels.chooseOptions}
               >
@@ -283,8 +283,8 @@ export function WCProductCard({
                 onClick={handleAddToCart}
                 disabled={!canPurchase || isAddingToCart}
                 className={cn(
-                  "absolute bottom-3 flex h-9 w-9 items-center justify-center rounded-full border border-brand-border/60 bg-brand-ivory text-brand-primary shadow-lg opacity-0 transition-all duration-300 group-hover:opacity-100 hover:scale-110 hover:bg-brand-primary hover:text-white disabled:opacity-50",
-                  isRTL ? "left-3" : "right-3"
+                  "absolute bottom-2 flex h-9 w-9 items-center justify-center rounded-full border border-brand-border/60 bg-white text-brand-primary shadow-lg opacity-100 transition-all duration-300 hover:scale-110 hover:bg-brand-primary hover:text-white disabled:opacity-50 sm:bottom-3 sm:opacity-0 sm:group-hover:opacity-100",
+                  isRTL ? "left-2 sm:left-3" : "right-2 sm:right-3"
                 )}
                 aria-label={labels.addToCart}
               >
@@ -295,11 +295,11 @@ export function WCProductCard({
           </div>
 
           {/* Info */}
-          <div className="relative flex min-h-28 flex-1 items-center justify-center overflow-hidden p-4 text-center">
+          <div className="relative flex min-h-[104px] flex-1 items-center justify-center overflow-hidden px-2.5 py-3 text-center sm:px-3.5">
             <div className="flex w-full flex-col items-center gap-1">
             {/* Variation terms */}
             {hasVariations && visibleVariationTerms.length > 0 && (
-              <div className="flex flex-wrap justify-center gap-1">
+              <div className="hidden flex-wrap justify-center gap-1 sm:flex">
                 {visibleVariationTerms.map((term) => (
                   <span key={term} className="max-w-20 truncate rounded-full bg-brand-beige px-2 py-0.5 text-[9px] font-semibold uppercase text-brand-primary/60">
                     {term}
@@ -315,7 +315,7 @@ export function WCProductCard({
 
             <Link href={productHref} className="block w-full">
               <h3 className={cn(
-                "text-[13px] font-semibold leading-snug text-brand-primary-dark",
+                "text-[12px] font-semibold leading-snug text-brand-primary-dark sm:text-[13px]",
                 productNameLines === 1 ? "line-clamp-1" : "line-clamp-2"
               )}>
                 {productName}
@@ -323,10 +323,10 @@ export function WCProductCard({
             </Link>
 
             {reviewCount > 0 && (
-              <div className={cn("mt-1 flex items-center gap-1.5", isRTL && "flex-row-reverse")}>
+              <div className={cn("mt-0.5 flex items-center gap-1.5", isRTL && "flex-row-reverse")}>
                 <div className="flex items-center gap-0.5">
                   {RATING_STARS.map((star) => (
-                    <Star key={star} className={cn("h-3 w-3", rating >= star ? "fill-brand-gold text-brand-gold" : "text-brand-primary/15")} />
+                    <Star key={star} className={cn("h-2.5 w-2.5 sm:h-3 sm:w-3", rating >= star ? "fill-brand-gold text-brand-gold" : "text-brand-primary/15")} />
                   ))}
                 </div>
                 <span className="text-[10px] text-brand-primary/40">({reviewCount})</span>

@@ -5,7 +5,7 @@ import { CollectionPageHeader } from "@/components/shop/CollectionPageHeader";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { getDictionary } from "@/i18n";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
-import { getProducts, getFreeGiftProductInfo, getBundleEnabledProductSlugs, getCategories } from "@/lib/api/woocommerce";
+import { getProducts, getFreeGiftProductInfo, getBundleEnabledProductSlugs } from "@/lib/api/woocommerce";
 import { getPageSeo, getStaticPageContent, pickLocale, getFeatureToggles } from "@/lib/api/wordpress";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
@@ -72,11 +72,10 @@ export default async function ShopPage({ params }: ShopPageProps) {
 
   // Fetch products, gift product info (IDs and slugs), and bundle product slugs in parallel
   // Load 15 products initially to ensure enough visible products after filtering out gift products
-  const [productsResult, giftProductInfo, bundleProductSlugs, categories] = await Promise.all([
+  const [productsResult, giftProductInfo, bundleProductSlugs] = await Promise.all([
     getProducts({ per_page: 15, locale: locale as Locale }),
     getFreeGiftProductInfo(),
     getBundleEnabledProductSlugs(),
-    getCategories(locale as Locale),
   ]);
 
   // Filter out gift products from the shop listing
@@ -90,8 +89,6 @@ export default async function ShopPage({ params }: ShopPageProps) {
   // Adjust total count to exclude gift products
   const filteredTotal = productsResult.total - (productsResult.products.length - filteredProducts.length);
 
-  const rootCategories = categories.filter((category) => category.parent === 0);
-
   return (
     <div className="bg-transparent text-brand-primary">
       <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} className="sr-only" />
@@ -100,7 +97,6 @@ export default async function ShopPage({ params }: ShopPageProps) {
         title={dictionary.common.shop}
         description={subtitle}
         locale={locale as Locale}
-        categories={rootCategories}
       />
 
       <Suspense fallback={<ProductGridSkeleton count={12} />}>

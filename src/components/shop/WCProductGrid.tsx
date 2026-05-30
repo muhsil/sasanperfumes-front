@@ -39,12 +39,12 @@ export function WCProductGrid({
     2: "grid-cols-2",
     3: "grid-cols-2 md:grid-cols-3",
     4: "grid-cols-2 md:grid-cols-3 lg:grid-cols-4",
-    5: "grid-cols-2 md:grid-cols-3 lg:grid-cols-4",
+    5: "grid-cols-2 md:grid-cols-3 lg:grid-cols-5",
     6: "grid-cols-2 md:grid-cols-3 lg:grid-cols-6",
   };
 
   return (
-    <div className={cn("grid gap-4 px-5 md:px-7 lg:px-12", gridCols[columns], className)}>
+    <div className={cn("grid gap-x-2 gap-y-5 px-3 sm:gap-x-3 md:px-5 lg:px-8", gridCols[columns], className)}>
       {products.map((product) => (
         <WCProductCard
           key={product.id}
