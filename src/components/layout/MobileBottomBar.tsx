@@ -185,7 +185,7 @@ export function MobileBottomBar({ locale, settings, dictionary, menuItems, mobil
                     <IconComponent className="h-[18px] w-[18px]" />
                   </div>
                   {label && (
-                    <span className="max-w-full truncate text-[8.5px] font-semibold uppercase leading-tight">{label}</span>
+                    <span className="max-w-full truncate text-[7.5px] font-semibold uppercase leading-tight">{label}</span>
                   )}
                 </button>
               );
@@ -206,7 +206,7 @@ export function MobileBottomBar({ locale, settings, dictionary, menuItems, mobil
                   )}
                 </div>
                 {label && (
-                  <span className="max-w-full truncate text-[8.5px] font-semibold uppercase leading-tight">{label}</span>
+                  <span className="max-w-full truncate text-[7.5px] font-semibold uppercase leading-tight">{label}</span>
                 )}
               </Link>
             );
