@@ -167,7 +167,7 @@ export function SearchResultsClient({
 
       {loading && (
         <div className="px-5 py-8 md:px-7 lg:px-12">
-          <ProductGridSkeleton count={12} columns={4} />
+          <ProductGridSkeleton count={12} columns={6} />
         </div>
       )}
 

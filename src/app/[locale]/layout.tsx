@@ -184,6 +184,9 @@ export default async function LocaleLayout({
                   mobileMenuItems={mobileMenuItems?.items}
                   mobileBottomBarMenuItems={mobileBottomBarMenu?.items}
                   categoriesDrawerMenuItems={categoriesDrawerMenu?.items}
+                  whatsAppPhoneNumber={whatsAppSettings?.number || siteConfig.contact.whatsapp}
+                  whatsAppMessage={pickLocale(whatsAppSettings?.message, validLocale, "")}
+                  whatsAppEnabled={showWhatsApp}
                 />
               </div>
               <MiniCartDrawer
@@ -198,39 +201,39 @@ export default async function LocaleLayout({
                   remove: dictionary.common.remove,
                 }}
               />
-                          <AccountDrawer
-                            locale={validLocale}
-                            dictionary={{
-                              myAccount: dictionary.account.myAccount,
-                              orders: dictionary.account.orders,
-                              addresses: dictionary.account.addresses,
-                              wishlist: dictionary.account.wishlist,
-                              settings: dictionary.account.settings,
-                              logout: dictionary.account.logout,
-                              welcome: dictionary.account.welcome,
-                              login: dictionary.account.login,
-                              register: dictionary.account.register,
-                              notLoggedIn: dictionary.account.notLoggedIn,
-                              profile: dictionary.account.profile,
-                              more: dictionary.common.more,
-                            }}
-                          />
-                                                                                                                                                                                                <NetworkStatusBanner locale={validLocale} />
-                                                                                                                                                                                                <LocationCurrencyBanner locale={validLocale} />
-                                                                                                                                                                                                <CookieConsentBanner locale={validLocale} />
-                                                                                                {showWhatsApp && (
-                                                                                                  <div className="print:hidden">
-                                                                                                    <WhatsAppFloatingButton
-                                                                                                      phoneNumber={whatsAppSettings?.number || siteConfig.contact.whatsapp}
-                                                                                                      message={pickLocale(whatsAppSettings?.message, validLocale, "")}
-                                                                                                      locale={validLocale}
-                                                                                                      enabled
-                                                                                                      showDesktop={whatsAppSettings?.showDesktop ?? true}
-                                                                                                      showMobile={whatsAppSettings?.showMobile ?? true}
-                                                                                                      position={whatsAppSettings?.position || "bottom-left"}
-                                                                                                    />
-                                                                                                  </div>
-                                                                                                )}
+              <AccountDrawer
+                locale={validLocale}
+                dictionary={{
+                  myAccount: dictionary.account.myAccount,
+                  orders: dictionary.account.orders,
+                  addresses: dictionary.account.addresses,
+                  wishlist: dictionary.account.wishlist,
+                  settings: dictionary.account.settings,
+                  logout: dictionary.account.logout,
+                  welcome: dictionary.account.welcome,
+                  login: dictionary.account.login,
+                  register: dictionary.account.register,
+                  notLoggedIn: dictionary.account.notLoggedIn,
+                  profile: dictionary.account.profile,
+                  more: dictionary.common.more,
+                }}
+              />
+              <NetworkStatusBanner locale={validLocale} />
+              <LocationCurrencyBanner locale={validLocale} />
+              <CookieConsentBanner locale={validLocale} />
+              {showWhatsApp && (
+                <div className="print:hidden">
+                  <WhatsAppFloatingButton
+                    phoneNumber={whatsAppSettings?.number || siteConfig.contact.whatsapp}
+                    message={pickLocale(whatsAppSettings?.message, validLocale, "")}
+                    locale={validLocale}
+                    enabled
+                    showDesktop={whatsAppSettings?.showDesktop ?? true}
+                    showMobile={false}
+                    position={whatsAppSettings?.position || "bottom-left"}
+                  />
+                </div>
+              )}
               {/* New global feature components */}
               {showPromotionalPopup && <PromotionalPopup locale={validLocale} />}
               {showAbandonedCartPopup && <AbandonedCartPopup locale={validLocale} />}

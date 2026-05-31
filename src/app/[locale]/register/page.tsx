@@ -3,10 +3,9 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Home } from "lucide-react";
 import { Input } from "@/components/common/Input";
 import { Button } from "@/components/common/Button";
-import { AuthBackground } from "@/components/common/AuthBackground";
+import { AuthCard } from "@/components/auth/AuthCard";
 import { PhoneInput } from "@/components/common/PhoneInput";
 import { register } from "@/lib/api/auth";
 import { validatePhoneNumber, parsePhoneNumber } from "@/lib/utils/phone";
@@ -51,8 +50,8 @@ export default function RegisterPage({ params }: RegisterPageProps) {
 
   const t = {
     en: {
-      register: "REGISTER",
-      registerTitle: "Create an Account – Start Shopping",
+      register: "Register",
+      registerTitle: "Create your account",
       name: "Name",
       namePlaceholder: "Name",
       phone: "Phone number",
@@ -206,189 +205,165 @@ export default function RegisterPage({ params }: RegisterPageProps) {
   };
 
   return (
-    <AuthBackground showImage={false} className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-8 md:py-12">
-      <div className="w-full max-w-md">
-        <div className="contents">
-          {/* Registration Form */}
-          <div className="luxury-panel p-5 md:p-7 lg:p-8">
-            {/* Home Icon */}
-            <div className="mb-4">
-              <Link
-                href={`/${locale}`}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-brand-border/70 bg-brand-ivory text-brand-primary shadow-[0_8px_18px_rgba(20,15,10,0.08)] transition-all duration-300 hover:bg-brand-primary hover:text-white"
-                aria-label="Home"
-              >
-                <Home className="h-5 w-5" />
-              </Link>
-            </div>
-            <div className={`mb-6 ${isRTL ? "text-right" : "text-left"}`}>
-              <div className="inline-block">
-                <h1 className="text-xs font-bold uppercase text-brand-primary">{texts.register}</h1>
-                <div className="mt-2 h-px bg-brand-primary"></div>
-              </div>
-            </div>
-
-            <h2 className={`mb-5 text-lg font-semibold text-brand-primary md:mb-7 md:text-2xl ${isRTL ? "text-right" : "text-left"}`}>
-              {texts.registerTitle}
-            </h2>
-
-            {errors.general && (
-              <div className="mb-6 rounded-md bg-red-50 p-4 text-sm text-red-600">
-                {errors.general}
-              </div>
-            )}
-
-            {successMessage && (
-              <div className="mb-6 rounded-md bg-green-50 p-4 text-sm text-green-600">
-                {successMessage}
-              </div>
-            )}
-
-            <GoogleSignInButton
-              onSuccess={async (credential) => {
-                setIsGoogleLoading(true);
-                setErrors({});
-                try {
-                  const response = await googleLogin(credential);
-                  if (response.success) {
-                    router.push(`/${locale}/account`);
-                  } else {
-                    setErrors({ general: response.error?.message || texts.googleSignUpError });
-                  }
-                } catch {
-                  setErrors({ general: texts.googleSignUpError });
-                } finally {
-                  setIsGoogleLoading(false);
-                }
-              }}
-              onError={() => setErrors({ general: texts.googleSignUpError })}
-              text="signup_with"
-              locale={locale}
-            />
-
-            <div className="flex items-center gap-4 my-6">
-              <div className="flex-1 h-px bg-gray-300"></div>
-              <span className="text-sm text-gray-500">{texts.orDivider}</span>
-              <div className="flex-1 h-px bg-gray-300"></div>
-            </div>
-
-            {isGoogleLoading && (
-              <div className="mb-6 rounded-lg border border-brand-border/70 bg-brand-beige/55 p-3 text-center text-sm text-brand-primary">
-                {texts.registering}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <Input
-                name="name"
-                type="text"
-                placeholder={texts.namePlaceholder}
-                value={formData.name}
-                onChange={handleInputChange}
-                error={errors.name}
-                autoComplete="name"
-                dir={isRTL ? "rtl" : "ltr"}
-                className=""
-              />
-
-              <PhoneInput
-                label={texts.phone}
-                value={formData.phone}
-                onChange={(phone) => {
-                  setFormData((prev) => ({ ...prev, phone }));
-                  if (errors.phone) {
-                    setErrors((prev) => ({ ...prev, phone: undefined }));
-                  }
-                }}
-                error={errors.phone}
-                isRTL={isRTL}
-              />
-
-              <Input
-                name="email"
-                type="email"
-                placeholder={texts.emailPlaceholder}
-                value={formData.email}
-                onChange={handleInputChange}
-                error={errors.email}
-                autoComplete="email"
-                dir={isRTL ? "rtl" : "ltr"}
-                className=""
-              />
-
-              <Input
-                name="password"
-                type="password"
-                placeholder={texts.passwordPlaceholder}
-                value={formData.password}
-                onChange={handleInputChange}
-                error={errors.password}
-                autoComplete="new-password"
-                dir={isRTL ? "rtl" : "ltr"}
-                className=""
-              />
-
-              {/* Newsletter Checkbox */}
-              <div className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
-                <input
-                  type="checkbox"
-                  id="newsletter"
-                  checked={newsletter}
-                  onChange={(e) => setNewsletter(e.target.checked)}
-                  className="w-4 h-4 border-gray-300 rounded accent-brand-primary"
-                />
-                <label htmlFor="newsletter" className="text-sm text-brand-primary">
-                  {texts.newsletterLabel}
-                </label>
-              </div>
-
-              {/* Terms Checkbox */}
-              <div className={`flex items-start gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
-                <input
-                  type="checkbox"
-                  id="terms"
-                  checked={termsAccepted}
-                  onChange={(e) => {
-                    setTermsAccepted(e.target.checked);
-                    if (errors.terms) {
-                      setErrors((prev) => ({ ...prev, terms: undefined }));
-                    }
-                  }}
-                  className="w-4 h-4 mt-0.5 border-gray-300 rounded accent-brand-primary"
-                />
-                <label htmlFor="terms" className="text-sm text-brand-primary">
-                  {texts.termsLabel}{" "}
-                  <Link href={`/${locale}/terms-and-conditions`} className="text-brand-primary hover:underline">
-                    {texts.termsLink}
-                  </Link>
-                </label>
-              </div>
-              {errors.terms && (
-                <p className="text-sm text-red-600">{errors.terms}</p>
-              )}
-
-              <Button
-                type="submit"
-                className="mt-5 w-full"
-                isLoading={isLoading}
-                disabled={isLoading}
-              >
-                {isLoading ? texts.registering : texts.registerButton}
-              </Button>
-            </form>
-
-            <div className={`mt-6 text-sm ${isRTL ? "text-right" : "text-left"}`}>
-              <span className="text-gray-500">{texts.hasAccount} </span>
-              <Link
-                href={`/${locale}/login`}
-                className="font-semibold text-brand-primary hover:text-brand-primary-dark transition-colors"
-              >
-                {texts.signInLink}
-              </Link>
-            </div>
-          </div>
+    <AuthCard
+      locale={locale}
+      eyebrow={texts.register}
+      title={texts.registerTitle}
+      footer={
+        <>
+          <span className="text-brand-muted">{texts.hasAccount} </span>
+          <Link
+            href={`/${locale}/login`}
+            className="font-semibold text-brand-primary transition-colors hover:text-brand-primary-dark"
+          >
+            {texts.signInLink}
+          </Link>
+        </>
+      }
+    >
+      {errors.general && (
+        <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          {errors.general}
         </div>
+      )}
+
+      {successMessage && (
+        <div className="mb-4 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+          {successMessage}
+        </div>
+      )}
+
+      <GoogleSignInButton
+        onSuccess={async (credential) => {
+          setIsGoogleLoading(true);
+          setErrors({});
+          try {
+            const response = await googleLogin(credential);
+            if (response.success) {
+              router.push(`/${locale}/account`);
+            } else {
+              setErrors({ general: response.error?.message || texts.googleSignUpError });
+            }
+          } catch {
+            setErrors({ general: texts.googleSignUpError });
+          } finally {
+            setIsGoogleLoading(false);
+          }
+        }}
+        onError={() => setErrors({ general: texts.googleSignUpError })}
+        text="signup_with"
+        locale={locale}
+      />
+
+      <div className="my-5 flex items-center gap-3">
+        <div className="h-px flex-1 bg-brand-border/70" />
+        <span className="text-xs text-brand-muted">{texts.orDivider}</span>
+        <div className="h-px flex-1 bg-brand-border/70" />
       </div>
-    </AuthBackground>
+
+      {isGoogleLoading && (
+        <div className="mb-4 rounded-md border border-brand-border/70 bg-brand-beige/50 p-3 text-center text-sm text-brand-primary">
+          {texts.registering}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Input
+          label={texts.name}
+          name="name"
+          type="text"
+          placeholder={texts.namePlaceholder}
+          value={formData.name}
+          onChange={handleInputChange}
+          error={errors.name}
+          autoComplete="name"
+          dir={isRTL ? "rtl" : "ltr"}
+          className="rounded-md bg-white"
+        />
+
+        <PhoneInput
+          label={texts.phone}
+          value={formData.phone}
+          onChange={(phone) => {
+            setFormData((prev) => ({ ...prev, phone }));
+            if (errors.phone) {
+              setErrors((prev) => ({ ...prev, phone: undefined }));
+            }
+          }}
+          error={errors.phone}
+          isRTL={isRTL}
+        />
+
+        <Input
+          label={texts.email}
+          name="email"
+          type="email"
+          placeholder={texts.emailPlaceholder}
+          value={formData.email}
+          onChange={handleInputChange}
+          error={errors.email}
+          autoComplete="email"
+          dir={isRTL ? "rtl" : "ltr"}
+          className="rounded-md bg-white"
+        />
+
+        <Input
+          label={texts.password}
+          name="password"
+          type="password"
+          placeholder={texts.passwordPlaceholder}
+          value={formData.password}
+          onChange={handleInputChange}
+          error={errors.password}
+          autoComplete="new-password"
+          dir={isRTL ? "rtl" : "ltr"}
+          className="rounded-md bg-white"
+        />
+
+        <div className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
+          <input
+            type="checkbox"
+            id="newsletter"
+            checked={newsletter}
+            onChange={(e) => setNewsletter(e.target.checked)}
+            className="h-4 w-4 rounded border-brand-border accent-brand-primary"
+          />
+          <label htmlFor="newsletter" className="text-sm text-brand-primary">
+            {texts.newsletterLabel}
+          </label>
+        </div>
+
+        <div className={`flex items-start gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
+          <input
+            type="checkbox"
+            id="terms"
+            checked={termsAccepted}
+            onChange={(e) => {
+              setTermsAccepted(e.target.checked);
+              if (errors.terms) {
+                setErrors((prev) => ({ ...prev, terms: undefined }));
+              }
+            }}
+            className="mt-0.5 h-4 w-4 rounded border-brand-border accent-brand-primary"
+          />
+          <label htmlFor="terms" className="text-sm leading-6 text-brand-primary">
+            {texts.termsLabel}{" "}
+            <Link href={`/${locale}/terms-and-conditions`} className="font-medium text-brand-primary hover:underline">
+              {texts.termsLink}
+            </Link>
+          </label>
+        </div>
+        {errors.terms && <p className="text-sm text-red-600">{errors.terms}</p>}
+
+        <Button
+          type="submit"
+          className="mt-2 w-full rounded-md shadow-none hover:translate-y-0"
+          isLoading={isLoading}
+          disabled={isLoading}
+        >
+          {isLoading ? texts.registering : texts.registerButton}
+        </Button>
+      </form>
+    </AuthCard>
   );
 }

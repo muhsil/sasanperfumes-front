@@ -51,9 +51,9 @@ export function ReferralProgram({ locale = "en", customerId }: ReferralProgramPr
   const desc  = isAr ? settings.desc_ar  : settings.desc_en;
 
   return (
-    <div className="luxury-panel p-5 md:p-6" dir={isAr ? "rtl" : "ltr"}>
+    <div className="rounded-lg border border-brand-border/70 bg-brand-ivory p-5 shadow-[0_18px_44px_rgba(20,15,10,0.08)] md:p-6" dir={isAr ? "rtl" : "ltr"}>
       <div className="mb-4 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full border border-brand-border/70 bg-brand-ivory">
+        <div className="flex h-10 w-10 items-center justify-center rounded-md border border-brand-border/70 bg-white">
           <Users className="h-5 w-5 text-brand-primary" />
         </div>
         <div>
@@ -64,7 +64,7 @@ export function ReferralProgram({ locale = "en", customerId }: ReferralProgramPr
 
       {/* Rewards info */}
       <div className="mb-4 grid grid-cols-2 gap-3">
-        <div className="rounded-lg border border-brand-border/70 bg-brand-ivory p-3 text-center">
+        <div className="rounded-lg border border-brand-border/70 bg-white p-3 text-center">
           <p className="text-lg font-bold text-brand-primary">AED {settings.referrer_discount}</p>
           <p className="text-xs text-gray-500">{isAr ? "مكافأتك" : "Your reward"}</p>
         </div>
@@ -88,16 +88,16 @@ export function ReferralProgram({ locale = "en", customerId }: ReferralProgramPr
           </p>
 
           {/* Referral URL */}
-          <div className="mb-3 rounded-lg border border-brand-border/70 bg-brand-ivory px-3 py-2">
-            <p className="mb-1 text-[10px] uppercase tracking-wide text-gray-400">{isAr ? "رابطك" : "Your Link"}</p>
+          <div className="mb-3 rounded-lg border border-brand-border/70 bg-white px-3 py-2">
+            <p className="mb-1 text-[10px] uppercase text-gray-400">{isAr ? "رابطك" : "Your Link"}</p>
             <p className="truncate text-xs font-medium text-gray-700">{info.referral_url}</p>
           </div>
 
           {/* Code */}
           <div className="mb-4 flex items-center gap-2 rounded-lg border border-dashed border-brand-primary/35 bg-brand-beige/45 px-4 py-3">
             <div className="flex-1">
-              <p className="text-[10px] uppercase tracking-wide text-gray-400">{isAr ? "كودك" : "Your Code"}</p>
-              <p className="font-mono text-xl font-bold tracking-widest text-brand-primary">{info.referral_code}</p>
+              <p className="text-[10px] uppercase text-gray-400">{isAr ? "كودك" : "Your Code"}</p>
+              <p className="font-mono text-xl font-bold text-brand-primary">{info.referral_code}</p>
             </div>
             <button onClick={copyLink} className="flex items-center gap-1 rounded-lg bg-brand-primary px-3 py-2 text-xs font-medium text-white hover:bg-brand-primary-dark">
               {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
@@ -108,7 +108,7 @@ export function ReferralProgram({ locale = "en", customerId }: ReferralProgramPr
           {/* Share button */}
           <button
             onClick={share}
-            className="flex w-full items-center justify-center gap-2 rounded-full border border-brand-primary/45 py-2.5 text-sm font-medium text-brand-primary transition-colors hover:bg-brand-beige"
+            className="flex w-full items-center justify-center gap-2 rounded-md border border-brand-primary/45 py-2.5 text-sm font-medium text-brand-primary transition-colors hover:bg-brand-beige"
           >
             <Share2 className="h-4 w-4" />
             {isAr ? "مشاركة الكود" : "Share Your Code"}

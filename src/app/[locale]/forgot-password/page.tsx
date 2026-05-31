@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Input } from "@/components/common/Input";
 import { Button } from "@/components/common/Button";
-import { AuthBackground } from "@/components/common/AuthBackground";
+import { AuthCard } from "@/components/auth/AuthCard";
 import { useNotification } from "@/contexts/NotificationContext";
 import { forgotPassword } from "@/lib/api/auth";
 
@@ -28,8 +28,8 @@ export default function ForgotPasswordPage({ params }: ForgotPasswordPageProps) 
 
   const t = {
     en: {
-      title: "Forgot Password",
-      subtitle: "Enter your email address and we'll send you a link to reset your password",
+      title: "Reset password",
+      subtitle: "Enter your email and we will send a reset link.",
       email: "Email Address",
       emailPlaceholder: "Enter your email",
       submitButton: "Send Reset Link",
@@ -96,64 +96,57 @@ export default function ForgotPasswordPage({ params }: ForgotPasswordPageProps) 
     }
   };
 
-    return (
-      <AuthBackground showImage={false} className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-8 md:py-12">
-      <div className="w-full max-w-md">
-        <div className="luxury-panel p-5 md:p-7">
-          <div className={`mb-8 text-center ${isRTL ? "rtl" : ""}`}>
-            <h1 className="font-title text-2xl text-brand-primary md:text-3xl">{texts.title}</h1>
-            <p className="mt-2 text-sm text-brand-muted md:text-base">{texts.subtitle}</p>
-          </div>
-
-          {error && (
-            <div className="mb-6 rounded-md bg-red-50 p-4 text-sm text-red-600">
-              {error}
-            </div>
-          )}
-
-          {successMessage && (
-            <div className="mb-6 rounded-md bg-green-50 p-4 text-sm text-green-600">
-              {successMessage}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <Input
-              label={texts.email}
-              name="email"
-              type="email"
-              placeholder={texts.emailPlaceholder}
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                if (error) setError(null);
-              }}
-              error={error || undefined}
-              autoComplete="email"
-              dir={isRTL ? "rtl" : "ltr"}
-              required
-            />
-
-            <Button
-              type="submit"
-              className="w-full bg-brand-primary hover:bg-brand-primary-dark focus-visible:ring-brand-primary"
-              isLoading={isLoading}
-              disabled={isLoading}
-            >
-              {isLoading ? texts.submitting : texts.submitButton}
-            </Button>
-          </form>
-
-          <div className={`mt-6 text-center text-sm ${isRTL ? "rtl" : ""}`}>
-            <Link
-              href={`/${locale}/login`}
-              className="font-medium text-brand-primary hover:underline"
-            >
-              {texts.backToLogin}
-            </Link>
-          </div>
+  return (
+    <AuthCard
+      locale={locale}
+      eyebrow={texts.backToLogin}
+      title={texts.title}
+      subtitle={texts.subtitle}
+      footer={
+        <Link href={`/${locale}/login`} className="font-semibold text-brand-primary hover:underline">
+          {texts.backToLogin}
+        </Link>
+      }
+    >
+      {error && (
+        <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          {error}
         </div>
-      </div>
-    </AuthBackground>
+      )}
+
+      {successMessage && (
+        <div className="mb-4 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+          {successMessage}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <Input
+          label={texts.email}
+          name="email"
+          type="email"
+          placeholder={texts.emailPlaceholder}
+          value={email}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            if (error) setError(null);
+          }}
+          error={error || undefined}
+          autoComplete="email"
+          dir={isRTL ? "rtl" : "ltr"}
+          className="rounded-md bg-white"
+          required
+        />
+
+        <Button
+          type="submit"
+          className="w-full rounded-md shadow-none hover:translate-y-0"
+          isLoading={isLoading}
+          disabled={isLoading}
+        >
+          {isLoading ? texts.submitting : texts.submitButton}
+        </Button>
+      </form>
+    </AuthCard>
   );
 }

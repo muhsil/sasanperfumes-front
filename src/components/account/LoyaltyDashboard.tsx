@@ -65,10 +65,10 @@ export function LoyaltyDashboard({ locale = "en", customerId }: LoyaltyDashboard
   const programName = isAr ? settings.label_ar : settings.label_en;
 
   return (
-    <div className="luxury-panel p-5 md:p-6" dir={isAr ? "rtl" : "ltr"}>
+    <div className="rounded-lg border border-brand-border/70 bg-brand-ivory p-5 shadow-[0_18px_44px_rgba(20,15,10,0.08)] md:p-6" dir={isAr ? "rtl" : "ltr"}>
       <div className="mb-4 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-primary">
-          <Star className="h-5 w-5 text-white" />
+        <div className="flex h-10 w-10 items-center justify-center rounded-md border border-brand-border/70 bg-white">
+          <Star className="h-5 w-5 text-brand-primary" />
         </div>
         <div>
           <h3 className="font-bold text-brand-primary">{programName}</h3>
@@ -88,11 +88,11 @@ export function LoyaltyDashboard({ locale = "en", customerId }: LoyaltyDashboard
         <>
           {/* Points display */}
           <div className="mb-4 grid grid-cols-2 gap-3">
-            <div className="rounded-lg border border-brand-border/70 bg-brand-ivory p-3 text-center md:p-4">
+            <div className="rounded-lg border border-brand-border/70 bg-white p-3 text-center md:p-4">
               <p className="text-2xl font-bold text-brand-primary">{balance.points.toLocaleString()}</p>
               <p className="text-xs text-gray-500">{isAr ? "نقاطك" : "Your Points"}</p>
             </div>
-            <div className="rounded-lg border border-brand-border/70 bg-brand-ivory p-3 text-center md:p-4">
+            <div className="rounded-lg border border-brand-border/70 bg-white p-3 text-center md:p-4">
               <p className="text-2xl font-bold text-green-600">AED {balance.value_aed.toFixed(2)}</p>
               <p className="text-xs text-gray-500">{isAr ? "القيمة" : "Value"}</p>
             </div>
@@ -126,7 +126,7 @@ export function LoyaltyDashboard({ locale = "en", customerId }: LoyaltyDashboard
                 {isAr ? "كود الخصم الخاص بك:" : "Your discount coupon:"}
               </p>
               <div className="flex items-center gap-2">
-                <span className="flex-1 font-mono text-lg font-bold tracking-widest text-brand-primary">{coupon}</span>
+                <span className="flex-1 font-mono text-lg font-bold text-brand-primary">{coupon}</span>
                 <button onClick={copyCoupon} className="flex items-center gap-1 rounded-lg bg-brand-primary px-3 py-1.5 text-xs font-medium text-white">
                   {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                   {copied ? (isAr ? "تم" : "Copied!") : (isAr ? "نسخ" : "Copy")}
@@ -137,7 +137,7 @@ export function LoyaltyDashboard({ locale = "en", customerId }: LoyaltyDashboard
           ) : balance.can_redeem ? (
             <button
               onClick={redeem} disabled={redeeming}
-                className="flex w-full items-center justify-center gap-2 rounded-full bg-brand-primary py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-primary-dark disabled:opacity-60"
+                className="flex w-full items-center justify-center gap-2 rounded-md bg-brand-primary py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-primary-dark disabled:opacity-60"
             >
               {redeeming ? <Loader2 className="h-4 w-4 animate-spin" /> : <Gift className="h-4 w-4" />}
               {isAr ? `استرد ${balance.points} نقطة (AED ${balance.value_aed.toFixed(2)})` : `Redeem ${balance.points} points (AED ${balance.value_aed.toFixed(2)})`}
@@ -149,7 +149,7 @@ export function LoyaltyDashboard({ locale = "en", customerId }: LoyaltyDashboard
           {/* Transaction history */}
           {history.length > 0 && (
             <div className="mt-5 border-t border-gray-100 pt-4">
-              <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
+              <h4 className="mb-3 text-xs font-semibold uppercase text-gray-400">
                 {isAr ? "سجل المعاملات" : "Transaction History"}
               </h4>
               <div className="space-y-2">

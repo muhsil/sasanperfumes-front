@@ -84,7 +84,7 @@ export default async function FeaturedProductsPage({ params }: FeaturedProductsP
         </p>
       </div>
 
-      <Suspense fallback={<ProductGridSkeleton count={12} columns={4} />}>
+      <Suspense fallback={<ProductGridSkeleton count={12} columns={6} />}>
         <FeaturedProductsClient
           products={filteredProducts}
           locale={locale as Locale}

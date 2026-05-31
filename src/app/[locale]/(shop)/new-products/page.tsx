@@ -84,7 +84,7 @@ export default async function NewProductsPage({ params }: NewProductsPageProps) 
         </p>
       </div>
 
-      <Suspense fallback={<ProductGridSkeleton count={12} columns={4} />}>
+      <Suspense fallback={<ProductGridSkeleton count={12} columns={6} />}>
         <NewProductsClient
           products={filteredProducts}
           locale={locale as Locale}

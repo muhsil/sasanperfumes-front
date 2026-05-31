@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import type { Locale } from "@/config/site";
 import type { WCProduct } from "@/types/woocommerce";
 
-const STORAGE_KEY = "sasanperfumes_product_view_preference_v3";
+const STORAGE_KEY = "sasanperfumes_product_view_preference_v4";
 const PREFERENCE_CHANGE_EVENT = "sasanperfumes_preference_change";
 
 let cachedPreference: ViewPreference | null = null;
@@ -31,7 +31,7 @@ interface ProductListingProps {
 
 const DEFAULT_PREFERENCE: ViewPreference = {
   viewMode: "grid",
-  gridColumns: 4,
+  gridColumns: 6,
 };
 
 function getProductPrice(product: WCProduct): number {
@@ -77,8 +77,8 @@ function getPreferenceSnapshot(): ViewPreference {
     cachedStorageValue = stored;
     if (stored) {
       const parsed = JSON.parse(stored) as ViewPreference;
-      if (parsed.gridColumns === 4) {
-        cachedPreference = { viewMode: "grid", gridColumns: 4 };
+      if (parsed.gridColumns === 6) {
+        cachedPreference = { viewMode: "grid", gridColumns: 6 };
         return cachedPreference;
       }
     }

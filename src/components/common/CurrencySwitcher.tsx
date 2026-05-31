@@ -98,19 +98,13 @@ export function CurrencySwitcher({ className, locale = "en" }: CurrencySwitcherP
   const translations = {
     en: {
       selectCurrency: "Choose Currency",
-      popular: "Popular",
     },
     ar: {
       selectCurrency: "اختر العملة",
-      popular: "الأكثر استخداماً",
     },
   };
 
   const t = translations[locale];
-
-  // Separate USD and other currencies
-  const usdCurrency = currencies.find((c) => c.code === "USD");
-  const otherCurrencies = currencies.filter((c) => c.code !== "USD");
 
   return (
     <>
@@ -173,123 +167,45 @@ export function CurrencySwitcher({ className, locale = "en" }: CurrencySwitcherP
             </div>
 
             {/* Currency Options */}
-            <div className="p-4 md:p-5">
-              {/* Main - AED & USD Featured */}
-              <div className="mb-6">
-                <p className="mb-3 text-xs font-bold uppercase text-brand-muted">
-                  {t.popular}
-                </p>
-                <div className="mb-5 grid grid-cols-2 gap-2.5 md:gap-3">
-                  {/* AED */}
-                  {currencies.find(c => c.code === "AED") && (
-                    <button
-                      type="button"
-                      onClick={() => handleSelect("AED" as Currency)}
-                      className={cn(
-                        "flex flex-col items-center gap-2 rounded-lg border p-3 transition-all",
-                        currency === "AED"
-                          ? "border-brand-primary bg-brand-beige shadow-[0_10px_22px_rgba(20,15,10,0.08)]"
-                          : "border-brand-border/70 bg-white/75 hover:border-brand-primary/45 hover:bg-white"
-                      )}
-                    >
-                      <span className={cn(
-                        "flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border text-2xl shadow-sm transition-all",
-                        currency === "AED"
-                          ? "border-brand-primary bg-brand-ivory ring-2 ring-brand-primary/15"
-                          : "border-brand-border/70 bg-brand-beige"
-                      )}>
-                        <CountryFlag currencyCode="AED" size={28} />
+            <div className="p-3 md:p-4">
+              <div
+                role="listbox"
+                className="max-h-[min(64vh,520px)] overflow-y-auto rounded-lg border border-brand-border/70 bg-white/75 shadow-inner [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              >
+                {currencies.map((curr) => (
+                  <button
+                    key={curr.code}
+                    type="button"
+                    onClick={() => handleSelect(curr.code as Currency)}
+                    className={cn(
+                      "flex w-full items-center gap-3 border-b border-brand-border/55 px-3.5 py-3 text-left transition-all last:border-b-0 hover:bg-brand-beige/70",
+                      currency === curr.code && "bg-brand-beige"
+                    )}
+                    role="option"
+                    aria-selected={currency === curr.code}
+                  >
+                    <span className={cn(
+                      "flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border bg-brand-ivory shadow-sm",
+                      currency === curr.code ? "border-brand-primary ring-2 ring-brand-primary/15" : "border-brand-border/70"
+                    )}>
+                      <CountryFlag currencyCode={curr.code} size={26} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-bold text-brand-primary">{curr.code}</span>
+                      <span className="block truncate text-xs text-brand-muted">{curr.label.replace(` (${curr.code})`, "")}</span>
+                    </span>
+                    {curr.symbol && curr.symbol !== curr.code && (
+                      <span className="rounded-full border border-brand-border/70 bg-brand-ivory px-2.5 py-1 text-xs font-semibold text-brand-primary">
+                        {curr.symbol}
                       </span>
-                      <div className="text-center">
-                        <p className={cn(
-                          "text-sm font-bold",
-                          currency === "AED" ? "text-brand-primary" : "text-brand-primary"
-                        )}>
-                          AED
-                        </p>
-                        <p className="text-xs text-brand-muted">UAE</p>
-                      </div>
-                      {currency === "AED" && (
-                        <Check className="h-4 w-4 text-brand-primary" />
-                      )}
-                    </button>
-                  )}
-
-                  {/* USD */}
-                  {usdCurrency && (
-                    <button
-                      type="button"
-                      onClick={() => handleSelect(usdCurrency.code as Currency)}
-                      className={cn(
-                        "flex flex-col items-center gap-2 rounded-lg border p-3 transition-all",
-                        currency === usdCurrency.code
-                          ? "border-brand-primary bg-brand-beige shadow-[0_10px_22px_rgba(20,15,10,0.08)]"
-                          : "border-brand-border/70 bg-white/75 hover:border-brand-primary/45 hover:bg-white"
-                      )}
-                    >
-                      <span className={cn(
-                        "flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border text-2xl shadow-sm transition-all",
-                        currency === usdCurrency.code
-                          ? "border-brand-primary bg-brand-ivory ring-2 ring-brand-primary/15"
-                          : "border-brand-border/70 bg-brand-beige"
-                      )}>
-                        <CountryFlag currencyCode={usdCurrency.code} size={28} />
+                    )}
+                    {currency === curr.code && (
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-primary text-white">
+                        <Check className="h-4 w-4" />
                       </span>
-                      <div className="text-center">
-                        <p className={cn(
-                          "text-sm font-bold",
-                          currency === usdCurrency.code ? "text-brand-primary" : "text-brand-primary"
-                        )}>
-                          USD
-                        </p>
-                        <p className="text-xs text-brand-muted">USA</p>
-                      </div>
-                      {currency === usdCurrency.code && (
-                        <Check className="h-4 w-4 text-brand-primary" />
-                      )}
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Other Currencies */}
-              <div>
-                <p className="mb-3 text-xs font-bold uppercase text-brand-muted">
-                  {locale === "ar" ? "جميع العملات" : "All Currencies"}
-                </p>
-                <div className="grid grid-cols-3 gap-2">
-                  {otherCurrencies.filter(c => c.code !== "AED").map((curr) => (
-                    <button
-                      key={curr.code}
-                      type="button"
-                      onClick={() => handleSelect(curr.code as Currency)}
-                      className={cn(
-                        "flex flex-col items-center gap-2 rounded-lg border p-2.5 transition-all",
-                        currency === curr.code
-                          ? "border-brand-primary bg-brand-beige shadow-[0_8px_18px_rgba(20,15,10,0.08)]"
-                          : "border-brand-border/70 bg-white/75 hover:border-brand-primary/45 hover:bg-white"
-                      )}
-                    >
-                      <span className={cn(
-                        "flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border text-lg transition-all",
-                        currency === curr.code
-                          ? "border-brand-primary bg-brand-ivory ring-2 ring-brand-primary/15"
-                          : "border-brand-border/70 bg-brand-beige"
-                      )}>
-                        <CountryFlag currencyCode={curr.code} size={24} />
-                      </span>
-                      <p className={cn(
-                        "text-xs font-semibold",
-                        currency === curr.code ? "text-brand-primary" : "text-brand-primary"
-                      )}>
-                        {curr.code}
-                      </p>
-                      {currency === curr.code && (
-                        <Check className="h-3.5 w-3.5 text-brand-primary" />
-                      )}
-                    </button>
-                  ))}
-                </div>
+                    )}
+                  </button>
+                ))}
               </div>
             </div>
           </div>

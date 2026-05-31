@@ -232,7 +232,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         locale={locale as Locale}
       />
 
-      <Suspense fallback={<ProductGridSkeleton count={12} columns={4} />}>
+      <Suspense fallback={<ProductGridSkeleton count={12} columns={6} />}>
         <CategoryClient products={products} locale={locale as Locale} bundleProductSlugs={bundleProductSlugs} />
       </Suspense>
 

@@ -122,7 +122,8 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
     .replace(/\{\{amount\}\}/g, String(topbarSettings?.freeShippingThreshold ?? 500))
     .replace(/\{\{currency\}\}/g, currency);
   const hideTopbarOnMobile = topbarSettings?.hideOnMobile !== false;
-  const mobileDrawerOffsetClass = topbarText && !topbarDismissed
+  const topbarVisible = Boolean(topbarText && !topbarDismissed && !isScrolled);
+  const mobileDrawerOffsetClass = topbarVisible
     ? hideTopbarOnMobile
       ? "top-[76px] h-[calc(100vh-76px)] md:top-[128px] md:h-[calc(100vh-128px)]"
       : "top-[108px] h-[calc(100vh-108px)] md:top-[128px] md:h-[calc(100vh-128px)]"
@@ -133,12 +134,12 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
       <header
         className={cn(
           headerSettings?.sticky !== false ? "sticky top-0 z-50" : "relative z-50",
-          "w-full bg-transparent backdrop-blur-xl transition-all duration-300",
+          "w-full bg-transparent transition-all duration-300",
           isScrolled && "shadow-[0_18px_48px_rgba(20,15,10,0.18)]"
         )}
       >
         {/* Top promotional bar */}
-        {topbarText && !topbarDismissed && (
+        {topbarVisible && (
           <div
             className={cn("bg-brand-primary text-brand-ivory", hideTopbarOnMobile && "hidden md:block")}
             style={{
@@ -175,7 +176,14 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
 
         {/* Row 1: Search/Currency/Language — Logo — Account/Cart */}
         <div className="relative w-full px-3 py-1.5 md:px-5 md:py-2 lg:px-8">
-          <div className="relative flex h-[4rem] items-center justify-between rounded-full border border-brand-border/70 bg-brand-ivory/96 px-2.5 shadow-[0_16px_40px_rgba(20,15,10,0.12)] md:h-[5rem] md:px-5 xl:grid xl:grid-cols-[minmax(230px,1fr)_minmax(0,2fr)_minmax(230px,1fr)] xl:gap-5 xl:px-6">
+          <div
+            className={cn(
+              "relative flex h-[4rem] items-center justify-between rounded-full border border-brand-border/70 px-2.5 transition-all duration-300 md:h-[5rem] md:px-5 xl:grid xl:grid-cols-[minmax(230px,1fr)_minmax(0,2fr)_minmax(230px,1fr)] xl:gap-5 xl:px-6",
+              isScrolled
+                ? "bg-brand-ivory shadow-[0_12px_30px_rgba(20,15,10,0.12)]"
+                : "bg-brand-ivory/96 shadow-[0_16px_40px_rgba(20,15,10,0.12)] backdrop-blur-xl"
+            )}
+          >
             {/* Left: Search + Currency + Language (desktop) / Mobile menu button */}
             <div className="flex items-center gap-1.5 md:gap-3.5 xl:justify-self-start">
               {/* Mobile menu button */}

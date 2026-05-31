@@ -6,7 +6,7 @@ import { Drawer } from "@/components/common/Drawer";
 import { cn } from "@/lib/utils";
 
 export type ViewMode = "grid" | "list";
-export type GridColumns = 4;
+export type GridColumns = 6;
 export type SortOption = "default" | "price-asc" | "price-desc" | "name-asc" | "name-desc" | "date-desc";
 
 interface ProductViewToggleProps {

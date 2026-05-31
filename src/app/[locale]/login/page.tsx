@@ -3,10 +3,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Home } from "lucide-react";
 import { Input } from "@/components/common/Input";
 import { Button } from "@/components/common/Button";
-import { AuthBackground } from "@/components/common/AuthBackground";
+import { AuthCard } from "@/components/auth/AuthCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 
@@ -39,8 +38,8 @@ export default function LoginPage({ params }: LoginPageProps) {
 
   const t = {
     en: {
-      login: "LOGIN",
-      loginTitle: "Welcome Back – Sign In to Continue",
+      login: "Sign in",
+      loginTitle: "Sign in to your account",
       username: "E-mail",
       usernamePlaceholder: "E-mail",
       password: "Password",
@@ -170,157 +169,134 @@ export default function LoginPage({ params }: LoginPageProps) {
   };
 
   return (
-    <AuthBackground showImage={false} className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-8 md:py-12">
-      <div className="w-full max-w-md">
-        <div className="contents">
-          {/* Login Form */}
-          <div className="luxury-panel p-5 md:p-7 lg:p-8">
-            {/* Home Icon */}
-            <div className="mb-4">
-              <Link
-                href={`/${locale}`}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-brand-border/70 bg-brand-ivory text-brand-primary shadow-[0_8px_18px_rgba(20,15,10,0.08)] transition-all duration-300 hover:bg-brand-primary hover:text-white"
-                aria-label="Home"
-              >
-                <Home className="h-5 w-5" />
-              </Link>
-            </div>
-            <div className={`mb-6 ${isRTL ? "text-right" : "text-left"}`}>
-              <div className="inline-block">
-                <h1 className="text-xs font-bold uppercase text-brand-primary">{texts.login}</h1>
-                <div className="mt-2 h-px bg-brand-primary"></div>
-              </div>
-            </div>
+    <AuthCard
+      locale={locale}
+      eyebrow={texts.login}
+      title={texts.loginTitle}
+      footer={
+        <>
+          <span className="text-brand-muted">{texts.noAccount} </span>
+          <Link
+            href={`/${locale}/register`}
+            className="font-semibold text-brand-primary transition-colors hover:text-brand-primary-dark"
+          >
+            {texts.signUpLink}
+          </Link>
+        </>
+      }
+    >
+      <GoogleSignInButton
+        onSuccess={async (credential) => {
+          setIsGoogleLoading(true);
+          setErrors({});
+          try {
+            const response = await googleLogin(credential);
+            if (response.success) {
+              router.push(`/${locale}/account`);
+            } else {
+              setErrors({ general: response.error?.message || texts.googleSignInError });
+            }
+          } catch {
+            setErrors({ general: texts.googleSignInError });
+          } finally {
+            setIsGoogleLoading(false);
+          }
+        }}
+        onError={() => setErrors({ general: texts.googleSignInError })}
+        text="signin_with"
+        locale={locale}
+      />
 
-            <h2 className={`mb-5 text-lg font-semibold text-brand-primary md:mb-7 md:text-2xl ${isRTL ? "text-right" : "text-left"}`}>
-              {texts.loginTitle}
-            </h2>
+      <div className="my-5 flex items-center gap-3">
+        <div className="h-px flex-1 bg-brand-border/70" />
+        <span className="text-xs text-brand-muted">{texts.orDivider}</span>
+        <div className="h-px flex-1 bg-brand-border/70" />
+      </div>
 
-            <GoogleSignInButton
-              onSuccess={async (credential) => {
-                setIsGoogleLoading(true);
-                setErrors({});
-                try {
-                  const response = await googleLogin(credential);
-                  if (response.success) {
-                    router.push(`/${locale}/account`);
-                  } else {
-                    setErrors({ general: response.error?.message || texts.googleSignInError });
-                  }
-                } catch {
-                  setErrors({ general: texts.googleSignInError });
-                } finally {
-                  setIsGoogleLoading(false);
-                }
-              }}
-              onError={() => setErrors({ general: texts.googleSignInError })}
-              text="signin_with"
-              locale={locale}
-            />
+      {isGoogleLoading && (
+        <div className="mb-4 rounded-md border border-brand-border/70 bg-brand-beige/50 p-3 text-center text-sm text-brand-primary">
+          {texts.loggingIn}
+        </div>
+      )}
 
-            <div className="flex items-center gap-4 my-6">
-              <div className="flex-1 h-px bg-gray-300"></div>
-              <span className="text-sm text-gray-500">{texts.orDivider}</span>
-              <div className="flex-1 h-px bg-gray-300"></div>
-            </div>
+      <div className={`mb-4 rounded-md border border-brand-border/70 bg-white p-3 text-sm leading-6 text-brand-muted ${isRTL ? "text-right" : "text-left"}`}>
+        <p>
+          {texts.returningUserMessage}{" "}
+          <Link
+            href={`/${locale}/forgot-password`}
+            className="font-semibold text-brand-primary hover:underline"
+          >
+            {texts.returningUserLink}
+          </Link>{" "}
+          {texts.returningUserSuffix}
+        </p>
+      </div>
 
-            {isGoogleLoading && (
-              <div className="mb-6 rounded-lg border border-brand-border/70 bg-brand-beige/55 p-3 text-center text-sm text-brand-primary">
-                {texts.loggingIn}
-              </div>
-            )}
-
-            <div className={`mb-6 rounded-md bg-brand-beige border border-brand-primary p-4 text-sm text-brand-primary ${isRTL ? "text-right" : "text-left"}`}>
-              <p>
-                {texts.returningUserMessage}{" "}
-                <Link
-                  href={`/${locale}/forgot-password`}
-                  className="font-semibold text-brand-primary underline hover:text-brand-primary-dark"
-                >
-                  {texts.returningUserLink}
-                </Link>{" "}
-                {texts.returningUserSuffix}
+      {errors.general && (
+        <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          {rateLimitSeconds > 0 ? (
+            <div>
+              <p>{texts.rateLimitMessage}</p>
+              <p className="mt-2 font-semibold text-red-800">
+                {formatCountdown(rateLimitSeconds)}
               </p>
             </div>
-            {errors.general && (
-              <div className="mb-6 rounded-md bg-red-50 p-4 text-sm text-red-600">
-                {rateLimitSeconds > 0 ? (
-                  <div>
-                    <p>{texts.rateLimitMessage}</p>
-                    <p className="mt-2 text-lg font-semibold text-red-700">
-                      {formatCountdown(rateLimitSeconds)}
-                    </p>
-                  </div>
-                ) : (
-                  <div>
-                    <p>{errors.general}</p>
-                    <Link
-                      href={`/${locale}/forgot-password`}
-                      className="mt-2 inline-block font-semibold text-brand-primary underline hover:text-brand-primary-dark"
-                    >
-                      {texts.loginFailedSuggestion}
-                    </Link>
-                  </div>
-                )}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <Input
-                name="username"
-                type="text"
-                placeholder={texts.usernamePlaceholder}
-                value={formData.username}
-                onChange={handleInputChange}
-                error={errors.username}
-                autoComplete="username"
-                dir={isRTL ? "rtl" : "ltr"}
-                className=""
-              />
-
-              <Input
-                name="password"
-                type="password"
-                placeholder={texts.passwordPlaceholder}
-                value={formData.password}
-                onChange={handleInputChange}
-                error={errors.password}
-                autoComplete="current-password"
-                dir={isRTL ? "rtl" : "ltr"}
-                className=""
-              />
-
-              <div className={`text-sm ${isRTL ? "text-right" : "text-left"}`}>
-                <Link
-                  href={`/${locale}/forgot-password`}
-                  className="text-brand-primary hover:underline"
-                >
-                  {texts.forgotPassword}
-                </Link>
-              </div>
-
-              <Button
-                type="submit"
-                className="mt-5 w-full"
-                isLoading={isLoading}
-                disabled={isLoading || rateLimitSeconds > 0}
-              >
-                {isLoading ? texts.loggingIn : texts.loginButton}
-              </Button>
-            </form>
-
-            <div className={`mt-6 text-sm ${isRTL ? "text-right" : "text-left"}`}>
-              <span className="text-gray-500">{texts.noAccount} </span>
+          ) : (
+            <div>
+              <p>{errors.general}</p>
               <Link
-                href={`/${locale}/register`}
-                className="font-semibold text-brand-primary hover:text-brand-primary-dark transition-colors"
+                href={`/${locale}/forgot-password`}
+                className="mt-2 inline-block font-semibold text-brand-primary hover:underline"
               >
-                {texts.signUpLink}
+                {texts.loginFailedSuggestion}
               </Link>
             </div>
-          </div>
+          )}
         </div>
-      </div>
-    </AuthBackground>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Input
+          label={texts.username}
+          name="username"
+          type="text"
+          placeholder={texts.usernamePlaceholder}
+          value={formData.username}
+          onChange={handleInputChange}
+          error={errors.username}
+          autoComplete="username"
+          dir={isRTL ? "rtl" : "ltr"}
+          className="rounded-md bg-white"
+        />
+
+        <Input
+          label={texts.password}
+          name="password"
+          type="password"
+          placeholder={texts.passwordPlaceholder}
+          value={formData.password}
+          onChange={handleInputChange}
+          error={errors.password}
+          autoComplete="current-password"
+          dir={isRTL ? "rtl" : "ltr"}
+          className="rounded-md bg-white"
+        />
+
+        <div className={`text-sm ${isRTL ? "text-right" : "text-left"}`}>
+          <Link href={`/${locale}/forgot-password`} className="font-medium text-brand-primary hover:underline">
+            {texts.forgotPassword}
+          </Link>
+        </div>
+
+        <Button
+          type="submit"
+          className="mt-2 w-full rounded-md shadow-none hover:translate-y-0"
+          isLoading={isLoading}
+          disabled={isLoading || rateLimitSeconds > 0}
+        >
+          {isLoading ? texts.loggingIn : texts.loginButton}
+        </Button>
+      </form>
+    </AuthCard>
   );
 }

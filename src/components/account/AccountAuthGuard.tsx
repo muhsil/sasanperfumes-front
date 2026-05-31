@@ -17,10 +17,10 @@ function AuthLoadingSkeleton() {
   return (
     <div className="container mx-auto px-5 py-8 md:px-7 lg:px-12">
       <div className="animate-pulse">
-        <div className="mb-8 h-8 w-48 rounded bg-brand-beige" />
+        <div className="mb-6 h-7 w-44 rounded bg-brand-beige" />
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-24 rounded-lg border border-brand-border/70 bg-brand-ivory" />
+            <div key={i} className="h-20 rounded-lg border border-brand-border/70 bg-brand-ivory" />
           ))}
         </div>
       </div>
@@ -40,15 +40,15 @@ function NotAuthenticatedState({
   loginText: string;
 }) {
   return (
-    <div className="container mx-auto px-5 py-12 md:px-7 md:py-16 lg:px-12">
-      <div className="mx-auto max-w-md text-center">
-        <div className="mb-6 flex justify-center">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full border border-brand-border/70 bg-brand-ivory shadow-[0_12px_28px_rgba(20,15,10,0.08)] md:h-24 md:w-24">
-            <Icon className="h-10 w-10 text-brand-muted md:h-12 md:w-12" />
+    <div className="container mx-auto px-5 py-10 md:px-7 md:py-14 lg:px-12">
+      <div className="mx-auto max-w-md rounded-lg border border-brand-border/70 bg-brand-ivory p-6 text-center shadow-[0_18px_44px_rgba(20,15,10,0.08)]">
+        <div className="mb-5 flex justify-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-md border border-brand-border/70 bg-white">
+            <Icon className="h-7 w-7 text-brand-primary" />
           </div>
         </div>
-        <p className="mb-8 text-brand-muted">{notLoggedInText}</p>
-        <Button asChild variant="primary" size="lg">
+        <p className="mb-6 text-sm leading-6 text-brand-muted">{notLoggedInText}</p>
+        <Button asChild variant="primary" size="lg" className="w-full rounded-md shadow-none hover:translate-y-0">
           <Link href={`/${locale}/login`}>{loginText}</Link>
         </Button>
       </div>

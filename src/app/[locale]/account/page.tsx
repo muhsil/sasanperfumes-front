@@ -117,53 +117,51 @@ export default function AccountPage({ params }: AccountPageProps) {
   return (
     <div className="account-shell min-h-screen bg-transparent py-5 md:py-8" dir={isRTL ? "rtl" : "ltr"}>
       <div className="container mx-auto px-5 md:px-7 lg:px-12">
-        <h1 className="mb-5 font-title text-[30px] leading-none text-brand-primary md:mb-8 md:text-4xl">
+        <h1 className="mb-5 border-b border-brand-border/70 pb-4 text-2xl font-semibold leading-tight text-brand-primary md:mb-7 md:text-3xl">
           {texts.myAccount}
         </h1>
 
-        <div className="grid gap-8 lg:grid-cols-3">
+        <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-1">
-            <div className="luxury-panel p-5 md:p-6">
-              <div className="flex flex-col items-center text-center">
-                <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full border border-brand-border/70 bg-brand-ivory shadow-[0_12px_28px_rgba(20,15,10,0.08)] md:h-24 md:w-24">
-                  <User className="h-10 w-10 text-brand-primary md:h-12 md:w-12" />
+            <div className="rounded-lg border border-brand-border/70 bg-brand-ivory p-5 shadow-[0_18px_44px_rgba(20,15,10,0.08)] md:p-6">
+              <div className="flex items-center gap-4">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md border border-brand-border/70 bg-white">
+                  <User className="h-7 w-7 text-brand-primary" />
                 </div>
-                <h2 className="text-xl font-semibold text-brand-primary">
-                  {user.user_display_name}
-                </h2>
-                <p className="mt-1 text-brand-muted">{user.user_email}</p>
-                <p className="mt-2 text-sm text-brand-muted">
-                  {texts.welcome}
-                </p>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-brand-muted">{texts.welcome}</p>
+                  <h2 className="truncate text-lg font-semibold text-brand-primary">
+                    {user.user_display_name}
+                  </h2>
+                  <p className="truncate text-sm text-brand-muted">{user.user_email}</p>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="lg:col-span-2 space-y-6">
-            {/* Loyalty Points */}
+          <div className="space-y-5 lg:col-span-2">
             <LoyaltyDashboard locale={locale as "en" | "ar"} customerId={user?.user_id ? parseInt(String(user.user_id)) : undefined} />
 
-            {/* Referral Program */}
             <ReferralProgram locale={locale as "en" | "ar"} customerId={user?.user_id ? parseInt(String(user.user_id)) : undefined} />
 
-            <div className="luxury-panel overflow-hidden">
+            <div className="overflow-hidden rounded-lg border border-brand-border/70 bg-brand-ivory shadow-[0_18px_44px_rgba(20,15,10,0.08)]">
               <nav>
                 <ul className="divide-y divide-brand-border/70">
                   {menuItems.map((item) => (
                     <li key={item.href}>
                       <Link
                         href={item.href}
-                          className="flex items-center justify-between p-4 transition-colors hover:bg-brand-beige/55"
+                        className="flex items-center justify-between p-4 transition-colors hover:bg-brand-beige/55"
                       >
                         <div className="flex items-center gap-4">
-                            <div className="flex h-11 w-11 items-center justify-center rounded-full border border-brand-border/70 bg-brand-ivory text-brand-primary md:h-12 md:w-12">
-                              <item.icon className="h-5 w-5 md:h-6 md:w-6" />
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-brand-border/70 bg-white text-brand-primary">
+                            <item.icon className="h-5 w-5" />
                           </div>
                           <div>
-                              <h3 className="font-medium text-brand-primary">
+                            <h3 className="text-sm font-semibold text-brand-primary">
                               {item.label}
                             </h3>
-                              <p className="text-sm text-brand-muted">
+                            <p className="text-sm text-brand-muted">
                               {item.description}
                             </p>
                           </div>
@@ -183,7 +181,7 @@ export default function AccountPage({ params }: AccountPageProps) {
                 <Button
                   onClick={handleLogout}
                   variant="outline"
-                  className="w-full justify-center gap-2 text-red-600 hover:bg-red-50 hover:text-red-700"
+                  className="w-full justify-center gap-2 rounded-md text-red-600 hover:translate-y-0 hover:bg-red-50 hover:text-red-700"
                 >
                   <LogOut className="h-5 w-5" />
                   {texts.logout}
