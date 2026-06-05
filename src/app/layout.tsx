@@ -1,9 +1,31 @@
 import type { Metadata } from "next";
+import { Eczar, Noto_Sans_Arabic, Poppins } from "next/font/google";
 import { headers } from "next/headers";
 import { siteConfig } from "@/config/site";
 import { themeConfig } from "@/config/theme";
 import { INDEX_NOFOLLOW_ROBOTS } from "@/lib/utils/seo";
 import "./globals.css";
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  variable: "--font-poppins",
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
+
+const eczar = Eczar({
+  subsets: ["latin"],
+  variable: "--font-eczar",
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
+
+const notoSansArabic = Noto_Sans_Arabic({
+  subsets: ["arabic"],
+  variable: "--font-noto-sans-arabic",
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: `${siteConfig.name} | Premium Perfumes & Fragrances in UAE`,
@@ -37,19 +59,18 @@ export default async function RootLayout({
   const dir = locale === "ar" ? "rtl" : "ltr";
 
   return (
-    <html
-      lang={locale}
-      dir={dir}
-      suppressHydrationWarning
-      className="overflow-x-clip"
-    >
+      <html
+        lang={locale}
+        dir={dir}
+        suppressHydrationWarning
+        className={`overflow-x-clip ${poppins.variable} ${eczar.variable} ${notoSansArabic.variable}`}
+      >
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
         <style dangerouslySetInnerHTML={{ __html: `
           :root {
-            --font-jost: "Manrope", "Segoe UI", Arial, Helvetica, sans-serif;
-            --font-display: "Cormorant Garamond", "Times New Roman", serif;
-            --font-noto-sans-arabic: "IBM Plex Sans Arabic", "Noto Sans Arabic", "Segoe UI", Arial, Helvetica, sans-serif;
+            --font-jost: var(--font-poppins);
+            --font-display: var(--font-eczar);
             --background: ${themeConfig.colors.background};
             --foreground: ${themeConfig.colors.foreground};
             --color-primary: ${themeConfig.colors.primary};

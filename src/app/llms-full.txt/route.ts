@@ -48,8 +48,8 @@ Our focus is a simple, polished fragrance experience: discover a scent, choose a
 ${categoriesSection}
 
 ## Customer Information
-- About Us: ${siteConfig.url}/en/about
-- Contact Us: ${siteConfig.url}/en/contact
+- About Us: ${siteConfig.url}/en/about-us
+- Contact Us: ${siteConfig.url}/en/contact-us
 - Guides: ${siteConfig.url}/en/guides
 - WhatsApp: +971 50 607 1405
 

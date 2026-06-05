@@ -44,7 +44,7 @@ export async function generateMetadata({
     description: wpSeo?.description || pageContent.seo.description,
     image: wpSeo?.ogImage || undefined,
     locale: lang,
-    pathname: "/contact",
+    pathname: "/contact-us",
     keywords: isAr ? defaultKeywords.ar : defaultKeywords.en,
   });
 }
@@ -102,14 +102,14 @@ export default async function ContactPage({ params }: ContactPageProps) {
   }));
 
   const breadcrumbItems = [
-    { name: content.heroTitle || dictionary.common.contact, href: `/${locale}/contact` },
+    { name: content.heroTitle || dictionary.common.contact, href: `/${locale}/contact-us` },
   ];
   const pageTitle = content.heroTitle || dictionary.common.contact;
 
   return (
     <div className="flex flex-col">
       <JsonLd data={generateContactPageJsonLd({
-        url: `${siteConfig.url}/${locale}/contact`,
+        url: `${siteConfig.url}/${locale}/contact-us`,
         telephone: siteConfig.contact.callPhone || siteConfig.contact.phone,
         email: siteConfig.contact.email,
         address: siteConfig.contact.address,

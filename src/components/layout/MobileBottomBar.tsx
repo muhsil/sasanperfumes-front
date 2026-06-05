@@ -13,6 +13,7 @@ import type { WPMenuItem } from "@/types/wordpress";
 import type { Dictionary } from "@/i18n";
 import { CategoriesDrawer } from "@/components/layout/CategoriesDrawer";
 import { triggerHaptic } from "@/lib/utils/haptics";
+import { normalizeMenuUrl } from "@/config/menu";
 
 interface MobileBottomBarProps {
   locale: Locale;
@@ -78,7 +79,7 @@ function wpMenuToBarItems(wpItems: WPMenuItem[], locale: Locale): MobileBarSetti
         icon,
         label: isCategoriesItem ? "Menu" : item.title,
         labelAr: isCategoriesItem ? "القائمة" : (locale === "ar" ? item.title : ""),
-        url: item.url || "/",
+        url: normalizeMenuUrl(item.url || "/", locale),
       };
     });
 }
@@ -159,9 +160,9 @@ export function MobileBottomBar({
   }
 
   const isItemActive = (item: MobileBarSettings["items"][0]) => {
-    const itemPath = item.url.startsWith("/") ? `/${locale}${item.url}` : item.url;
+    const itemPath = item.url;
     
-    if (item.icon === "home" || item.url === "/" || item.url === "") {
+    if (item.icon === "home" || item.url === "/" || item.url === "" || item.url === `/${locale}`) {
       return pathname === `/${locale}` || pathname === `/${locale}/`;
     }
     if (item.icon === "grid" || item.url.includes("categories")) {
@@ -206,7 +207,7 @@ export function MobileBottomBar({
             const label = isCategoriesItem
               ? (isRTL ? "القائمة" : "Menu")
               : rawLabel;
-            const href = item.url.startsWith("/") ? `/${locale}${item.url}` : item.url || `/${locale}`;
+            const href = item.url || `/${locale}`;
 
             const isWishlist = item.icon === "heart" || item.url.includes("wishlist");
             const isWhatsApp = item.icon === "whatsapp";

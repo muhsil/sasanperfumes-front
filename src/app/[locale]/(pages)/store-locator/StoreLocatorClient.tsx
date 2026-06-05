@@ -110,7 +110,7 @@ export default function StoreLocatorClient({ dict, locale, stores: storeList, co
   const countries = buildCountries(storeList);
 
   const breadcrumbItems = [
-    { name: cms.heroSubtitle || dict.heroSubtitle, href: `/${locale}/store-locator` },
+    { name: cms.heroSubtitle || dict.heroSubtitle, href: `/${locale}/store-listing` },
   ];
 
   const content = {

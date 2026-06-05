@@ -46,14 +46,24 @@ const fetchPromise: Record<string, Promise<WCCategory[]> | null> = {};
 function extractSlugFromMenuUrl(url: string): string | null {
   if (!url || url === "#") return null;
   try {
-    let path = url;
-    if (url.startsWith("http")) {
-      path = new URL(url).pathname;
-    }
-    // Remove locale prefix and trailing slashes
-    path = path.replace(/^\/(en|ar)\//, "/").replace(/\/$/, "");
-    const match = path.match(/\/category\/(.+)/);
-    return match ? match[1] : null;
+    const parsed = url.startsWith("http") ? new URL(url) : null;
+    const path = (parsed?.pathname || url).replace(/^\/(en|ar)\//, "/").replace(/\/$/, "");
+    const categoryParam = parsed?.searchParams.get("category");
+    if (categoryParam) return decodeURIComponent(categoryParam);
+
+    const categoryMatch = path.match(/\/(?:product-)?category\/([^/?#]+)/);
+    if (categoryMatch) return decodeURIComponent(categoryMatch[1]);
+
+    const lastSegment = path.split("/").filter(Boolean).pop();
+    if (!lastSegment) return null;
+
+    const slugAliases: Record<string, string> = {
+      "perfume": "perfumes",
+      "hair-mist": "sasan-hair-mist",
+      "oud-dakhoon": "oud-perfumes",
+    };
+
+    return slugAliases[lastSegment] || decodeURIComponent(lastSegment);
   } catch {
     return null;
   }

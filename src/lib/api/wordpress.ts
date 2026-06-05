@@ -631,7 +631,7 @@ async function fetchWPAPI<T>(
   endpoint: string,
   options: FetchOptions = {}
 ): Promise<T | null> {
-  const { revalidate = 60, tags, locale, noCache = false } = options;
+  const { revalidate = 300, tags, locale, noCache = false } = options;
   const urls = buildWPAPIUrls(endpoint, locale);
 
   try {
@@ -746,7 +746,8 @@ export async function getSiteSettings(locale?: Locale): Promise<SiteSettings> {
     "/sasanperfumes/v1/site-settings",
     {
       locale,
-      noCache: true,
+      tags: ["site-settings"],
+      revalidate: 600,
     }
   );
   const shouldUseLegacySiteIdentity = Boolean(pluginSiteData);
@@ -758,7 +759,8 @@ export async function getSiteSettings(locale?: Locale): Promise<SiteSettings> {
         "",
         {
           locale,
-          noCache: true,
+          tags: ["site-settings"],
+          revalidate: 600,
         }
       );
     }
@@ -894,7 +896,8 @@ export async function getHomePageSettings(locale?: Locale): Promise<HomePageACF>
     "/sasanperfumes/v1/home-settings",
     {
       locale,
-      noCache: true,
+      tags: ["home-settings"],
+      revalidate: 600,
     }
   );
 
@@ -1414,7 +1417,38 @@ export async function getFooterSettings(): Promise<FooterSettings> {
     poweredBy: data.poweredBy || defaultFooterSettings.poweredBy,
   } : defaultFooterSettings;
 
-  return rebrandApiContent(settings);
+  const legacyQuickLinkUrls = ["/", "/shop", "/category/perfumes", "/category/all-over-spray", "/category/sasan-hair-mist", "/category/gift-set", "/contact"];
+  const legacyCustomerServiceUrls = ["/faq", "/shipping", "/returns", "/track-order", "/privacy", "/terms-and-conditions", "/private-labeling"];
+
+  const liveQuickLinks: FooterSettings["quickLinks"]["items"] = [
+    { label: { en: "About Us", ar: "من نحن" }, url: "/about-us" },
+    { label: { en: "Our Stores", ar: "مواقعنا" }, url: "/store-listing" },
+    { label: { en: "B2B", ar: "B2B" }, url: "#" },
+  ];
+
+  const liveCustomerServiceLinks: FooterSettings["customerService"]["items"] = [
+    { label: { en: "Contact Us", ar: "تواصل معنا" }, url: "/contact-us" },
+    { label: { en: "Delivery Policy", ar: "سياسة التسليم" }, url: "/privacy-policy" },
+    { label: { en: "Exchange & Return Policy", ar: "سياسة الاستبدال والإرجاع" }, url: "/refund_returns" },
+    { label: { en: "Payment Policy", ar: "سياسة الدفع" }, url: "/refund_returns" },
+  ];
+
+  const quickLinkUrls = settings.quickLinks.items.map((item) => item.url);
+  const customerServiceUrls = settings.customerService.items.map((item) => item.url);
+  const isLegacyQuickLinks = legacyQuickLinkUrls.every((url, index) => quickLinkUrls[index] === url);
+  const isLegacyCustomerService = legacyCustomerServiceUrls.every((url, index) => customerServiceUrls[index] === url);
+
+  const normalizedSettings: FooterSettings = {
+    ...settings,
+    quickLinks: isLegacyQuickLinks
+      ? { ...settings.quickLinks, items: liveQuickLinks }
+      : settings.quickLinks,
+    customerService: isLegacyCustomerService
+      ? { ...settings.customerService, items: liveCustomerServiceLinks }
+      : settings.customerService,
+  };
+
+  return rebrandApiContent(normalizedSettings);
 }
 
 // WordPress Page types from REST API
@@ -1804,7 +1838,7 @@ const defaultHomeSections: HomeSections = {
 export async function getHomeSections(): Promise<HomeSections> {
   const data = await fetchWPAPI<HomeSections>(
     "/sasanperfumes/v1/home-sections",
-    { noCache: true }
+    { tags: ["home-sections"], revalidate: 600 }
   );
   return rebrandApiContent(data ?? defaultHomeSections);
 }
@@ -2211,7 +2245,8 @@ const defaultFeatureToggles: FeatureToggles = {
 
 export async function getFeatureToggles(): Promise<FeatureToggles> {
   const data = await fetchWPAPI<FeatureToggles>("/sasanperfumes/v1/feature-toggles", {
-    noCache: true,
+    tags: ["feature-toggles"],
+    revalidate: 600,
   });
   return { ...defaultFeatureToggles, ...data };
 }

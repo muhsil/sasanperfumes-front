@@ -12,7 +12,7 @@ import Typography from "@mui/material/Typography";
 import type { Dictionary } from "@/i18n";
 import type { Locale } from "@/config/site";
 import type { WCProduct } from "@/types/woocommerce";
-import { getProducts } from "@/lib/api/woocommerce";
+import { searchProducts } from "@/lib/api/search";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { getProductSlugFromPermalink, decodeHtmlEntities } from "@/lib/utils";
 import { useFreeGift } from "@/contexts/FreeGiftContext";
@@ -64,9 +64,9 @@ export function SearchDrawer({
     setLoading(true);
     setHasSearched(true);
     try {
-      const response = await getProducts({
-        search: searchQuery,
-        per_page: 6,
+      const response = await searchProducts({
+        query: searchQuery,
+        perPage: 6,
         locale,
       });
       // Filter out free gift products from search results
@@ -86,7 +86,7 @@ export function SearchDrawer({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
-      router.push(`/${locale}/shop?search=${encodeURIComponent(query.trim())}`);
+      router.push(`/${locale}/search?q=${encodeURIComponent(query.trim())}`);
       onClose();
     }
   };
@@ -130,7 +130,7 @@ export function SearchDrawer({
       return;
     }
 
-    router.push(`/${locale}/shop?search=${encodeURIComponent(query.trim())}`);
+    router.push(`/${locale}/search?q=${encodeURIComponent(query.trim())}`);
     handleClose();
   }, [handleClose, locale, query, router]);
 

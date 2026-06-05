@@ -3,22 +3,30 @@ import { siteConfig, type Locale } from "@/config/site";
 import type { Dictionary } from "@/i18n";
 import type { SiteSettings, FooterSettings } from "@/types/wordpress";
 import type { FeatureToggles } from "@/lib/api/wordpress";
+import { normalizeMenuUrl } from "@/config/menu";
 import { NewsletterForm } from "@/components/common/NewsletterForm";
 import { SocialIconLinks } from "@/components/common/SocialIconLinks";
 
 const SLUG_TOGGLE_MAP: Record<string, keyof FeatureToggles> = {
   "/shop": "sasanperfumes_shop_enabled",
   "/about": "sasanperfumes_about_enabled",
+  "/about-us": "sasanperfumes_about_enabled",
   "/contact": "sasanperfumes_contact_enabled",
+  "/contact-us": "sasanperfumes_contact_enabled",
   "/blog": "sasanperfumes_blog_enabled",
   "/brands": "sasanperfumes_brands_page_enabled",
   "/services": "sasanperfumes_services_page_enabled",
   "/what-we-do": "sasanperfumes_what_we_do_enabled",
   "/store-locator": "sasanperfumes_store_locator_enabled",
+  "/store-listing": "sasanperfumes_store_locator_enabled",
   "/faq": "sasanperfumes_faq_enabled",
   "/shipping": "sasanperfumes_shipping_enabled",
+  "/shipping-policy": "sasanperfumes_shipping_enabled",
   "/returns": "sasanperfumes_returns_enabled",
+  "/refund_returns": "sasanperfumes_returns_enabled",
   "/privacy": "sasanperfumes_privacy_enabled",
+  "/privacy-policy": "sasanperfumes_privacy_enabled",
+  "/delivery-policy": "sasanperfumes_privacy_enabled",
   "/terms-and-conditions": "sasanperfumes_terms_enabled",
   "/private-labeling": "sasanperfumes_private_labeling_enabled",
   "/size-guide": "sasanperfumes_size_guide_enabled",
@@ -47,37 +55,40 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
 
   const isLinkEnabled = (url: string): boolean => {
     if (!featureToggles) return true;
-    const toggleKey = SLUG_TOGGLE_MAP[url];
+    const normalizedUrl = normalizeMenuUrl(url, locale);
+    const pathForToggle = normalizedUrl.startsWith("/") && !normalizedUrl.startsWith(`/${locale}/`)
+      ? normalizedUrl
+      : normalizedUrl.replace(/^\/(en|ar)(?=\/|$)/, "");
+    const toggleKey = SLUG_TOGGLE_MAP[pathForToggle.split("?")[0]] || SLUG_TOGGLE_MAP[url];
     if (!toggleKey) return true;
     return featureToggles[toggleKey] !== false;
   };
+
+  const toHref = (url: string) => normalizeMenuUrl(url, locale);
 
   const footerLinks = {
     quickLinks: (quickLinkItems.length > 0
       ? quickLinkItems.map((item) => ({
           name: t(item.label),
-          href: item.url.startsWith("/") ? `/${locale}${item.url}` : item.url,
+          href: toHref(item.url),
           url: item.url,
         }))
       : [
-          { name: dictionary.common.home, href: `/${locale}`, url: "/" },
-          { name: dictionary.common.shop, href: `/${locale}/shop`, url: "/shop" },
-          { name: dictionary.common.about, href: `/${locale}/about`, url: "/about" },
-          { name: dictionary.common.contact, href: `/${locale}/contact`, url: "/contact" },
-          { name: dictionary.footer.storeLocator, href: `/${locale}/store-locator`, url: "/store-locator" },
+          { name: locale === "ar" ? "من نحن" : "About Us", href: `/${locale}/about-us`, url: "/about-us" },
+          { name: locale === "ar" ? "مواقعنا" : "Our Stores", href: `/${locale}/store-listing`, url: "/store-listing" },
+          { name: "B2B", href: "#", url: "#" },
         ]).filter((link) => isLinkEnabled(link.url)),
     customerService: (csLinkItems.length > 0
       ? csLinkItems.map((item) => ({
           name: t(item.label),
-          href: item.url.startsWith("/") ? `/${locale}${item.url}` : item.url,
+          href: toHref(item.url),
           url: item.url,
         }))
       : [
-          { name: dictionary.common.faq, href: `/${locale}/faq`, url: "/faq" },
-          { name: dictionary.footer.shippingInfo, href: `/${locale}/shipping`, url: "/shipping" },
-          { name: dictionary.footer.returnPolicy, href: `/${locale}/returns`, url: "/returns" },
-          { name: dictionary.footer.privacyPolicy, href: `/${locale}/privacy`, url: "/privacy" },
-          { name: dictionary.footer.termsConditions, href: `/${locale}/terms-and-conditions`, url: "/terms-and-conditions" },
+          { name: locale === "ar" ? "تواصل معنا" : "Contact Us", href: `/${locale}/contact-us`, url: "/contact-us" },
+          { name: locale === "ar" ? "سياسة التسليم" : "Delivery Policy", href: `/${locale}/privacy-policy`, url: "/privacy-policy" },
+          { name: locale === "ar" ? "سياسة الاستبدال والإرجاع" : "Exchange & Return Policy", href: `/${locale}/refund_returns`, url: "/refund_returns" },
+          { name: locale === "ar" ? "سياسة الدفع" : "Payment Policy", href: `/${locale}/refund_returns`, url: "/refund_returns" },
         ]).filter((link) => isLinkEnabled(link.url)),
   };
 
@@ -164,12 +175,16 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
               <ul className="space-y-3">
                 {footerLinks.quickLinks.map((link) => (
                   <li key={link.name}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-brand-ivory/68 transition-colors hover:text-white"
-                    >
-                      {link.name}
-                    </Link>
+                    {link.href === "#" ? (
+                      <span className="text-sm text-brand-ivory/68">{link.name}</span>
+                    ) : (
+                      <Link
+                        href={link.href}
+                        className="text-sm text-brand-ivory/68 transition-colors hover:text-white"
+                      >
+                        {link.name}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -182,12 +197,16 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
               <ul className="space-y-3">
                 {footerLinks.customerService.map((link) => (
                   <li key={link.name}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-brand-ivory/68 transition-colors hover:text-white"
-                    >
-                      {link.name}
-                    </Link>
+                    {link.href === "#" ? (
+                      <span className="text-sm text-brand-ivory/68">{link.name}</span>
+                    ) : (
+                      <Link
+                        href={link.href}
+                        className="text-sm text-brand-ivory/68 transition-colors hover:text-white"
+                      >
+                        {link.name}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>

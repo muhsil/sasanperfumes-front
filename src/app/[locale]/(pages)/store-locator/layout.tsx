@@ -16,15 +16,15 @@ export async function generateMetadata({
   const isRTL = locale === "ar";
 
   return generateSeoMetadata({
-    title: isRTL ? "ساسان للعطور | التواصل والخدمات" : "Sasan Perfumes | Contact & Services",
+    title: isRTL ? "ساسان للعطور | مواقعنا" : "Sasan Perfumes | Our Stores",
     description: isRTL
-      ? "تواصل مع ساسان للعطور لمعرفة المزيد عن العطور، معطرات الشعر، بخاخات الجسم، أطقم الهدايا، وخدمات التصنيع الخاص."
-      : "Contact Sasan Perfumes for perfumes, hair mist, all over sprays, gift sets, and private-label perfume services.",
+      ? "تفضل بزيارة مواقع ساسان للعطور في الإمارات لمعرفة أقرب فرع والحصول على تفاصيل الاتصال."
+      : "Find Sasan Perfumes store locations across the UAE and reach us for store details, directions, and contact information.",
     locale: locale as Locale,
-    pathname: "/store-locator",
+    pathname: "/store-listing",
     keywords: isRTL
-      ? ["ساسان للعطور", "متجر عطور الإمارات", "عطور", "معطر الشعر", "بخاخ الجسم", "أطقم هدايا", "تصنيع عطور خاص", "تواصل معنا"]
-      : ["Sasan Perfumes", "UAE perfume store", "perfumes", "hair mist", "all over spray", "gift sets", "private labeling", "contact Sasan Perfumes"],
+      ? ["ساسان للعطور", "مواقعنا", "الفروع", "الإمارات", "عطور", "معطر الشعر", "بخاخ الجسم", "أطقم هدايا", "تواصل معنا"]
+      : ["Sasan Perfumes", "Our Stores", "store listing", "store locations", "UAE perfume store", "hair mist", "all over spray", "gift sets"],
   });
 }
 

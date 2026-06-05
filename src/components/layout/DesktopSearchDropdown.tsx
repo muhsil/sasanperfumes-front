@@ -8,7 +8,7 @@ import { createPortal } from "react-dom";
 import type { Dictionary } from "@/i18n";
 import type { Locale } from "@/config/site";
 import type { WCProduct } from "@/types/woocommerce";
-import { getProducts } from "@/lib/api/woocommerce";
+import { searchProducts } from "@/lib/api/search";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { cn, getProductSlugFromPermalink, decodeHtmlEntities } from "@/lib/utils";
 import { useFreeGift } from "@/contexts/FreeGiftContext";
@@ -114,9 +114,9 @@ export function DesktopSearchDropdown({
     setLoading(true);
     setHasSearched(true);
     try {
-      const response = await getProducts({
-        search: searchQuery,
-        per_page: 6,
+      const response = await searchProducts({
+        query: searchQuery,
+        perPage: 6,
         locale,
       });
       const freeGiftIds = getFreeGiftProductIds();

@@ -12,8 +12,8 @@ Sasan Perfumes is a UAE fragrance store offering perfumes, hair mist, all over s
 ## Links
 - Website: ${siteConfig.url}
 - Shop: ${siteConfig.url}/en/shop
-- About Us: ${siteConfig.url}/en/about
-- Contact: ${siteConfig.url}/en/contact
+- About Us: ${siteConfig.url}/en/about-us
+- Contact: ${siteConfig.url}/en/contact-us
 - Full LLM Context: ${siteConfig.url}/llms-full.txt
 
 ## Product Categories

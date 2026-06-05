@@ -4,6 +4,8 @@ import type { Locale } from "@/config/site";
 import { getStaticPageContent, pickLocale, mapRepeater, getFeatureToggles } from "@/lib/api/wordpress";
 import StoreLocatorClient from "./StoreLocatorClient";
 
+export { generateMetadata } from "./layout";
+
 interface StoreLocatorPageProps {
   params: Promise<{ locale: string }>;
 }

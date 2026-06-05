@@ -198,7 +198,7 @@ export async function generateMetadata({
     description: wpSeo?.description || pageContent.seo.description,
     image: wpSeo?.ogImage || undefined,
     locale: lang,
-    pathname: "/about",
+    pathname: "/about-us",
     keywords: lang === "ar" ? arabicKeywords : defaultKeywords.en,
   });
 }
@@ -284,7 +284,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
   })).filter((item) => item.question || item.answer);
 
   const breadcrumbItems = [
-    { name: dictionary.common.about, href: `/${locale}/about` },
+    { name: dictionary.common.about, href: `/${locale}/about-us` },
   ];
 
   const hasHeroContent = Boolean(heroSubtitle || title || heroDescription || (ctaButton && ctaLink));

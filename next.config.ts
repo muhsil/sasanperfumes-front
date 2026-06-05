@@ -44,7 +44,7 @@ const nextConfig: NextConfig = {
     removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error", "warn"] } : false,
   },
   experimental: {
-    cpus: 2,
+    cpus: 1,
     ...(disableRuntimeCache ? {} : {
       staleTimes: {
         dynamic: 300,

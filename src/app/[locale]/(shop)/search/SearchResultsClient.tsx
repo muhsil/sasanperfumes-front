@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Search, X } from "lucide-react";
 import { ProductGridSkeleton } from "@/components/common/Skeleton";
 import { ProductListing } from "@/components/shop/ProductListing";
-import { getProducts } from "@/lib/api/woocommerce";
+import { searchProducts } from "@/lib/api/search";
 import { cn } from "@/lib/utils";
 import type { Locale } from "@/config/site";
 import type { WCProduct } from "@/types/woocommerce";
@@ -73,9 +73,9 @@ export function SearchResultsClient({
 
     setLoading(true);
     try {
-      const response = await getProducts({
-        search: searchQuery,
-        per_page: 40,
+      const response = await searchProducts({
+        query: searchQuery,
+        perPage: 40,
         locale,
       });
       const filteredProducts = response.products.filter((product) => !hiddenGiftProductIds.includes(product.id));

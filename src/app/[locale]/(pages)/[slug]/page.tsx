@@ -11,6 +11,9 @@ const SLUG_REDIRECTS: Record<string, string> = {
   "privacy-policy": "/privacy",
   "shipping-policy": "/shipping",
   "return-policy": "/returns",
+  "delivery-policy": "/privacy",
+  "refund_returns": "/returns",
+  "payment-policy": "/returns",
 };
 
 interface DynamicPageProps {
