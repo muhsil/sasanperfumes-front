@@ -13,7 +13,7 @@ export function SeoContentSection({ title, paragraphs, backgroundImage, isRTL = 
   return (
     <section
       data-section="seo-content"
-      className="section-band relative overflow-hidden py-8 md:py-10 lg:py-12"
+      className="lazy-section section-band relative overflow-hidden py-8 md:py-10 lg:py-12"
       dir={isRTL ? "rtl" : "ltr"}
     >
       <div className="relative px-5 md:px-7 lg:px-12">

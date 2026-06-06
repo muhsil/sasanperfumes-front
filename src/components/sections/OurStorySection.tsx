@@ -29,7 +29,7 @@ export function OurStorySection({
   if (!hasText && !image) return null;
 
   return (
-    <section className="section-band py-8 md:py-10 lg:py-12">
+    <section className="lazy-section section-band py-8 md:py-10 lg:py-12">
       <div className="px-5 md:px-7 lg:px-12">
           <div className={`grid gap-6 lg:items-center ${image ? "lg:grid-cols-12" : ""}`}>
             {hasText && (

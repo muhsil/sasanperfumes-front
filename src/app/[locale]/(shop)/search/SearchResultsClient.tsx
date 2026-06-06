@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Search, X } from "lucide-react";
 import { ProductGridSkeleton } from "@/components/common/Skeleton";
 import { ProductListing } from "@/components/shop/ProductListing";
-import { searchProducts } from "@/lib/api/search";
+import { searchProducts, type SearchSuggestion } from "@/lib/api/search";
+import { trackAnalyticsEvent } from "@/lib/utils/analytics";
 import { cn } from "@/lib/utils";
 import type { Locale } from "@/config/site";
 import type { WCProduct } from "@/types/woocommerce";
@@ -61,12 +62,17 @@ export function SearchResultsClient({
   const [inputValue, setInputValue] = useState(initialQuery);
   const [products, setProducts] = useState<WCProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [didYouMean, setDidYouMean] = useState<SearchSuggestion | null>(null);
+  const [matchMode, setMatchMode] = useState<"exact" | "fuzzy" | "fallback">("fallback");
+  const lastTrackedQueryRef = useRef("");
   const isRTL = locale === "ar";
   const t = translations[locale];
 
   const fetchProducts = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
       setProducts([]);
+      setDidYouMean(null);
+      setMatchMode("fallback");
       setLoading(false);
       return;
     }
@@ -78,11 +84,28 @@ export function SearchResultsClient({
         perPage: 40,
         locale,
       });
+
       const filteredProducts = response.products.filter((product) => !hiddenGiftProductIds.includes(product.id));
       setProducts(filteredProducts);
+      setDidYouMean(response.didYouMean);
+      setMatchMode(response.matchMode);
+
+      if (lastTrackedQueryRef.current !== response.query) {
+        trackAnalyticsEvent("site_search", {
+          search_term: response.query,
+          results_count: filteredProducts.length,
+          total_results: response.total,
+          match_mode: response.matchMode,
+          did_you_mean: response.didYouMean?.label || "",
+          locale,
+        });
+        lastTrackedQueryRef.current = response.query;
+      }
     } catch (error) {
       console.error("Search error:", error);
       setProducts([]);
+      setDidYouMean(null);
+      setMatchMode("fallback");
     } finally {
       setLoading(false);
     }
@@ -106,6 +129,8 @@ export function SearchResultsClient({
     setInputValue("");
     router.push(`/${locale}/search`);
   };
+
+  const showSuggestion = Boolean(query && didYouMean && matchMode !== "exact");
 
   return (
     <div className="min-h-screen bg-[#f8f3ef] text-brand-primary" dir={isRTL ? "rtl" : "ltr"}>
@@ -145,6 +170,21 @@ export function SearchResultsClient({
             )}
           </div>
         </form>
+
+        {!loading && showSuggestion && didYouMean && (
+          <div className="mt-4 rounded-2xl border border-brand-border/70 bg-white px-4 py-3 shadow-sm">
+            <p className="text-sm text-brand-primary/70">
+              {isRTL ? "هل تقصد" : "Did you mean"}{" "}
+              <Link
+                href={`/${locale}/product/${didYouMean.slug}`}
+                className="font-semibold text-brand-primary underline decoration-brand-gold decoration-2 underline-offset-4 transition-colors hover:text-brand-primary-dark"
+              >
+                {didYouMean.label}
+              </Link>
+              ?
+            </p>
+          </div>
+        )}
 
         {query && !loading && (
           <p className="mt-4 text-[13px] font-normal tracking-normal text-brand-primary/70">
@@ -191,6 +231,14 @@ export function SearchResultsClient({
           <h2 className="mb-2 text-2xl font-normal tracking-normal text-brand-primary">{t.noResults}</h2>
           <p className="mb-2 max-w-md text-sm leading-6 tracking-normal text-brand-primary/60">{t.noResultsDesc}</p>
           <p className="mb-8 text-sm tracking-normal text-brand-primary/45">{t.tryDifferent}</p>
+          {didYouMean && (
+            <Link
+              href={`/${locale}/product/${didYouMean.slug}`}
+              className="mb-4 inline-flex items-center justify-center rounded-full bg-brand-primary px-5 py-3 text-[13px] font-semibold text-white transition-colors hover:bg-brand-primary-dark"
+            >
+              {isRTL ? "اذهب إلى المنتج المقترح" : `Try "${didYouMean.label}"`}
+            </Link>
+          )}
           <Link
             href={`/${locale}/shop`}
             className="inline-flex items-center justify-center rounded-full border border-brand-primary px-8 py-3 text-[13px] font-normal tracking-normal text-brand-primary transition-colors hover:bg-white"

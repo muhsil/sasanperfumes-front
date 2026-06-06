@@ -4,12 +4,36 @@ import type { WCProduct } from "@/types/woocommerce";
 const ARABIC_DIACRITICS = /[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]/g;
 const NON_ALPHANUMERIC = /[^\p{L}\p{N}]+/gu;
 
+const SEARCH_TOKEN_ALIASES: Record<string, string> = {
+  aoud: "oud",
+  oudh: "oud",
+  bakhor: "bakhoor",
+  bakhour: "bakhoor",
+  bukhoor: "bakhoor",
+  fragrance: "perfume",
+  cologne: "perfume",
+  spray: "mist",
+  mist: "spray",
+  incense: "bakhoor",
+};
+
+export interface SearchFieldGroups {
+  names: string[];
+  slugs: string[];
+  categories: string[];
+  brands: string[];
+  tags: string[];
+  attributes: string[];
+  descriptions: string[];
+  identifiers: string[];
+}
+
 export interface SearchIndexEntry {
   product: WCProduct;
   normalizedName: string;
   normalizedSlug: string;
   searchableText: string;
-  fields: string[];
+  fields: SearchFieldGroups;
   tokens: string[];
 }
 
@@ -18,26 +42,19 @@ export interface RankedSearchEntry {
   score: number;
 }
 
+export interface SearchSuggestion {
+  label: string;
+  slug: string;
+  productId: number;
+  href?: string;
+}
+
 function uniqueValues(values: string[]): string[] {
   return Array.from(new Set(values.filter(Boolean)));
 }
 
-export function normalizeSearchText(value: string): string {
-  return decodeHtmlEntities(stripHtml(value || ""))
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(ARABIC_DIACRITICS, "")
-    .replace(/['’`´]/g, "")
-    .replace(/&/g, " ")
-    .replace(NON_ALPHANUMERIC, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-export function tokenizeSearchText(value: string): string[] {
-  const normalized = normalizeSearchText(value);
-  return normalized ? normalized.split(" ").filter(Boolean) : [];
+function canonicalizeToken(token: string): string {
+  return SEARCH_TOKEN_ALIASES[token] || token;
 }
 
 function levenshteinDistance(a: string, b: string): number {
@@ -45,32 +62,32 @@ function levenshteinDistance(a: string, b: string): number {
   if (!a) return b.length;
   if (!b) return a.length;
 
-  const prev = new Array<number>(b.length + 1);
-  const curr = new Array<number>(b.length + 1);
+  const previous = new Array<number>(b.length + 1);
+  const current = new Array<number>(b.length + 1);
 
   for (let j = 0; j <= b.length; j += 1) {
-    prev[j] = j;
+    previous[j] = j;
   }
 
   for (let i = 1; i <= a.length; i += 1) {
-    curr[0] = i;
+    current[0] = i;
     const aChar = a.charCodeAt(i - 1);
 
     for (let j = 1; j <= b.length; j += 1) {
       const cost = aChar === b.charCodeAt(j - 1) ? 0 : 1;
-      curr[j] = Math.min(
-        prev[j] + 1,
-        curr[j - 1] + 1,
-        prev[j - 1] + cost
+      current[j] = Math.min(
+        previous[j] + 1,
+        current[j - 1] + 1,
+        previous[j - 1] + cost
       );
     }
 
     for (let j = 0; j <= b.length; j += 1) {
-      prev[j] = curr[j];
+      previous[j] = current[j];
     }
   }
 
-  return prev[b.length];
+  return previous[b.length];
 }
 
 function similarityScore(left: string, right: string): number {
@@ -90,28 +107,92 @@ function similarityScore(left: string, right: string): number {
   return Math.min(1, baseScore + prefixBonus);
 }
 
-function collectProductSearchFields(product: WCProduct): string[] {
+function scoreFieldGroup(
+  query: string,
+  values: string[],
+  weights: { exact: number; prefix: number; includes: number; fuzzy: number }
+): number {
+  let best = 0;
+
+  for (const value of values) {
+    if (!value) continue;
+
+    if (value === query) {
+      best = Math.max(best, weights.exact);
+      continue;
+    }
+
+    if (value.startsWith(query)) {
+      best = Math.max(best, weights.prefix);
+    }
+
+    if (value.includes(query)) {
+      best = Math.max(best, weights.includes);
+    }
+
+    best = Math.max(best, similarityScore(query, value) * weights.fuzzy);
+  }
+
+  return best;
+}
+
+export function normalizeSearchText(value: string): string {
+  const normalizedTokens = decodeHtmlEntities(stripHtml(value || ""))
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(ARABIC_DIACRITICS, "")
+    .replace(/['’`´]/g, "")
+    .replace(/&/g, " ")
+    .replace(NON_ALPHANUMERIC, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ")
+    .map(canonicalizeToken);
+
+  return uniqueValues(normalizedTokens).join(" ");
+}
+
+export function tokenizeSearchText(value: string): string[] {
+  const normalized = normalizeSearchText(value);
+  return normalized ? normalized.split(" ").filter(Boolean) : [];
+}
+
+function collectProductSearchFields(product: WCProduct): SearchFieldGroups {
   const attributeFields = (product.attributes || []).flatMap((attribute) => [
     attribute.name,
     ...(attribute.terms || []).map((term) => term.name),
   ]);
 
-  return uniqueValues([
-    product.name,
-    product.slug,
-    product.short_description,
-    ...product.categories.map((category) => category.name),
-    ...(product.tags || []).map((tag) => tag.name),
-    ...(product.brands || []).map((brand) => brand.name),
-    ...attributeFields,
-  ].map((field) => normalizeSearchText(field)));
+  return {
+    names: uniqueValues([normalizeSearchText(product.name || "")]),
+    slugs: uniqueValues([normalizeSearchText(product.slug || "")]),
+    categories: uniqueValues((product.categories || []).map((category) => normalizeSearchText(category.name))),
+    brands: uniqueValues((product.brands || []).map((brand) => normalizeSearchText(brand.name))),
+    tags: uniqueValues((product.tags || []).map((tag) => normalizeSearchText(tag.name))),
+    attributes: uniqueValues(attributeFields.map((field) => normalizeSearchText(field))),
+    descriptions: uniqueValues([
+      normalizeSearchText(product.short_description || ""),
+      normalizeSearchText(product.description || ""),
+    ]),
+    identifiers: uniqueValues([normalizeSearchText(product.sku || "")]),
+  };
 }
 
 export function createSearchIndexEntry(product: WCProduct): SearchIndexEntry {
   const fields = collectProductSearchFields(product);
   const normalizedName = normalizeSearchText(product.name);
   const normalizedSlug = normalizeSearchText(product.slug);
-  const searchableText = fields.join(" ");
+  const searchableText = [
+    ...fields.names,
+    ...fields.slugs,
+    ...fields.categories,
+    ...fields.brands,
+    ...fields.tags,
+    ...fields.attributes,
+    ...fields.descriptions,
+    ...fields.identifiers,
+  ].join(" ");
   const tokens = uniqueValues(tokenizeSearchText(searchableText));
 
   return {
@@ -131,20 +212,18 @@ export function scoreSearchEntry(query: string, entry: SearchIndexEntry): number
   const queryTokens = tokenizeSearchText(normalizedQuery);
   let score = 0;
 
-  if (entry.normalizedName === normalizedQuery) score += 220;
-  if (entry.normalizedSlug === normalizedQuery) score += 200;
-  if (entry.normalizedName.startsWith(normalizedQuery)) score += 120;
-  if (entry.normalizedSlug.startsWith(normalizedQuery)) score += 110;
+  score += scoreFieldGroup(normalizedQuery, entry.fields.names, { exact: 220, prefix: 140, includes: 90, fuzzy: 70 });
+  score += scoreFieldGroup(normalizedQuery, entry.fields.slugs, { exact: 200, prefix: 120, includes: 85, fuzzy: 60 });
+  score += scoreFieldGroup(normalizedQuery, entry.fields.categories, { exact: 108, prefix: 76, includes: 58, fuzzy: 42 });
+  score += scoreFieldGroup(normalizedQuery, entry.fields.brands, { exact: 78, prefix: 54, includes: 40, fuzzy: 34 });
+  score += scoreFieldGroup(normalizedQuery, entry.fields.tags, { exact: 50, prefix: 34, includes: 26, fuzzy: 20 });
+  score += scoreFieldGroup(normalizedQuery, entry.fields.attributes, { exact: 36, prefix: 26, includes: 20, fuzzy: 16 });
+  score += scoreFieldGroup(normalizedQuery, entry.fields.descriptions, { exact: 18, prefix: 12, includes: 10, fuzzy: 8 });
+  score += scoreFieldGroup(normalizedQuery, entry.fields.identifiers, { exact: 240, prefix: 140, includes: 100, fuzzy: 80 });
 
   if (entry.searchableText.includes(normalizedQuery)) {
-    score += 70 + Math.min(20, normalizedQuery.length);
+    score += 60 + Math.min(20, normalizedQuery.length);
   }
-
-  const bestFieldSimilarity = Math.max(
-    ...entry.fields.map((field) => similarityScore(normalizedQuery, field)),
-    0
-  );
-  score += bestFieldSimilarity * 60;
 
   let exactMatches = 0;
   let fuzzyMatches = 0;
@@ -165,10 +244,12 @@ export function scoreSearchEntry(query: string, entry: SearchIndexEntry): number
         bestTokenSimilarity = 1;
         break;
       }
+
       const currentSimilarity = similarityScore(token, candidateToken);
       if (currentSimilarity > bestTokenSimilarity) {
         bestTokenSimilarity = currentSimilarity;
       }
+
       if (bestTokenSimilarity === 1) break;
     }
 
@@ -183,16 +264,16 @@ export function scoreSearchEntry(query: string, entry: SearchIndexEntry): number
     }
   }
 
-  score += exactMatches * 35;
+  score += exactMatches * 36;
   score += fuzzyMatches * 16;
   score += tokenSimilaritySum * 18;
 
   if (queryTokens.length > 1 && exactMatches === queryTokens.length) {
-    score += 25;
+    score += 30;
   }
 
   if (queryTokens.length === 1 && entry.tokens.includes(queryTokens[0])) {
-    score += 15;
+    score += 18;
   }
 
   return score;
@@ -222,4 +303,31 @@ export function mergeRankedSearchEntries(
   }
 
   return Array.from(merged.values()).sort((a, b) => b.score - a.score || a.product.id - b.product.id);
+}
+
+export function buildSearchSuggestion(
+  query: string,
+  rankedEntries: RankedSearchEntry[],
+  minScore = 90
+): SearchSuggestion | null {
+  const normalizedQuery = normalizeSearchText(query);
+  if (!normalizedQuery || rankedEntries.length === 0) {
+    return null;
+  }
+
+  const topMatch = rankedEntries[0];
+  if (!topMatch || topMatch.score < minScore) {
+    return null;
+  }
+
+  const normalizedTopName = normalizeSearchText(topMatch.product.name);
+  if (normalizedTopName === normalizedQuery || normalizedTopName.includes(normalizedQuery)) {
+    return null;
+  }
+
+  return {
+    label: decodeHtmlEntities(topMatch.product.name),
+    slug: topMatch.product.slug,
+    productId: topMatch.product.id,
+  };
 }

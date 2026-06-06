@@ -101,7 +101,7 @@ export function BannersSection({
   };
 
   return (
-    <section className={`bg-brand-beige py-8 md:py-10 lg:py-12 ${className} ${getVisibilityClass()}`}>
+    <section className={`lazy-section bg-brand-beige py-8 md:py-10 lg:py-12 ${className} ${getVisibilityClass()}`}>
       <div>
         <div className={`grid gap-4 px-5 md:px-7 lg:px-12 ${getGridClass()}`}>
           {banners.map((banner, index) => {

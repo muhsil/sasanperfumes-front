@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { getDictionary } from "@/i18n";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { getNewProducts, getFreeGiftProductInfo, getBundleEnabledProductSlugs, getCategories } from "@/lib/api/woocommerce";
-import { getHomePageSettings, getSeoSettings, getHomeSections } from "@/lib/api/wordpress";
+import { getHomePageSettings, getSeoSettings, getHomeSections, getTopbarSettings, getBrandsSliderData } from "@/lib/api/wordpress";
 import {
   HeroSlider,
   ProductSection,
@@ -12,6 +12,7 @@ import {
   SeoContentSection,
   OurStorySection,
 } from "@/components/sections";
+import { TrustSignals } from "@/components/common/TrustSignals";
 import { ProductSectionSkeleton } from "@/components/sections/ProductSection";
 import { CategorySectionSkeleton } from "@/components/sections/CategorySection";
 import { siteConfig, type Locale } from "@/config/site";
@@ -177,10 +178,12 @@ export default async function HomePage({ params }: HomePageProps) {
 
   // Only fetch what's needed for above-the-fold content (hero + banners + dictionary)
   // Product data is fetched independently by each Suspense-wrapped section below
-  const [dictionary, homeSettings, homeSections] = await Promise.all([
+  const [dictionary, homeSettings, homeSections, topbarSettings, brandsSliderData] = await Promise.all([
     getDictionary(validLocale),
     getHomePageSettings(validLocale),
     getHomeSections(),
+    getTopbarSettings(validLocale),
+    getBrandsSliderData(validLocale),
   ]);
 
   const t = (bi: { en: string; ar: string }) => isRTL ? bi.ar : bi.en;
@@ -193,7 +196,14 @@ export default async function HomePage({ params }: HomePageProps) {
       <h1 className="sr-only">{h1Text}</h1>
 
       <HeroSlider settings={homeSettings.hero_slider} />
-      <BrandsSlider locale={validLocale} />
+      <BrandsSlider locale={validLocale} initialData={brandsSliderData} />
+      <div className="px-5 pt-6 md:px-7 lg:px-12">
+        <TrustSignals
+          locale={validLocale}
+          freeShippingThreshold={topbarSettings.freeShippingThreshold ?? undefined}
+          compact
+        />
+      </div>
 
       <div className="relative bg-transparent">
         <Suspense fallback={<ProductSectionSkeleton fullView />}>

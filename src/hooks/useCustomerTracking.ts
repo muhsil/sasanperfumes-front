@@ -2,6 +2,7 @@
 
 import { useEffect, useCallback, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { trackAnalyticsEvent } from "@/lib/utils/analytics";
 
 const STORAGE_KEY = "sasanperfumes_customer_tracking";
 const SESSION_KEY = "sasanperfumes_tracking_session";
@@ -87,6 +88,7 @@ export function useCustomerTracking() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const initializedRef = useRef(false);
+  const exitTrackedRef = useRef(false);
 
   // Initialize tracking on first page load or new session
   useEffect(() => {
@@ -162,6 +164,26 @@ export function useCustomerTracking() {
 
     saveTracking(updated);
   }, [pathname, searchParams]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handlePageExit = () => {
+      if (exitTrackedRef.current) return;
+      exitTrackedRef.current = true;
+
+      const data = getStoredTracking();
+      trackAnalyticsEvent("site_exit", {
+        page_path: pathname,
+        locale: data?.locale || "",
+        pages_viewed: data?.pages_viewed || 0,
+        landing_page: data?.landing_page || "",
+      });
+    };
+
+    window.addEventListener("pagehide", handlePageExit);
+    return () => window.removeEventListener("pagehide", handlePageExit);
+  }, [pathname]);
 
   // Get tracking data for order submission
   const getTrackingData = useCallback((): CustomerTrackingData | null => {

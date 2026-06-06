@@ -88,7 +88,7 @@ export function ProductReviews({ productId, locale }: { productId: number; local
   }, [reviews]);
 
   return (
-    <section className="border-t border-gray-100 bg-white py-10" dir={isRTL ? "rtl" : "ltr"}>
+    <section className="lazy-section border-t border-gray-100 bg-white py-10" dir={isRTL ? "rtl" : "ltr"}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-xl font-semibold text-gray-900">{t.title}</h2>

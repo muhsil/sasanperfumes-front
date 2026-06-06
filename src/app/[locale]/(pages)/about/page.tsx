@@ -379,7 +379,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
       </Suspense>
 
       {(hasStoryContent || aboutImages.story) && (
-        <section className="bg-white">
+        <section id="brand-story" className="bg-white">
           <div className={`grid ${hasStoryContent && aboutImages.story ? "about-story-square lg:grid-cols-2 lg:items-stretch" : ""}`}>
             {hasStoryContent && (
               <div className={`flex min-h-[420px] flex-col justify-center px-5 py-16 md:px-7 md:py-20 lg:min-h-0 lg:px-12 xl:px-16 ${isRTL ? "lg:order-2" : ""}`}>
@@ -414,7 +414,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
       )}
 
       {(hasUniqueContent || aboutImages.detail) && (
-        <section className="bg-[#f8f3ef]">
+        <section id="sourcing" className="bg-[#f8f3ef]">
           <div className={`grid ${hasUniqueContent && aboutImages.detail ? "lg:grid-cols-2" : ""}`}>
             {hasUniqueContent && (
               <div className={`flex min-h-[420px] flex-col justify-center bg-brand-primary px-5 py-16 text-white md:px-7 md:py-20 lg:px-12 xl:px-16 ${isRTL ? "lg:order-2" : ""}`}>

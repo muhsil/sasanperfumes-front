@@ -134,7 +134,7 @@ export function CategorySection({
   };
 
   return (
-    <section className={`${sectionClassName} ${className} ${getVisibilityClass()}`}>
+    <section className={`${sectionClassName} lazy-section ${className} ${getVisibilityClass()}`}>
       <div className="mb-5 flex items-end justify-between gap-4 px-5 md:px-7 lg:px-12 md:mb-6">
         <div className={`${isRTL ? "text-right" : "text-left"}`}>
           <h2 className={`font-title text-3xl md:text-4xl ${titleClassName}`}>

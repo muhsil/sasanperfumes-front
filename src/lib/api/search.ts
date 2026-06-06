@@ -7,11 +7,24 @@ export interface SearchProductsParams {
   perPage?: number;
 }
 
+export interface SearchSuggestion {
+  label: string;
+  slug: string;
+  productId: number;
+  href?: string;
+}
+
+export interface SearchProductsResponse extends WCProductsResponse {
+  query: string;
+  didYouMean: SearchSuggestion | null;
+  matchMode: "exact" | "fuzzy" | "fallback";
+}
+
 export async function searchProducts({
   query,
   locale,
   perPage = 12,
-}: SearchProductsParams): Promise<WCProductsResponse> {
+}: SearchProductsParams): Promise<SearchProductsResponse> {
   const searchParams = new URLSearchParams();
   searchParams.set("q", query);
   searchParams.set("per_page", String(perPage));
@@ -29,5 +42,5 @@ export async function searchProducts({
     throw new Error(`Search API Error: ${response.status} ${response.statusText}`);
   }
 
-  return response.json() as Promise<WCProductsResponse>;
+  return response.json() as Promise<SearchProductsResponse>;
 }

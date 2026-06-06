@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Menu, X, ShoppingBag, User, Heart } from "lucide-react";
+import { Menu, X, ShoppingBag, User, Heart, Search } from "lucide-react";
 import { LanguageSwitcher } from "@/components/common/LanguageSwitcher";
 import { CurrencySwitcher } from "@/components/common/CurrencySwitcher";
 import { useCart } from "@/contexts/CartContext";
@@ -18,6 +18,7 @@ import type { SiteSettings, WPMenuItem } from "@/types/wordpress";
 import type { HeaderSettings, TopbarSettings } from "@/lib/api/wordpress";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { CategoriesDrawer } from "@/components/layout/CategoriesDrawer";
+import { SearchDrawer } from "@/components/layout/SearchDrawer";
 import { DesktopSearchDropdown } from "@/components/layout/DesktopSearchDropdown";
 import { BrandsMegaMenu } from "@/components/layout/BrandsMegaMenu";
 import { getHeaderCategoryLinks, getDynamicNavigationItems, type DynamicNavigationItem } from "@/config/menu";
@@ -57,6 +58,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
   const [topbarDismissed, setTopbarDismissed] = useState(false);
   const [logoError, setLogoError] = useState(false);
   const [isCategoriesDrawerOpen, setIsCategoriesDrawerOpen] = useState(false);
+  const [isSearchDrawerOpen, setIsSearchDrawerOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const brandsMegaMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isRTL = locale === "ar";
@@ -66,6 +68,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
     const id = setTimeout(() => {
       setIsMobileMenuOpen(false);
       setIsBrandsMegaMenuOpen(false);
+      setIsSearchDrawerOpen(false);
     }, 0);
     return () => clearTimeout(id);
   }, [pathname]);
@@ -276,9 +279,14 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
             {/* Right: Search + Cart (mobile) / Account + Wishlist + Cart (desktop) */}
             <div className="flex items-center gap-1.5 md:gap-2.5 xl:justify-self-end">
               {/* Mobile search */}
-              <div className="xl:hidden">
-                <DesktopSearchDropdown locale={locale} dictionary={dictionary} />
-              </div>
+              <button
+                type="button"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-brand-border/45 bg-brand-ivory/90 text-brand-primary transition-colors hover:border-brand-primary/40 hover:bg-brand-beige md:h-10 md:w-10 xl:hidden"
+                onClick={() => setIsSearchDrawerOpen(true)}
+                aria-label={dictionary.common.searchPlaceholder || "Search"}
+              >
+                <Search className="h-[18px] w-[18px] md:h-5 md:w-5" />
+              </button>
 
               <div className="hidden xl:block">
                 <DesktopSearchDropdown locale={locale} dictionary={dictionary} />
@@ -443,6 +451,12 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
         locale={locale}
         dictionary={dictionary}
         menuItems={categoriesDrawerMenuItems}
+      />
+      <SearchDrawer
+        isOpen={isSearchDrawerOpen}
+        onClose={() => setIsSearchDrawerOpen(false)}
+        locale={locale}
+        dictionary={dictionary}
       />
     </>
   );

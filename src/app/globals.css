@@ -217,6 +217,11 @@ a {
     linear-gradient(180deg, color-mix(in srgb, var(--color-ivory) 84%, white 16%) 0%, color-mix(in srgb, var(--background) 96%, white 4%) 100%);
 }
 
+.lazy-section {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 900px;
+}
+
 .home-view-section {
   position: relative;
   isolation: isolate;

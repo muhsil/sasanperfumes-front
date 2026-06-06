@@ -1,5 +1,12 @@
 "use client";
 
+import { FacebookPixel } from "./FacebookPixel";
+import { GoogleAnalytics } from "./GoogleAnalytics";
+import { GoogleTagManager } from "./GoogleTagManager";
+import { OmnisendTracking } from "./OmnisendTracking";
+import { SnapchatPixel } from "./SnapchatPixel";
+import { TikTokPixel } from "./TikTokPixel";
+
 interface TrackingScriptsProps {
   gaId?: string;
   googleAdsId?: string;
@@ -19,12 +26,14 @@ export function TrackingScripts({
   omnisendBrandId,
   gtmId,
 }: TrackingScriptsProps){
-  void gaId;
-  void googleAdsId;
-  void fbPixelId;
-  void tiktokPixelId;
-  void snapPixelId;
-  void omnisendBrandId;
-  void gtmId;
-  return null;
+  return (
+    <>
+      <GoogleTagManager gtmId={gtmId || ""} />
+      <GoogleAnalytics gaId={gaId || ""} googleAdsId={googleAdsId} />
+      <FacebookPixel pixelId={fbPixelId || ""} />
+      <TikTokPixel pixelId={tiktokPixelId || ""} />
+      <SnapchatPixel pixelId={snapPixelId || ""} />
+      <OmnisendTracking brandId={omnisendBrandId || ""} />
+    </>
+  );
 }

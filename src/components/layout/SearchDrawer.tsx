@@ -12,7 +12,7 @@ import Typography from "@mui/material/Typography";
 import type { Dictionary } from "@/i18n";
 import type { Locale } from "@/config/site";
 import type { WCProduct } from "@/types/woocommerce";
-import { searchProducts } from "@/lib/api/search";
+import { searchProducts, type SearchSuggestion } from "@/lib/api/search";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { getProductSlugFromPermalink, decodeHtmlEntities } from "@/lib/utils";
 import { useFreeGift } from "@/contexts/FreeGiftContext";
@@ -36,6 +36,8 @@ export function SearchDrawer({
   const [results, setResults] = useState<WCProduct[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [didYouMean, setDidYouMean] = useState<SearchSuggestion | null>(null);
+  const [matchMode, setMatchMode] = useState<"exact" | "fuzzy" | "fallback">("fallback");
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const isRTL = locale === "ar";
 
@@ -44,6 +46,8 @@ export function SearchDrawer({
     setResults([]);
     setHasSearched(false);
     setLoading(false);
+    setDidYouMean(null);
+    setMatchMode("fallback");
   }, []);
 
   useEffect(() => {
@@ -58,6 +62,8 @@ export function SearchDrawer({
     if (!searchQuery.trim()) {
       setResults([]);
       setHasSearched(false);
+      setDidYouMean(null);
+      setMatchMode("fallback");
       return;
     }
 
@@ -69,6 +75,8 @@ export function SearchDrawer({
         perPage: 6,
         locale,
       });
+      setDidYouMean(response.didYouMean);
+      setMatchMode(response.matchMode);
       // Filter out free gift products from search results
       const freeGiftIds = getFreeGiftProductIds();
       const filteredProducts = response.products.filter(
@@ -78,6 +86,8 @@ export function SearchDrawer({
     } catch (error) {
       console.error("Search error:", error);
       setResults([]);
+      setDidYouMean(null);
+      setMatchMode("fallback");
     } finally {
       setLoading(false);
     }
@@ -102,6 +112,8 @@ export function SearchDrawer({
     if (!value.trim()) {
       setResults([]);
       setHasSearched(false);
+      setDidYouMean(null);
+      setMatchMode("fallback");
       setLoading(false);
       return;
     }
@@ -217,9 +229,31 @@ export function SearchDrawer({
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <Search className="mb-4 h-12 w-12 text-brand-muted/45" />
               <p className="text-brand-muted">{dictionary.common.noResults || "No products found"}</p>
+              {didYouMean && matchMode !== "exact" && (
+                <Link
+                  href={`/${locale}/product/${didYouMean.slug}`}
+                  onClick={handleClose}
+                  className="mt-4 inline-flex items-center rounded-full bg-brand-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-primary-dark"
+                >
+                  {isRTL ? "هل تقصد" : "Try"} {didYouMean.label}
+                </Link>
+              )}
             </div>
-          ) : results.length > 0 ? (
-            <div className="space-y-2">
+        ) : results.length > 0 ? (
+          <div className="space-y-2">
+              {didYouMean && matchMode !== "exact" && (
+                <div className="mx-3 mt-3 rounded-lg border border-brand-border/70 bg-brand-beige/50 px-3 py-2 text-sm text-brand-primary/75">
+                  {isRTL ? "هل تقصد" : "Did you mean"}{" "}
+                  <Link
+                    href={`/${locale}/product/${didYouMean.slug}`}
+                    onClick={handleClose}
+                    className="font-semibold text-brand-primary underline decoration-brand-gold decoration-2 underline-offset-4"
+                  >
+                    {didYouMean.label}
+                  </Link>
+                  ?
+                </div>
+              )}
               {results.map((product) => {
                 const productSlug = getProductSlugFromPermalink(product.permalink, product.slug);
                 return (

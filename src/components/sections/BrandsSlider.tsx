@@ -8,46 +8,29 @@ import { Autoplay } from "swiper/modules";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { shouldUseUnoptimizedImage } from "@/lib/utils/image";
 import type { Locale } from "@/config/site";
+import type { BrandsSliderData } from "@/lib/api/wordpress";
 
 import "swiper/css";
 
-interface Brand {
-  name: string;
-  image: string;
-  url: string;
+interface BrandsSliderProps {
+  locale: Locale;
+  initialData?: BrandsSliderData | null;
 }
 
-interface SliderOptions {
-  desktop_count: number;
-  tablet_count: number;
-  mobile_count: number;
-  autoplay: boolean;
-  autoplay_speed: number;
-  loop: boolean;
-  arrows: boolean;
-  dots: boolean;
-}
-
-interface BrandsSliderData {
-  enabled: boolean;
-  heading: { en: string; ar: string };
-  subtitle?: { en: string; ar: string };
-  slider_options?: SliderOptions;
-  brands: Brand[];
-}
-
-export function BrandsSlider({ locale }: { locale: Locale }) {
-  const [data, setData] = useState<BrandsSliderData | null>(null);
+export function BrandsSlider({ locale, initialData = null }: BrandsSliderProps) {
+  const [data, setData] = useState<BrandsSliderData | null>(initialData);
   const isAr = locale === "ar";
 
   useEffect(() => {
+    if (data || initialData) return;
+
     fetch("/api/brands-slider")
       .then((r) => r.json())
       .then((d: BrandsSliderData) => {
         if (d?.enabled && d.brands?.length > 0) setData(d);
       })
       .catch(() => {});
-  }, []);
+  }, [data, initialData]);
 
   if (!data) return null;
 
@@ -56,7 +39,7 @@ export function BrandsSlider({ locale }: { locale: Locale }) {
   const sliderOptions = data.slider_options || { desktop_count: 5, tablet_count: 4, mobile_count: 3, autoplay: true, autoplay_speed: 2000, loop: true, arrows: false, dots: false };
 
   return (
-    <section className="bg-brand-beige py-8 md:py-10 lg:py-12">
+    <section className="lazy-section bg-brand-beige py-8 md:py-10 lg:py-12">
       <div>
         {heading && (
           <h2 className="mb-3 text-center font-title text-3xl text-brand-primary md:text-4xl">

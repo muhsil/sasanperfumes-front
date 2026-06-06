@@ -8,7 +8,7 @@ import { createPortal } from "react-dom";
 import type { Dictionary } from "@/i18n";
 import type { Locale } from "@/config/site";
 import type { WCProduct } from "@/types/woocommerce";
-import { searchProducts } from "@/lib/api/search";
+import { searchProducts, type SearchSuggestion } from "@/lib/api/search";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { cn, getProductSlugFromPermalink, decodeHtmlEntities } from "@/lib/utils";
 import { useFreeGift } from "@/contexts/FreeGiftContext";
@@ -31,6 +31,8 @@ export function DesktopSearchDropdown({
   const [isVisible, setIsVisible] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [didYouMean, setDidYouMean] = useState<SearchSuggestion | null>(null);
+  const [matchMode, setMatchMode] = useState<"exact" | "fuzzy" | "fallback">("fallback");
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -42,6 +44,8 @@ export function DesktopSearchDropdown({
     setHasSearched(false);
     setHighlightedIndex(-1);
     setLoading(false);
+    setDidYouMean(null);
+    setMatchMode("fallback");
   }, []);
 
   // Lock body scroll when open
@@ -108,6 +112,8 @@ export function DesktopSearchDropdown({
     if (!searchQuery.trim()) {
       setResults([]);
       setHasSearched(false);
+      setDidYouMean(null);
+      setMatchMode("fallback");
       return;
     }
 
@@ -119,6 +125,8 @@ export function DesktopSearchDropdown({
         perPage: 6,
         locale,
       });
+      setDidYouMean(response.didYouMean);
+      setMatchMode(response.matchMode);
       const freeGiftIds = getFreeGiftProductIds();
       const filteredProducts = response.products.filter(
         (product) => !freeGiftIds.includes(product.id)
@@ -127,6 +135,8 @@ export function DesktopSearchDropdown({
     } catch (error) {
       console.error("Search error:", error);
       setResults([]);
+      setDidYouMean(null);
+      setMatchMode("fallback");
     } finally {
       setLoading(false);
     }
@@ -144,6 +154,8 @@ export function DesktopSearchDropdown({
     } else {
       setResults([]);
       setHasSearched(false);
+      setDidYouMean(null);
+      setMatchMode("fallback");
     }
 
     return () => {
@@ -201,6 +213,8 @@ export function DesktopSearchDropdown({
     setQuery("");
     setResults([]);
     setHasSearched(false);
+    setDidYouMean(null);
+    setMatchMode("fallback");
     inputRef.current?.focus();
   };
 
@@ -327,6 +341,15 @@ export function DesktopSearchDropdown({
                     : `No results for "${query}"`
                   }
                 </p>
+                {didYouMean && matchMode !== "exact" && (
+                  <Link
+                    href={`/${locale}/product/${didYouMean.slug}`}
+                    onClick={handleClose}
+                    className="mt-4 inline-flex items-center rounded-full bg-brand-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-primary-dark"
+                  >
+                    {isRTL ? "هل تقصد" : "Try"} {didYouMean.label}
+                  </Link>
+                )}
                 <p className="mt-3 text-xs text-brand-muted/70">
                   {isRTL
                     ? "جرب كلمات بحث مختلفة"
@@ -336,6 +359,19 @@ export function DesktopSearchDropdown({
               </div>
             ) : results.length > 0 ? (
               <div>
+                {didYouMean && matchMode !== "exact" && (
+                  <div className="border-b border-brand-border/70 bg-brand-beige/40 px-6 py-3 text-sm text-brand-primary/75">
+                    {isRTL ? "هل تقصد" : "Did you mean"}{" "}
+                    <Link
+                      href={`/${locale}/product/${didYouMean.slug}`}
+                      onClick={handleClose}
+                      className="font-semibold text-brand-primary underline decoration-brand-gold decoration-2 underline-offset-4"
+                    >
+                      {didYouMean.label}
+                    </Link>
+                    ?
+                  </div>
+                )}
                 <div className="border-b border-brand-border/70 bg-brand-beige/45 px-6 py-3">
                   <p className="text-[11px] font-semibold uppercase text-brand-muted">
                     {isRTL ? "المنتجات" : "Products"}

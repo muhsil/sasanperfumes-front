@@ -114,7 +114,7 @@ export function ProductSection({
     : `bg-transparent pb-0 pt-8 md:pt-9 lg:pt-10 ${className} ${getVisibilityClass()}`;
 
   return (
-    <section className={sectionClass}>
+    <section className={`${sectionClass} lazy-section`}>
       <div className="px-5 md:px-7 lg:px-12">
         <div className="mb-4 flex flex-col gap-3 md:mb-5 md:flex-row md:items-end md:justify-between">
           <div className={isRTL ? "text-right" : "text-left"}>

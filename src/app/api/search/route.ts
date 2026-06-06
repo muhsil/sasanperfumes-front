@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProducts } from "@/lib/api/woocommerce";
-import { createSearchIndexEntry, mergeRankedSearchEntries, normalizeSearchText, rankSearchEntries } from "@/lib/search";
+import { buildSearchSuggestion, createSearchIndexEntry, mergeRankedSearchEntries, normalizeSearchText, rankSearchEntries } from "@/lib/search";
 import type { Locale } from "@/config/site";
 import type { WCProduct, WCProductsResponse } from "@/types/woocommerce";
 
@@ -97,7 +97,7 @@ function shouldUseFuzzyFallback(query: string, exactTopScore: number, exactCount
   const normalizedQuery = normalizeSearchText(query);
   if (normalizedQuery.length < 3) return false;
   if (exactCount === 0) return true;
-  return exactTopScore < 90;
+  return exactTopScore < 100;
 }
 
 export async function GET(request: NextRequest) {
@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
 
   if (!normalizedQuery) {
     return NextResponse.json(
-      { products: [], total: 0, totalPages: 0 },
+      { products: [], total: 0, totalPages: 0, query, didYouMean: null, matchMode: "fallback" },
       {
         headers: {
           "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const exactResults = await getProducts({
-      search: query,
+      search: normalizedQuery,
       per_page: Math.max(perPage * 4, perPage),
       locale,
     });
@@ -138,12 +138,23 @@ export async function GET(request: NextRequest) {
     }
 
     const products = rankedProducts.slice(0, perPage).map((item) => item.product);
+    const didYouMean = buildSearchSuggestion(query, rankedProducts, 95);
+    const matchMode: "exact" | "fuzzy" | "fallback" =
+      rankedExact.length > 0 && bestExactScore >= 100 ? "exact" : didYouMean ? "fuzzy" : "fallback";
 
     return NextResponse.json(
       {
         products,
         total: rankedProducts.length,
         totalPages: 1,
+        query,
+        didYouMean: didYouMean
+          ? {
+              ...didYouMean,
+              href: `/${locale}/product/${didYouMean.slug}`,
+            }
+          : null,
+        matchMode,
       },
       {
         headers: {
@@ -154,7 +165,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Search API failed:", error);
     return NextResponse.json(
-      { products: [], total: 0, totalPages: 0 },
+      { products: [], total: 0, totalPages: 0, query, didYouMean: null, matchMode: "fallback" },
       {
         headers: {
           "Cache-Control": "no-store",

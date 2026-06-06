@@ -23,6 +23,7 @@ import { useKeyboardVisible } from "@/hooks/useKeyboardVisible";
 import { useCustomerTracking } from "@/hooks/useCustomerTracking";
 import { omnisendIdentify, omnisendTrackStartedCheckout, type OmnisendLineItem } from "@/lib/utils/omnisend";
 import { fbTrackInitiateCheckout } from "@/lib/utils/fbpixel";
+import { trackAnalyticsEvent } from "@/lib/utils/analytics";
 import type { CoCartItem } from "@/lib/api/cocart";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { GiftWrapOption } from "@/components/checkout/GiftWrapOption";
@@ -190,6 +191,7 @@ export default function CheckoutClient() {
         const [isCheckingEmail, setIsCheckingEmail] = useState(false);
         const [showLoginPrompt, setShowLoginPrompt] = useState(false);
         const emailCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+        const beginCheckoutTrackedRef = useRef(false);
 
         const [addressErrors, setAddressErrors] = useState<{ shippingAddress?: string; shippingCity?: string; billingAddress?: string; billingCity?: string }>({});
   
@@ -711,11 +713,11 @@ export default function CheckoutClient() {
       // Identify user in Omnisend when guest enters email at checkout
       // This enables abandoned cart/checkout email recovery for guest users
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (email && emailRegex.test(email)) {
-        omnisendIdentify(email);
+        if (email && emailRegex.test(email)) {
+          omnisendIdentify(email);
 
         // Also fire "started checkout" event so Omnisend can track checkout abandonment
-        if (cart && cartItems.length > 0) {
+        if (cart && cartItems.length > 0 && !beginCheckoutTrackedRef.current) {
           const currMinorUnit = cart.currency?.currency_minor_unit ?? 2;
           const currDivisor = Math.pow(10, currMinorUnit);
           const cartValue = parseFloat(cart.totals?.total || "0") / currDivisor;
@@ -745,6 +747,15 @@ export default function CheckoutClient() {
             currency: cart.currency?.currency_code || "AED",
             numItems: cartItems.reduce((sum: number, ci: CoCartItem) => sum + ci.quantity.value, 0),
           });
+
+          trackAnalyticsEvent("begin_checkout", {
+            value: cartValue,
+            currency: cart.currency?.currency_code || "AED",
+            item_count: cartItems.length,
+            total_quantity: cartItems.reduce((sum: number, ci: CoCartItem) => sum + ci.quantity.value, 0),
+          });
+
+          beginCheckoutTrackedRef.current = true;
         }
       }
     }, 500);

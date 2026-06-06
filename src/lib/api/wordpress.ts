@@ -2350,3 +2350,39 @@ export async function getWhatsAppSettings(): Promise<WhatsAppSettings | null> {
     revalidate: 600,
   });
 }
+
+// â”€â”€â”€ Brands Slider â”€â”€â”€
+
+export interface BrandsSliderData {
+  enabled: boolean;
+  heading: { en: string; ar: string };
+  subtitle?: { en: string; ar: string };
+  slider_options?: {
+    desktop_count: number;
+    tablet_count: number;
+    mobile_count: number;
+    autoplay: boolean;
+    autoplay_speed: number;
+    loop: boolean;
+    arrows: boolean;
+    dots: boolean;
+  };
+  brands: Array<{
+    name: string;
+    image: string;
+    url: string;
+  }>;
+}
+
+export async function getBrandsSliderData(locale?: Locale): Promise<BrandsSliderData | null> {
+  const data = await fetchWPAPI<BrandsSliderData>(
+    "/sasanperfumes/v1/brands-slider",
+    {
+      locale,
+      tags: ["brands-slider"],
+      revalidate: 600,
+    }
+  );
+
+  return rebrandApiContent(data ?? null);
+}

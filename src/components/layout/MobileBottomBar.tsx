@@ -12,6 +12,7 @@ import type { MobileBarSettings } from "@/lib/api/wordpress";
 import type { WPMenuItem } from "@/types/wordpress";
 import type { Dictionary } from "@/i18n";
 import { CategoriesDrawer } from "@/components/layout/CategoriesDrawer";
+import { SearchDrawer } from "@/components/layout/SearchDrawer";
 import { triggerHaptic } from "@/lib/utils/haptics";
 import { normalizeMenuUrl } from "@/config/menu";
 
@@ -57,22 +58,20 @@ function inferIconFromMenuItem(item: WPMenuItem): string {
   const title = item.title.toLowerCase().trim();
   const url = item.url.toLowerCase();
 
-  // Map common titles/URLs to icons
   if (title === "home" || url === "/" || url === "") return "home";
   if (title === "menu" || title === "categories" || url.includes("categories")) return "grid";
   if (title === "search" || url.includes("search")) return "search";
   if (title === "account" || url.includes("account")) return "user";
   if (title === "wishlist" || url.includes("wishlist")) return "heart";
 
-  // Default to home icon for unrecognized items
   return "home";
 }
 
 // Convert WordPress menu items to MobileBarSettings items
 function wpMenuToBarItems(wpItems: WPMenuItem[], locale: Locale): MobileBarSettings["items"] {
   return wpItems
-    .filter(item => item.parent === 0) // Only top-level items
-    .map(item => {
+    .filter((item) => item.parent === 0)
+    .map((item) => {
       const icon = inferIconFromMenuItem(item);
       const isCategoriesItem = icon === "grid";
       return {
@@ -100,9 +99,13 @@ export function MobileBottomBar({
   const { setIsAccountDrawerOpen } = useAuth();
   const isKeyboardVisible = useKeyboardVisible();
   const [isCategoriesDrawerOpen, setIsCategoriesDrawerOpen] = useState(false);
+  const [isSearchDrawerOpen, setIsSearchDrawerOpen] = useState(false);
   const [activeDrawer, setActiveDrawer] = useState<string | null>(null);
   const [isGalleryFullscreenOpen, setIsGalleryFullscreenOpen] = useState(false);
   const pathname = usePathname();
+  void whatsAppPhoneNumber;
+  void whatsAppMessage;
+  void whatsAppEnabled;
 
   useEffect(() => {
     const syncGalleryState = (event?: Event) => {
@@ -123,37 +126,12 @@ export function MobileBottomBar({
     return () => window.removeEventListener("gallery-fullscreen-change", syncGalleryState as EventListener);
   }, []);
 
-  // Use WordPress Mobile Bottom Bar menu if available, otherwise fall back to plugin API settings
   const effectiveSettings: MobileBarSettings = mobileBottomBarMenuItems && mobileBottomBarMenuItems.length > 0
     ? { enabled: true, items: wpMenuToBarItems(mobileBottomBarMenuItems, locale) }
     : settings;
 
   const isRTL = locale === "ar";
-  const defaultWhatsAppMessage = isRTL
-    ? "مرحبا، أود معرفة المزيد عن منتجاتكم وخدماتكم."
-    : "Hello Sasan Perfumes, I would like to know more about your products and services.";
-  const whatsAppUrl =
-    whatsAppEnabled && whatsAppPhoneNumber
-      ? `https://wa.me/${whatsAppPhoneNumber}?text=${encodeURIComponent(whatsAppMessage || defaultWhatsAppMessage)}`
-      : "";
-  const isSearchItem = (item: MobileBarSettings["items"][0]) =>
-    item.icon === "search" || item.url.includes("search") || item.label?.toLowerCase() === "search";
-  const searchIndex = effectiveSettings.items.findIndex(isSearchItem);
-  const replaceIndex = searchIndex >= 0 ? searchIndex : Math.floor(effectiveSettings.items.length / 2);
-  const bottomBarItems = effectiveSettings.items
-    .map((item, index) => {
-      if (whatsAppUrl && index === replaceIndex) {
-        return {
-          ...item,
-          icon: "whatsapp",
-          label: "WhatsApp",
-          labelAr: "واتساب",
-          url: whatsAppUrl,
-        };
-      }
-      return item;
-    })
-    .filter((item) => item.icon !== "search" && !item.url.includes("search"));
+  const bottomBarItems = effectiveSettings.items;
 
   if (!effectiveSettings.enabled || bottomBarItems.length === 0) {
     return null;
@@ -161,12 +139,15 @@ export function MobileBottomBar({
 
   const isItemActive = (item: MobileBarSettings["items"][0]) => {
     const itemPath = item.url;
-    
+
     if (item.icon === "home" || item.url === "/" || item.url === "" || item.url === `/${locale}`) {
       return pathname === `/${locale}` || pathname === `/${locale}/`;
     }
     if (item.icon === "grid" || item.url.includes("categories")) {
       return activeDrawer === "categories";
+    }
+    if (item.icon === "search" || item.url.includes("search")) {
+      return activeDrawer === "search" || pathname.includes("/search");
     }
     if (item.icon === "user" || item.url.includes("account")) {
       return activeDrawer === "account" || pathname.includes("/account");
@@ -183,6 +164,10 @@ export function MobileBottomBar({
       e.preventDefault();
       setActiveDrawer("categories");
       setIsCategoriesDrawerOpen(true);
+    } else if (item.icon === "search" || item.url.includes("search")) {
+      e.preventDefault();
+      setActiveDrawer("search");
+      setIsSearchDrawerOpen(true);
     } else if (item.icon === "user" || item.url.includes("account")) {
       e.preventDefault();
       setActiveDrawer("account");
@@ -199,10 +184,8 @@ export function MobileBottomBar({
         <div className="flex items-center justify-around px-1.5 py-1.5">
           {bottomBarItems.map((item, index) => {
             const IconComponent = iconMap[item.icon] || Home;
-            // Override "Categories" label with "Menu" / "القائمة"
-            // Also handled server-side in getMobileBarSettings for SSR consistency
             const rawLabel = isRTL && item.labelAr ? item.labelAr : item.label;
-            const isCategoriesItem = item.icon === "grid" || item.url.includes("categories") || 
+            const isCategoriesItem = item.icon === "grid" || item.url.includes("categories") ||
               item.label?.toLowerCase() === "categories" || item.labelAr === "الفئات";
             const label = isCategoriesItem
               ? (isRTL ? "القائمة" : "Menu")
@@ -214,8 +197,8 @@ export function MobileBottomBar({
             const showBadge = isWishlist && wishlistItemsCount > 0;
             const isActive = isItemActive(item);
 
-            const isDrawerItem = item.icon === "grid" || item.icon === "user" ||
-                                 item.url.includes("categories") || item.url.includes("account");
+            const isDrawerItem = item.icon === "grid" || item.icon === "search" || item.icon === "user" ||
+              item.url.includes("categories") || item.url.includes("search") || item.url.includes("account");
 
             const activeClasses = isActive
               ? "bg-brand-primary text-white shadow-[0_8px_18px_rgba(20,15,10,0.18)]"
@@ -277,6 +260,16 @@ export function MobileBottomBar({
         locale={locale}
         dictionary={dictionary}
         menuItems={categoriesDrawerMenuItems || mobileMenuItems || menuItems}
+      />
+
+      <SearchDrawer
+        isOpen={isSearchDrawerOpen}
+        onClose={() => {
+          setIsSearchDrawerOpen(false);
+          setActiveDrawer(null);
+        }}
+        locale={locale}
+        dictionary={dictionary}
       />
     </>
   );

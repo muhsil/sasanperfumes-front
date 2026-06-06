@@ -12,6 +12,7 @@ import { CountdownTimer } from "@/components/common/CountdownTimer";
 import { SocialShareModal } from "@/components/common/SocialShareModal";
 import { BackInStockAlert } from "@/components/common/BackInStockAlert";
 import { ClothingSizeGuideModal } from "@/components/common/ClothingSizeGuideModal";
+import { TrustSignals } from "@/components/common/TrustSignals";
 import { ScentGuideContent } from "@/components/shop/ScentGuideContent";
 import { RelatedProducts } from "@/components/shop/RelatedProducts";
 import { RecentlyViewed } from "@/components/shop/RecentlyViewed";
@@ -36,6 +37,7 @@ import { BESTSELLER_PRODUCT_SLUGS } from "@/lib/api/woocommerce";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { triggerHaptic } from "@/lib/utils/haptics";
 import { fbTrackViewContent } from "@/lib/utils/fbpixel";
+import { trackAnalyticsEvent } from "@/lib/utils/analytics";
 
 function getDisplayPrice(product: WCProduct, selectedVariation?: WCProductVariation | null) {
   if (selectedVariation?.prices) {
@@ -552,6 +554,9 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
   const [variationStockBadgeEnabled, setVariationStockBadgeEnabled] = useState(true);
   const [variationImageEntries, setVariationImageEntries] = useState<{ variation_id: number; id: number; src: string; thumbnail: string; alt: string; attributes?: Record<string, string> }[]>([]);
   const [variationsWithPricing, setVariationsWithPricing] = useState<WCProductVariation[]>([]);
+  const [showStickyAddToCart, setShowStickyAddToCart] = useState(false);
+  const ctaSectionRef = useRef<HTMLDivElement | null>(null);
+  const hasTrackedViewItemRef = useRef(false);
     const { addToCart } = useCart();
     const { currency, convertPrice, getCurrencyInfo } = useCurrency();
     const { addToWishlist, removeFromWishlist, isInWishlist, getWishlistItemId } = useWishlist();
@@ -582,6 +587,31 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
     mediaQuery.addListener(syncViewport);
     return () => mediaQuery.removeListener(syncViewport);
   }, []);
+
+  useEffect(() => {
+    if (!isMobileViewport) {
+      setShowStickyAddToCart(false);
+      return;
+    }
+
+    const target = ctaSectionRef.current;
+    if (!target || typeof IntersectionObserver === "undefined") {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setShowStickyAddToCart(!entry.isIntersecting);
+      },
+      {
+        threshold: 0.2,
+        rootMargin: "0px 0px -18% 0px",
+      }
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [isMobileViewport]);
 
   const variationAttributes = useMemo(() => {
     if (product.type !== "variable") return [];
@@ -750,6 +780,16 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
       value: price,
       currency: product.prices.currency_code || "AED",
     });
+    if (!hasTrackedViewItemRef.current) {
+      hasTrackedViewItemRef.current = true;
+      trackAnalyticsEvent("view_item", {
+        product_id: product.id,
+        product_name: decodeHtmlEntities(product.name),
+        category: product.categories?.[0]?.name || "",
+        value: price,
+        currency: product.prices.currency_code || "AED",
+      });
+    }
   }, [product.id, product.name, product.prices.price, product.prices.currency_minor_unit, product.prices.currency_code, product.categories]);
 
   const primaryCategory = product.categories?.[0];
@@ -870,6 +910,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
   const canPurchaseProduct = !isOutOfStock && product.is_purchasable && hasPrice;
   const images = galleryImages;
   const imageCount = images.length;
+  const stickyImage = images[selectedImage] || images[0];
 
   // Check if the selected variation is out of stock
   const isSelectedVariationOutOfStock = selectedVariation
@@ -1560,7 +1601,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           )}
 
           {/* Add to Cart Section */}
-          <div className="flex flex-col gap-4 pt-5">
+          <div ref={ctaSectionRef} className="flex flex-col gap-4 pt-5">
             <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
               <div className="flex h-12 items-center justify-between overflow-hidden rounded-full border border-brand-border/80 bg-brand-ivory">
                 <button
@@ -1627,6 +1668,13 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               )}
             </ProductAddToCartButton>
           </div>
+
+          <TrustSignals
+            locale={locale}
+            freeShippingThreshold={freeShippingThreshold ?? undefined}
+            compact
+            className="mt-4"
+          />
 
           <div className="mt-5">
           {hasPrice && (
@@ -1748,19 +1796,23 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
 
       {/* Sticky Add to Cart Bar */}
       <div
-        className="hidden"
+        className={cn(
+          "fixed inset-x-3 bottom-20 z-40 rounded-2xl border border-brand-border/70 bg-brand-ivory/96 px-3 py-3 shadow-[0_18px_48px_rgba(20,15,10,0.18)] backdrop-blur-xl transition-all duration-300 md:hidden",
+          !canPurchaseProduct && "hidden",
+          showStickyAddToCart ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"
+        )}
       >
         <div className="grid items-center gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
           <div className="flex min-w-0 items-center gap-3">
-            {images.length > 0 && (
-              <div className="relative h-12 w-12 shrink-0 overflow-hidden bg-white sm:h-14 sm:w-14">
+            {stickyImage && (
+              <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-white sm:h-14 sm:w-14">
                 <Image
-                  src={images[0].src || images[0].thumbnail}
+                  src={stickyImage.src || stickyImage.thumbnail}
                   alt={product.name}
                   width={56}
                   height={56}
                   className="h-full w-full object-cover"
-                  unoptimized={shouldUseUnoptimizedImage(images[0].src || images[0].thumbnail)}
+                  unoptimized={shouldUseUnoptimizedImage(stickyImage.src || stickyImage.thumbnail)}
                 />
               </div>
             )}
@@ -1804,6 +1856,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               onClick={handleAddToCart}
               disabled={!canPurchaseProduct || isSelectedVariationOutOfStock || isAddingToCart || !canAddToCart}
               isAdded={isAddedToCart}
+              isLoading={isAddingToCart}
               className="h-11 min-w-0 px-4 text-xs font-bold uppercase tracking-[0.1em] sm:h-10 sm:min-w-[180px] sm:px-5"
             >
               {isAddedToCart ? (
@@ -1815,9 +1868,11 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               )}
             </ProductAddToCartButton>
           </div>
-        </div>
-      </div>
 
+
+
+      </div>
+      </div>
       </div>
       </div>
   );
