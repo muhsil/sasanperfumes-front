@@ -346,7 +346,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         localizedCategoryName={localizedCategoryName}
         hiddenGiftProductIds={hiddenGiftProductIds}
         freeShippingThreshold={freeShippingThreshold}
-        reviewsEnabled={featureToggles.sasanperfumes_reviews_enabled !== false}
+        reviewsEnabled={featureToggles.sasanperfumes_reviews_enabled}
       />
     </>
   );

@@ -6,7 +6,6 @@ import type { FeatureToggles } from "@/lib/api/wordpress";
 import { normalizeMenuUrl } from "@/config/menu";
 import { NewsletterForm } from "@/components/common/NewsletterForm";
 import { SocialIconLinks } from "@/components/common/SocialIconLinks";
-import { TrustSignals } from "@/components/common/TrustSignals";
 
 const SLUG_TOGGLE_MAP: Record<string, keyof FeatureToggles> = {
   "/shop": "sasanperfumes_shop_enabled",
@@ -213,14 +212,6 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
               </ul>
             </div>
           </div>
-        </div>
-
-        <div className="mt-10">
-          <TrustSignals
-            locale={locale}
-            variant="dark"
-            compact
-          />
         </div>
 
         <div className="mt-10 grid gap-6 rounded-lg border border-white/10 bg-white/8 p-5 text-brand-ivory shadow-[0_22px_54px_rgba(0,0,0,0.22)] md:grid-cols-[0.8fr_1.2fr] md:p-7">

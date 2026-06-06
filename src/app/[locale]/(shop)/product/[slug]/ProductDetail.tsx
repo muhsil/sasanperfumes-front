@@ -12,7 +12,6 @@ import { CountdownTimer } from "@/components/common/CountdownTimer";
 import { SocialShareModal } from "@/components/common/SocialShareModal";
 import { BackInStockAlert } from "@/components/common/BackInStockAlert";
 import { ClothingSizeGuideModal } from "@/components/common/ClothingSizeGuideModal";
-import { TrustSignals } from "@/components/common/TrustSignals";
 import { ScentGuideContent } from "@/components/shop/ScentGuideContent";
 import { RelatedProducts } from "@/components/shop/RelatedProducts";
 import { RecentlyViewed } from "@/components/shop/RecentlyViewed";
@@ -1367,7 +1366,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
             {productDisplayName}
           </h1>
 
-          {reviewCount > 0 && (
+          {reviewsEnabled && reviewCount > 0 && (
             <a
               href="#reviews"
               className={`mt-4 inline-flex items-center gap-2 text-sm font-normal text-brand-primary/70 transition-opacity hover:opacity-70 ${
@@ -1668,13 +1667,6 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               )}
             </ProductAddToCartButton>
           </div>
-
-          <TrustSignals
-            locale={locale}
-            freeShippingThreshold={freeShippingThreshold ?? undefined}
-            compact
-            className="mt-4"
-          />
 
           <div className="mt-5">
           {hasPrice && (

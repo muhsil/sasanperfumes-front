@@ -2243,12 +2243,45 @@ const defaultFeatureToggles: FeatureToggles = {
   sasanperfumes_home_seo_enabled: true,
 };
 
+function parseBooleanLike(value: unknown, fallback = false): boolean {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value !== 0;
+
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (["true", "1", "yes", "on"].includes(normalized)) return true;
+    if (["false", "0", "no", "off", ""].includes(normalized)) return false;
+  }
+
+  return fallback;
+}
+
+function normalizeFeatureToggles(data?: Partial<FeatureToggles> | Record<string, unknown> | null): FeatureToggles {
+  const normalizedData: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(data || {})) {
+    const normalizedKey = key.startsWith("anbar_")
+      ? `sasanperfumes_${key.slice("anbar_".length)}`
+      : key;
+    normalizedData[normalizedKey] = value;
+  }
+
+  const merged = { ...defaultFeatureToggles, ...normalizedData } as Record<string, unknown>;
+
+  return Object.fromEntries(
+    Object.entries(merged).map(([key, value]) => [
+      key,
+      parseBooleanLike(value, defaultFeatureToggles[key as keyof FeatureToggles] ?? false),
+    ])
+  ) as FeatureToggles;
+}
+
 export async function getFeatureToggles(): Promise<FeatureToggles> {
-  const data = await fetchWPAPI<FeatureToggles>("/sasanperfumes/v1/feature-toggles", {
+  const data = await fetchWPAPI<Partial<FeatureToggles> | Record<string, unknown>>("/sasanperfumes/v1/feature-toggles", {
     tags: ["feature-toggles"],
-    revalidate: 600,
+    noCache: true,
   });
-  return { ...defaultFeatureToggles, ...data };
+  return normalizeFeatureToggles(data);
 }
 
 // ─── Private Labeling ───

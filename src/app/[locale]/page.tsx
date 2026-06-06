@@ -1,20 +1,16 @@
 import { Suspense } from "react";
 import { getDictionary } from "@/i18n";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
-import { getNewProducts, getFreeGiftProductInfo, getBundleEnabledProductSlugs, getCategories } from "@/lib/api/woocommerce";
-import { getHomePageSettings, getSeoSettings, getHomeSections, getTopbarSettings, getBrandsSliderData } from "@/lib/api/wordpress";
+import { getNewProducts, getFreeGiftProductInfo, getBundleEnabledProductSlugs } from "@/lib/api/woocommerce";
+import { getHomePageSettings, getSeoSettings, getHomeSections } from "@/lib/api/wordpress";
 import {
   HeroSlider,
   ProductSection,
-  CategorySection,
   BannersSection,
-  BrandsSlider,
   SeoContentSection,
   OurStorySection,
 } from "@/components/sections";
-import { TrustSignals } from "@/components/common/TrustSignals";
 import { ProductSectionSkeleton } from "@/components/sections/ProductSection";
-import { CategorySectionSkeleton } from "@/components/sections/CategorySection";
 import { siteConfig, type Locale } from "@/config/site";
 import type { Metadata } from "next";
 
@@ -113,64 +109,6 @@ async function NewProductsSection({ locale, isRTL, dictionary, homeSettings }: {
 // ─── Main homepage component ───
 // Only fetches hero/banner settings for instant above-the-fold render.
 // Product sections stream in via Suspense boundaries.
-async function DiscoverCategoriesSection({ locale, isRTL, dictionary, homeSettings }: {
-  locale: Locale;
-  isRTL: boolean;
-  dictionary: Awaited<ReturnType<typeof getDictionary>>;
-  homeSettings: Awaited<ReturnType<typeof getHomePageSettings>>;
-}) {
-  const categories = await getCategories(locale);
-  const mainCategoryCount = categories.filter((cat) => cat.parent === 0 && cat.slug !== "uncategorized").length;
-  const normalizeKey = (value: string) => value.toLowerCase().replace(/&amp;/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-  const collectionImages = new Map<string, { src: string; alt: string }>();
-
-  homeSettings.collections.collections.forEach((collection) => {
-    if (!collection.image?.url) return;
-    const image = { src: collection.image.url, alt: collection.image.alt || collection.title };
-    collectionImages.set(normalizeKey(collection.title), image);
-
-    const categorySlug = collection.link?.url?.match(/\/category\/([^/?#]+)/)?.[1];
-    if (categorySlug) {
-      collectionImages.set(normalizeKey(categorySlug), image);
-    }
-  });
-
-  const fallbackImages = Object.fromEntries(
-    categories
-      .map((category) => {
-        const image = collectionImages.get(normalizeKey(category.slug)) || collectionImages.get(normalizeKey(category.name));
-        return image ? [category.id, image] : null;
-      })
-      .filter((entry): entry is [number, { src: string; alt: string }] => entry !== null)
-  );
-
-  const settings = {
-    ...homeSettings.shop_by_category,
-    enabled: homeSettings.collections.enabled !== false,
-    section_title: homeSettings.collections.section_title || (isRTL ? dictionary.sections.collections.title : "Discover More"),
-    section_subtitle: homeSettings.collections.section_subtitle || dictionary.sections.collections.subtitle,
-    categories_count: mainCategoryCount,
-    selected_category_ids: [],
-    show_view_all: false,
-    responsive_columns: {
-      desktop: 5,
-      tablet: 3,
-      mobile: 2,
-    },
-  };
-
-  return (
-    <CategorySection
-      settings={settings}
-      categories={categories}
-      locale={locale}
-      isRTL={isRTL}
-      variant="dark"
-      fallbackImages={fallbackImages}
-    />
-  );
-}
-
 export default async function HomePage({ params }: HomePageProps) {
   const { locale } = await params;
   const validLocale = locale as Locale;
@@ -178,12 +116,10 @@ export default async function HomePage({ params }: HomePageProps) {
 
   // Only fetch what's needed for above-the-fold content (hero + banners + dictionary)
   // Product data is fetched independently by each Suspense-wrapped section below
-  const [dictionary, homeSettings, homeSections, topbarSettings, brandsSliderData] = await Promise.all([
+  const [dictionary, homeSettings, homeSections] = await Promise.all([
     getDictionary(validLocale),
     getHomePageSettings(validLocale),
     getHomeSections(),
-    getTopbarSettings(validLocale),
-    getBrandsSliderData(validLocale),
   ]);
 
   const t = (bi: { en: string; ar: string }) => isRTL ? bi.ar : bi.en;
@@ -196,27 +132,10 @@ export default async function HomePage({ params }: HomePageProps) {
       <h1 className="sr-only">{h1Text}</h1>
 
       <HeroSlider settings={homeSettings.hero_slider} />
-      <BrandsSlider locale={validLocale} initialData={brandsSliderData} />
-      <div className="px-5 pt-6 md:px-7 lg:px-12">
-        <TrustSignals
-          locale={validLocale}
-          freeShippingThreshold={topbarSettings.freeShippingThreshold ?? undefined}
-          compact
-        />
-      </div>
 
       <div className="relative bg-transparent">
         <Suspense fallback={<ProductSectionSkeleton fullView />}>
           <NewProductsSection
-            locale={validLocale}
-            isRTL={isRTL}
-            dictionary={dictionary}
-            homeSettings={homeSettings}
-          />
-        </Suspense>
-
-        <Suspense fallback={<CategorySectionSkeleton count={5} variant="dark" />}>
-          <DiscoverCategoriesSection
             locale={validLocale}
             isRTL={isRTL}
             dictionary={dictionary}

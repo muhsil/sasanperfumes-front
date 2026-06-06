@@ -66,7 +66,7 @@ h4,
 h5,
 h6 {
   font-family: var(--font-display), var(--font-jost), "Segoe UI", serif;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.08;
   letter-spacing: 0;
 }
@@ -77,7 +77,7 @@ h3.font-normal,
 h4.font-normal,
 h5.font-normal,
 h6.font-normal {
-  font-weight: 600;
+  font-weight: 700;
 }
 
 [lang="ar"] {
