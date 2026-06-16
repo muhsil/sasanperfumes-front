@@ -2,7 +2,7 @@
 
 @media (width >= 96rem) {
   .container {
-    max-width: 84rem;
+    max-width: 80rem;
   }
 }
 
@@ -46,12 +46,11 @@
 
 html {
   scroll-behavior: smooth;
-  background: var(--background);
+  background: #ffffff;
 }
 
 body {
-  background:
-    linear-gradient(180deg, #fffdf8 0%, var(--background) 54%, #ece3d7 100%);
+  background: #ffffff;
   color: var(--foreground);
   font-family: var(--font-jost), "Segoe UI", Arial, Helvetica, sans-serif;
   line-height: 1.6;
@@ -141,18 +140,11 @@ a {
   position: relative;
   isolation: isolate;
   max-width: 100vw;
-  background:
-    linear-gradient(180deg, rgba(255, 253, 248, 0.96) 0%, rgba(245, 241, 234, 0.96) 48%, rgba(236, 227, 215, 0.94) 100%);
+  background: #ffffff;
 }
 
 .site-shell::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    repeating-linear-gradient(135deg, rgba(20, 15, 10, 0.028) 0 1px, rgba(20, 15, 10, 0) 1px 16px);
+  display: none;
 }
 
 .site-shell > nav:has(> header.sticky) {
@@ -161,9 +153,10 @@ a {
   z-index: 50;
 }
 
-.site-shell > main > :where(div, main, section, article):not(.page-flush):not(.fixed) {
-  margin-inline: var(--page-container-margin);
-  width: auto;
+.site-shell > main > :where(div, main, section, article):not(.page-flush):not(.fixed):not(.hero-banner) {
+  margin-inline: auto;
+  width: calc(100% - (var(--page-container-margin) * 2));
+  max-width: 80rem;
 }
 
 @media (width >= 48rem) {
@@ -213,8 +206,7 @@ a {
 
 .section-band {
   border-block: 1px solid color-mix(in srgb, var(--color-border) 72%, transparent);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--color-ivory) 84%, white 16%) 0%, color-mix(in srgb, var(--background) 96%, white 4%) 100%);
+  background: transparent;
 }
 
 .lazy-section {

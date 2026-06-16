@@ -295,7 +295,7 @@ export function HeroSlider({ settings }: HeroSliderProps) {
   // Single slide or Swiper not loaded yet — render first slide statically (instant LCP, zero CLS)
   if (!hasMultipleSlides || !swiperReady || !SwiperComponents) {
     return (
-      <section className={`relative w-full overflow-hidden border-b border-brand-border/35 ${getVisibilityClass()}`}>
+      <section className={`hero-banner relative w-full overflow-hidden border-b border-brand-border/35 ${getVisibilityClass()}`}>
         <SlideContent slide={activeSlides[0]} index={0} locale={locale} />
       </section>
     );
@@ -311,7 +311,7 @@ export function HeroSlider({ settings }: HeroSliderProps) {
   };
 
   return (
-    <section className={`relative w-full overflow-hidden border-b border-brand-border/35 ${getVisibilityClass()}`}>
+    <section className={`hero-banner relative w-full overflow-hidden border-b border-brand-border/35 ${getVisibilityClass()}`}>
       <Swiper
         modules={modules}
         spaceBetween={0}

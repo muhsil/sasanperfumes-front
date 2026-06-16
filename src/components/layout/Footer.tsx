@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { siteConfig, type Locale } from "@/config/site";
 import type { Dictionary } from "@/i18n";
 import type { SiteSettings, FooterSettings } from "@/types/wordpress";
@@ -6,6 +7,7 @@ import type { FeatureToggles } from "@/lib/api/wordpress";
 import { normalizeMenuUrl } from "@/config/menu";
 import { NewsletterForm } from "@/components/common/NewsletterForm";
 import { SocialIconLinks } from "@/components/common/SocialIconLinks";
+import { shouldUseUnoptimizedImage } from "@/lib/utils/image";
 
 const SLUG_TOGGLE_MAP: Record<string, keyof FeatureToggles> = {
   "/shop": "sasanperfumes_shop_enabled",
@@ -155,15 +157,27 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
     <footer className="main-footer relative overflow-hidden border-t border-white/10 bg-brand-primary pb-20 text-brand-ivory md:pb-0">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.035)_0_1px,transparent_1px_20px)]" />
 
-      <div className="relative w-full px-5 py-10 md:px-7 md:py-14 lg:px-12">
-        <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-12">
+        <div className="relative w-full px-5 py-10 md:px-7 md:py-14 lg:px-12">
+          <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-12">
           <div className="border-b border-white/10 pb-8 lg:border-b-0 lg:border-e lg:pe-12">
             <p className="mb-4 text-[11px] font-semibold uppercase text-brand-gold">
               {siteSettings?.tagline || "Fragrance house"}
             </p>
-            <h2 className="font-title text-4xl leading-none text-brand-ivory md:text-5xl">
-              {siteSettings?.site_name || siteConfig.name}
-            </h2>
+            {siteSettings?.logo?.url ? (
+              <Image
+                src={siteSettings.logo.url}
+                alt={siteSettings.logo.alt || siteConfig.name}
+                width={240}
+                height={96}
+                className="h-14 w-auto md:h-16"
+                style={{ width: "auto", height: "auto" }}
+                unoptimized={shouldUseUnoptimizedImage(siteSettings.logo.url)}
+              />
+            ) : (
+              <span className="font-title text-4xl leading-none text-brand-ivory md:text-5xl">
+                {siteConfig.name}
+              </span>
+            )}
             <p className="mt-5 max-w-xl text-sm leading-7 text-brand-ivory/68">{description}</p>
           </div>
 

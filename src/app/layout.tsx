@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Eczar, Noto_Sans_Arabic, Poppins } from "next/font/google";
+import { Noto_Sans_Arabic, Poppins } from "next/font/google";
 import { headers } from "next/headers";
 import { siteConfig } from "@/config/site";
 import { themeConfig } from "@/config/theme";
@@ -9,13 +9,6 @@ import "./globals.css";
 const poppins = Poppins({
   subsets: ["latin"],
   variable: "--font-poppins",
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
-const eczar = Eczar({
-  subsets: ["latin"],
-  variable: "--font-eczar",
   weight: ["400", "500", "600", "700"],
   display: "swap",
 });
@@ -63,14 +56,14 @@ export default async function RootLayout({
         lang={locale}
         dir={dir}
         suppressHydrationWarning
-        className={`overflow-x-clip ${poppins.variable} ${eczar.variable} ${notoSansArabic.variable}`}
+        className={`overflow-x-clip ${poppins.variable} ${notoSansArabic.variable}`}
       >
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
         <style dangerouslySetInnerHTML={{ __html: `
           :root {
             --font-jost: var(--font-poppins);
-            --font-display: var(--font-eczar);
+            --font-display: var(--font-poppins);
             --background: ${themeConfig.colors.background};
             --foreground: ${themeConfig.colors.foreground};
             --color-primary: ${themeConfig.colors.primary};
