@@ -7,11 +7,17 @@ const NON_ALPHANUMERIC = /[^\p{L}\p{N}]+/gu;
 const SEARCH_TOKEN_ALIASES: Record<string, string> = {
   aoud: "oud",
   oudh: "oud",
+  dakhoon: "oud",
+  dakhon: "oud",
+  doakh: "oud",
   bakhor: "bakhoor",
   bakhour: "bakhoor",
   bukhoor: "bakhoor",
   fragrance: "perfume",
   cologne: "perfume",
+  fragrence: "perfume",
+  parfume: "perfume",
+  parfum: "perfume",
   spray: "mist",
   mist: "spray",
   incense: "bakhoor",
@@ -136,6 +142,44 @@ function scoreFieldGroup(
   return best;
 }
 
+function normalizeCategoryMatchText(value: string): string {
+  return normalizeSearchText(value)
+    .split(" ")
+    .filter(Boolean)
+    .join(" ");
+}
+
+function scoreCategoryBoost(query: string, entry: SearchIndexEntry): number {
+  if (!query.trim() || !entry.fields.categories.length) return 0;
+
+  const normalizedQuery = normalizeSearchText(query);
+  if (!normalizedQuery) return 0;
+
+  let categoryScore = 0;
+
+  for (const category of entry.fields.categories) {
+    if (!category) continue;
+    const normalizedCategory = normalizeCategoryMatchText(category);
+    if (!normalizedCategory) continue;
+
+    if (normalizedCategory === normalizedQuery) {
+      categoryScore = Math.max(categoryScore, 170);
+      continue;
+    }
+
+    if (normalizedCategory.startsWith(normalizedQuery) || normalizedQuery.startsWith(normalizedCategory)) {
+      categoryScore = Math.max(categoryScore, 120);
+      continue;
+    }
+
+    if (normalizedCategory.includes(normalizedQuery) || similarityScore(normalizedQuery, normalizedCategory) >= 0.84) {
+      categoryScore = Math.max(categoryScore, 70);
+    }
+  }
+
+  return categoryScore;
+}
+
 export function normalizeSearchText(value: string): string {
   const normalizedTokens = decodeHtmlEntities(stripHtml(value || ""))
     .toLowerCase()
@@ -214,7 +258,8 @@ export function scoreSearchEntry(query: string, entry: SearchIndexEntry): number
 
   score += scoreFieldGroup(normalizedQuery, entry.fields.names, { exact: 220, prefix: 140, includes: 90, fuzzy: 70 });
   score += scoreFieldGroup(normalizedQuery, entry.fields.slugs, { exact: 200, prefix: 120, includes: 85, fuzzy: 60 });
-  score += scoreFieldGroup(normalizedQuery, entry.fields.categories, { exact: 108, prefix: 76, includes: 58, fuzzy: 42 });
+  score += scoreFieldGroup(normalizedQuery, entry.fields.categories, { exact: 130, prefix: 94, includes: 70, fuzzy: 52 });
+  score += scoreCategoryBoost(query, entry);
   score += scoreFieldGroup(normalizedQuery, entry.fields.brands, { exact: 78, prefix: 54, includes: 40, fuzzy: 34 });
   score += scoreFieldGroup(normalizedQuery, entry.fields.tags, { exact: 50, prefix: 34, includes: 26, fuzzy: 20 });
   score += scoreFieldGroup(normalizedQuery, entry.fields.attributes, { exact: 36, prefix: 26, includes: 20, fuzzy: 16 });

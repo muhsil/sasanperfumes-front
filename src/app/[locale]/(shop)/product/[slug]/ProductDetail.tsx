@@ -64,6 +64,35 @@ function sanitizeProductDescription(html: string): string {
   if (!html) return "";
   
   let sanitized = html;
+  const blockedHeadingText = [
+    "shop by category",
+    "why shop with us",
+    "trust, speed, and service",
+    "trust, speed &amp; service",
+    "why shop with us",
+    "why shop with us trust, speed and service",
+    "trust speed and service",
+    "why shop with us trust speed and service",
+    "ÙºÙ‡ÙˆØµ Ù…Ø¨Ø§ÙØ³",
+    "ÙƒØ§Ù… ÙˆØ´Ø±Ø§Ø¡ ØµØ§Ù„",
+    "ÙºÙ‡ØªÙˆ Ø§Ø²Ù‚ÙˆÙ‚ Ø§Ù†ÙˆÙ† ØÙ…Ø¹Ø±Ø¶",
+    "Ù‚Ù‡Ø§Øª Ø§Ù„ØºØ±Ù Ø§Ù„Ø´Ù‡Ø§Ù‚ ÙˆØ§Ù„Ø£ÙˆØ±",
+    "Ø£Ø¨Ø³Ø±ÙŠØ© ÙŠÙƒÙŠØ± Ù…Ø±ÙŠØ¹",
+    "ÙŠÙ‡Ù†Ø§ÙˆÙ† Ù‚Ù‡Ø§Øª Ø§Ù„ØªØ¹Ø¯Ø§",
+  ];
+
+  const blockPattern = blockedHeadingText
+    .map((token) => token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .join("|");
+  const headingTagPattern = new RegExp(
+    `(<\\s*(?:h[1-6]|p|div|span|strong|b)\\b[^>]*>)\\s*(?:${blockPattern})\\s*(</\\s*(?:h[1-6]|p|div|span|strong|b)\\s*>)`,
+    "gi"
+  );
+
+  // Remove leftover section titles or phrases from product descriptions that
+  // were previously added on CMS product pages.
+  sanitized = sanitized.replace(headingTagPattern, "");
+  sanitized = sanitized.replace(new RegExp(`\\b(?:${blockPattern})\\b`, "gi"), "");
   
   sanitized = sanitized.replace(/<div[^>]*class="[^"]*tinv[^"]*"[^>]*>[\s\S]*?<\/div>/gi, "");
   sanitized = sanitized.replace(/<div[^>]*class="[^"]*yith[^"]*"[^>]*>[\s\S]*?<\/div>/gi, "");
