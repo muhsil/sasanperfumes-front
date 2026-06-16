@@ -126,7 +126,7 @@ export default async function LocaleLayout({
           <ComparisonProvider>
                                         <CartProvider locale={validLocale}>
                                           <FreeGiftProvider locale={validLocale}>
-                      <WishlistProvider>
+                      <WishlistProvider locale={validLocale}>
               <JsonLd data={generateOrganizationJsonLd()} />
               <JsonLd data={generateWebSiteJsonLd()} />
               {generateLocalBusinessJsonLd().map((schema, i) => (

@@ -15,14 +15,40 @@ import {
   getBasicAuthParams,
 } from "./helpers";
 import { API_BASE, backendHeaders, noCacheUrl } from "@/lib/utils/backendFetch";
+import { type Locale } from "@/config/site";
+import { cookies } from "next/headers";
 
 const WISHLIST_BASE = `${API_BASE}/wp-json/wc/v3/wishlist`;
+const LOCALE_COOKIE = "NEXT_LOCALE";
 
-export async function GET() {
+function parseLocale(value: string | null): Locale | null {
+  return value === "ar" || value === "en" ? value : null;
+}
+
+async function getLocale(request: NextRequest): Promise<Locale | null> {
+  const localeQuery = parseLocale(request.nextUrl.searchParams.get("locale"));
+  if (localeQuery) return localeQuery;
+
+  const cookieStore = await cookies();
+  const localeCookie = cookieStore.get(LOCALE_COOKIE)?.value;
+  const cookieLocale = parseLocale(localeCookie || null);
+  if (cookieLocale) return cookieLocale;
+
+  const referer = request.headers.get("referer");
+  if (referer) {
+    const match = referer.match(/\/(en|ar)\//);
+    return parseLocale(match?.[1] || null);
+  }
+
+  return null;
+}
+
+export async function GET(request: NextRequest) {
   try {
     if (!areCredentialsConfigured()) {
       return misconfiguredResponse();
     }
+    const locale = await getLocale(request);
 
     const userId = await getUserId();
     if (!userId) {
@@ -76,7 +102,7 @@ export async function GET() {
       return NextResponse.json({ success: true, wishlist: null, items: [] });
     }
 
-    const enrichedItems = await fetchEnrichedWishlistItems(shareKey);
+    const enrichedItems = await fetchEnrichedWishlistItems(shareKey, locale);
 
     const wishlist = wishlistMeta ? {
       ...wishlistMeta,
@@ -96,6 +122,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const action = request.nextUrl.searchParams.get("action");
+  const locale = await getLocale(request);
 
   try {
     if (!areCredentialsConfigured()) {
@@ -137,7 +164,7 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        const enrichedItems = await fetchEnrichedWishlistItems(shareKey);
+        const enrichedItems = await fetchEnrichedWishlistItems(shareKey, locale);
         return wishlistSuccessResponse(shareKey, enrichedItems, { added_to: shareKey });
       }
 
@@ -170,7 +197,7 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        const enrichedItems = await fetchEnrichedWishlistItems(shareKey);
+        const enrichedItems = await fetchEnrichedWishlistItems(shareKey, locale);
         return wishlistSuccessResponse(shareKey, enrichedItems);
       }
 
@@ -206,7 +233,7 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        const enrichedItems = await fetchEnrichedWishlistItems(shareKey);
+        const enrichedItems = await fetchEnrichedWishlistItems(shareKey, locale);
         return wishlistSuccessResponse(shareKey, enrichedItems, { syncResults: results });
       }
 

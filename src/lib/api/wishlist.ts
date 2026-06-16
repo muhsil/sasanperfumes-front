@@ -44,6 +44,14 @@ export interface WishlistOperationResponse {
   error?: WishlistError;
 }
 
+type WishlistLocale = "en" | "ar";
+
+function withLocale(url: string, locale?: WishlistLocale): string {
+  if (!locale) return url;
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}locale=${locale}`;
+}
+
 function getHeaders(): HeadersInit {
   const headers: HeadersInit = {
     "Content-Type": "application/json",
@@ -57,9 +65,15 @@ function getHeaders(): HeadersInit {
   return headers;
 }
 
-export async function getWishlist(): Promise<WishlistOperationResponse> {
+function isWishlistLocale(value: string | null | undefined): value is WishlistLocale {
+  return value === "ar" || value === "en";
+}
+
+export async function getWishlist(locale?: string): Promise<WishlistOperationResponse> {
   try {
-    const response = await fetch("/api/wishlist", {
+    const validLocale = isWishlistLocale(locale) ? locale : undefined;
+
+    const response = await fetch(withLocale("/api/wishlist", validLocale), {
       method: "GET",
       headers: getHeaders(),
     });
@@ -95,9 +109,11 @@ export async function getWishlist(): Promise<WishlistOperationResponse> {
 
 export async function addToWishlist(
   productId: number,
-  variationId?: number
+  variationId?: number,
+  locale?: string
 ): Promise<WishlistOperationResponse> {
   try {
+    const validLocale = isWishlistLocale(locale) ? locale : undefined;
     const body: Record<string, unknown> = {
       product_id: productId,
     };
@@ -106,7 +122,7 @@ export async function addToWishlist(
       body.variation_id = variationId;
     }
 
-    const response = await fetch("/api/wishlist?action=add", {
+    const response = await fetch(withLocale("/api/wishlist?action=add", validLocale), {
       method: "POST",
       headers: getHeaders(),
       body: JSON.stringify(body),
@@ -143,14 +159,16 @@ export async function addToWishlist(
 
 export async function removeFromWishlist(
   productId: number,
-  itemId?: number
+  itemId?: number,
+  locale?: string
 ): Promise<WishlistOperationResponse> {
   try {
+    const validLocale = isWishlistLocale(locale) ? locale : undefined;
     const body: Record<string, unknown> = { product_id: productId };
     if (itemId) {
       body.item_id = itemId;
     }
-    const response = await fetch("/api/wishlist?action=remove", {
+    const response = await fetch(withLocale("/api/wishlist?action=remove", validLocale), {
       method: "POST",
       headers: getHeaders(),
       body: JSON.stringify(body),
@@ -186,10 +204,12 @@ export async function removeFromWishlist(
 }
 
 export async function syncWishlist(
-  guestItems: Array<{ product_id: number; variation_id?: number }>
+  guestItems: Array<{ product_id: number; variation_id?: number }>,
+  locale?: string
 ): Promise<WishlistOperationResponse> {
   try {
-    const response = await fetch("/api/wishlist?action=sync", {
+    const validLocale = isWishlistLocale(locale) ? locale : undefined;
+    const response = await fetch(withLocale("/api/wishlist?action=sync", validLocale), {
       method: "POST",
       headers: getHeaders(),
       body: JSON.stringify({ items: guestItems }),

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { API_BASE, backendHeaders, backendPostHeaders, noCacheUrl } from "@/lib/utils/backendFetch";
+import { type Locale } from "@/config/site";
 
 const WISHLIST_BASE = `${API_BASE}/wp-json/wc/v3/wishlist`;
 const PRODUCTS_BASE = `${API_BASE}/wp-json/wc/v3/products`;
@@ -56,8 +57,9 @@ const PRODUCT_CACHE_TTL = 5 * 60 * 1000;
 interface CachedProduct {
   data: WCProduct;
   timestamp: number;
+  locale: Locale | null;
 }
-const productCache = new Map<number, CachedProduct>();
+const productCache = new Map<string, CachedProduct>();
 
 const SHARE_KEY_CACHE_TTL = 60 * 1000;
 interface CachedShareKey {
@@ -66,17 +68,27 @@ interface CachedShareKey {
 }
 const shareKeyCache = new Map<number, CachedShareKey>();
 
-function getCachedProduct(productId: number): WCProduct | null {
-  const cached = productCache.get(productId);
-  if (cached && Date.now() - cached.timestamp < PRODUCT_CACHE_TTL) {
+function getCachedProduct(productId: number, locale: Locale | null): WCProduct | null {
+  const cacheKey = getProductCacheKey(productId, locale);
+  const cached = productCache.get(cacheKey);
+  if (cached && cached.locale === locale && Date.now() - cached.timestamp < PRODUCT_CACHE_TTL) {
     return cached.data;
   }
-  if (cached) productCache.delete(productId);
+  if (cached) productCache.delete(cacheKey);
   return null;
 }
 
-function setCachedProduct(productId: number, product: WCProduct): void {
-  productCache.set(productId, { data: product, timestamp: Date.now() });
+function getProductCacheKey(productId: number, locale: Locale | null): string {
+  return `${locale || "default"}:${productId}`;
+}
+
+function normalizeLocale(value: string | null | undefined): Locale | null {
+  return value === "ar" ? "ar" : value === "en" ? "en" : null;
+}
+
+function setCachedProduct(productId: number, product: WCProduct, locale: Locale | null): void {
+  const cacheKey = getProductCacheKey(productId, locale);
+  productCache.set(cacheKey, { data: product, timestamp: Date.now(), locale });
 }
 
 function getCachedShareKey(userId: number): string | null {
@@ -268,14 +280,18 @@ export async function removeProductFromWishlist(
 
 // --- Product Enrichment ---
 
-export async function fetchProductDetails(productIds: number[]): Promise<Map<number, WCProduct>> {
+export async function fetchProductDetails(
+  productIds: number[],
+  locale?: string
+): Promise<Map<number, WCProduct>> {
+  const localeValue = normalizeLocale(locale);
   const productMap = new Map<number, WCProduct>();
 
   if (productIds.length === 0) return productMap;
 
   const uncachedIds: number[] = [];
   for (const id of productIds) {
-    const cached = getCachedProduct(id);
+    const cached = getCachedProduct(id, localeValue);
     if (cached) {
       productMap.set(id, cached);
     } else {
@@ -289,8 +305,15 @@ export async function fetchProductDetails(productIds: number[]): Promise<Map<num
 
   try {
     const idsParam = uncachedIds.join(",");
+    const params = new URLSearchParams(getBasicAuthParams());
+    params.set("include", idsParam);
+    params.set("per_page", uncachedIds.length.toString());
+    if (localeValue) {
+      params.set("lang", localeValue);
+    }
+
     const response = await fetch(
-      noCacheUrl(`${PRODUCTS_BASE}?include=${idsParam}&per_page=${uncachedIds.length}&${getBasicAuthParams()}`),
+      noCacheUrl(`${PRODUCTS_BASE}?${params.toString()}`),
       {
         method: "GET",
         headers: backendHeaders(),
@@ -301,7 +324,7 @@ export async function fetchProductDetails(productIds: number[]): Promise<Map<num
       const products: WCProduct[] = await response.json();
       for (const product of products) {
         productMap.set(product.id, product);
-        setCachedProduct(product.id, product);
+        setCachedProduct(product.id, product, localeValue);
       }
     }
   } catch (error) {
@@ -313,7 +336,8 @@ export async function fetchProductDetails(productIds: number[]): Promise<Map<num
 
 export function enrichWishlistItems(
   rawItems: RawWishlistItem[],
-  productMap: Map<number, WCProduct>
+  productMap: Map<number, WCProduct>,
+  locale: string | null = "en"
 ): EnrichedWishlistItem[] {
   return rawItems.map((item) => {
     const product = productMap.get(item.product_id);
@@ -334,7 +358,7 @@ export function enrichWishlistItems(
       product_name: productName,
       product_price: productPrice,
       product_image: productImage,
-      product_url: productSlug ? `/en/product/${productSlug}` : undefined,
+      product_url: productSlug ? `/${locale === "ar" ? "ar" : "en"}/product/${productSlug}` : undefined,
       stock_status: stockStatus,
       is_in_stock: stockStatus === "instock",
     };
@@ -351,7 +375,11 @@ export function parseRawItems(data: unknown): RawWishlistItem[] {
   return [];
 }
 
-export async function fetchEnrichedWishlistItems(shareKey: string): Promise<EnrichedWishlistItem[]> {
+export async function fetchEnrichedWishlistItems(
+  shareKey: string,
+  locale?: string
+): Promise<EnrichedWishlistItem[]> {
+  const localeValue = normalizeLocale(locale);
   const productsResponse = await fetch(noCacheUrl(`${WISHLIST_BASE}/${shareKey}/get_products?${getBasicAuthParams()}`), {
     method: "GET",
     headers: backendHeaders(),
@@ -369,8 +397,8 @@ export async function fetchEnrichedWishlistItems(shareKey: string): Promise<Enri
   }
 
   const productIds = rawItems.map((item) => item.product_id).filter(Boolean);
-  const productMap = await fetchProductDetails(productIds);
-  return enrichWishlistItems(rawItems, productMap);
+  const productMap = await fetchProductDetails(productIds, localeValue);
+  return enrichWishlistItems(rawItems, productMap, localeValue);
 }
 
 export function wishlistSuccessResponse(

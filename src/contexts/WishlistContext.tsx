@@ -17,6 +17,9 @@ import { omnisendTrackAddedToWishlist } from "@/lib/utils/omnisend";
 
 const WISHLIST_COUNT_CACHE_KEY = "sasanperfumes_wishlist_count";
 
+type WishlistLocale = "en" | "ar";
+const LOCALE_VALID_VALUES = new Set<WishlistLocale>(["en", "ar"]);
+
 interface WishlistContextType {
   wishlist: WishlistResponse | null;
   wishlistItems: WishlistItem[];
@@ -33,6 +36,15 @@ interface WishlistContextType {
 }
 
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
+
+interface WishlistProviderProps {
+  children: React.ReactNode;
+  locale?: WishlistLocale | string;
+}
+
+function resolveLocale(locale?: WishlistLocale | string): WishlistLocale {
+  return locale === "ar" ? "ar" : "en";
+}
 
 // Helper functions for localStorage caching (outside component to avoid SSR issues)
 function getCachedWishlistCount(): number {
@@ -63,13 +75,16 @@ function clearCachedWishlistCount(): void {
   }
 }
 
-export function WishlistProvider({ children }: { children: React.ReactNode }) {
+export function WishlistProvider({ children, locale = "en" }: WishlistProviderProps) {
   const [wishlist, setWishlist] = useState<WishlistResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [cachedCount, setCachedCount] = useState<number>(0);
   const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
   const { notify } = useNotification();
+  const resolvedLocale = LOCALE_VALID_VALUES.has(locale as WishlistLocale)
+    ? (locale as WishlistLocale)
+    : resolveLocale(locale);
 
   // Initialize cached count from localStorage on mount
   useEffect(() => {
@@ -90,7 +105,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     }
     setIsLoading(true);
     try {
-      const response = await apiGetWishlist();
+      const response = await apiGetWishlist(resolvedLocale);
       if (response.success) {
         if (response.wishlist) {
           setWishlist(response.wishlist);
@@ -110,7 +125,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, resolvedLocale]);
 
   useEffect(() => {
     if (!isAuthLoading) {
@@ -123,7 +138,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       NProgress.start();
       try {
-        const response = await apiAddToWishlist(productId, variationId);
+        const response = await apiAddToWishlist(productId, variationId, resolvedLocale);
         if (response.success) {
           // Use mutation response directly instead of calling refreshWishlist()
           // This makes the operation faster by avoiding an extra API call
@@ -170,7 +185,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         NProgress.done();
       }
     },
-    [notify, user]
+    [notify, resolvedLocale, user]
   );
 
   const removeFromWishlist = useCallback(
@@ -184,7 +199,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
           const item = wishlist.items.find((i) => i.product_id === productId);
           resolvedItemId = item?.id;
         }
-        const response = await apiRemoveFromWishlist(productId, resolvedItemId);
+        const response = await apiRemoveFromWishlist(productId, resolvedItemId, resolvedLocale);
         if (response.success) {
           // Use mutation response directly instead of calling refreshWishlist()
           // This makes the operation faster by avoiding an extra API call
@@ -211,14 +226,14 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         NProgress.done();
       }
     },
-    [wishlist, notify]
+    [wishlist, notify, resolvedLocale]
   );
 
   const syncWishlist = useCallback(
     async (guestItems: Array<{ product_id: number; variation_id?: number }>) => {
       setIsLoading(true);
       try {
-        const response = await apiSyncWishlist(guestItems);
+        const response = await apiSyncWishlist(guestItems, resolvedLocale);
         if (response.success && response.wishlist) {
           setWishlist(response.wishlist);
         } else if (response.error) {
@@ -230,7 +245,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false);
       }
     },
-    []
+    [resolvedLocale]
   );
 
   const isInWishlist = useCallback(
