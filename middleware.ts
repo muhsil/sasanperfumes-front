@@ -1,18 +1,48 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { siteConfig } from "./src/config/site";
+import { canonicalHost, cmsHostname, mediaHostNames } from "./src/config/site";
 import { proxy } from "./src/proxy";
+
+const DEV_ALLOWED_HOSTS = ["localhost", "127.0.0.1", "::1", "localhost:3000"];
+
+function parseHost(value: string | undefined): string {
+  if (!value) return "";
+  const trimmed = value.trim().toLowerCase();
+  if (!trimmed) return "";
+  if (trimmed.includes("://")) {
+    try {
+      return new URL(trimmed).hostname;
+    } catch {
+      return "";
+    }
+  }
+  return trimmed.replace(/^www\./, "");
+}
+
+function getAllowedHosts(): string[] {
+  const allowed = new Set<string>([
+    ...DEV_ALLOWED_HOSTS,
+    canonicalHost,
+    "cms.shapehive.com",
+    "qa.cms.shapehive.com",
+    cmsHostname,
+    ...mediaHostNames,
+  ]);
+
+  const envHosts = (process.env.NEXT_PUBLIC_ALLOWED_HOSTS || process.env.ALLOWED_HOSTS || "")
+    .split(",")
+    .map(parseHost)
+    .filter(Boolean);
+
+  envHosts.forEach((host) => allowed.add(host));
+
+  return Array.from(allowed);
+}
 
 function isCanonicalHost(request: NextRequest) {
   const hostHeader = request.headers.get("host")?.toLowerCase() || "";
   const host = hostHeader.split(":")[0];
-  const canonicalHost = (
-    process.env.NEXT_PUBLIC_CANONICAL_HOST ||
-    process.env.CANONICAL_HOST ||
-    new URL(siteConfig.url).hostname
-  ).replace(/^www\./, "").toLowerCase();
-
-  const allowedHosts = ["localhost", "127.0.0.1", "::1", "cms.shapehive.com", "localhost:3000"];
+  const allowedHosts = getAllowedHosts();
   const devLikeHost = allowedHosts.some((allowed) => host === allowed || host.startsWith(`${allowed}:`));
 
   if (devLikeHost) {
@@ -24,11 +54,6 @@ function isCanonicalHost(request: NextRequest) {
 
 function enforceCanonicalHost(request: NextRequest) {
   if (isCanonicalHost(request)) return;
-
-  const canonicalHost =
-    process.env.NEXT_PUBLIC_CANONICAL_HOST ||
-    process.env.CANONICAL_HOST ||
-    new URL(siteConfig.url).hostname.replace(/^www\./, "");
 
   const redirectUrl = request.nextUrl.clone();
   redirectUrl.protocol = "https:";

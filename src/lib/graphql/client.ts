@@ -1,10 +1,10 @@
 import { ApolloClient, InMemoryCache, createHttpLink } from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
-import { disableRuntimeCache } from "@/config/site";
+import { disableRuntimeCache, cmsUrl } from "@/config/site";
 
 const WORDPRESS_GRAPHQL_ENDPOINT =
   process.env.NEXT_PUBLIC_WORDPRESS_GRAPHQL_URL ||
-  "https://cms.shapehive.com/graphql";
+  `${cmsUrl}/graphql`;
 
 const httpLink = createHttpLink({
   uri: WORDPRESS_GRAPHQL_ENDPOINT,

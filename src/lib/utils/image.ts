@@ -3,12 +3,17 @@
  * Vercel's /_next/image optimization service cannot reach external WordPress servers,
  * so we bypass optimization for those URLs.
  */
+import { siteConfig } from "@/config/site";
+
 export function isWordPressMediaUrl(src?: string): boolean {
   if (!src || typeof src !== 'string') return false;
-  return (
-    src.includes('/wp-content/uploads') ||
-    src.includes('cms.shapehive.com')
-  );
+  const hostNames = new Set([
+    ...siteConfig?.mediaHostNames,
+    "cms.shapehive.com",
+    "qa.cms.shapehive.com",
+  ]);
+
+  return src.includes("/wp-content/uploads") || Array.from(hostNames).some((host) => src.includes(host));
 }
 
 /**

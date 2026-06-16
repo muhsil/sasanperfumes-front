@@ -5,6 +5,47 @@ const disableRuntimeCache =
   process.env.DISABLE_RUNTIME_CACHE === "true" ||
   process.env.NEXT_PUBLIC_DISABLE_RUNTIME_CACHE === "true";
 
+const cmsApiUrl = (process.env.NEXT_PUBLIC_WC_API_URL || "https://cms.shapehive.com").replace(/\/+$/, "");
+const imageHostFallbacks = [
+  "cms.shapehive.com",
+  "qa.cms.shapehive.com",
+];
+const extraImageHosts = (
+  process.env.NEXT_PUBLIC_CMS_IMAGE_HOSTS ||
+  process.env.NEXT_PUBLIC_WP_API_HOST ||
+  ""
+)
+  .split(",")
+  .map((host) => host.trim())
+  .filter(Boolean);
+const cmsApiHost = (() => {
+  try {
+    return new URL(cmsApiUrl).hostname;
+  } catch {
+    return "cms.shapehive.com";
+  }
+})();
+const mediaHostnames = Array.from(new Set([cmsApiHost, ...imageHostFallbacks, ...extraImageHosts]));
+
+type ImageRemotePattern = {
+  protocol: "http" | "https";
+  hostname: string;
+  pathname: string;
+};
+
+const mediaRemotePatterns: ImageRemotePattern[] = mediaHostnames.flatMap((hostname) => [
+  {
+    protocol: "https",
+    hostname,
+    pathname: "/wp-content/uploads/**",
+  },
+  {
+    protocol: "http",
+    hostname,
+    pathname: "/wp-content/uploads/**",
+  },
+]);
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   images: {
@@ -15,16 +56,7 @@ const nextConfig: NextConfig = {
     qualities: [75, 85, 100],
     minimumCacheTTL: disableRuntimeCache ? 0 : 31536000,
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "cms.shapehive.com",
-        pathname: "/wp-content/uploads/**",
-      },
-      {
-        protocol: "http",
-        hostname: "cms.shapehive.com",
-        pathname: "/wp-content/uploads/**",
-      },
+      ...mediaRemotePatterns,
       {
         protocol: "https",
         hostname: "flagcdn.com",
@@ -78,7 +110,7 @@ const nextConfig: NextConfig = {
     ];
   },
   async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_WC_API_URL || "https://cms.shapehive.com";
+    const apiUrl = cmsApiUrl;
     return [
       {
         source: '/cms-media/:path*',

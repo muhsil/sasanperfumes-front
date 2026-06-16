@@ -66,7 +66,7 @@ src/
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/muhsiltomsher-cloud/sasanperfumes-front.git
+git clone https://github.com/muhsil/sasanperfumes-front.git
 cd sasanperfumes
 ```
 
@@ -84,8 +84,17 @@ cp .env.example .env.local
 ```
 NEXT_PUBLIC_SITE_URL=https://shapehive.com
 NEXT_PUBLIC_WC_API_URL=https://cms.shapehive.com
+NEXT_PUBLIC_CANONICAL_HOST=https://shapehive.com
 WC_CONSUMER_KEY=ck_xxxxx
 WC_CONSUMER_SECRET=cs_xxxxx
+```
+
+For QA:
+```
+NEXT_PUBLIC_SITE_URL=https://qa.shapehive.com
+NEXT_PUBLIC_WC_API_URL=https://qa.cms.shapehive.com
+NEXT_PUBLIC_CANONICAL_HOST=https://qa.shapehive.com
+NEXT_PUBLIC_WORDPRESS_GRAPHQL_URL=https://qa.cms.shapehive.com/graphql
 ```
 
 5. Run the development server:

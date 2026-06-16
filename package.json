@@ -43,14 +43,14 @@
   "main": "screenshot.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/muhsiltomsher-cloud/sasanperfumes-front.git"
+    "url": "git+https://github.com/muhsil/sasanperfumes-front.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/muhsiltomsher-cloud/sasanperfumes-front/issues"
+    "url": "https://github.com/muhsil/sasanperfumes-front/issues"
   },
-  "homepage": "https://github.com/muhsiltomsher-cloud/sasanperfumes-front#readme"
+  "homepage": "https://github.com/muhsil/sasanperfumes-front#readme"
 }

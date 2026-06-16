@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cmsUrl } from "@/config/site";
 
-const WP = process.env.NEXT_PUBLIC_WC_API_URL || "https://cms.shapehive.com";
+const WP = cmsUrl;
 const WP_USER = process.env.WP_ADMIN_USER || "admin";
 const WP_PASS = process.env.WP_ADMIN_PASSWORD;
 

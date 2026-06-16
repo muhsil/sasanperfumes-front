@@ -5,6 +5,42 @@
  * These values are read from environment variables when available,
  * with fallbacks for local development.
  */
+const DEFAULT_SITE_URL = "https://shapehive.com";
+const DEFAULT_CMS_URL = "https://cms.shapehive.com";
+
+function safeUrl(value: string | undefined, fallback: string): string {
+  const candidate = value?.trim() || fallback;
+  return candidate.replace(/\/+$/, "");
+}
+
+function urlHost(value: string, fallback: string): string {
+  try {
+    return new URL(value).hostname;
+  } catch {
+    return fallback;
+  }
+}
+
+export const siteUrl = safeUrl(process.env.NEXT_PUBLIC_SITE_URL, DEFAULT_SITE_URL);
+export const cmsUrl = safeUrl(process.env.NEXT_PUBLIC_WC_API_URL, DEFAULT_CMS_URL);
+
+export const canonicalHost =
+  (
+    process.env.NEXT_PUBLIC_CANONICAL_HOST ||
+    process.env.CANONICAL_HOST ||
+    safeUrl(process.env.NEXT_PUBLIC_SITE_URL, DEFAULT_SITE_URL)
+  )
+    .replace(/^https?:\/\//, "")
+    .replace(/\/+$/, "")
+    .replace(/^www\./, "")
+    .toLowerCase();
+
+export const cmsHostname = urlHost(cmsUrl, DEFAULT_CMS_URL.replace(/^https?:\/\//, ""));
+
+export const mediaHostNames = Array.from(
+  new Set([cmsHostname, "cms.shapehive.com", "qa.cms.shapehive.com"])
+);
+
 export const siteConfig = {
   // Site name - displayed in browser title, meta tags, etc.
   name: "Sasan Perfumes",
@@ -13,14 +49,20 @@ export const siteConfig = {
   description: "Sasan Perfumes is a UAE fragrance store for perfumes, hair mist, all over sprays, and gift-ready scent collections.",
   
   // Frontend URL - reads from NEXT_PUBLIC_SITE_URL environment variable
-  url: process.env.NEXT_PUBLIC_SITE_URL || "https://shapehive.com",
+  url: siteUrl,
 
   // Open Graph image URL - uses the site URL for the og image
-  ogImage: `${process.env.NEXT_PUBLIC_SITE_URL || "https://shapehive.com"}/og.jpg`,
+  ogImage: `${siteUrl}/og.jpg`,
   
   // WordPress/WooCommerce Backend API URL - reads from NEXT_PUBLIC_WC_API_URL environment variable
   // This can be different from the public frontend URL.
-  apiUrl: process.env.NEXT_PUBLIC_WC_API_URL || "https://cms.shapehive.com",
+  apiUrl: cmsUrl,
+
+  mediaHostNames: mediaHostNames,
+
+  authBackgroundImage:
+    process.env.NEXT_PUBLIC_AUTH_BACKGROUND_IMAGE ||
+    `${cmsUrl}/wp-content/uploads/2025/12/page-bg.jpg`,
 
   // Optional brand assets for this copied frontend. Backend products still load
   // from WooCommerce, but the old backend logo/site name is not reused by default.
