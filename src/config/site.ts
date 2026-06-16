@@ -13,10 +13,10 @@ export const siteConfig = {
   description: "Sasan Perfumes is a UAE fragrance store for perfumes, hair mist, all over sprays, and gift-ready scent collections.",
   
   // Frontend URL - reads from NEXT_PUBLIC_SITE_URL environment variable
-  url: process.env.NEXT_PUBLIC_SITE_URL || "https://sasanperfumes.com",
+  url: process.env.NEXT_PUBLIC_SITE_URL || "https://shapehive.com",
 
   // Open Graph image URL - uses the site URL for the og image
-  ogImage: `${process.env.NEXT_PUBLIC_SITE_URL || "https://sasanperfumes.com"}/og.jpg`,
+  ogImage: `${process.env.NEXT_PUBLIC_SITE_URL || "https://shapehive.com"}/og.jpg`,
   
   // WordPress/WooCommerce Backend API URL - reads from NEXT_PUBLIC_WC_API_URL environment variable
   // This can be different from the public frontend URL.
