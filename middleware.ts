@@ -12,14 +12,16 @@ function parseHost(value: string | undefined): string {
   if (!value) return "";
   const trimmed = value.trim().toLowerCase();
   if (!trimmed) return "";
+  const firstValue = trimmed.split(",")[0].trim();
+  if (!firstValue) return "";
   if (trimmed.includes("://")) {
     try {
-      return new URL(trimmed).hostname;
+      return new URL(firstValue).hostname;
     } catch {
       return "";
     }
   }
-  return trimmed.replace(/^www\./, "").replace(/\.+$/, "");
+  return firstValue.replace(/^www\./, "").replace(/\.+$/, "");
 }
 
 function normalizeHost(value: string | undefined): string {
