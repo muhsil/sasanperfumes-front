@@ -7,6 +7,12 @@ const DEV_ALLOWED_HOSTS = ["localhost", "127.0.0.1", "::1", "localhost:3000"];
 const CANONICAL_HOSTS_ENV = process.env.NEXT_PUBLIC_CANONICAL_HOSTS || process.env.CANONICAL_HOSTS || "";
 const DEFAULT_CANONICAL_HOST = "shapehive.com";
 const SHAPEHIVE_HOST_SUFFIX = ".shapehive.com";
+const KNOWN_CANONICAL_HOSTS = [
+  "shapehive.com",
+  "qa.shapehive.com",
+  "om.shapehive.com",
+  "sa.shapehive.com",
+];
 
 function parseHost(value: string | undefined): string {
   if (!value) return "";
@@ -58,7 +64,12 @@ function getCanonicalHosts(): string[] {
   const envCanonicalHosts = CANONICAL_HOSTS_ENV.split(",")
     .map(parseHost)
     .filter(Boolean);
-  const hosts = new Set<string>([canonicalHost, ...envCanonicalHosts, DEFAULT_CANONICAL_HOST]);
+  const hosts = new Set<string>([
+    canonicalHost,
+    ...envCanonicalHosts,
+    ...KNOWN_CANONICAL_HOSTS,
+    DEFAULT_CANONICAL_HOST,
+  ]);
   return Array.from(hosts);
 }
 
