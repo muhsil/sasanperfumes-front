@@ -23,6 +23,10 @@ class sasanperfumes_Security {
     private $frontend_redirect_url = 'https://shapehive.com';
 
     public function __construct() {
+        $this->frontend_redirect_url = untrailingslashit(
+            get_option('sasanperfumes_frontend_url', $this->frontend_redirect_url)
+        );
+
         $this->disable_xmlrpc();
         $this->hide_wp_version();
         $this->block_user_enumeration();

@@ -1194,7 +1194,14 @@ function sasanperfumes_settings_cors_handling() {
     remove_filter('rest_pre_serve_request','rest_send_cors_headers');
     add_filter('rest_pre_serve_request', function($value) {
         $origin = get_http_origin();
-        $allowed = array('https://shapehive.com','https://cms.shapehive.com','http://localhost:3000','http://localhost:3001');
+        $allowed = array(
+            'https://shapehive.com',
+            'https://qa.shapehive.com',
+            'https://cms.shapehive.com',
+            'https://qa.cms.shapehive.com',
+            'http://localhost:3000',
+            'http://localhost:3001',
+        );
         header('Access-Control-Allow-Origin: '.(in_array($origin,$allowed)?esc_url_raw($origin):'*'));
         header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
         header('Access-Control-Allow-Credentials: true');

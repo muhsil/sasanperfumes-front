@@ -710,7 +710,7 @@ function sasanperfumes_rest_get_product_page($request) {
 function sasanperfumes_product_page_row_actions($actions, $post) {
     if ($post->post_type !== 'sasanperfumes_product_page') return $actions;
     $slug = $post->post_name;
-    $base = defined('sasanperfumes_FRONTEND_URL') ? sasanperfumes_FRONTEND_URL : 'https://shapehive.com';
+    $base = untrailingslashit(get_option('sasanperfumes_frontend_url', 'https://shapehive.com'));
     $actions['view_en'] = '<a href="' . esc_url($base . '/en/products/' . $slug) . '" target="_blank">View EN</a>';
     $actions['view_ar'] = '<a href="' . esc_url($base . '/ar/products/' . $slug) . '" target="_blank">View AR</a>';
     return $actions;
