@@ -57,6 +57,17 @@ function sasanperfumes_get_frontend_url_map(): array {
     return sasanperfumes_parse_frontend_url_map($from_site);
 }
 
+function sasanperfumes_get_frontend_url_map_example(): array {
+    return array(
+        'cms.shapehive.com' => 'https://shapehive.com',
+        'qa.cms.shapehive.com' => 'https://qa.shapehive.com',
+        'cms.om.shapehive.com' => 'https://om.shapehive.com',
+        'om.cms.shapehive.com' => 'https://om.shapehive.com',
+        'cms.sa.shapehive.com' => 'https://sa.shapehive.com',
+        'sa.cms.shapehive.com' => 'https://sa.shapehive.com',
+    );
+}
+
 function sasanperfumes_render_multisite_frontend_settings_page() {
     if (!current_user_can('manage_network_options')) {
         wp_die('You do not have sufficient permissions to access this page.');
@@ -68,7 +79,9 @@ function sasanperfumes_render_multisite_frontend_settings_page() {
 
     $network_default = untrailingslashit(trim((string) get_site_option('sasanperfumes_frontend_url', 'https://shapehive.com')));
     $network_map     = sasanperfumes_get_frontend_url_map();
-    $map_text        = sasanperfumes_format_frontend_url_map_text($network_map);
+    $map_text        = sasanperfumes_format_frontend_url_map_text(
+        !empty($network_map) ? $network_map : sasanperfumes_get_frontend_url_map_example()
+    );
     ?>
     <div class="wrap">
         <h1>Frontend URL Mapping (Network)</h1>
@@ -104,8 +117,16 @@ function sasanperfumes_render_multisite_frontend_settings_page() {
                         </p>
                         <pre><code>{
   "cms.shapehive.com": "https://shapehive.com",
-  "qa.cms.shapehive.com": "https://qa.shapehive.com"
+  "qa.cms.shapehive.com": "https://qa.shapehive.com",
+  "cms.om.shapehive.com": "https://om.shapehive.com",
+  "om.cms.shapehive.com": "https://om.shapehive.com",
+  "cms.sa.shapehive.com": "https://sa.shapehive.com",
+  "sa.cms.shapehive.com": "https://sa.shapehive.com"
 }</code></pre>
+                        <p class="description">
+                            Enter host names exactly as used by each site (without ports).
+                            You can keep either an explicit domain or keep this section blank and update it later.
+                        </p>
                     </td>
                 </tr>
             </table>

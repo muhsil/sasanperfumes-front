@@ -9,6 +9,10 @@ const cmsApiUrl = (process.env.NEXT_PUBLIC_WC_API_URL || "https://cms.shapehive.
 const imageHostFallbacks = [
   "cms.shapehive.com",
   "qa.cms.shapehive.com",
+  "cms.om.shapehive.com",
+  "cms.sa.shapehive.com",
+  "om.cms.shapehive.com",
+  "sa.cms.shapehive.com",
 ];
 const extraImageHosts = (
   process.env.NEXT_PUBLIC_CMS_IMAGE_HOSTS ||

@@ -27,6 +27,12 @@ function getAllowedHosts(): string[] {
     ...canonicalHosts,
     "cms.shapehive.com",
     "qa.cms.shapehive.com",
+    "cms.om.shapehive.com",
+    "cms.sa.shapehive.com",
+    "om.cms.shapehive.com",
+    "sa.cms.shapehive.com",
+    "om.shapehive.com",
+    "sa.shapehive.com",
     cmsHostname,
     ...mediaHostNames,
   ]);

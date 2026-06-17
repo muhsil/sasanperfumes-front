@@ -38,7 +38,17 @@ export const canonicalHost =
 export const cmsHostname = urlHost(cmsUrl, DEFAULT_CMS_URL.replace(/^https?:\/\//, ""));
 
 export const mediaHostNames = Array.from(
-  new Set([cmsHostname, "cms.shapehive.com", "qa.cms.shapehive.com"])
+  new Set([
+    cmsHostname,
+    "cms.shapehive.com",
+    "qa.cms.shapehive.com",
+    "cms.om.shapehive.com",
+    "cms.sa.shapehive.com",
+    "om.cms.shapehive.com",
+    "sa.cms.shapehive.com",
+    "om.shapehive.com",
+    "sa.shapehive.com",
+  ])
 );
 
 export const siteConfig = {
