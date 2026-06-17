@@ -10,7 +10,6 @@ export function isWordPressMediaUrl(src?: string): boolean {
   const hostNames = new Set([
     ...siteConfig?.mediaHostNames,
     "cms.shapehive.com",
-    "qa.cms.shapehive.com",
   ]);
 
   return src.includes("/wp-content/uploads") || Array.from(hostNames).some((host) => src.includes(host));

@@ -60,11 +60,9 @@ function sasanperfumes_get_frontend_url_map(): array {
 function sasanperfumes_get_frontend_url_map_example(): array {
     return array(
         'cms.shapehive.com' => 'https://shapehive.com',
-        'qa.cms.shapehive.com' => 'https://qa.shapehive.com',
-        'cms.om.shapehive.com' => 'https://om.shapehive.com',
-        'om.cms.shapehive.com' => 'https://om.shapehive.com',
-        'cms.sa.shapehive.com' => 'https://sa.shapehive.com',
-        'sa.cms.shapehive.com' => 'https://sa.shapehive.com',
+        'qa.shapehive.com' => 'https://qa.shapehive.com',
+        'om.shapehive.com' => 'https://om.shapehive.com',
+        'sa.shapehive.com' => 'https://sa.shapehive.com',
     );
 }
 
@@ -117,11 +115,9 @@ function sasanperfumes_render_multisite_frontend_settings_page() {
                         </p>
                         <pre><code>{
   "cms.shapehive.com": "https://shapehive.com",
-  "qa.cms.shapehive.com": "https://qa.shapehive.com",
-  "cms.om.shapehive.com": "https://om.shapehive.com",
-  "om.cms.shapehive.com": "https://om.shapehive.com",
-  "cms.sa.shapehive.com": "https://sa.shapehive.com",
-  "sa.cms.shapehive.com": "https://sa.shapehive.com"
+  "qa.shapehive.com": "https://qa.shapehive.com",
+  "om.shapehive.com": "https://om.shapehive.com",
+  "sa.shapehive.com": "https://sa.shapehive.com"
 }</code></pre>
                         <p class="description">
                             Enter host names exactly as used by each site (without ports).

@@ -92,9 +92,9 @@ WC_CONSUMER_SECRET=cs_xxxxx
 For QA:
 ```
 NEXT_PUBLIC_SITE_URL=https://qa.shapehive.com
-NEXT_PUBLIC_WC_API_URL=https://qa.cms.shapehive.com
+NEXT_PUBLIC_WC_API_URL=https://cms.shapehive.com
 NEXT_PUBLIC_CANONICAL_HOST=https://qa.shapehive.com
-NEXT_PUBLIC_WORDPRESS_GRAPHQL_URL=https://qa.cms.shapehive.com/graphql
+NEXT_PUBLIC_WORDPRESS_GRAPHQL_URL=https://cms.shapehive.com/graphql
 ```
 
 5. Run the development server:
