@@ -281,6 +281,9 @@ add_action('wp_ajax_sasanperfumes_search_products', function() {
 // Include Settings module (homepage, header, SEO, mobile settings)
 require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-settings.php';
 
+// Multisite helpers used across classes for backend/frontend URL resolution.
+require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-multisite.php';
+
 // Include Home Sections module (Our Story, Why Choose Us, FAQ, SEO Content)
 require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-home-sections.php';
 

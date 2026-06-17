@@ -16,7 +16,7 @@ class sasanperfumes_Frontend_Urls {
     private $frontend_url = '';
 
     public function __construct() {
-        $this->frontend_url = get_option('sasanperfumes_frontend_url', 'https://shapehive.com');
+        $this->frontend_url = sasanperfumes_get_frontend_url();
 
         if (empty($this->frontend_url)) {
             return;

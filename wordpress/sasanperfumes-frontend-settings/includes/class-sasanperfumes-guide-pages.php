@@ -523,7 +523,7 @@ function sasanperfumes_get_guide_by_slug($request) {
 function sasanperfumes_guide_row_actions($actions, $post) {
     if ($post->post_type !== 'sasanperfumes_guide') return $actions;
     $slug = get_post_meta($post->ID, '_sasanperfumes_guide_slug', true) ?: sanitize_title($post->post_title);
-    $base = untrailingslashit(get_option('sasanperfumes_frontend_url', 'https://shapehive.com'));
+    $base = untrailingslashit(sasanperfumes_get_frontend_url());
     $actions['view_en'] = '<a href="' . esc_url($base . '/en/guides/' . $slug) . '" target="_blank">View EN</a>';
     $actions['view_ar'] = '<a href="' . esc_url($base . '/ar/guides/' . $slug) . '" target="_blank">View AR</a>';
     return $actions;
@@ -533,7 +533,7 @@ function sasanperfumes_guide_row_actions($actions, $post) {
 function sasanperfumes_guide_view_links($post) {
     if ($post->post_type !== 'sasanperfumes_guide') return;
     $slug = get_post_meta($post->ID, '_sasanperfumes_guide_slug', true) ?: sanitize_title($post->post_title);
-    $base = untrailingslashit(get_option('sasanperfumes_frontend_url', 'https://shapehive.com'));
+    $base = untrailingslashit(sasanperfumes_get_frontend_url());
     echo '<div class="notice notice-info inline" style="margin:10px 0;padding:10px 15px;">';
     echo '<strong>View on site:</strong> ';
     echo '<a href="' . esc_url($base . '/en/guides/' . $slug) . '" target="_blank" class="button button-small" style="margin-left:8px;">View EN</a> ';

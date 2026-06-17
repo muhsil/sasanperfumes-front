@@ -24,7 +24,7 @@ class sasanperfumes_Security {
 
     public function __construct() {
         $this->frontend_redirect_url = untrailingslashit(
-            get_option('sasanperfumes_frontend_url', $this->frontend_redirect_url)
+            sasanperfumes_get_frontend_url($this->frontend_redirect_url)
         );
 
         $this->disable_xmlrpc();

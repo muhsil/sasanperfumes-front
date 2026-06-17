@@ -97,7 +97,7 @@ function sasanperfumes_referral_get_info(WP_REST_Request $req) {
 
     $code     = sasanperfumes_referral_get_code($customer_id);
     $referred = (int) get_user_meta($customer_id, 'sasanperfumes_referral_count', true);
-    $site_url = get_option('sasanperfumes_frontend_url', home_url());
+    $site_url = sasanperfumes_get_frontend_url(home_url());
 
     return rest_ensure_response([
         'referral_code'  => $code,
