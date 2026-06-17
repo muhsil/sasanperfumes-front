@@ -26,6 +26,7 @@ function getAllowedHosts(): string[] {
     ...DEV_ALLOWED_HOSTS,
     ...canonicalHosts,
     "cms.shapehive.com",
+    "shapehive.com",
     "qa.shapehive.com",
     "om.shapehive.com",
     "sa.shapehive.com",
