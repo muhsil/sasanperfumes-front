@@ -92,7 +92,7 @@ export function FeaturedProductsSlider({
       <div className="px-5 md:px-7 lg:px-12">
         <div className="mb-6 flex flex-col gap-4 md:mb-8 md:flex-row md:items-end md:justify-between">
           <div className={isRTL ? "text-right" : "text-left"}>
-            <h2 className="text-2xl md:text-3xl font-normal text-brand-primary">
+            <h2 className="text-xl md:text-2xl font-normal text-brand-primary">
               {settings.section_title}
             </h2>
             {settings.section_subtitle && (

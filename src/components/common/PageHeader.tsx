@@ -41,7 +41,7 @@ export function PageHeader({
         </div>
       )}
       <div className={cn("max-w-[820px]", isRTL && "ms-auto text-right")}>
-        <h1 className="font-title text-[28px] leading-none text-brand-primary md:text-[44px]">
+        <h1 className="font-title text-[26px] leading-tight text-brand-primary md:text-[34px]">
           {decodeHtmlEntities(title)}
         </h1>
         {subtitle && (

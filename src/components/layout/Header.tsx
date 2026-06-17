@@ -246,7 +246,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                         href={item.href}
                         onClick={handleBrandsMegaMenuClose}
                         className={cn(
-                          "group relative flex items-center gap-1 whitespace-nowrap text-[11px] font-bold uppercase tracking-[0.14em] text-brand-primary transition-colors hover:text-brand-primary",
+                          "group relative flex items-center gap-1 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-primary transition-colors hover:text-brand-primary",
                           isBrandsMegaMenuOpen && "text-brand-primary"
                         )}
                       >
@@ -267,7 +267,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                   <Link
                     key={item.name}
                     href={item.href}
-                    className="group relative shrink-0 whitespace-nowrap text-[11px] font-bold uppercase tracking-[0.14em] text-brand-primary transition-colors hover:text-brand-primary"
+                    className="group relative shrink-0 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-primary transition-colors hover:text-brand-primary"
                   >
                     {item.name}
                     <span className="absolute inset-x-0 -bottom-1 h-px origin-left scale-x-0 bg-brand-gold transition-transform duration-300 group-hover:scale-x-100" />

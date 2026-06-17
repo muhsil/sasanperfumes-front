@@ -161,7 +161,7 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
           <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-12">
           <div className="border-b border-white/10 pb-8 lg:border-b-0 lg:border-e lg:pe-12">
             <p className="mb-4 text-[11px] font-semibold uppercase text-brand-gold">
-              {siteSettings?.tagline || "Fragrance house"}
+              {siteSettings?.tagline || "Logo"}
             </p>
             {siteSettings?.logo?.url ? (
               <Image
@@ -169,12 +169,12 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
                 alt={siteSettings.logo.alt || siteConfig.name}
                 width={240}
                 height={96}
-                className="h-10 w-auto md:h-12"
+                className="h-8 w-auto md:h-10"
                 style={{ width: "auto", height: "auto" }}
                 unoptimized={shouldUseUnoptimizedImage(siteSettings.logo.url)}
               />
             ) : (
-              <span className="font-title text-4xl leading-none text-brand-ivory md:text-5xl">
+              <span className="font-title text-2xl leading-none text-brand-ivory md:text-3xl">
                 {siteConfig.name}
               </span>
             )}

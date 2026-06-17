@@ -118,7 +118,7 @@ export function ProductSection({
       <div className="px-5 md:px-7 lg:px-12">
         <div className="mb-4 flex flex-col gap-3 md:mb-5 md:flex-row md:items-end md:justify-between">
           <div className={isRTL ? "text-right" : "text-left"}>
-            <h2 className="font-title text-2xl text-brand-primary md:text-3xl">
+            <h2 className="font-title text-xl text-brand-primary md:text-2xl">
               {settings.section_title}
             </h2>
             {settings.section_subtitle && (

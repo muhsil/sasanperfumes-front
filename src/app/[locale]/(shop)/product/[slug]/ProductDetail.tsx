@@ -81,6 +81,25 @@ function sanitizeProductDescription(html: string): string {
     "ÙŠÙ‡Ù†Ø§ÙˆÙ† Ù‚Ù‡Ø§Øª Ø§Ù„ØªØ¹Ø¯Ø§",
   ];
 
+  blockedHeadingText.push(
+    "shop by categories",
+    "trust speed and service",
+    "trusted payment methods and protected checkout",
+    "fast delivery",
+    "simple returns",
+    "why shop with us?",
+    "why shop with us trust, speed and service",
+    "why shop with us trust speed and service",
+    "why shop with us trust speed and service.",
+    "trust, speed, and service.",
+    "shop by categories",
+    "thiqa, sor3a, wa khidma",
+    "thiqa, sor3a w al khidma",
+    "thalak ashoraaa min sasan",
+  );
+  const normalizedBlockedHeadingText = blockedHeadingText.map((token) =>
+    token.toLowerCase().trim()
+  );
   const blockPattern = blockedHeadingText
     .map((token) => token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
     .join("|");
@@ -102,6 +121,18 @@ function sanitizeProductDescription(html: string): string {
   sanitized = sanitized.replace(/Add to Wishlist/gi, "");
   sanitized = sanitized.replace(/<\/?b[^>]*>/gi, "");
   sanitized = sanitized.replace(/<\/?strong[^>]*>/gi, "");
+  sanitized = sanitized.replace(
+    /<\s*(h[1-6]|p|div|span|strong|b)\b[^>]*>[\s\S]*?<\/\s*\1\s*>/gi,
+    (match) => {
+      const text = decodeHtmlEntities(match.replace(/<[^>]*>/g, " "))
+        .toLowerCase()
+        .normalize("NFKC")
+        .replace(/[\u200e\u200f\u00ad]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+      return normalizedBlockedHeadingText.some((token) => text.includes(token)) ? "" : match;
+    }
+  );
   // Strip <a> tags but keep their text content (links point to CMS URLs that don't work on frontend)
   sanitized = sanitized.replace(/<a[^>]*>(.*?)<\/a>/gi, "$1");
   // Clean up extra Word/Office formatting spans
@@ -595,8 +626,9 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
   const convertedShippingThreshold = freeShippingThreshold ? Math.ceil(convertPrice(freeShippingThreshold)) : null;
     void currencyInfo;
     void convertedShippingThreshold;
-    const rating = Number(product.average_rating || 0);
+  const rating = Number(product.average_rating || 0);
   const reviewCount = Number(product.review_count || 0);
+  const showReviews = reviewsEnabled && reviewCount > 0;
 
   useEffect(() => {
     setDetailsMounted(true);
@@ -1391,11 +1423,11 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           </div>
 
           {/* Title */}
-          <h1 className="font-title w-full text-[32px] leading-tight text-brand-primary sm:text-[36px] md:text-[44px] lg:text-[52px]">
-            {productDisplayName}
-          </h1>
+            <h1 className="font-title w-full text-[28px] leading-tight text-brand-primary sm:text-[32px] md:text-[38px] lg:text-[44px]">
+              {productDisplayName}
+            </h1>
 
-          {reviewsEnabled && reviewCount > 0 && (
+          {showReviews && (
             <a
               href="#reviews"
               className={`mt-4 inline-flex items-center gap-2 text-sm font-normal text-brand-primary/70 transition-opacity hover:opacity-70 ${
@@ -1771,7 +1803,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
         </aside>
       </div>
 
-      {reviewsEnabled && (
+       {showReviews && (
         <div id="reviews">
           <ProductReviews productId={product.id} locale={locale} />
         </div>

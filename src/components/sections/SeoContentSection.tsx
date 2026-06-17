@@ -23,7 +23,7 @@ export function SeoContentSection({ title, paragraphs, backgroundImage, isRTL = 
               {isRTL ? "Fragrance Guide" : "Fragrance Notes"}
             </p>
             {title && (
-              <h2 className="max-w-xl font-title text-3xl leading-none text-brand-primary md:text-4xl lg:text-5xl">
+              <h2 className="max-w-xl font-title text-[28px] leading-tight text-brand-primary md:text-[34px]">
                 {title}
               </h2>
             )}

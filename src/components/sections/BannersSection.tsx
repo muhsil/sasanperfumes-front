@@ -48,7 +48,7 @@ export function BannersSectionSkeleton({ count = 2 }: { count?: number }) {
   };
 
   return (
-    <section className="bg-brand-beige py-8 md:py-10 lg:py-12">
+    <section className="bg-transparent py-8 md:py-10 lg:py-12">
       <div>
         <div className={`grid gap-4 px-5 md:px-7 lg:px-12 ${getGridClass()}`}>
           {Array.from({ length: count }).map((_, i) => (
@@ -101,7 +101,7 @@ export function BannersSection({
   };
 
   return (
-    <section className={`lazy-section bg-brand-beige py-8 md:py-10 lg:py-12 ${className} ${getVisibilityClass()}`}>
+    <section className={`lazy-section bg-transparent py-8 md:py-10 lg:py-12 ${className} ${getVisibilityClass()}`}>
       <div>
         <div className={`grid gap-4 px-5 md:px-7 lg:px-12 ${getGridClass()}`}>
           {banners.map((banner, index) => {
@@ -150,7 +150,7 @@ export function BannersSection({
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent transition-opacity duration-700 group-hover:opacity-90" />
                     <div className="absolute inset-x-0 bottom-0 p-5 text-white sm:p-7 lg:p-10">
                       {banner.title && (
-                        <h3 className="max-w-[14ch] font-title text-2xl leading-none text-white sm:text-3xl lg:text-4xl">
+                        <h3 className="max-w-[14ch] font-title text-xl leading-none text-white sm:text-2xl lg:text-3xl">
                           {decodeHtmlEntities(banner.title)}
                         </h3>
                       )}
