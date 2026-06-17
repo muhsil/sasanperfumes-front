@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { redirect } from "next/navigation";
 import { disableRuntimeCache, siteConfig } from "@/config/site";
+import { backendHeaders } from "@/lib/utils/backendFetch";
 
 interface SizeGuidePageProps {
   params: Promise<{ locale: string }>;
@@ -10,7 +11,9 @@ async function isSizeGuideEnabled(): Promise<boolean> {
   try {
     const res = await fetch(
       `${siteConfig.apiUrl}/wp-json/sasanperfumes/v1/advanced/scent-size-guide`,
-      disableRuntimeCache ? { cache: "no-store" } : { next: { revalidate: 300 } }
+      disableRuntimeCache
+        ? { cache: "no-store", headers: backendHeaders() }
+        : { next: { revalidate: 300 }, headers: backendHeaders() }
     );
     if (!res.ok) return false;
     const data = await res.json();

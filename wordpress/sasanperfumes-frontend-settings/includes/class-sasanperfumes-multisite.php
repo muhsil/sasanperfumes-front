@@ -210,3 +210,128 @@ function sasanperfumes_get_frontend_url($fallback = 'https://shapehive.com'): st
 
     return $fallback_url;
 }
+
+function sasanperfumes_normalize_rest_frontend_host(?string $host): string {
+    if (!is_string($host)) {
+        return "";
+    }
+
+    $clean = strtolower(trim($host));
+    if (!$clean) return "";
+
+    if (strpos($clean, ",") !== false) {
+        $parts = explode(",", $clean);
+        $clean = trim($parts[0]);
+    }
+
+    $clean = preg_replace('/^https?:\/\//', "", $clean);
+    if (!$clean) return "";
+
+    $clean = preg_replace('/\/.*$/', "", $clean);
+    $clean = preg_replace('/:\d+$/', "", $clean);
+    $clean = trim($clean, " \t\n\r\0\x0B");
+
+    return preg_replace('/^www\./', "", $clean);
+}
+
+function sasanperfumes_get_incoming_frontend_host(): string {
+    if (!is_multisite()) return '';
+
+    $candidates = [];
+    $candidates[] = $_SERVER['HTTP_X_FRONTEND_HOST'] ?? '';
+    $candidates[] = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? '';
+    $candidates[] = $_SERVER['HTTP_ORIGIN'] ?? '';
+    $candidates[] = $_SERVER['HTTP_REFERER'] ?? '';
+    $candidates[] = $_GET['frontend_host'] ?? '';
+
+    foreach ($candidates as $candidate) {
+        $normalized = sasanperfumes_normalize_rest_frontend_host(is_string($candidate) ? $candidate : '');
+        if ($normalized !== "") {
+            return $normalized;
+        }
+    }
+
+    return "";
+}
+
+function sasanperfumes_find_blog_id_for_frontend_host(string $frontend_host): int {
+    if (!is_multisite() || $frontend_host === "") {
+        return 0;
+    }
+
+    static $cache = [];
+    if (isset($cache[$frontend_host])) {
+        return $cache[$frontend_host];
+    }
+
+    $target = 0;
+    $frontend_host = sasanperfumes_normalize_frontend_host($frontend_host);
+    if ($frontend_host === "") {
+        $cache[$frontend_host] = 0;
+        return 0;
+    }
+
+    $sites = get_sites([
+        'number' => 0,
+        'fields' => 'ids',
+    ]);
+
+    foreach ((array) $sites as $site_id) {
+        $site_frontend_url = trim((string) get_blog_option((int) $site_id, 'sasanperfumes_frontend_url', ''));
+        if (!$site_frontend_url) {
+            $site_frontend_url = get_home_url((int) $site_id);
+        }
+
+        $site_host = sasanperfumes_normalize_frontend_host($site_frontend_url);
+        if ($site_host !== "" && $site_host === $frontend_host) {
+            $target = (int) $site_id;
+            break;
+        }
+    }
+
+    $cache[$frontend_host] = $target;
+    return $target;
+}
+
+function sasanperfumes_apply_rest_blog_switch(): int {
+    if (!is_multisite()) {
+        return 0;
+    }
+
+    $frontend_host = sasanperfumes_get_incoming_frontend_host();
+    if ($frontend_host === "") {
+        return 0;
+    }
+
+    $target = sasanperfumes_find_blog_id_for_frontend_host($frontend_host);
+    if (!$target || $target === get_current_blog_id()) {
+        return 0;
+    }
+
+    switch_to_blog($target);
+    return $target;
+}
+
+function sasanperfumes_restore_rest_blog_switch(int $switched_blog_id): void {
+    if ($switched_blog_id > 0 && function_exists('is_switched') && function_exists('restore_current_blog') && is_switched()) {
+        restore_current_blog();
+    }
+}
+
+if (is_multisite()) {
+    add_filter('rest_pre_dispatch', function($result, $server, $request) {
+        $switched = sasanperfumes_apply_rest_blog_switch();
+        if ($switched > 0) {
+            $GLOBALS['sasanperfumes_rest_blog_switched_id'] = $switched;
+        }
+        return $result;
+    }, 0, 3);
+
+    add_filter('rest_post_dispatch', function($result, $server, $request, $response) {
+        if (!empty($GLOBALS['sasanperfumes_rest_blog_switched_id'])) {
+            sasanperfumes_restore_rest_blog_switch((int) $GLOBALS['sasanperfumes_rest_blog_switched_id']);
+            $GLOBALS['sasanperfumes_rest_blog_switched_id'] = 0;
+        }
+        return $result;
+    }, 0, 4);
+}

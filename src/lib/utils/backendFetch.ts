@@ -4,16 +4,32 @@ const API_BASE = siteConfig.apiUrl;
 const BACKEND_USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36";
 const LEGACY_MEDIA_HOSTS = [["cms", ["fragrance", "network"].join(""), "ae"].join(".")];
-const LEGACY_BRAND_NAMES = [
-  ["Fragrance", "Network"].join(" "),
-];
+const LEGACY_BRAND_NAMES = [["Fragrance", "Network"].join(" ")];
+
+function headersToRecord(headers?: HeadersInit): Record<string, string> {
+  if (!headers) return {};
+
+  if (typeof Headers !== "undefined" && headers instanceof Headers) {
+    const result: Record<string, string> = {};
+    headers.forEach((value, key) => {
+      result[key] = value;
+    });
+    return result;
+  }
+
+  if (Array.isArray(headers)) {
+    return Object.fromEntries(headers);
+  }
+
+  return { ...(headers as Record<string, string>) };
+}
 
 export function backendHeaders(extra?: HeadersInit): HeadersInit {
-  return {
+  return headersToRecord({
     "Accept": "application/json",
     "User-Agent": BACKEND_USER_AGENT,
     ...extra,
-  };
+  });
 }
 
 export function backendPostHeaders(extra?: HeadersInit): HeadersInit {
@@ -35,7 +51,11 @@ export function noCacheUrl(url: string): string {
 }
 
 export async function fetchBackend(url: string, init?: RequestInit): Promise<Response> {
-  const response = await fetch(url, init);
+  const requestHeaders = init?.headers ? headersToRecord(init.headers) : undefined;
+  const response = await fetch(url, {
+    ...init,
+    headers: requestHeaders || init?.headers,
+  });
 
   if (response.status !== 404 && response.status !== 403) {
     return response;

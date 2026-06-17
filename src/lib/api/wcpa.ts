@@ -6,6 +6,7 @@
  */
 
 import { disableRuntimeCache, siteConfig, type Locale } from "@/config/site";
+import { backendHeaders } from "@/lib/utils/backendFetch";
 import type { WCPAProductAddons, WCPAForm, WCPAFormValues, WCPAField } from "@/types/wcpa";
 
 const API_BASE = `${siteConfig.apiUrl}/wp-json`;
@@ -36,6 +37,7 @@ export async function getProductAddons(
             revalidate: 300, // Addon forms rarely change - cache for 5 minutes
             tags: ["product-addons", `product-addons-${productId}`],
           },
+          headers: backendHeaders(),
         });
 
     if (!response.ok) {
@@ -78,6 +80,7 @@ export async function getProductAddonsBySlug(
             revalidate: 60,
             tags: ["product-addons", `product-addons-${slug}`],
           },
+          headers: backendHeaders(),
         });
 
     if (!response.ok) {

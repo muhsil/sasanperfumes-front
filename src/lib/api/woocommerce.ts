@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { disableRuntimeCache, siteConfig, API_BASE_CURRENCY, type Locale, type Currency } from "@/config/site";
+import { backendHeaders } from "@/lib/utils/backendFetch";
 import type {
   WCProduct,
   WCCategory,
@@ -94,12 +95,13 @@ async function fetchAPI<T>(
   url = `${url}${separator}currency=${currencyToUse}`;
 
   const response = await fetch(url, disableRuntimeCache
-    ? { cache: "no-store" }
+    ? { cache: "no-store", headers: backendHeaders() }
     : {
         next: {
           revalidate,
           tags,
         },
+        headers: backendHeaders(),
       });
 
   if (!response.ok) {
@@ -130,12 +132,13 @@ async function fetchAPIWithPagination<T>(
   url = `${url}${separator}currency=${currencyToUse}`;
 
   const response = await fetch(url, disableRuntimeCache
-    ? { cache: "no-store" }
+    ? { cache: "no-store", headers: backendHeaders() }
     : {
         next: {
           revalidate,
           tags,
         },
+        headers: backendHeaders(),
       });
 
   if (!response.ok) {
@@ -873,6 +876,7 @@ export async function getBundleConfig(
             revalidate: 300, // Bundle config rarely changes - cache for 5 minutes
             tags: ["bundle-config", `bundle-config-${productSlug}`, locale ? `bundle-config-${productSlug}-${locale}` : ""].filter(Boolean),
         },
+        headers: backendHeaders(),
       }
     );
 
@@ -948,6 +952,7 @@ export async function getFreeGiftProductInfo(currency?: string): Promise<FreeGif
     }
 
     const response = await fetch(url, {
+      headers: backendHeaders(),
       next: {
         revalidate: 600, // Free gift rules rarely change - cache for 10 minutes
         tags: ["free-gifts"],
@@ -1034,6 +1039,7 @@ export async function getHiddenProductIds(): Promise<number[]> {
     
     const response = await fetch(url, {
       headers: {
+        ...(backendHeaders() as Record<string, string>),
         Authorization: `Basic ${Buffer.from(`${consumerKey}:${consumerSecret}`).toString("base64")}`,
       },
       next: {
@@ -1074,6 +1080,7 @@ export async function getBundleEnabledProductSlugs(): Promise<string[]> {
           revalidate: 60,
           tags: ["bundle-enabled-products"],
         },
+        headers: backendHeaders(),
       }
     );
 
@@ -1086,6 +1093,7 @@ export async function getBundleEnabledProductSlugs(): Promise<string[]> {
             revalidate: 60,
             tags: ["bundles"],
           },
+          headers: backendHeaders(),
         }
       );
 
@@ -1160,6 +1168,7 @@ export async function getProductUpsellIds(
 
     const response = await fetch(url, {
       headers: {
+        ...(backendHeaders() as Record<string, string>),
         Authorization: `Basic ${Buffer.from(`${process.env.WC_CONSUMER_KEY}:${process.env.WC_CONSUMER_SECRET}`).toString("base64")}`,
       },
       next: {
@@ -1284,6 +1293,7 @@ export async function getFeaturedProducts(params?: {
     
     const response = await fetch(url, {
       headers: {
+        ...(backendHeaders() as Record<string, string>),
         Authorization: `Basic ${Buffer.from(`${process.env.WC_CONSUMER_KEY}:${process.env.WC_CONSUMER_SECRET}`).toString("base64")}`,
       },
       next: {

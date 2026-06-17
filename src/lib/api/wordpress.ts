@@ -1,6 +1,7 @@
 import { disableRuntimeCache, siteConfig, type Locale } from "@/config/site";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { translateToArabic } from "@/config/menu";
+import { backendHeaders } from "@/lib/utils/backendFetch";
 import type {
   HomePageACF,
   SiteSettings,
@@ -26,12 +27,7 @@ import type {
 } from "@/types/wordpress";
 
 const WP_API_BASE = `${siteConfig.apiUrl}/wp-json`;
-const WP_API_USER_AGENT =
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36";
-const WP_API_HEADERS: HeadersInit = {
-  Accept: "application/json",
-  "User-Agent": WP_API_USER_AGENT,
-};
+const WP_API_HEADERS = backendHeaders();
 const WP_NAMESPACE_FALLBACKS = ["sasanperfumes/v1"];
 
 function formatFetchError(error: unknown): string {
@@ -635,11 +631,11 @@ async function fetchWPAPI<T>(
   const urls = buildWPAPIUrls(endpoint, locale);
 
   try {
-    const shouldBypassCache = disableRuntimeCache || noCache;
-    const fetchOptions: RequestInit = shouldBypassCache
-      ? { headers: WP_API_HEADERS, cache: "no-store" }
-      : {
-          headers: WP_API_HEADERS,
+      const shouldBypassCache = disableRuntimeCache || noCache;
+      const fetchOptions: RequestInit = shouldBypassCache
+        ? { headers: backendHeaders(WP_API_HEADERS), cache: "no-store" }
+        : {
+          headers: backendHeaders(WP_API_HEADERS),
           next: {
             revalidate,
             tags,
@@ -650,7 +646,7 @@ async function fetchWPAPI<T>(
       let response = await fetch(url, fetchOptions);
 
       if (response.status === 403) {
-        response = await fetch(url);
+        response = await fetch(url, { headers: backendHeaders(WP_API_HEADERS) });
       }
 
       if (!response.ok) {
@@ -2108,7 +2104,10 @@ export async function getBlogPosts(page = 1, perPage = 12): Promise<{ posts: Blo
   const url = `/wp/v2/posts?per_page=${perPage}&page=${page}&_embed=true`;
   const response = await fetch(
     `${WP_API_BASE}${url}`,
-    disableRuntimeCache ? { cache: "no-store" } : { next: { revalidate: 300, tags: ["blog"] } }
+    {
+      ...(disableRuntimeCache ? { cache: "no-store" } : { next: { revalidate: 300, tags: ["blog"] } }),
+      headers: backendHeaders(),
+    }
   );
 
   if (!response.ok) return { posts: [], total: 0, totalPages: 0 };
@@ -2140,7 +2139,10 @@ export async function getBlogPost(slug: string): Promise<BlogPost | null> {
   const url = `/wp/v2/posts?slug=${encodeURIComponent(slug)}&_embed=true`;
   const response = await fetch(
     `${WP_API_BASE}${url}`,
-    disableRuntimeCache ? { cache: "no-store" } : { next: { revalidate: 300, tags: ["blog", `blog-${slug}`] } }
+    {
+      ...(disableRuntimeCache ? { cache: "no-store" } : { next: { revalidate: 300, tags: ["blog", `blog-${slug}`] } }),
+      headers: backendHeaders(),
+    }
   );
 
   if (!response.ok) return null;
