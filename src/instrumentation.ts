@@ -34,10 +34,12 @@ export async function register() {
       const requestHeaders = await getRequestHeaders();
       const explicitHost = requestHeaders.get("x-frontend-host");
       const forwardedHost = requestHeaders.get("x-forwarded-host");
+      const host = requestHeaders.get("host");
       const origin = requestHeaders.get("origin");
       const referer = requestHeaders.get("referer");
-      const host = explicitHost || forwardedHost || origin || referer || "";
-      return normalizeFrontendHost(host);
+      const candidates = [explicitHost, forwardedHost, host, origin, referer];
+      const selected = candidates.find((item) => Boolean(item)) ?? "";
+      return normalizeFrontendHost(selected);
     } catch {
       return "";
     }

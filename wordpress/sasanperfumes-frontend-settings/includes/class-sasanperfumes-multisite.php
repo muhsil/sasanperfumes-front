@@ -239,6 +239,7 @@ function sasanperfumes_get_incoming_frontend_host(): string {
 
     $candidates = [];
     $candidates[] = $_SERVER['HTTP_X_FRONTEND_HOST'] ?? '';
+    $candidates[] = $_SERVER['HTTP_HOST'] ?? '';
     $candidates[] = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? '';
     $candidates[] = $_SERVER['HTTP_ORIGIN'] ?? '';
     $candidates[] = $_SERVER['HTTP_REFERER'] ?? '';
