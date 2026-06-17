@@ -7,7 +7,16 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { getDictionary } from "@/i18n";
 import { generateMetadata as generateSeoMetadata, generateFAQJsonLd } from "@/lib/utils/seo";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { getPageSeo, getStaticPageContent, pickLocale, mapRepeater, getServices, getFeatureToggles } from "@/lib/api/wordpress";
+import {
+  getPageBySlug,
+  getPageSeo,
+  getStaticPageContent,
+  pickLocale,
+  mapRepeater,
+  getServices,
+  getFeatureToggles,
+  stripHtmlTags,
+} from "@/lib/api/wordpress";
 import { BLUR_DATA_URL } from "@/lib/utils";
 import { shouldUseUnoptimizedImage } from "@/lib/utils/image";
 import type { Locale } from "@/config/site";
@@ -191,7 +200,7 @@ export async function generateMetadata({
   const toggles = await getFeatureToggles();
   if (!toggles.sasanperfumes_about_enabled) return {};
   const pageContent = dictionary.pages.about;
-  const wpSeo = await getPageSeo("about", lang);
+  const wpSeo = (await getPageSeo("about", lang)) ?? (await getPageSeo("about-us", lang));
 
   return generateSeoMetadata({
     title: wpSeo?.title || pageContent.seo.title,
@@ -209,7 +218,17 @@ export default async function AboutPage({ params }: AboutPageProps) {
   if (!toggles.sasanperfumes_about_enabled) notFound();
   const dictionary = await getDictionary(locale as Locale);
   const isRTL = locale === "ar";
-  const wp = await getStaticPageContent("about");
+  const [wpPageConfig, wpPageConfigFallback, legacyWordPressPage] = await Promise.all([
+    getStaticPageContent("about"),
+    getStaticPageContent("about-us"),
+    getPageBySlug("about-us", locale as Locale),
+  ]);
+
+  const wp = wpPageConfig || wpPageConfigFallback;
+  const legacyTitle = legacyWordPressPage ? stripHtmlTags(legacyWordPressPage.title.rendered) : "";
+  const legacyBodyHtml = legacyWordPressPage?.content?.rendered || "";
+  const legacyBodyText = legacyBodyHtml ? stripHtmlTags(legacyBodyHtml) : "";
+  const hasLegacyWordPressContent = Boolean(legacyBodyText || legacyTitle);
   const aboutImages = {
     hero: pickImageUrl(wp?.heroImage, wp?.hero_image),
     story: pickImageUrl(wp?.storyImage, wp?.story_image),
@@ -295,6 +314,8 @@ export default async function AboutPage({ params }: AboutPageProps) {
   const hasMissionContent = Boolean(missionTitle || missionContent || visionTitle || visionContent);
   const hasIngredientsContent = Boolean(ingredientsTitle || ingredientsSubtitle || ingredientsDesc || ingredientItems.length > 0);
   const hasCtaContent = Boolean(ctaTitle || ctaSubtitle || (ctaButton && ctaLink));
+  const hasCMSContent = hasHeroContent || hasStoryContent || hasUniqueContent || hasJourneyContent || hasMissionContent || hasIngredientsContent || hasCtaContent;
+  const pageHeading = title || legacyTitle || dictionary.common.about;
 
   return (
     <main className="bg-white text-brand-primary">
@@ -310,6 +331,20 @@ export default async function AboutPage({ params }: AboutPageProps) {
       <JsonLd data={generateFAQJsonLd(brandFaqItems)} />
 
       <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} />
+
+      {!hasCMSContent && hasLegacyWordPressContent && (
+        <section className="bg-white px-5 py-16 md:px-7 md:py-20 lg:px-12 lg:py-28">
+          <div className="mx-auto max-w-4xl">
+            <h1 className="mb-8 text-3xl font-light leading-tight text-brand-primary md:text-5xl">
+              {pageHeading}
+            </h1>
+            <div
+              className="prose prose-stone max-w-none text-brand-primary/80 [&_p]:text-base [&_p]:leading-8 [&_img]:w-full [&_img]:rounded-lg"
+              dangerouslySetInnerHTML={{ __html: legacyBodyHtml }}
+            />
+          </div>
+        </section>
+      )}
 
       {(hasHeroContent || hasHeroMedia) && (
         <section className="bg-[#f8f3ef]">

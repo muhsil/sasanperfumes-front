@@ -150,7 +150,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
               color: topbarSettings?.textColor || "#f8f4ec",
             }}
           >
-            <div className="flex h-8 w-full items-center justify-center gap-2 px-5 md:px-7 lg:px-12">
+            <div className="mx-auto flex h-8 max-w-[80rem] items-center justify-center gap-2 px-5 md:px-7 lg:px-12">
               {topbarSettings?.link ? (
                 <a
                   href={topbarSettings.link}
@@ -178,10 +178,10 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
         )}
 
         {/* Row 1: Search/Currency/Language — Logo — Account/Cart */}
-        <div className="relative w-full px-3 py-1.5 md:px-5 md:py-2 lg:px-8">
+        <div className="w-full">
           <div
             className={cn(
-              "relative flex h-[4rem] items-center justify-between rounded-full border border-brand-border/70 px-2.5 transition-all duration-300 md:h-[5rem] md:px-5 xl:grid xl:grid-cols-[minmax(230px,1fr)_minmax(0,2fr)_minmax(230px,1fr)] xl:gap-5 xl:px-6",
+              "mx-auto flex h-[4rem] max-w-[80rem] items-center justify-between rounded-full border border-brand-border/70 px-5 py-1.5 transition-all duration-300 md:h-[5rem] md:px-5 xl:grid xl:grid-cols-[minmax(230px,1fr)_minmax(0,2fr)_minmax(230px,1fr)] xl:gap-5 xl:px-6",
               isScrolled
                 ? "bg-brand-ivory shadow-[0_12px_30px_rgba(20,15,10,0.12)]"
                 : "bg-brand-ivory/96 shadow-[0_16px_40px_rgba(20,15,10,0.12)] backdrop-blur-xl"
@@ -348,7 +348,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
 
         {/* Row 2: Desktop Navigation (centered) + MegaMenu */}
         <nav className="hidden">
-          <div className="flex w-full items-center justify-center gap-9 rounded-full border border-brand-border/65 bg-brand-ivory/86 px-5 py-3 shadow-[0_10px_28px_rgba(20,15,10,0.08)] md:px-7 lg:px-12">
+          <div className="mx-auto flex w-full max-w-[80rem] items-center justify-center gap-9 rounded-full border border-brand-border/65 bg-brand-ivory/86 px-5 py-3 shadow-[0_10px_28px_rgba(20,15,10,0.08)] md:px-7 lg:px-12">
             {navigation.map((item) => {
               if (item.hasMegaMenu) {
                 return (

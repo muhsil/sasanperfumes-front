@@ -1,7 +1,13 @@
 import { Suspense } from "react";
 import { getDictionary } from "@/i18n";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
-import { getNewProducts, getFreeGiftProductInfo, getBundleEnabledProductSlugs } from "@/lib/api/woocommerce";
+import {
+  getNewProducts,
+  getFreeGiftProductInfo,
+  getBundleEnabledProductSlugs,
+  getBestsellerProducts,
+  getFeaturedProducts,
+} from "@/lib/api/woocommerce";
 import { getHomePageSettings, getSeoSettings, getHomeSections } from "@/lib/api/wordpress";
 import {
   HeroSlider,
@@ -9,8 +15,10 @@ import {
   BannersSection,
   SeoContentSection,
   OurStorySection,
+  FeaturedProductsSlider,
 } from "@/components/sections";
 import { ProductSectionSkeleton } from "@/components/sections/ProductSection";
+import { FeaturedProductsSliderSkeleton } from "@/components/sections/FeaturedProductsSlider";
 import { siteConfig, type Locale } from "@/config/site";
 import type { Metadata } from "next";
 
@@ -39,8 +47,64 @@ export async function generateMetadata({
     locale: validLocale,
     pathname: "",
     keywords: isArabic
-      ? ["عطور فاخرة", "عطور عربية", "زيوت عطرية", "عناية بالجسم", "معطرات منزل", "ساسان للعطور", "عطور الإمارات", "شراء عطور اون لاين", "عود عربي", "هدايا عطرية", "عطور دبي", "بخور", "عطور طبيعية", "عطور نسائية", "عطور رجالية", "عطور أصلية", "عطور مسك", "عطور عنبر", "متجر عطور أون لاين الإمارات", "عطور فخمة دبي", "أفضل عطور عربية", "عطور هدايا فخمة", "بخور عود", "عطر شرقي", "توصيل عطور الإمارات", "عطر أروماتيك", "أروماتيك الإمارات", "أروماتيك دبي", "زيوت أروماتيك", "لوشن جسم أروماتيك", "كريم يد وجسم أروماتيك", "عطور وروائح أروماتيك", "علب هدايا أروماتيك", "عطر جيد", "عطور بأسعار معقولة الإمارات", "عطور رجالية ونسائية", "أفضل رائحة عطر", "عطر يدوم طويلاً الإمارات"]
-      : ["premium perfumes", "Arabian fragrances", "aromatic oils", "body care", "home fragrances", "Sasan Perfumes", "UAE perfume", "buy perfume online", "Arabian oud", "luxury perfume Dubai", "natural fragrance", "perfume gift sets", "oud perfume", "women perfume UAE", "men cologne Dubai", "bakhoor incense", "best perfume UAE", "handcrafted perfume", "niche perfume Dubai", "oriental fragrance", "musk perfume", "amber perfume", "online perfume store UAE", "luxury scent collection", "perfume delivery UAE", "aromatic perfume", "aromatic UAE", "aromatic Dubai", "aromatic oils", "aromatic body lotion", "aromatic hand and body lotion", "aromatic perfumes and fragrances", "aromatic gift boxes", "good perfume", "affordable perfume UAE", "perfume for men and women", "best smelling perfume", "long lasting scent UAE", "aromatic scent collection"],
+      ? [
+          "Luxury perfumes",
+          "Arabian fragrances",
+          "aromatic oils",
+          "body care",
+          "home fragrance",
+          "Oud perfume",
+          "Aromatic scents",
+          "Buy perfume online",
+          "Perfume gift sets",
+          "Sasan Perfumes",
+          "UAE perfume store",
+          "Saudi Arabia perfume",
+          "Natural fragrance",
+          "Long lasting perfume",
+          "Premium perfume shop",
+        ]
+      : [
+          "premium perfumes",
+          "Arabian fragrances",
+          "aromatic oils",
+          "body care",
+          "home fragrances",
+          "Sasan Perfumes",
+          "UAE perfume",
+          "buy perfume online",
+          "Arabian oud",
+          "luxury perfume Dubai",
+          "natural fragrance",
+          "perfume gift sets",
+          "oud perfume",
+          "women perfume UAE",
+          "men cologne Dubai",
+          "bakhoor incense",
+          "best perfume UAE",
+          "handcrafted perfume",
+          "niche perfume Dubai",
+          "oriental fragrance",
+          "musk perfume",
+          "amber perfume",
+          "online perfume store UAE",
+          "luxury scent collection",
+          "perfume delivery UAE",
+          "aromatic perfume",
+          "aromatic UAE",
+          "aromatic Dubai",
+          "aromatic oils",
+          "aromatic body lotion",
+          "aromatic hand and body lotion",
+          "aromatic perfumes and fragrances",
+          "aromatic gift boxes",
+          "good perfume",
+          "affordable perfume UAE",
+          "perfume for men and women",
+          "best smelling perfume",
+          "long lasting scent UAE",
+          "aromatic scent collection",
+        ],
   });
 
   return {
@@ -49,7 +113,7 @@ export async function generateMetadata({
   };
 }
 
-// ─── Async server component: New Products section ───
+// Async server component: New Products section
 // Fetches its own data so the hero/banners can render without waiting for products
 async function NewProductsSection({ locale, isRTL, dictionary, homeSettings }: {
   locale: Locale;
@@ -106,16 +170,114 @@ async function NewProductsSection({ locale, isRTL, dictionary, homeSettings }: {
   );
 }
 
-// ─── Main homepage component ───
-// Only fetches hero/banner settings for instant above-the-fold render.
-// Product sections stream in via Suspense boundaries.
+// Async server component: Bestseller section
+async function BestsellerProductsSection({ locale, isRTL, dictionary, homeSettings }: {
+  locale: Locale;
+  isRTL: boolean;
+  dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  homeSettings: Awaited<ReturnType<typeof getHomePageSettings>>;
+}) {
+  const [
+    { products: bestsellerProductsRaw },
+    { products: bestsellerProductsEn },
+    giftProductInfo,
+    bundleProductSlugs,
+  ] = await Promise.all([
+    getBestsellerProducts({ per_page: 20, locale }),
+    getBestsellerProducts({ per_page: 20, locale: "en" }),
+    getFreeGiftProductInfo(),
+    getBundleEnabledProductSlugs(),
+  ]);
+
+  const bestsellerEnglishSlugs: Record<number, string> = {};
+  bestsellerProductsEn.forEach((product) => {
+    bestsellerEnglishSlugs[product.id] = product.slug;
+  });
+
+  const bestsellerProducts = bestsellerProductsRaw.filter(
+    (product) =>
+      !giftProductInfo.ids.includes(product.id) &&
+      !giftProductInfo.slugs.includes(product.slug)
+  );
+
+  const settings = {
+    ...homeSettings.bestseller_products,
+    section_title:
+      homeSettings.bestseller_products.section_title || dictionary.sections.bestsellers.title,
+    section_subtitle:
+      homeSettings.bestseller_products.section_subtitle || dictionary.sections.bestsellers.subtitle,
+  };
+
+  return (
+    <ProductSection
+      settings={settings}
+      products={bestsellerProducts}
+      locale={locale}
+      isRTL={isRTL}
+      viewAllText={dictionary.common.viewAll}
+      fullView
+      bundleProductSlugs={bundleProductSlugs}
+      englishProductSlugs={bestsellerEnglishSlugs}
+    />
+  );
+}
+
+// Async server component: Featured products section
+async function FeaturedProductsSection({ locale, isRTL, dictionary, homeSettings }: {
+  locale: Locale;
+  isRTL: boolean;
+  dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  homeSettings: Awaited<ReturnType<typeof getHomePageSettings>>;
+}) {
+  const [
+    { products: featuredProductsRaw },
+    { products: featuredProductsEn },
+    giftProductInfo,
+    bundleProductSlugs,
+  ] = await Promise.all([
+    getFeaturedProducts({ per_page: 20, locale }),
+    getFeaturedProducts({ per_page: 20, locale: "en" }),
+    getFreeGiftProductInfo(),
+    getBundleEnabledProductSlugs(),
+  ]);
+
+  const featuredEnglishSlugs: Record<number, string> = {};
+  featuredProductsEn.forEach((product) => {
+    featuredEnglishSlugs[product.id] = product.slug;
+  });
+
+  const featuredProducts = featuredProductsRaw.filter(
+    (product) =>
+      !giftProductInfo.ids.includes(product.id) &&
+      !giftProductInfo.slugs.includes(product.slug)
+  );
+
+  const settings = {
+    ...homeSettings.featured_products,
+    section_title:
+      homeSettings.featured_products.section_title || dictionary.sections.featuredProducts.title,
+    section_subtitle:
+      homeSettings.featured_products.section_subtitle || dictionary.sections.featuredProducts.subtitle,
+  };
+
+  return (
+    <FeaturedProductsSlider
+      settings={settings}
+      products={featuredProducts}
+      locale={locale}
+      isRTL={isRTL}
+      viewAllText={dictionary.common.viewAll}
+      bundleProductSlugs={bundleProductSlugs}
+      englishProductSlugs={featuredEnglishSlugs}
+    />
+  );
+}
+
 export default async function HomePage({ params }: HomePageProps) {
   const { locale } = await params;
   const validLocale = locale as Locale;
   const isRTL = locale === "ar";
 
-  // Only fetch what's needed for above-the-fold content (hero + banners + dictionary)
-  // Product data is fetched independently by each Suspense-wrapped section below
   const [dictionary, homeSettings, homeSections] = await Promise.all([
     getDictionary(validLocale),
     getHomePageSettings(validLocale),
@@ -123,9 +285,7 @@ export default async function HomePage({ params }: HomePageProps) {
   ]);
 
   const t = (bi: { en: string; ar: string }) => isRTL ? bi.ar : bi.en;
-
-  // H1 heading text for SEO - hidden visually but read by search engines
-  const h1Text = isRTL ? "ساسان للعطور" : siteConfig.name;
+  const h1Text = isRTL ? "Sasan Perfumes" : siteConfig.name;
 
   return (
     <>
@@ -143,7 +303,25 @@ export default async function HomePage({ params }: HomePageProps) {
           />
         </Suspense>
 
+        <Suspense fallback={<ProductSectionSkeleton fullView />}>
+          <BestsellerProductsSection
+            locale={validLocale}
+            isRTL={isRTL}
+            dictionary={dictionary}
+            homeSettings={homeSettings}
+          />
+        </Suspense>
+
         <BannersSection settings={homeSettings.banners} />
+
+        <Suspense fallback={<FeaturedProductsSliderSkeleton />}>
+          <FeaturedProductsSection
+            locale={validLocale}
+            isRTL={isRTL}
+            dictionary={dictionary}
+            homeSettings={homeSettings}
+          />
+        </Suspense>
 
         {homeSections.seoContent?.enabled !== false && (homeSections.seoContent?.paragraphs?.length ?? 0) > 0 && (
           <SeoContentSection

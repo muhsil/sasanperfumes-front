@@ -153,11 +153,11 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
 
   return (
     <>
-    <SocialIconLinks links={socialLinks} variant="dark" />
+    <SocialIconLinks className="mx-auto max-w-[80rem]" links={socialLinks} variant="dark" />
     <footer className="main-footer relative overflow-hidden border-t border-white/10 bg-brand-primary pb-20 text-brand-ivory md:pb-0">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.035)_0_1px,transparent_1px_20px)]" />
 
-        <div className="relative w-full px-5 py-10 md:px-7 md:py-14 lg:px-12">
+        <div className="relative mx-auto w-full max-w-[80rem] px-5 py-10 md:px-7 md:py-14 lg:px-12">
           <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-12">
           <div className="border-b border-white/10 pb-8 lg:border-b-0 lg:border-e lg:pe-12">
             <p className="mb-4 text-[11px] font-semibold uppercase text-brand-gold">

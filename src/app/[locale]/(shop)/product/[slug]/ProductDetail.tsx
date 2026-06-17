@@ -624,11 +624,14 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
     const isRTL = locale === "ar";
     const currencyInfo = getCurrencyInfo();
   const convertedShippingThreshold = freeShippingThreshold ? Math.ceil(convertPrice(freeShippingThreshold)) : null;
-    void currencyInfo;
-    void convertedShippingThreshold;
   const rating = Number(product.average_rating || 0);
   const reviewCount = Number(product.review_count || 0);
   const showReviews = reviewsEnabled && reviewCount > 0;
+  const freeShippingNotice = convertedShippingThreshold
+    ? isRTL
+      ? `مجاني الشحن عند الطلبات فوق ${currencyInfo.symbol}${convertedShippingThreshold}${currencyInfo.code === "AED" ? "" : ` ${currencyInfo.code}`}`
+      : `Free shipping on orders over ${currencyInfo.symbol}${convertedShippingThreshold}`
+    : "";
 
   useEffect(() => {
     setDetailsMounted(true);
@@ -1377,31 +1380,32 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
 
   return (
     <div className="bg-transparent text-brand-primary">
-      <div className="w-full px-5 pb-3 pt-4 md:px-7 md:pb-4 md:pt-6 lg:px-12">
-        <div className="flex items-center justify-between gap-3">
-          <Breadcrumbs items={breadcrumbItems} locale={locale} contained={false} />
-          <SocialShareModal
-            url={`${siteConfig.url}/${locale}/product/${product.slug}`}
-            title={decodeHtmlEntities(product.name)}
-            locale={locale}
-            className="shrink-0"
-          />
+      <div className="mx-auto w-full max-w-[80rem] space-y-8">
+        <div className="w-full px-4 pb-3 pt-4 md:px-6 md:pb-4 md:pt-6 lg:px-10">
+          <div className="flex items-center justify-between gap-3">
+            <Breadcrumbs items={breadcrumbItems} locale={locale} contained={false} />
+            <SocialShareModal
+              url={`${siteConfig.url}/${locale}/product/${product.slug}`}
+              title={decodeHtmlEntities(product.name)}
+              locale={locale}
+              className="shrink-0"
+            />
+          </div>
         </div>
-      </div>
 
-      <div className="w-full px-0">
-        <div className="grid w-full gap-x-8 gap-y-7 px-5 pb-8 md:px-7 lg:grid-cols-[minmax(0,1.08fr)_minmax(380px,0.92fr)] lg:px-12 xl:grid-cols-[minmax(0,1.12fr)_minmax(420px,0.88fr)]">
+        <div className="w-full px-0">
+          <div className="grid w-full gap-x-8 gap-y-7 px-4 pb-8 md:px-6 lg:grid-cols-[minmax(0,1.08fr)_minmax(380px,0.92fr)] lg:gap-x-10 xl:grid-cols-[minmax(0,1.12fr)_minmax(420px,0.88fr)]">
         {/* Product Gallery */}
         <div className="min-w-0">
           {renderImageGallery()}
         </div>
 
         {/* Product Info */}
-        <aside className="min-w-0 pb-10 pt-2 text-brand-primary md:pb-12 md:pt-6 lg:pt-6">
-          <div className="rounded-lg border border-brand-border/70 bg-[#fffdf9] p-5 shadow-[0_18px_46px_rgba(20,15,10,0.07)] md:p-7 lg:p-8">
-          <div className="mx-auto flex w-full max-w-[620px] flex-col items-stretch space-y-0 lg:ml-0 lg:mr-auto">
+        <aside className="min-w-0 pb-8 pt-2 text-brand-primary md:pb-10 md:pt-6 lg:pt-6">
+          <div className="rounded-3xl border border-brand-border/65 bg-white p-5 shadow-[0_14px_40px_rgba(20,15,10,0.07)] md:p-7">
+            <div className="mx-auto flex w-full flex-col items-stretch space-y-0">
           {/* Category + Brand row */}
-          <div className="mb-5 flex w-full flex-wrap items-center gap-x-3 gap-y-2 self-start">
+          <div className="mb-4 flex w-full flex-wrap items-center gap-x-2 gap-y-2 self-start">
             {primaryCategory && categorySlugForUrl && (
               <Link
                 href={`/${locale}/category/${categorySlugForUrl}`}
@@ -1423,14 +1427,14 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           </div>
 
           {/* Title */}
-            <h1 className="font-title w-full text-[28px] leading-tight text-brand-primary sm:text-[32px] md:text-[38px] lg:text-[44px]">
+            <h1 className="font-title w-full text-[24px] leading-tight text-brand-primary sm:text-[28px] md:text-[32px] lg:text-[38px]">
               {productDisplayName}
             </h1>
 
           {showReviews && (
             <a
               href="#reviews"
-              className={`mt-4 inline-flex items-center gap-2 text-sm font-normal text-brand-primary/70 transition-opacity hover:opacity-70 ${
+              className={`mt-3 inline-flex items-center gap-2 text-sm font-normal text-brand-primary/70 transition-opacity hover:opacity-70 ${
                 isRTL ? "flex-row-reverse" : ""
               }`}
             >
@@ -1448,7 +1452,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           )}
 
           {/* Price and stock indicator */}
-          <div className="-mx-5 mt-5 border-y border-brand-border/70 bg-brand-beige/35 px-5 py-4 md:-mx-7 md:px-7 lg:-mx-8 lg:px-8">
+          <div className="mt-5 rounded-2xl border border-brand-border/70 bg-brand-ivory/45 p-4">
             {(() => {
               const displayPrice = getDisplayPrice(product, selectedVariation);
               const isOnSale = selectedVariation?.sale_price || product.on_sale;
@@ -1494,22 +1498,41 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           </div>
 
 
-          {/* Loyalty points earning badge */}
-          {!isOutOfStock && hasPrice && (
-            <LoyaltyPointsBadge
-              priceAed={parseInt(getDisplayPrice(product, selectedVariation).price) / Math.pow(10, product.prices.currency_minor_unit)}
-              isAr={isRTL}
-            />
-          )}
+          {/* Trust, reward and urgency block */}
+          <div className="rounded-2xl border border-brand-border/70 bg-white/80 p-4">
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-brand-primary">
+                {isOutOfStock ? (
+                  <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                ) : (
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                )}
+                <span>{isOutOfStock ? (isRTL ? "غير متوفر" : "Out of stock") : (isRTL ? "متوفر الآن" : "In stock")}</span>
+              </div>
 
-          {/* Flash sale countdown */}
-          {product.on_sale && product.sale_end && (
-            <CountdownTimer endDate={product.sale_end} locale={locale} />
-          )}
+              {!isOutOfStock && hasPrice && (
+                <>
+                  <LoyaltyPointsBadge
+                    priceAed={parseInt(getDisplayPrice(product, selectedVariation).price) / Math.pow(10, product.prices.currency_minor_unit)}
+                    isAr={isRTL}
+                  />
+                  {product.on_sale && product.sale_end && <CountdownTimer endDate={product.sale_end} locale={locale} />}
+                </>
+              )}
 
           {/* Guide links — size guide modal only (scent guide is in Description accordion) */}
-          <div className="flex flex-wrap items-center gap-4">
+          </div>
+          </div>
+
+          {/* Guide links â€” size guide modal only (scent guide is in Description accordion) */}
+
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
             <ClothingSizeGuideModal productId={product.id} locale={locale} />
+            {freeShippingNotice && (
+              <p className="text-xs font-medium text-brand-muted">
+                {freeShippingNotice}
+              </p>
+            )}
           </div>
 
           {/* Notes / key info shown under price */}
@@ -1566,13 +1589,13 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           )}
 
           {product.type === "variable" && variationAttributes.length > 0 && (
-            <div className="mt-6 space-y-5 border-t border-brand-border/70 pt-5">
+            <div className="mt-5 space-y-4 border-t border-brand-border/70 pt-5">
               {variationAttributes.map((attr) => {
                 const key = attr.taxonomy || attr.name;
                 const selectedSlug = selectedVariations[key];
                 return (
                   <div key={key}>
-                    <p className="mb-2.5 text-[12px] font-semibold text-brand-muted">
+                    <p className="mb-2.5 text-[12px] font-semibold uppercase tracking-[0.08em] text-brand-muted">
                       {decodeHtmlEntities(attr.name)}
                     </p>
                     <div className="flex flex-wrap gap-2.5">
@@ -1629,12 +1652,12 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                               }
                             }}
                             className={cn(
-                              "rounded-full border px-4 py-2 text-xs font-semibold transition-colors",
+                              "rounded-[999px] border px-4 py-2 text-xs font-semibold transition-colors",
                               isOutOfStock
                                 ? "cursor-not-allowed border-brand-border/70 bg-transparent text-brand-primary/30 line-through opacity-50"
                                 : isSelected
-                                ? "border-brand-primary bg-brand-primary text-white"
-                                : "border-brand-border/80 bg-brand-ivory text-brand-primary hover:border-brand-primary"
+                                ? "border-brand-primary bg-brand-primary text-white shadow-[0_10px_20px_rgba(24,18,10,0.2)]"
+                                : "border-brand-border/80 bg-white text-brand-primary hover:border-brand-primary/80"
                             )}
                           >
                             {decodeHtmlEntities(term.name)}
@@ -1662,8 +1685,8 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
 
           {/* Add to Cart Section */}
           <div ref={ctaSectionRef} className="flex flex-col gap-4 pt-5">
-            <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-              <div className="flex h-12 items-center justify-between overflow-hidden rounded-full border border-brand-border/80 bg-brand-ivory">
+            <div className="grid gap-3 sm:grid-cols-[minmax(150px,1fr)_auto]">
+              <div className="flex h-12 items-center justify-between overflow-hidden rounded-full border border-brand-border/80 bg-brand-ivory/80">
                 <button
                   type="button"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -1701,7 +1724,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                 type="button"
                 onClick={handleWishlistToggle}
                 disabled={isAddingToWishlist}
-                className={`flex h-12 min-w-[56px] items-center justify-center rounded-full border border-brand-border/80 bg-brand-ivory text-sm font-semibold text-brand-primary transition-colors duration-300 hover:border-brand-primary hover:bg-brand-primary hover:text-white ${isAddingToWishlist ? "cursor-not-allowed opacity-50" : ""}`}
+                className={`flex h-12 min-w-[56px] items-center justify-center rounded-full border border-brand-border/80 bg-white text-sm font-semibold text-brand-primary transition-colors duration-300 hover:border-brand-primary hover:bg-brand-primary hover:text-white ${isAddingToWishlist ? "cursor-not-allowed opacity-50" : ""}`}
                 aria-label={isWishlisted ? (isRTL ? "إزالة من المفضلة" : "Remove from wishlist") : (isRTL ? "أضف إلى المفضلة" : "Add to wishlist")}
               >
                 <Heart className={`h-5 w-5 ${isWishlisted ? "fill-current" : ""}`} />
@@ -1715,7 +1738,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               isAdded={isAddedToCart}
               isLoading={isAddingToCart}
               showIcon
-              className="h-12 w-full text-xs font-bold uppercase"
+              className="h-12 w-full rounded-full text-sm font-semibold uppercase tracking-[0.08em]"
             >
               {isAddedToCart ? (
                 <><Check className="h-4 w-4" />{isRTL ? "تمت الإضافة!" : "added"}</>
@@ -1821,11 +1844,13 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
       )}
 
       {/* Related Products (category-based) */}
-      <RelatedProducts
-        products={relatedProducts}
-        currentProductId={product.id}
-        locale={locale}
-      />
+      <div className="pb-16">
+        <RelatedProducts
+          products={relatedProducts}
+          currentProductId={product.id}
+          locale={locale}
+        />
+      </div>
 
       {/* Recently Viewed Products */}
       <RecentlyViewed
@@ -1850,12 +1875,12 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
       {/* Sticky Add to Cart Bar */}
       <div
         className={cn(
-          "fixed inset-x-3 bottom-20 z-40 rounded-2xl border border-brand-border/70 bg-brand-ivory/96 px-3 py-3 shadow-[0_18px_48px_rgba(20,15,10,0.18)] backdrop-blur-xl transition-all duration-300 md:hidden",
+          "fixed inset-x-3 bottom-20 z-40 rounded-[20px] border border-brand-border/70 bg-white/95 px-3 py-3 shadow-[0_16px_44px_rgba(20,15,10,0.18)] backdrop-blur-xl transition-all duration-300 md:hidden",
           !canPurchaseProduct && "hidden",
           showStickyAddToCart ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"
         )}
       >
-        <div className="grid items-center gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+          <div className="grid items-center gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
           <div className="flex min-w-0 items-center gap-3">
             {stickyImage && (
               <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-white sm:h-14 sm:w-14">
@@ -1883,22 +1908,22 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
             </div>
           </div>
           <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2 sm:flex sm:shrink-0 sm:gap-3">
-            <div className="flex h-11 items-center overflow-hidden rounded-full border border-brand-primary bg-transparent sm:h-10">
+            <div className="flex h-10 items-center overflow-hidden rounded-full border border-brand-primary bg-transparent sm:h-10">
               <button
                 type="button"
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
                 disabled={quantity <= 1}
-                className="flex h-11 w-9 items-center justify-center text-brand-primary transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-40 sm:h-10"
+                className="flex h-10 w-10 items-center justify-center text-brand-primary transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-40 sm:h-10"
                 aria-label={isRTL ? "تقليل الكمية" : "Decrease quantity"}
               >
                 <Minus className="h-3.5 w-3.5" />
               </button>
-              <span className="w-9 text-center text-sm font-normal text-brand-primary sm:w-10">{quantity}</span>
+                <span className="w-10 text-center text-sm font-normal text-brand-primary sm:w-10">{quantity}</span>
               <button
                 type="button"
                 onClick={() => setQuantity(Math.min(quantity + 1, product.add_to_cart.maximum || 99))}
                 disabled={quantity >= (product.add_to_cart.maximum || 99)}
-                className="flex h-11 w-9 items-center justify-center text-brand-primary transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-40 sm:h-10"
+                className="flex h-10 w-10 items-center justify-center text-brand-primary transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-40 sm:h-10"
                 aria-label={isRTL ? "زيادة الكمية" : "Increase quantity"}
               >
                 <Plus className="h-3.5 w-3.5" />
@@ -1910,7 +1935,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               disabled={!canPurchaseProduct || isSelectedVariationOutOfStock || isAddingToCart || !canAddToCart}
               isAdded={isAddedToCart}
               isLoading={isAddingToCart}
-              className="h-11 min-w-0 px-4 text-xs font-bold uppercase tracking-[0.1em] sm:h-10 sm:min-w-[180px] sm:px-5"
+              className="h-10 min-w-0 rounded-full px-4 text-xs font-bold uppercase tracking-[0.1em] sm:h-10 sm:min-w-[180px] sm:px-5"
             >
               {isAddedToCart ? (
                 <><Check className="h-4 w-4" />{isRTL ? "تمت الإضافة!" : "added"}</>
@@ -1924,6 +1949,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
 
 
 
+      </div>
       </div>
       </div>
       </div>
