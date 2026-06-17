@@ -29,6 +29,16 @@ import type {
 const WP_API_BASE = `${siteConfig.apiUrl}/wp-json`;
 const WP_API_HEADERS = backendHeaders();
 const WP_NAMESPACE_FALLBACKS = ["sasanperfumes/v1"];
+const CMS_FORCE_DYNAMIC_CACHE = process.env.NEXT_PUBLIC_DISABLE_CMS_CACHE === "true" || process.env.DISABLE_CMS_CACHE === "true";
+
+function isCmsContentEndpoint(endpoint: string): boolean {
+  return (
+    endpoint.includes("/sasanperfumes/v1/") ||
+    endpoint.includes("/menus/v1/") ||
+    endpoint.includes("/wp/v2/pages") ||
+    endpoint.includes("/wp/v2/media")
+  );
+}
 
 function formatFetchError(error: unknown): string {
   if (!(error instanceof Error)) {
@@ -631,7 +641,7 @@ async function fetchWPAPI<T>(
   const urls = buildWPAPIUrls(endpoint, locale);
 
   try {
-      const shouldBypassCache = disableRuntimeCache || noCache;
+      const shouldBypassCache = disableRuntimeCache || noCache || CMS_FORCE_DYNAMIC_CACHE || isCmsContentEndpoint(endpoint);
       const fetchOptions: RequestInit = shouldBypassCache
         ? { headers: backendHeaders(WP_API_HEADERS), cache: "no-store" }
         : {
