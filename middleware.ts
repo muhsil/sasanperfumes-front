@@ -5,6 +5,8 @@ import { proxy } from "./src/proxy";
 
 const DEV_ALLOWED_HOSTS = ["localhost", "127.0.0.1", "::1", "localhost:3000"];
 const CANONICAL_HOSTS_ENV = process.env.NEXT_PUBLIC_CANONICAL_HOSTS || process.env.CANONICAL_HOSTS || "";
+const DEFAULT_CANONICAL_HOST = "shapehive.com";
+const SHAPEHIVE_HOST_SUFFIX = ".shapehive.com";
 
 function parseHost(value: string | undefined): string {
   if (!value) return "";
@@ -17,7 +19,13 @@ function parseHost(value: string | undefined): string {
       return "";
     }
   }
-  return trimmed.replace(/^www\./, "");
+  return trimmed.replace(/^www\./, "").replace(/\.+$/, "");
+}
+
+function normalizeHost(value: string | undefined): string {
+  const parsed = parseHost(value);
+  if (!parsed) return "";
+  return parsed.replace(/:\d+$/, "").trim();
 }
 
 function getAllowedHosts(): string[] {
@@ -48,13 +56,13 @@ function getCanonicalHosts(): string[] {
   const envCanonicalHosts = CANONICAL_HOSTS_ENV.split(",")
     .map(parseHost)
     .filter(Boolean);
-  const hosts = new Set<string>([canonicalHost, ...envCanonicalHosts]);
+  const hosts = new Set<string>([canonicalHost, ...envCanonicalHosts, DEFAULT_CANONICAL_HOST]);
   return Array.from(hosts);
 }
 
 function isCanonicalHost(request: NextRequest) {
-  const hostHeader = request.headers.get("host")?.toLowerCase() || "";
-  const host = hostHeader.split(":")[0];
+  const rawHost = request.headers.get("host") || request.headers.get("x-forwarded-host") || "";
+  const host = normalizeHost(rawHost);
   const allowedHosts = getAllowedHosts();
   const devLikeHost = allowedHosts.some((allowed) => host === allowed || host.startsWith(`${allowed}:`));
 
@@ -62,7 +70,17 @@ function isCanonicalHost(request: NextRequest) {
     return true;
   }
 
-  return getCanonicalHosts().some((hostName) => host === hostName);
+  const canonicalHosts = getCanonicalHosts();
+  const isKnownCanonical = canonicalHosts.some((hostName) => host === hostName);
+  const isShapeHiveRelated = host.endsWith(SHAPEHIVE_HOST_SUFFIX);
+
+  // Let unknown shapehive hostnames pass through middleware checks and be redirected
+  // to the configured canonical host to avoid production-level 503 behavior.
+  if (!isKnownCanonical && isShapeHiveRelated) {
+    return false;
+  }
+
+  return isKnownCanonical;
 }
 
 function enforceCanonicalHost(request: NextRequest) {
