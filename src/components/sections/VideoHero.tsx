@@ -86,7 +86,7 @@ export function VideoHero({ locale }: { locale: Locale }) {
       {/* Content */}
       <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center text-white">
         {title && (
-          <h1 className="mb-3 max-w-2xl text-3xl font-bold leading-tight sm:text-5xl">{title}</h1>
+          <h1 className="mb-3 max-w-2xl text-2xl font-bold leading-tight sm:text-4xl">{title}</h1>
         )}
         {subtitle && (
           <p className="mb-8 max-w-lg text-sm opacity-90 sm:text-lg">{subtitle}</p>

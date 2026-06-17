@@ -154,7 +154,7 @@ function SlideContent({ slide, index, locale }: { slide: HeroSliderSettings["sli
       <div className="container mx-auto px-6 md:px-12">
         <div className="max-w-xl">
           {slideTitle && (
-            <h2 className="font-title text-3xl text-white drop-shadow-[0_10px_24px_rgba(0,0,0,0.35)] md:text-5xl lg:text-6xl">{slideTitle}</h2>
+            <h2 className="font-title text-2xl text-white drop-shadow-[0_10px_24px_rgba(0,0,0,0.35)] md:text-4xl lg:text-5xl">{slideTitle}</h2>
           )}
           {slideSubtitle && (
             <p className="mt-3 max-w-lg text-sm text-white/90 drop-shadow md:mt-4 md:text-base lg:text-lg">{slideSubtitle}</p>

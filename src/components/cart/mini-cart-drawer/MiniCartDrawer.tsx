@@ -140,7 +140,7 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
   ) : undefined;
 
   const productIds = cartItems.map((item) => item.id);
-  const productCategories = useProductCategories(productIds);
+  const productCategories = useProductCategories(productIds, locale);
 
   const renderCartItems = () => (
     <ul className="divide-y divide-brand-border/60">

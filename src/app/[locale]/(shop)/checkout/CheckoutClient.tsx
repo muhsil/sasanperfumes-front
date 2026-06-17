@@ -153,7 +153,7 @@ export default function CheckoutClient() {
       return pid ? parseInt(pid, 10) : item.id;
     };
     const productIds = cartItems.map((item) => getParentId(item));
-    const { categories: productCategories, brands: productBrands } = useProductMeta(productIds);
+    const { categories: productCategories, brands: productBrands } = useProductMeta(productIds, locale as Locale);
     const getItemLookupId = (item: CoCartItem): number => getParentId(item);
     const isRTL = locale === "ar";
     const isKeyboardVisible = useKeyboardVisible();

@@ -88,7 +88,7 @@ export function CollectionPageHeader({
           </div>
         )}
         <div className="flex-1">
-          <h1 className="font-title text-[30px] leading-none text-brand-primary md:text-[54px]">
+          <h1 className="font-title text-[28px] leading-none text-brand-primary md:text-[44px]">
             {decodeHtmlEntities(title)}
           </h1>
           {subtitle && (

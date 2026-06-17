@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: true, wishlist: null, items: [] });
     }
 
-    const enrichedItems = await fetchEnrichedWishlistItems(shareKey, locale);
+    const enrichedItems = await fetchEnrichedWishlistItems(shareKey, locale || undefined);
 
     const wishlist = wishlistMeta ? {
       ...wishlistMeta,
@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        const enrichedItems = await fetchEnrichedWishlistItems(shareKey, locale);
+        const enrichedItems = await fetchEnrichedWishlistItems(shareKey, locale || undefined);
         return wishlistSuccessResponse(shareKey, enrichedItems, { added_to: shareKey });
       }
 
@@ -197,7 +197,7 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        const enrichedItems = await fetchEnrichedWishlistItems(shareKey, locale);
+        const enrichedItems = await fetchEnrichedWishlistItems(shareKey, locale || undefined);
         return wishlistSuccessResponse(shareKey, enrichedItems);
       }
 
@@ -233,7 +233,7 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        const enrichedItems = await fetchEnrichedWishlistItems(shareKey, locale);
+        const enrichedItems = await fetchEnrichedWishlistItems(shareKey, locale || undefined);
         return wishlistSuccessResponse(shareKey, enrichedItems, { syncResults: results });
       }
 

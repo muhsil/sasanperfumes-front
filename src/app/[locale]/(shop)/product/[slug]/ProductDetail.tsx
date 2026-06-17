@@ -759,7 +759,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
   // Fetch full variation data with pricing
   useEffect(() => {
     if (product.type !== "variable" || !product.id) return;
-    fetch(`/api/product-variations?product_id=${product.id}`)
+    fetch(`/api/product-variations?product_id=${product.id}&locale=${locale}`)
       .then((r) => r.json())
       .then((data) => {
         if (Array.isArray(data)) setVariationsWithPricing(data);

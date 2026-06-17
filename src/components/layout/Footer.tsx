@@ -169,7 +169,7 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
                 alt={siteSettings.logo.alt || siteConfig.name}
                 width={240}
                 height={96}
-                className="h-14 w-auto md:h-16"
+                className="h-10 w-auto md:h-12"
                 style={{ width: "auto", height: "auto" }}
                 unoptimized={shouldUseUnoptimizedImage(siteSettings.logo.url)}
               />

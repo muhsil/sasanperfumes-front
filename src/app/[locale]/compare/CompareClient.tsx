@@ -20,7 +20,7 @@ export function CompareClient({ locale, productIds }: CompareClientProps) {
 
   useEffect(() => {
     const params = productIds.map((id) => `include[]=${id}`).join("&");
-    fetch(`/api/products?${params}&per_page=3&lang=${locale}`)
+    fetch(`/api/products?${params}&per_page=3&locale=${locale}`)
       .then((r) => r.json())
       .then((d) => { setProducts(d.products || []); setLoading(false); })
       .catch(() => setLoading(false));

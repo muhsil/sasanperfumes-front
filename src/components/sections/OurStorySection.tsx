@@ -41,7 +41,7 @@ export function OurStorySection({
                 )}
 
                 {title && (
-                  <h2 className="max-w-xl font-title text-3xl leading-[1.08] text-brand-primary md:text-4xl lg:text-[2.75rem]">
+                  <h2 className="max-w-xl font-title text-2xl leading-[1.12] text-brand-primary md:text-3xl lg:text-[2.35rem]">
                     {title}
                   </h2>
                 )}

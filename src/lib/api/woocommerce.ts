@@ -64,6 +64,15 @@ interface FetchAPIResponse<T> {
   totalPages: number;
 }
 
+function getProductUILabels(locale?: Locale) {
+  const isArabic = locale === "ar";
+  return {
+    inStockText: isArabic ? "متوفر" : "In Stock",
+    outOfStockText: isArabic ? "غير متوفر" : "Out of Stock",
+    addToCartText: isArabic ? "أضف للسلة" : "Add to Cart",
+  };
+}
+
 async function fetchAPI<T>(
   endpoint: string,
   options: FetchOptions = {}
@@ -1221,11 +1230,35 @@ export async function getBestsellerProducts(params?: {
   locale?: Locale;
   currency?: Currency;
 }): Promise<WCProductsResponse> {
-  return getProducts({
-    ...params,
-    include: BESTSELLER_PRODUCT_IDS,
-    per_page: BESTSELLER_PRODUCT_IDS.length,
-  });
+  try {
+    const requestSlugs = BESTSELLER_PRODUCT_SLUGS;
+    const productPromises = requestSlugs.map((slug) =>
+      getProductBySlug(slug, params?.locale, params?.currency).catch(() => null)
+    );
+    const products = (await Promise.all(productPromises)).filter(
+      (product): product is WCProduct => Boolean(product)
+    );
+
+    const ordered = requestSlugs
+      .map((slug) => products.find((product) => product.slug === slug))
+      .filter((product): product is WCProduct => Boolean(product));
+
+    const pageSize = params?.per_page || ordered.length || BESTSELLER_PRODUCT_SLUGS.length;
+    const page = Math.max(params?.page || 1, 1);
+    const start = (page - 1) * pageSize;
+    const pagedProducts = ordered.slice(start, start + pageSize);
+
+    return {
+      products: pagedProducts,
+      total: ordered.length,
+      totalPages: Math.max(1, Math.ceil(ordered.length / pageSize)),
+    };
+  } catch {
+    return getProducts({
+      ...params,
+      per_page: params?.per_page,
+    });
+  }
 }
 
 // Get featured products
@@ -1238,6 +1271,8 @@ export async function getFeaturedProducts(params?: {
   currency?: Currency;
 }): Promise<WCProductsResponse> {
   try {
+    const labels = getProductUILabels(params?.locale);
+
     // Try to fetch featured products from custom endpoint
     const searchParams = new URLSearchParams();
     if (params?.page) searchParams.set("page", params.page.toString());
@@ -1332,15 +1367,15 @@ export async function getFeaturedProducts(params?: {
       is_on_backorder: product.stock_status === "onbackorder",
       low_stock_remaining: null,
       stock_availability: {
-        text: product.stock_status === "instock" ? "In Stock" : "Out of Stock",
+        text: product.stock_status === "instock" ? labels.inStockText : labels.outOfStockText,
         class: product.stock_status === "instock" ? "in-stock" : "out-of-stock",
       },
       sold_individually: product.sold_individually || false,
       add_to_cart: {
-        text: "Add to Cart",
+        text: labels.addToCartText,
         description: "",
         url: "",
-        single_text: "Add to Cart",
+        single_text: labels.addToCartText,
         minimum: 1,
         maximum: 9999,
         multiple_of: 1,

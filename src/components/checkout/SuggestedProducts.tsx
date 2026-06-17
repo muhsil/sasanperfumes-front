@@ -19,6 +19,11 @@ interface Product {
   currencyMinorUnit: number;
 }
 
+interface UpsellSuggestion {
+  cross_sell_ids?: number[];
+  upsell_ids?: number[];
+}
+
 function normalizeProduct(raw: Record<string, unknown>): Product | null {
   if (!raw || !raw.id) return null;
   const prices = raw.prices as Record<string, unknown> | undefined;
@@ -61,13 +66,9 @@ export function SuggestedProducts({
 
       try {
         const ids = cartItemIds.slice(0, 3);
-        const responses = await Promise.all(
-          ids.map((id) =>
-            fetch(`/api/products/${id}?fields=upsell_ids,cross_sell_ids`)
-              .then((r) => r.json())
-              .catch(() => ({ upsell_ids: [], cross_sell_ids: [] }))
-          )
-        );
+        const response = await fetch(`/api/product-upsells?ids=${ids.join(",")}&locale=${locale}`);
+        const parsed = await response.json();
+        const responses = (parsed?.products as UpsellSuggestion[] | undefined) || [];
 
         const allSuggestedIds = new Set<number>();
         responses.forEach((data) => {
@@ -80,7 +81,7 @@ export function SuggestedProducts({
         // If no cross-sell/upsell products, fetch featured products as fallback
         if (suggestedIds.length === 0) {
           try {
-            const featuredRes = await fetch(`/api/products?featured=true&per_page=4`);
+            const featuredRes = await fetch(`/api/products?featured=true&per_page=4&locale=${locale}`);
             const featuredData = await featuredRes.json();
             if (featuredData.products && featuredData.products.length > 0) {
               const normalized = featuredData.products.map(normalizeProduct).filter(Boolean) as Product[];
@@ -94,7 +95,7 @@ export function SuggestedProducts({
         }
 
         const productRes = await fetch(
-          `/api/products?include=${suggestedIds.join(",")}`
+          `/api/products?include=${suggestedIds.join(",")}&locale=${locale}`
         );
         const productData = await productRes.json();
 
@@ -110,7 +111,7 @@ export function SuggestedProducts({
     };
 
     fetchSuggestedProducts();
-  }, [cartItemIds]);
+  }, [cartItemIds, locale]);
 
   if (isLoading || products.length === 0) {
     return null;

@@ -397,7 +397,7 @@ export async function fetchEnrichedWishlistItems(
   }
 
   const productIds = rawItems.map((item) => item.product_id).filter(Boolean);
-  const productMap = await fetchProductDetails(productIds, localeValue);
+  const productMap = await fetchProductDetails(productIds, localeValue || undefined);
   return enrichWishlistItems(rawItems, productMap, localeValue);
 }
 

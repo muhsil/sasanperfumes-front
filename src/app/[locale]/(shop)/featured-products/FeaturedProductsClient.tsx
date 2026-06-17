@@ -49,7 +49,7 @@ export function FeaturedProductsClient({
 
     try {
       const response = await fetch(
-        `/api/products/featured?page=${nextPage}&per_page=${PER_PAGE}&locale=${locale}`
+        `/api/products?featured=true&page=${nextPage}&per_page=${PER_PAGE}&locale=${locale}`
       );
 
       if (!response.ok) {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { siteConfig } from "@/config/site";
+import type { Locale } from "@/config/site";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -33,10 +34,13 @@ interface StoreVariation {
 export async function GET(request: NextRequest) {
   const productId = request.nextUrl.searchParams.get("product_id");
   if (!productId) return NextResponse.json([]);
+  const locale = (request.nextUrl.searchParams.get("locale") as Locale) || (request.nextUrl.searchParams.get("lang") as Locale);
+
+  const localeQuery = locale ? `?lang=${locale}` : "";
 
   try {
     // First get the parent product to find variation IDs
-    const parentUrl = `${siteConfig.apiUrl}/wp-json/wc/store/v1/products/${productId}`;
+    const parentUrl = `${siteConfig.apiUrl}/wp-json/wc/store/v1/products/${productId}${localeQuery}`;
     const parentRes = await fetch(parentUrl, { cache: "no-store" });
     if (!parentRes.ok) return NextResponse.json([]);
     
@@ -55,7 +59,7 @@ export async function GET(request: NextRequest) {
     // Fetch each variation's full data from the Store API in parallel
     const variationPromises = variationIds.map(async (varId) => {
       try {
-        const varUrl = `${siteConfig.apiUrl}/wp-json/wc/store/v1/products/${varId}`;
+        const varUrl = `${siteConfig.apiUrl}/wp-json/wc/store/v1/products/${varId}${localeQuery}`;
         const res = await fetch(varUrl, { cache: "no-store" });
         if (!res.ok) return null;
         return await res.json() as StoreVariation;

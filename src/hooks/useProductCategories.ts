@@ -10,19 +10,20 @@ interface ProductMeta {
   brands: Record<number, string>;
 }
 
-export function useProductCategories(productIds: number[]): Record<number, string> {
-  const meta = useProductMeta(productIds);
+export function useProductCategories(productIds: number[], locale?: string): Record<number, string> {
+  const meta = useProductMeta(productIds, locale);
   return meta.categories;
 }
 
-export function useProductBrands(productIds: number[]): Record<number, string> {
-  const meta = useProductMeta(productIds);
+export function useProductBrands(productIds: number[], locale?: string): Record<number, string> {
+  const meta = useProductMeta(productIds, locale);
   return meta.brands;
 }
 
-export function useProductMeta(productIds: number[]): ProductMeta {
+export function useProductMeta(productIds: number[], locale?: string): ProductMeta {
   const [fetchedData, setFetchedData] = useState<ProductMeta>({ categories: {}, brands: {} });
   const prevIdsRef = useRef<string>("");
+  const prevLocaleRef = useRef<string | undefined>(undefined);
 
   const cachedCategories = useMemo(() => {
     const result: Record<number, string> = {};
@@ -50,14 +51,16 @@ export function useProductMeta(productIds: number[]): ProductMeta {
     if (uncachedIds.length === 0) return;
 
     const idsKey = [...uncachedIds].sort((a, b) => a - b).join(",");
-    if (idsKey === prevIdsRef.current) return;
+    if (idsKey === prevIdsRef.current && prevLocaleRef.current === locale) return;
+    prevLocaleRef.current = locale;
     prevIdsRef.current = idsKey;
 
     let cancelled = false;
 
     (async () => {
       try {
-        const response = await fetch(`/api/product-categories?ids=${uncachedIds.join(",")}`);
+        const localeParam = locale ? `&locale=${locale}` : "";
+        const response = await fetch(`/api/product-categories?ids=${uncachedIds.join(",")}${localeParam}`);
         const data = await response.json();
         if (cancelled) return;
 
@@ -78,7 +81,7 @@ export function useProductMeta(productIds: number[]): ProductMeta {
     })();
 
     return () => { cancelled = true; };
-  }, [uncachedIds]);
+  }, [uncachedIds, locale]);
 
   return useMemo(() => ({
     categories: { ...cachedCategories, ...fetchedData.categories },

@@ -150,7 +150,7 @@ export function BannersSection({
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent transition-opacity duration-700 group-hover:opacity-90" />
                     <div className="absolute inset-x-0 bottom-0 p-5 text-white sm:p-7 lg:p-10">
                       {banner.title && (
-                        <h3 className="max-w-[14ch] font-title text-3xl leading-none text-white sm:text-4xl lg:text-5xl">
+                        <h3 className="max-w-[14ch] font-title text-2xl leading-none text-white sm:text-3xl lg:text-4xl">
                           {decodeHtmlEntities(banner.title)}
                         </h3>
                       )}

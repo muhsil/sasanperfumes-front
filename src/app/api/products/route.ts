@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getProducts } from "@/lib/api/woocommerce";
+import { getFeaturedProducts, getProducts } from "@/lib/api/woocommerce";
 import type { Locale } from "@/config/site";
 import type { WCProduct, WCProductLightweight } from "@/types/woocommerce";
 
@@ -87,27 +87,56 @@ export async function GET(request: NextRequest) {
   const search = searchParams.get("search") || undefined;
   const orderby = searchParams.get("orderby") || undefined;
   const order = (searchParams.get("order") as "asc" | "desc") || undefined;
-  const locale = (searchParams.get("locale") as Locale) || undefined;
+  const locale = (searchParams.get("locale") as Locale) || (searchParams.get("lang") as Locale) || undefined;
   const lightweight = searchParams.get("lightweight") === "true";
   const brand = searchParams.get("brand") || undefined;
+  const featured = searchParams.get("featured") === "true";
+  const includeQuery = searchParams.get("include");
+  const includeList = searchParams.getAll("include[]");
+  const includeValues = includeQuery
+    ? includeQuery.split(",").map((id) => id.trim()).filter(Boolean)
+    : includeList.flatMap((entry) => entry.split(",")).map((id) => id.trim()).filter(Boolean);
+  const include = includeValues.length > 0
+    ? includeValues.map((id) => parseInt(id, 10)).filter((id) => Number.isFinite(id))
+    : [];
 
   try {
-    const cacheKey = JSON.stringify({ page, per_page, category, search, orderby, order, locale, brand });
+    const cacheKey = JSON.stringify({
+      page,
+      per_page,
+      category,
+      search,
+      orderby,
+      order,
+      locale,
+      brand,
+      featured,
+      include: includeValues,
+    });
     const cached = productsCache.get(cacheKey);
     let result: { products: WCProduct[]; total: number; totalPages: number };
 
     if (cached && Date.now() - cached.timestamp < PRODUCTS_CACHE_TTL) {
       result = cached.data;
     } else {
-      result = await getProducts({
-        page,
-        per_page: brand ? 100 : per_page,
-        category,
-        search,
-        orderby,
-        order,
-        locale,
-      });
+      if (featured) {
+        result = await getFeaturedProducts({
+          page,
+          per_page,
+          locale,
+        });
+      } else {
+        result = await getProducts({
+          page,
+          per_page: brand ? 100 : per_page,
+          category,
+          search,
+          orderby,
+          order,
+          include: include.length > 0 ? include : undefined,
+          locale,
+        });
+      }
 
       // Client-side brand filtering (Store API doesn't support brand param)
       if (brand) {

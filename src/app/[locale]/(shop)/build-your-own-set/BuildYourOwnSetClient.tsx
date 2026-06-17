@@ -13,7 +13,7 @@ import { saveBundleData } from "@/lib/utils/bundleStorage";
 import type { WCProduct } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
 import { decodeHtmlEntities } from "@/lib/utils";
-import { BESTSELLER_PRODUCT_IDS, type BundleConfig } from "@/lib/api/woocommerce";
+import { BESTSELLER_PRODUCT_SLUGS, type BundleConfig } from "@/lib/api/woocommerce";
 
 function sanitizeProductDescription(html: string): string {
   if (!html) return "";
@@ -299,7 +299,7 @@ export function BuildYourOwnSetClient({
     return categoriesWithProducts;
   }, [productOptions]);
 
-  const bestsellerIdSet = useMemo(() => new Set(BESTSELLER_PRODUCT_IDS), []);
+  const bestsellerSlugSet = useMemo(() => new Set(BESTSELLER_PRODUCT_SLUGS), []);
 
   const filteredProducts = useMemo(() => {
     const filtered = productOptions.filter((product) => {
@@ -349,14 +349,14 @@ export function BuildYourOwnSetClient({
     const bestsellers: ProductOption[] = [];
     const others: ProductOption[] = [];
     for (const product of filtered) {
-      if (bestsellerIdSet.has(product.id)) {
+      if (bestsellerSlugSet.has(product.slug)) {
         bestsellers.push(product);
       } else {
         others.push(product);
       }
     }
     return [...bestsellers, ...others];
-  }, [productOptions, searchQuery, categoryFilter, activeSlotConfig, slotEligibleProductIds, slotEligibleCategoryIds, slotExcludeProductIds, slotExcludeCategoryIds, products, bestsellerIdSet]);
+  }, [productOptions, searchQuery, categoryFilter, activeSlotConfig, slotEligibleProductIds, slotEligibleCategoryIds, slotExcludeProductIds, slotExcludeCategoryIds, products, bestsellerSlugSet]);
 
   // Get the bundle product's base price from WooCommerce
   const bundleProductPrice = useMemo(() => {

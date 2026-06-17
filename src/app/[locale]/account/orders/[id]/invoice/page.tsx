@@ -136,7 +136,7 @@ export default function InvoicePage({ params }: InvoicePageProps) {
       if (productIds.length === 0) return;
       try {
         const response = await fetch(
-          `${siteConfig.apiUrl}/wp-json/wc/store/v1/products?include=${productIds.join(",")}&per_page=${productIds.length}`
+          `${siteConfig.apiUrl}/wp-json/wc/store/v1/products?include=${productIds.join(",")}&per_page=${productIds.length}&lang=${locale}`
         );
         if (response.ok) {
           const products = await response.json();
