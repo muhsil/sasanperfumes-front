@@ -5,6 +5,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { generateMetadata as generateSeoMetadata, generateItemListJsonLd, generateFAQJsonLd } from "@/lib/utils/seo";
 import { getProductBySlug } from "@/lib/api/woocommerce";
 import { getGuidePages, getGuidePageBySlug } from "@/lib/api/wordpress";
+import { getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
 import { getDictionary } from "@/i18n";
 import { siteConfig, type Locale } from "@/config/site";
 import type { Metadata } from "next";
@@ -120,10 +121,14 @@ export default async function GuidePage({ params }: GuidePageProps) {
   const isRTL = locale === "ar";
   const dictionary = await getDictionary(validLocale);
   const dict = dictionary.pages.guides;
+  const [market, frontendHost] = await Promise.all([
+    getRequestMarket(),
+    getRequestFrontendHost(),
+  ]);
 
   // Fetch all products in parallel
   const productPromises = guide.products.map((gp) =>
-    getProductBySlug(gp.slug, validLocale)
+    getProductBySlug(gp.slug, validLocale, market.defaultCurrency, frontendHost)
   );
   const fetchedProducts = await Promise.all(productPromises);
 
@@ -161,17 +166,19 @@ export default async function GuidePage({ params }: GuidePageProps) {
     dateModified: guide.updatedAt,
     author: {
       "@type": "Organization",
-      name: "Sasan Perfumes",
+      name: siteConfig.name,
       url: siteConfig.url,
     },
     publisher: {
       "@type": "Organization",
-      name: "Sasan Perfumes",
+      name: siteConfig.name,
       url: siteConfig.url,
-      logo: {
-        "@type": "ImageObject",
-        url: `${siteConfig.url}/logo.png`,
-      },
+      ...(siteConfig.logoUrl ? {
+        logo: {
+          "@type": "ImageObject",
+          url: siteConfig.logoUrl,
+        },
+      } : {}),
     },
     mainEntityOfPage: {
       "@type": "WebPage",

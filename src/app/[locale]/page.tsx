@@ -8,7 +8,8 @@ import {
   getBestsellerProducts,
   getFeaturedProducts,
 } from "@/lib/api/woocommerce";
-import { getHomePageSettings, getSeoSettings, getHomeSections } from "@/lib/api/wordpress";
+import { getHomePageSettings, getSeoSettings, getHomeSections, getSiteSettings } from "@/lib/api/wordpress";
+import { getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
 import {
   HeroSlider,
   ProductSection,
@@ -19,7 +20,7 @@ import {
 } from "@/components/sections";
 import { ProductSectionSkeleton } from "@/components/sections/ProductSection";
 import { FeaturedProductsSliderSkeleton } from "@/components/sections/FeaturedProductsSlider";
-import { siteConfig, type Locale } from "@/config/site";
+import { siteConfig, type Currency, type Locale } from "@/config/site";
 import type { Metadata } from "next";
 
 export const revalidate = 300;
@@ -57,7 +58,7 @@ export async function generateMetadata({
           "Aromatic scents",
           "Buy perfume online",
           "Perfume gift sets",
-          "Sasan Perfumes",
+          "ShapeHive",
           "UAE perfume store",
           "Saudi Arabia perfume",
           "Natural fragrance",
@@ -70,7 +71,7 @@ export async function generateMetadata({
           "aromatic oils",
           "body care",
           "home fragrances",
-          "Sasan Perfumes",
+          "ShapeHive",
           "UAE perfume",
           "buy perfume online",
           "Arabian oud",
@@ -115,11 +116,13 @@ export async function generateMetadata({
 
 // Async server component: New Products section
 // Fetches its own data so the hero/banners can render without waiting for products
-async function NewProductsSection({ locale, isRTL, dictionary, homeSettings }: {
+async function NewProductsSection({ locale, isRTL, dictionary, homeSettings, currency, frontendHost }: {
   locale: Locale;
   isRTL: boolean;
   dictionary: Awaited<ReturnType<typeof getDictionary>>;
   homeSettings: Awaited<ReturnType<typeof getHomePageSettings>>;
+  currency: Currency;
+  frontendHost: string;
 }) {
   const [
     { products: newProductsRaw },
@@ -127,10 +130,10 @@ async function NewProductsSection({ locale, isRTL, dictionary, homeSettings }: {
     giftProductInfo,
     bundleProductSlugs,
   ] = await Promise.all([
-    getNewProducts({ per_page: 20, locale }),
-    getNewProducts({ per_page: 20, locale: "en" }),
-    getFreeGiftProductInfo(),
-    getBundleEnabledProductSlugs(),
+    getNewProducts({ per_page: 20, locale, currency, frontendHost }),
+    getNewProducts({ per_page: 20, locale: "en", currency, frontendHost }),
+    getFreeGiftProductInfo(currency, frontendHost),
+    getBundleEnabledProductSlugs(frontendHost),
   ]);
 
   const newProductEnglishSlugs: Record<number, string> = {};
@@ -171,11 +174,13 @@ async function NewProductsSection({ locale, isRTL, dictionary, homeSettings }: {
 }
 
 // Async server component: Bestseller section
-async function BestsellerProductsSection({ locale, isRTL, dictionary, homeSettings }: {
+async function BestsellerProductsSection({ locale, isRTL, dictionary, homeSettings, currency, frontendHost }: {
   locale: Locale;
   isRTL: boolean;
   dictionary: Awaited<ReturnType<typeof getDictionary>>;
   homeSettings: Awaited<ReturnType<typeof getHomePageSettings>>;
+  currency: Currency;
+  frontendHost: string;
 }) {
   const [
     { products: bestsellerProductsRaw },
@@ -183,10 +188,10 @@ async function BestsellerProductsSection({ locale, isRTL, dictionary, homeSettin
     giftProductInfo,
     bundleProductSlugs,
   ] = await Promise.all([
-    getBestsellerProducts({ per_page: 20, locale }),
-    getBestsellerProducts({ per_page: 20, locale: "en" }),
-    getFreeGiftProductInfo(),
-    getBundleEnabledProductSlugs(),
+    getBestsellerProducts({ per_page: 20, locale, currency, frontendHost }),
+    getBestsellerProducts({ per_page: 20, locale: "en", currency, frontendHost }),
+    getFreeGiftProductInfo(currency, frontendHost),
+    getBundleEnabledProductSlugs(frontendHost),
   ]);
 
   const bestsellerEnglishSlugs: Record<number, string> = {};
@@ -223,11 +228,13 @@ async function BestsellerProductsSection({ locale, isRTL, dictionary, homeSettin
 }
 
 // Async server component: Featured products section
-async function FeaturedProductsSection({ locale, isRTL, dictionary, homeSettings }: {
+async function FeaturedProductsSection({ locale, isRTL, dictionary, homeSettings, currency, frontendHost }: {
   locale: Locale;
   isRTL: boolean;
   dictionary: Awaited<ReturnType<typeof getDictionary>>;
   homeSettings: Awaited<ReturnType<typeof getHomePageSettings>>;
+  currency: Currency;
+  frontendHost: string;
 }) {
   const [
     { products: featuredProductsRaw },
@@ -235,10 +242,10 @@ async function FeaturedProductsSection({ locale, isRTL, dictionary, homeSettings
     giftProductInfo,
     bundleProductSlugs,
   ] = await Promise.all([
-    getFeaturedProducts({ per_page: 20, locale }),
-    getFeaturedProducts({ per_page: 20, locale: "en" }),
-    getFreeGiftProductInfo(),
-    getBundleEnabledProductSlugs(),
+    getFeaturedProducts({ per_page: 20, locale, currency, frontendHost }),
+    getFeaturedProducts({ per_page: 20, locale: "en", currency, frontendHost }),
+    getFreeGiftProductInfo(currency, frontendHost),
+    getBundleEnabledProductSlugs(frontendHost),
   ]);
 
   const featuredEnglishSlugs: Record<number, string> = {};
@@ -277,15 +284,20 @@ export default async function HomePage({ params }: HomePageProps) {
   const { locale } = await params;
   const validLocale = locale as Locale;
   const isRTL = locale === "ar";
+  const [market, frontendHost] = await Promise.all([
+    getRequestMarket(),
+    getRequestFrontendHost(),
+  ]);
 
-  const [dictionary, homeSettings, homeSections] = await Promise.all([
+  const [dictionary, homeSettings, homeSections, siteSettings] = await Promise.all([
     getDictionary(validLocale),
     getHomePageSettings(validLocale),
     getHomeSections(),
+    getSiteSettings(validLocale),
   ]);
 
   const t = (bi: { en: string; ar: string }) => isRTL ? bi.ar : bi.en;
-  const h1Text = isRTL ? "Sasan Perfumes" : siteConfig.name;
+  const h1Text = siteSettings.site_name || siteConfig.name;
 
   return (
     <>
@@ -300,6 +312,8 @@ export default async function HomePage({ params }: HomePageProps) {
             isRTL={isRTL}
             dictionary={dictionary}
             homeSettings={homeSettings}
+            currency={market.defaultCurrency}
+            frontendHost={frontendHost}
           />
         </Suspense>
 
@@ -309,6 +323,8 @@ export default async function HomePage({ params }: HomePageProps) {
             isRTL={isRTL}
             dictionary={dictionary}
             homeSettings={homeSettings}
+            currency={market.defaultCurrency}
+            frontendHost={frontendHost}
           />
         </Suspense>
 
@@ -320,6 +336,8 @@ export default async function HomePage({ params }: HomePageProps) {
             isRTL={isRTL}
             dictionary={dictionary}
             homeSettings={homeSettings}
+            currency={market.defaultCurrency}
+            frontendHost={frontendHost}
           />
         </Suspense>
 

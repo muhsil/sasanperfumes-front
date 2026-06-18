@@ -17,6 +17,7 @@ import { siteConfig, localeConfig, type Locale } from "@/config/site";
 import { INDEX_NOFOLLOW_ROBOTS, generateOrganizationJsonLd, generateWebSiteJsonLd, generateLocalBusinessJsonLd } from "@/lib/utils/seo";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getSiteSettings, getHeaderSettings, getPrimaryMenu, getMobileHeaderMenu, getMobileBottomBarMenu, getMobileBarSettings, getCategoriesDrawerMenu, getTopbarSettings, getSeoSettings, getFooterSettings, getWhatsAppSettings, getFeatureToggles, getStaticPageContent, mapRepeater, pickLocale } from "@/lib/api/wordpress";
+import { getRequestMarket } from "@/lib/market/server";
 import { TrackingScripts } from "@/components/tracking";
 import { Suspense } from "react";
 
@@ -54,6 +55,8 @@ export async function generateMetadata({
   const validLocale = locale as Locale;
   
   const siteSettings = await getSiteSettings(validLocale);
+  const metadataSiteName = siteSettings.site_name || siteConfig.name;
+  const metadataDescription = siteSettings.tagline || siteConfig.description;
   
   const faviconUrl = siteSettings.favicon?.url;
   const proxiedFaviconUrl = faviconUrl
@@ -65,10 +68,10 @@ export async function generateMetadata({
 
   return {
     title: {
-      default: siteConfig.name,
-      template: `%s | ${siteConfig.name}`,
+      default: metadataSiteName,
+      template: `%s | ${metadataSiteName}`,
     },
-    description: siteConfig.description,
+    description: metadataDescription,
     metadataBase: new URL(siteConfig.url),
     robots: INDEX_NOFOLLOW_ROBOTS,
     icons: faviconWithCacheBust ? {
@@ -93,6 +96,7 @@ export default async function LocaleLayout({
   const validLocale = locale as Locale;
   const dictionary = await getDictionary(validLocale);
   const { dir } = localeConfig[validLocale];
+  const market = await getRequestMarket();
 
   // Fetch site settings, header settings, topbar settings, menu, and SEO settings in parallel
   const [siteSettings, headerSettings, topbarSettings, menuItems, mobileMenuItems, mobileBottomBarMenu, mobileBarSettings, categoriesDrawerMenu, seoSettings, footerSettings, whatsAppSettings, featureToggles, contactPageContent] = await Promise.all([
@@ -121,7 +125,7 @@ export default async function LocaleLayout({
 
   return (
     <AuthProvider>
-      <CurrencyProvider>
+      <CurrencyProvider market={market}>
         <NotificationProvider>
           <ComparisonProvider>
                                         <CartProvider locale={validLocale}>

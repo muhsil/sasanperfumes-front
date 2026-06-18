@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getFeaturedProducts, getProducts } from "@/lib/api/woocommerce";
+import { getMarketByHost, normalizeMarketHost } from "@/config/market";
 import type { Locale } from "@/config/site";
 import type { WCProduct, WCProductLightweight } from "@/types/woocommerce";
 
@@ -31,7 +32,14 @@ function toProductLightweight(product: WCProduct): WCProductLightweight {
     prices: {
       price: product.prices.price,
       regular_price: product.prices.regular_price,
+      sale_price: product.prices.sale_price,
+      currency_code: product.prices.currency_code,
+      currency_symbol: product.prices.currency_symbol,
       currency_minor_unit: product.prices.currency_minor_unit,
+      currency_decimal_separator: product.prices.currency_decimal_separator,
+      currency_thousand_separator: product.prices.currency_thousand_separator,
+      currency_prefix: product.prices.currency_prefix,
+      currency_suffix: product.prices.currency_suffix,
       price_range: product.prices.price_range ?? null,
     },
     images: product.images.slice(0, 1).map((img) => ({
@@ -80,6 +88,12 @@ function toProductLightweight(product: WCProduct): WCProductLightweight {
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
+  const frontendHost = normalizeMarketHost(
+    request.headers.get("x-frontend-host") ||
+    request.headers.get("x-forwarded-host") ||
+    request.headers.get("host")
+  );
+  const market = getMarketByHost(frontendHost);
   
   const page = parseInt(searchParams.get("page") || "1", 10);
   const per_page = parseInt(searchParams.get("per_page") || "12", 10);
@@ -112,6 +126,7 @@ export async function GET(request: NextRequest) {
       brand,
       featured,
       include: includeValues,
+      frontendHost,
     });
     const cached = productsCache.get(cacheKey);
     let result: { products: WCProduct[]; total: number; totalPages: number };
@@ -124,6 +139,8 @@ export async function GET(request: NextRequest) {
           page,
           per_page,
           locale,
+          currency: market.defaultCurrency,
+          frontendHost,
         });
       } else {
         result = await getProducts({
@@ -135,6 +152,8 @@ export async function GET(request: NextRequest) {
           order,
           include: include.length > 0 ? include : undefined,
           locale,
+          currency: market.defaultCurrency,
+          frontendHost,
         });
       }
 
@@ -163,6 +182,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(response, {
       headers: {
         "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+        "Vary": "Host, X-Frontend-Host",
       },
     });
   } catch (error) {

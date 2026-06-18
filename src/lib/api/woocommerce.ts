@@ -9,10 +9,9 @@ import type {
 import type { BundlePricing } from "@/types/bundle";
 
 const API_BASE = `${siteConfig.apiUrl}/wp-json/wc/store/v1`;
-const legacyBrandName = ["Aromatic", "Scents", "Lab"].join(" ");
 
 function rebrandText(value: string): string {
-  return value.replaceAll(legacyBrandName, siteConfig.name);
+  return value;
 }
 
 function rebrandApiContent<T>(value: T): T {
@@ -52,11 +51,30 @@ function formatFetchError(error: unknown): string {
   return error.message;
 }
 
+function withFrontendHostParam(url: string, frontendHost?: string): string {
+  if (!frontendHost) return url;
+
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}frontend_host=${encodeURIComponent(frontendHost)}`;
+}
+
+function getCurrencyMinorUnit(currency?: Currency): number {
+  const code = (currency || DEFAULT_API_CURRENCY).toUpperCase();
+  return ["BHD", "KWD", "OMR"].includes(code) ? 3 : 2;
+}
+
+function toMinorUnitPrice(value: unknown, minorUnit: number): string {
+  const numeric = Number.parseFloat(String(value || "0"));
+  if (!Number.isFinite(numeric)) return "0";
+  return String(Math.round(numeric * Math.pow(10, minorUnit)));
+}
+
 interface FetchOptions {
   revalidate?: number;
   tags?: string[];
   locale?: Locale;
   currency?: Currency;
+  frontendHost?: string;
 }
 
 interface FetchAPIResponse<T> {
@@ -78,9 +96,13 @@ async function fetchAPI<T>(
   endpoint: string,
   options: FetchOptions = {}
 ): Promise<T> {
-  const { revalidate = 60, tags, locale, currency } = options;
+  const { revalidate = 60, tags, locale, currency, frontendHost } = options;
 
   let url = `${API_BASE}${endpoint}`;
+  if (frontendHost) {
+    const separator = url.includes("?") ? "&" : "?";
+    url = `${url}${separator}frontend_host=${encodeURIComponent(frontendHost)}`;
+  }
   
   // Add locale parameter for WPML language support
   if (locale) {
@@ -115,9 +137,13 @@ async function fetchAPIWithPagination<T>(
   endpoint: string,
   options: FetchOptions = {}
 ): Promise<FetchAPIResponse<T>> {
-  const { revalidate = 60, tags, locale, currency } = options;
+  const { revalidate = 60, tags, locale, currency, frontendHost } = options;
 
   let url = `${API_BASE}${endpoint}`;
+  if (frontendHost) {
+    const separator = url.includes("?") ? "&" : "?";
+    url = `${url}${separator}frontend_host=${encodeURIComponent(frontendHost)}`;
+  }
   
   // Add locale parameter for WPML language support
   if (locale) {
@@ -164,6 +190,7 @@ export async function getProducts(params?: {
   include?: number[];
   locale?: Locale;
   currency?: Currency;
+  frontendHost?: string;
 }): Promise<WCProductsResponse> {
   try {
     const searchParams = new URLSearchParams();
@@ -191,6 +218,7 @@ export async function getProducts(params?: {
       tags: ["products"],
       locale: params?.locale,
       currency: params?.currency,
+      frontendHost: params?.frontendHost,
       revalidate: 300,
     });
 
@@ -229,7 +257,8 @@ function isNonAsciiSlug(slug: string): boolean {
 export const getProductBySlug = cache(async function getProductBySlug(
   slug: string,
   locale?: Locale,
-  currency?: Currency
+  currency?: Currency,
+  frontendHost?: string
 ): Promise<WCProduct | null> {
   try {
     // URL encode the slug to handle non-ASCII characters (e.g., Arabic slugs)
@@ -243,6 +272,7 @@ export const getProductBySlug = cache(async function getProductBySlug(
         tags: ["products", `product-${slug}-${locale}`],
         locale,
         currency,
+        frontendHost,
       });
       
       if (localizedProducts.length > 0) {
@@ -254,6 +284,7 @@ export const getProductBySlug = cache(async function getProductBySlug(
     const products = await fetchAPI<WCProduct[]>(`/products?slug=${encodedSlug}`, {
       tags: ["products", `product-${slug}`],
       currency,
+      frontendHost,
     });
 
     if (products.length === 0) {
@@ -269,12 +300,14 @@ export const getProductBySlug = cache(async function getProductBySlug(
 // Get the English slug for a product (used for URL generation)
 // This ensures URLs always use English slugs regardless of current locale
 export const getEnglishSlugForProduct = cache(async function getEnglishSlugForProduct(
-  productId: number
+  productId: number,
+  frontendHost?: string
 ): Promise<string | null> {
   try {
     const product = await fetchAPI<WCProduct>(`/products/${productId}`, {
       tags: ["products", `product-${productId}`],
       locale: "en", // Always fetch with English locale to get English slug
+      frontendHost,
     });
     return product.slug;
   } catch {
@@ -288,13 +321,15 @@ export const getEnglishSlugForProduct = cache(async function getEnglishSlugForPr
 // finding the English category at the same position/index in the category list
 export const getEnglishSlugForCategory = cache(async function getEnglishSlugForCategory(
   localizedCategoryId: number,
-  locale?: Locale
+  locale?: Locale,
+  currency?: Currency,
+  frontendHost?: string
 ): Promise<string | null> {
   try {
     // Fetch categories for both locales
     const [localizedCategories, englishCategories] = await Promise.all([
-      getCategories(locale),
-      getCategories("en"),
+      getCategories(locale, currency, frontendHost),
+      getCategories("en", currency, frontendHost),
     ]);
     
     // Find the localized category by ID
@@ -332,13 +367,15 @@ export const getEnglishSlugForCategory = cache(async function getEnglishSlugForC
 export async function getProductById(
   id: number,
   locale?: Locale,
-  currency?: Currency
+  currency?: Currency,
+  frontendHost?: string
 ): Promise<WCProduct | null> {
   try {
     const product = await fetchAPI<WCProduct>(`/products/${id}`, {
       tags: ["products", `product-${id}`],
       locale,
       currency,
+      frontendHost,
     });
 
     return product;
@@ -350,7 +387,8 @@ export async function getProductById(
 export async function getProductsByIds(
   ids: number[],
   locale?: Locale,
-  currency?: Currency
+  currency?: Currency,
+  frontendHost?: string
 ): Promise<WCProduct[]> {
   if (ids.length === 0) {
     return [];
@@ -363,6 +401,7 @@ export async function getProductsByIds(
         tags: ["products", ...ids.map((id) => `product-${id}`)],
         locale,
         currency,
+        frontendHost,
       }
     );
 
@@ -375,7 +414,8 @@ export async function getProductsByIds(
 export async function searchProductByName(
   name: string,
   locale?: Locale,
-  currency?: Currency
+  currency?: Currency,
+  frontendHost?: string
 ): Promise<WCProduct | null> {
   if (!name) return null;
 
@@ -386,6 +426,7 @@ export async function searchProductByName(
         tags: ["products", `product-search-${name}`],
         locale,
         currency,
+        frontendHost,
         revalidate: 300,
       }
     );
@@ -400,12 +441,17 @@ export async function searchProductByName(
 }
 
 // Categories API - Memoized for request deduplication
-export const getCategories = cache(async function getCategories(locale?: Locale, currency?: Currency): Promise<WCCategory[]> {
+export const getCategories = cache(async function getCategories(
+  locale?: Locale,
+  currency?: Currency,
+  frontendHost?: string
+): Promise<WCCategory[]> {
   try {
     const categories = await fetchAPI<WCCategory[]>("/products/categories?per_page=100", {
       tags: ["categories"],
       locale,
       currency,
+      frontendHost,
       revalidate: 600, // Cache categories longer as they change less frequently
     });
 
@@ -590,10 +636,11 @@ export const TAG_SLUG_MAPPINGS = {
 export const getCategoryBySlug = cache(async function getCategoryBySlug(
   slug: string,
   locale?: Locale,
-  currency?: Currency
+  currency?: Currency,
+  frontendHost?: string
 ): Promise<WCCategory | null> {
   try {
-    const categories = await getCategories(locale, currency);
+    const categories = await getCategories(locale, currency, frontendHost);
     
     // First, try to find by exact slug match
     const exactMatch = categories.find((cat) => cat.slug === slug);
@@ -615,7 +662,7 @@ export const getCategoryBySlug = cache(async function getCategoryBySlug(
     // Fallback: If locale is not English, try to find by matching with English categories
     // This handles cases where the mapping might be incomplete
     if (locale && locale !== "en") {
-      const englishCategories = await getCategories("en", currency);
+      const englishCategories = await getCategories("en", currency, frontendHost);
       
       // Find the English category with this slug
       const englishCategory = englishCategories.find((cat) => cat.slug === slug);
@@ -663,9 +710,15 @@ export async function getProductsByCategory(
     per_page?: number;
     locale?: Locale;
     currency?: Currency;
+    frontendHost?: string;
   }
 ): Promise<WCProductsResponse> {
-  const category = await getCategoryBySlug(categorySlug, params?.locale, params?.currency);
+  const category = await getCategoryBySlug(
+    categorySlug,
+    params?.locale,
+    params?.currency,
+    params?.frontendHost
+  );
 
   if (!category) {
     return { products: [], total: 0, totalPages: 0 };
@@ -684,6 +737,7 @@ export async function getProductsByCategory(
     per_page: 100,
     locale: params.locale,
     currency: params.currency,
+    frontendHost: params.frontendHost,
   });
 
   const products = fallback.products.filter((product) =>
@@ -707,6 +761,7 @@ export async function getProductsByNote(
   params?: {
     locale?: Locale;
     currency?: Currency;
+    frontendHost?: string;
   }
 ): Promise<WCProductsResponse> {
   // Always fetch in English first for reliable attribute slug matching,
@@ -721,6 +776,7 @@ export async function getProductsByNote(
       per_page: 100,
       locale: "en",
       currency: params?.currency,
+      frontendHost: params?.frontendHost,
     });
     allEnglishProducts = allEnglishProducts.concat(result.products);
     totalPages = result.totalPages;
@@ -753,6 +809,7 @@ export async function getProductsByNote(
     include: matchedIds,
     locale: params.locale,
     currency: params?.currency,
+    frontendHost: params?.frontendHost,
   });
 
   return {
@@ -769,6 +826,7 @@ export const getRelatedProducts = cache(async function getRelatedProducts(
     per_page?: number;
     locale?: Locale;
     currency?: Currency;
+    frontendHost?: string;
   }
 ): Promise<WCProduct[]> {
   const categoryId = product.categories?.[0]?.id;
@@ -783,6 +841,7 @@ export const getRelatedProducts = cache(async function getRelatedProducts(
       per_page: params?.per_page || 8,
       locale: params?.locale,
       currency: params?.currency,
+      frontendHost: params?.frontendHost,
     });
 
     return products.filter((p) => p.id !== product.id);
@@ -799,6 +858,7 @@ export const getRelatedProductsByCategoryId = cache(async function getRelatedPro
     per_page?: number;
     locale?: Locale;
     currency?: Currency;
+    frontendHost?: string;
   }
 ): Promise<WCProduct[]> {
   try {
@@ -807,6 +867,7 @@ export const getRelatedProductsByCategoryId = cache(async function getRelatedPro
       per_page: params?.per_page || 8,
       locale: params?.locale,
       currency: params?.currency,
+      frontendHost: params?.frontendHost,
     });
 
     return products.filter((p) => p.id !== excludeProductId);
@@ -829,7 +890,7 @@ export interface SlotConfig {
   exclude_products?: number[];
 }
 
-// Bundle Configuration API (from Sasan Perfumes Bundles Creator plugin)
+// Bundle Configuration API (from ShapeHive Bundles Creator plugin)
 export interface BundleConfig {
   product_id: number;
   bundle_id?: string;
@@ -858,10 +919,14 @@ export interface BundleConfig {
 
 export async function getBundleConfig(
   productSlug: string,
-  locale?: Locale
+  locale?: Locale,
+  frontendHost?: string
 ): Promise<BundleConfig | null> {
   try {
-    let url = `${siteConfig.apiUrl}/wp-json/sasanperfumes-bundles/v1/config?slug=${productSlug}`;
+    let url = withFrontendHostParam(
+      `${siteConfig.apiUrl}/wp-json/sasanperfumes-bundles/v1/config?slug=${productSlug}`,
+      frontendHost
+    );
     
     // Add locale parameter for WPML language support
     // This ensures the bundle config returns product/category IDs for the correct language
@@ -935,8 +1000,8 @@ export interface FreeGiftInfo {
   slugs: string[];
 }
 
-export async function getFreeGiftProductIds(currency?: string): Promise<number[]> {
-  const info = await getFreeGiftProductInfo(currency);
+export async function getFreeGiftProductIds(currency?: string, frontendHost?: string): Promise<number[]> {
+  const info = await getFreeGiftProductInfo(currency, frontendHost);
   return info.ids;
 }
 
@@ -944,11 +1009,14 @@ export async function getFreeGiftProductIds(currency?: string): Promise<number[]
 // Slugs are needed for filtering across WPML locales since product IDs differ per locale
 // Note: WPML may create different slugs for Arabic products (e.g., "free-gift-2" instead of "free-gift")
 // so we need to fetch slugs for both English and Arabic locales
-export async function getFreeGiftProductInfo(currency?: string): Promise<FreeGiftInfo> {
+export async function getFreeGiftProductInfo(currency?: string, frontendHost?: string): Promise<FreeGiftInfo> {
   try {
-    let url = `${siteConfig.apiUrl}/wp-json/sasanperfumes-free-gifts/v1/rules`;
+    let url = withFrontendHostParam(
+      `${siteConfig.apiUrl}/wp-json/sasanperfumes-free-gifts/v1/rules`,
+      frontendHost
+    );
     if (currency) {
-      url += `?currency=${encodeURIComponent(currency)}`;
+      url += `${url.includes("?") ? "&" : "?"}currency=${encodeURIComponent(currency)}`;
     }
 
     const response = await fetch(url, {
@@ -989,7 +1057,7 @@ export async function getFreeGiftProductInfo(currency?: string): Promise<FreeGif
             // Fetch English product slug
             (async () => {
               try {
-                const product = await getProductById(id, "en");
+                const product = await getProductById(id, "en", undefined, frontendHost);
                 return product?.slug;
               } catch {
                 return undefined;
@@ -998,7 +1066,7 @@ export async function getFreeGiftProductInfo(currency?: string): Promise<FreeGif
             // Fetch Arabic product slug (may be different due to WPML)
             (async () => {
               try {
-                const product = await getProductById(id, "ar");
+                const product = await getProductById(id, "ar", undefined, frontendHost);
                 return product?.slug;
               } catch {
                 return undefined;
@@ -1025,7 +1093,7 @@ export async function getFreeGiftProductInfo(currency?: string): Promise<FreeGif
 // Uses WC REST API v3 which returns catalog_visibility field
 // Note: WooCommerce REST API doesn't support catalog_visibility as a query filter,
 // so we fetch all products and filter client-side by the catalog_visibility property
-export async function getHiddenProductIds(): Promise<number[]> {
+export async function getHiddenProductIds(frontendHost?: string): Promise<number[]> {
   try {
     const consumerKey = process.env.WC_CONSUMER_KEY;
     const consumerSecret = process.env.WC_CONSUMER_SECRET;
@@ -1035,7 +1103,10 @@ export async function getHiddenProductIds(): Promise<number[]> {
 
     // Fetch all products and filter by catalog_visibility property
     // The catalog_visibility query param is not supported by WC REST API
-    const url = `${siteConfig.apiUrl}/wp-json/wc/v3/products?per_page=100&status=publish`;
+    const url = withFrontendHostParam(
+      `${siteConfig.apiUrl}/wp-json/wc/v3/products?per_page=100&status=publish`,
+      frontendHost
+    );
     
     const response = await fetch(url, {
       headers: {
@@ -1071,10 +1142,13 @@ export async function getHiddenProductIds(): Promise<number[]> {
 
 // Fetch all bundle-enabled product slugs from the backend
 // Used to identify bundle products in shop listings
-export async function getBundleEnabledProductSlugs(): Promise<string[]> {
+export async function getBundleEnabledProductSlugs(frontendHost?: string): Promise<string[]> {
   try {
     const response = await fetch(
-      `${siteConfig.apiUrl}/wp-json/sasanperfumes-bundles/v1/enabled-products`,
+      withFrontendHostParam(
+        `${siteConfig.apiUrl}/wp-json/sasanperfumes-bundles/v1/enabled-products`,
+        frontendHost
+      ),
       {
         next: {
           revalidate: 60,
@@ -1087,7 +1161,10 @@ export async function getBundleEnabledProductSlugs(): Promise<string[]> {
     if (!response.ok) {
       // Fallback: try to get from bundles list
       const bundlesResponse = await fetch(
-        `${siteConfig.apiUrl}/wp-json/sasanperfumes-bundles/v1/bundles`,
+        withFrontendHostParam(
+          `${siteConfig.apiUrl}/wp-json/sasanperfumes-bundles/v1/bundles`,
+          frontendHost
+        ),
         {
           next: {
             revalidate: 60,
@@ -1129,7 +1206,7 @@ export async function getBundleEnabledProductSlugs(): Promise<string[]> {
           // Fetch product slugs from WooCommerce API
           const slugPromises = productIds.map(async (productId: number) => {
             try {
-              const product = await getProductById(productId);
+              const product = await getProductById(productId, undefined, undefined, frontendHost);
               return product?.slug || null;
             } catch {
               return null;
@@ -1160,11 +1237,15 @@ export async function getBundleEnabledProductSlugs(): Promise<string[]> {
 // The Store API doesn't include linked product IDs, so we use the REST API
 export async function getProductUpsellIds(
   productId: number,
-  locale?: Locale
+  locale?: Locale,
+  frontendHost?: string
 ): Promise<{ upsell_ids: number[]; cross_sell_ids: number[] }> {
   try {
     const langParam = locale ? `&lang=${locale}` : "";
-    const url = `${siteConfig.apiUrl}/wp-json/wc/v3/products/${productId}?_fields=upsell_ids,cross_sell_ids${langParam}`;
+    const url = withFrontendHostParam(
+      `${siteConfig.apiUrl}/wp-json/wc/v3/products/${productId}?_fields=upsell_ids,cross_sell_ids${langParam}`,
+      frontendHost
+    );
 
     const response = await fetch(url, {
       headers: {
@@ -1197,6 +1278,7 @@ export async function getNewProducts(params?: {
   per_page?: number;
   locale?: Locale;
   currency?: Currency;
+  frontendHost?: string;
 }): Promise<WCProductsResponse> {
   return getProducts({
     ...params,
@@ -1205,69 +1287,18 @@ export async function getNewProducts(params?: {
   });
 }
 
-export const BESTSELLER_PRODUCT_IDS = [
-  9732, // Sasan Perfumes Ramadan Gift Set (latest added - keep first)
-  8004, // Dark Musk Perfume
-  8009, // Velvet Amber Perfume
-  8007, // Secret Leather Perfume
-  8030, // Cool Violet Air Fresheners
-  8021, // Dark Musk Oil
-  9617, // Velvet Amber Oil
-  8036, // Hand Body Lotion Velvet Amber
-  8012, // Hair Mist Dark Musk
-  8019, // Hair Mist Royal Tobacco
-];
-
-// Slug-based bestseller matching for WPML multi-locale support
-// Product IDs differ across locales (EN vs AR), but slugs remain the same
-export const BESTSELLER_PRODUCT_SLUGS = [
-  "sasanperfumes-ramadan-box",                // Sasan Perfumes Ramadan Gift Set (latest added - keep first)
-  "dark-musk-perfume",              // Dark Musk Perfume
-  "velvet-amber-perfume",           // Velvet Amber Perfume
-  "secret-leather-perfume",         // Secret Leather Perfume
-  "cool-violet-air-fresheners",     // Cool Violet Air Fresheners
-  "dark-musk-oil",                  // Dark Musk Oil
-  "velvet-amber",                   // Velvet Amber Oil
-  "velvet-amber-hand-body-lotion",  // Hand Body Lotion Velvet Amber
-  "dark-musk-hair-body-mist",       // Hair Mist Dark Musk
-  "royal-tobacco-hair-body-mist",   // Hair Mist Royal Tobacco
-];
-
 export async function getBestsellerProducts(params?: {
   page?: number;
   per_page?: number;
   locale?: Locale;
   currency?: Currency;
+  frontendHost?: string;
 }): Promise<WCProductsResponse> {
-  try {
-    const requestSlugs = BESTSELLER_PRODUCT_SLUGS;
-    const productPromises = requestSlugs.map((slug) =>
-      getProductBySlug(slug, params?.locale, params?.currency).catch(() => null)
-    );
-    const products = (await Promise.all(productPromises)).filter(
-      (product): product is WCProduct => Boolean(product)
-    );
-
-    const ordered = requestSlugs
-      .map((slug) => products.find((product) => product.slug === slug))
-      .filter((product): product is WCProduct => Boolean(product));
-
-    const pageSize = params?.per_page || ordered.length || BESTSELLER_PRODUCT_SLUGS.length;
-    const page = Math.max(params?.page || 1, 1);
-    const start = (page - 1) * pageSize;
-    const pagedProducts = ordered.slice(start, start + pageSize);
-
-    return {
-      products: pagedProducts,
-      total: ordered.length,
-      totalPages: Math.max(1, Math.ceil(ordered.length / pageSize)),
-    };
-  } catch {
-    return getProducts({
-      ...params,
-      per_page: params?.per_page,
-    });
-  }
+  return getProducts({
+    ...params,
+    orderby: "popularity",
+    order: "desc",
+  });
 }
 
 // Get featured products
@@ -1278,18 +1309,25 @@ export async function getFeaturedProducts(params?: {
   per_page?: number;
   locale?: Locale;
   currency?: Currency;
+  frontendHost?: string;
 }): Promise<WCProductsResponse> {
   try {
     const labels = getProductUILabels(params?.locale);
+    const currencyCode = params?.currency || DEFAULT_API_CURRENCY;
+    const minorUnit = getCurrencyMinorUnit(currencyCode);
 
     // Try to fetch featured products from custom endpoint
     const searchParams = new URLSearchParams();
     if (params?.page) searchParams.set("page", params.page.toString());
     if (params?.per_page) searchParams.set("per_page", params.per_page.toString());
     if (params?.locale) searchParams.set("lang", params.locale);
+    searchParams.set("currency", currencyCode);
     
     const queryString = searchParams.toString();
-    const url = `${siteConfig.apiUrl}/wp-json/wc/v3/products?featured=true&status=publish${queryString ? `&${queryString}` : ""}`;
+    const url = withFrontendHostParam(
+      `${siteConfig.apiUrl}/wp-json/wc/v3/products?featured=true&status=publish${queryString ? `&${queryString}` : ""}`,
+      params?.frontendHost
+    );
     
     const response = await fetch(url, {
       headers: {
@@ -1325,17 +1363,17 @@ export async function getFeaturedProducts(params?: {
       description: product.description || "",
       on_sale: product.on_sale || false,
       prices: {
-        price: String(Math.round(parseFloat(String(product.price || "0")) * 100)),
-        regular_price: String(Math.round(parseFloat(String(product.regular_price || "0")) * 100)),
-        sale_price: product.sale_price ? String(Math.round(parseFloat(String(product.sale_price)) * 100)) : "",
+        price: toMinorUnitPrice(product.price, minorUnit),
+        regular_price: toMinorUnitPrice(product.regular_price || product.price, minorUnit),
+        sale_price: product.sale_price ? toMinorUnitPrice(product.sale_price, minorUnit) : "",
         price_range: null,
-        currency_code: "AED",
-        currency_symbol: "AED",
-        currency_minor_unit: 2,
+        currency_code: currencyCode,
+        currency_symbol: currencyCode,
+        currency_minor_unit: minorUnit,
         currency_decimal_separator: ".",
         currency_thousand_separator: ",",
         currency_prefix: "",
-        currency_suffix: " AED",
+        currency_suffix: ` ${currencyCode}`,
       },
       price_html: product.price_html || "",
       average_rating: product.average_rating || "0",

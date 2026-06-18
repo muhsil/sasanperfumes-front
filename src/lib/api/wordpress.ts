@@ -88,6 +88,11 @@ function buildWPAPIUrls(endpoint: string, locale?: Locale): string[] {
   return urls;
 }
 
+function appendQueryParam(url: string, key: string, value: string): string {
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}${key}=${encodeURIComponent(value)}`;
+}
+
 const legacyBrandNames = [
   ["Aromatic", "Scents", "Lab"].join(" "),
   ["Aromatics", "Scents", "Lab"].join(" "),
@@ -99,16 +104,11 @@ const legacyBrandNames = [
 const legacyMediaHosts = [["cms", ["fragrance", "network"].join(""), "ae"].join(".")];
 
 function rebrandText(value: string): string {
-  const withoutOldMediaHost = legacyMediaHosts.reduce(
+  return legacyMediaHosts.reduce(
     (text, host) => text
       .replaceAll(`https://${host}`, siteConfig.apiUrl)
       .replaceAll(`http://${host}`, siteConfig.apiUrl),
     value
-  );
-
-  return legacyBrandNames.reduce(
-    (text, legacyBrandName) => text.replaceAll(legacyBrandName, siteConfig.name),
-    withoutOldMediaHost
   );
 }
 
@@ -631,14 +631,17 @@ interface FetchOptions {
   tags?: string[];
   locale?: Locale;
   noCache?: boolean;
+  frontendHost?: string;
 }
 
 async function fetchWPAPI<T>(
   endpoint: string,
   options: FetchOptions = {}
 ): Promise<T | null> {
-  const { revalidate = 300, tags, locale, noCache = false } = options;
-  const urls = buildWPAPIUrls(endpoint, locale);
+  const { revalidate = 300, tags, locale, noCache = false, frontendHost } = options;
+  const urls = buildWPAPIUrls(endpoint, locale).map((url) =>
+    frontendHost ? appendQueryParam(url, "frontend_host", frontendHost) : url
+  );
 
   try {
       const shouldBypassCache = disableRuntimeCache || noCache || CMS_FORCE_DYNAMIC_CACHE || isCmsContentEndpoint(endpoint);
@@ -673,7 +676,7 @@ async function fetchWPAPI<T>(
       }
 
       try {
-        return JSON.parse(text) as T;
+        return JSON.parse(text.replace(/^\uFEFF/, "")) as T;
       } catch {
         console.warn(`WordPress API returned invalid JSON (${url})`);
         return null;
@@ -773,7 +776,7 @@ export async function getSiteSettings(locale?: Locale): Promise<SiteSettings> {
     return siteInfo;
   };
 
-  // Logo priority: explicit env override -> backend absolute URL -> local fallback
+  // Logo priority: explicit env override -> backend absolute URL.
   // We use the absolute backend URL directly (not proxied) so Next.js <Image> can
   // optimize it via remotePatterns. The /cms-media/ rewrite proxy causes _next/image
   // to return 400 because the optimizer rejects relative rewrite URLs server-side.
@@ -812,10 +815,6 @@ export async function getSiteSettings(locale?: Locale): Promise<SiteSettings> {
     }
   }
 
-  if (!logoUrl) {
-    logoUrl = siteConfig.logoUrl || "/images/logo-sasanperfumes.svg";
-  }
-
   if (logoUrl && logoId != null && !String(logoUrl).includes("v=")) {
     logoUrl = `${logoUrl}${logoUrl.includes("?") ? "&" : "?"}v=${logoId}`;
   }
@@ -852,8 +851,8 @@ export async function getSiteSettings(locale?: Locale): Promise<SiteSettings> {
   }
 
   // Decode HTML entities to prevent double-encoding in <title> and meta tags.
-  const rawSiteName = siteConfig.name;
-  const rawSiteTagline = siteConfig.description;
+  const rawSiteName = pluginSiteData?.name || siteInfo?.name || "";
+  const rawSiteTagline = pluginSiteData?.description || siteInfo?.description || "";
   const siteName = decodeHtmlEntities(rawSiteName);
   const siteTagline = decodeHtmlEntities(rawSiteTagline);
 
@@ -1342,8 +1341,8 @@ export async function getTopbarSettings(locale?: Locale): Promise<TopbarSettings
 // ─── Footer Settings ───
 const defaultFooterSettings: FooterSettings = {
   description: {
-    en: "Discover Sasan Perfumes, a UAE fragrance destination for perfumes, hair mist, all over sprays, and gift-ready scent collections.",
-    ar: "اكتشف ساسان للعطور، وجهتك في الإمارات للعطور، معطرات الشعر، بخاخات الجسم، ومجموعات الهدايا العطرية.",
+    en: "Discover ShapeHive, a UAE fragrance destination for perfumes, hair mist, all over sprays, and gift-ready scent collections.",
+    ar: "اكتشف شيب هايف، وجهتك في الإمارات للعطور، معطرات الشعر، بخاخات الجسم، ومجموعات الهدايا العطرية.",
   },
   copyright: {
     en: "All rights reserved.",

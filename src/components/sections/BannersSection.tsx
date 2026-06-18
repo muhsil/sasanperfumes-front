@@ -26,15 +26,6 @@ function BannerSkeleton() {
   return (
     <div className="relative min-h-[48svh] w-full overflow-hidden rounded-lg sm:min-h-[50svh] lg:min-h-[56svh]">
       <Skeleton className="absolute inset-0" />
-      <div className="absolute inset-0 flex items-center justify-center">
-        <Image
-          src="/images/sasanperfumes-placeholder.svg"
-          alt="Loading"
-          width={150}
-          height={150}
-          className="object-contain opacity-20"
-        />
-      </div>
     </div>
   );
 }
@@ -135,15 +126,7 @@ export function BannersSection({
                       />
                   </>
                 ) : (
-                  <div className="absolute inset-0 flex items-center justify-center bg-stone-200">
-                    <Image
-                      src="/images/sasanperfumes-placeholder.svg"
-                      alt="Sasan Perfumes"
-                      width={150}
-                      height={150}
-                      className="object-contain opacity-20"
-                    />
-                  </div>
+                  <div className="absolute inset-0 bg-stone-200" aria-hidden="true" />
                 )}
                 {(banner.title || banner.subtitle) && (
                   <>

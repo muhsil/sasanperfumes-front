@@ -25,9 +25,10 @@ function headersToRecord(headers?: HeadersInit): Record<string, string> {
 }
 
 export function backendHeaders(extra?: HeadersInit): HeadersInit {
+  const isBrowser = typeof window !== "undefined";
   return headersToRecord({
     "Accept": "application/json",
-    "User-Agent": BACKEND_USER_AGENT,
+    ...(isBrowser ? {} : { "User-Agent": BACKEND_USER_AGENT }),
     ...extra,
   });
 }
@@ -64,16 +65,11 @@ export async function fetchBackend(url: string, init?: RequestInit): Promise<Res
 }
 
 function sanitizeBackendText(value: string): string {
-  const withoutLegacyMedia = LEGACY_MEDIA_HOSTS.reduce(
+  return LEGACY_MEDIA_HOSTS.reduce(
     (text, host) => text
       .replaceAll(`https://${host}`, siteConfig.apiUrl)
       .replaceAll(`http://${host}`, siteConfig.apiUrl),
     value
-  );
-
-  return LEGACY_BRAND_NAMES.reduce(
-    (text, legacyName) => text.replaceAll(legacyName, siteConfig.name),
-    withoutLegacyMedia
   );
 }
 

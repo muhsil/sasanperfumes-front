@@ -13,7 +13,6 @@ import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { triggerHaptic } from "@/lib/utils/haptics";
-import { BESTSELLER_PRODUCT_SLUGS } from "@/lib/api/woocommerce";
 import type { WCProduct } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
 
@@ -113,15 +112,14 @@ export function WCProductCard({
   const productSlug = englishSlug || getProductSlugFromPermalink(product.permalink, product.slug);
   const isBundleProduct = bundleProductSlugs.includes(productSlug) || bundleProductSlugs.includes(product.slug);
   const productHref = `/${locale}/product/${productSlug}`;
+  const priceSourceCurrency = product.prices.currency_code;
   const prefetchProduct = useCallback(() => {
     if (prefetchedHrefRef.current === productHref) return;
     prefetchedHrefRef.current = productHref;
     router.prefetch(productHref);
   }, [productHref, router]);
   const productName = decodeHtmlEntities(product.name);
-  const extraBadgeSlugs = BESTSELLER_PRODUCT_SLUGS.includes(productSlug) || BESTSELLER_PRODUCT_SLUGS.includes(product.slug)
-    ? ["bestseller"]
-    : [];
+  const extraBadgeSlugs: string[] = [];
 
   const priceDivider = Math.pow(10, product.prices.currency_minor_unit);
   const price = parseInt(product.prices.price || "0") / priceDivider;
@@ -214,15 +212,7 @@ export function WCProductCard({
                     onError={() => setImageError(true)}
                   />
                 ) : (
-                  <div className="flex h-full items-center justify-center bg-brand-beige">
-                    <Image
-                      src="/images/sasanperfumes-placeholder.svg"
-                      alt="Sasan Perfumes"
-                      width={120}
-                      height={120}
-                      className="object-contain opacity-30"
-                    />
-                  </div>
+                  <div className="h-full bg-brand-beige" aria-hidden="true" />
                 )}
               </div>
             </Link>
@@ -356,17 +346,17 @@ export function WCProductCard({
                 <span className="text-[11px] font-bold text-brand-primary/45 sm:text-xs">{isRTL ? "غير متاح" : "Unavailable"}</span>
               ) : showAsVariable && hasPriceRange && minPrice !== maxPrice ? (
                 <div className="flex items-center justify-center gap-1">
-                  <FormattedPrice price={minPrice} className="text-[11px] font-bold text-brand-primary sm:text-xs" iconSize="xs" />
+                  <FormattedPrice price={minPrice} sourceCurrency={priceSourceCurrency} className="text-[11px] font-bold text-brand-primary sm:text-xs" iconSize="xs" />
                   <span className="text-xs text-brand-primary/40">–</span>
-                  <FormattedPrice price={maxPrice} className="text-[11px] font-bold text-brand-primary sm:text-xs" iconSize="xs" />
+                  <FormattedPrice price={maxPrice} sourceCurrency={priceSourceCurrency} className="text-[11px] font-bold text-brand-primary sm:text-xs" iconSize="xs" />
                 </div>
               ) : product.on_sale ? (
                 <div className="flex items-center justify-center gap-1">
-                  <FormattedPrice price={price} className="text-[11px] font-bold text-brand-primary sm:text-xs" iconSize="xs" />
-                  <FormattedPrice price={regularPrice} className="text-[11px] font-medium text-brand-primary/35" iconSize="xs" strikethrough />
+                  <FormattedPrice price={price} sourceCurrency={priceSourceCurrency} className="text-[11px] font-bold text-brand-primary sm:text-xs" iconSize="xs" />
+                  <FormattedPrice price={regularPrice} sourceCurrency={priceSourceCurrency} className="text-[11px] font-medium text-brand-primary/35" iconSize="xs" strikethrough />
                 </div>
               ) : (
-                <FormattedPrice price={price} className="text-[11px] font-bold text-brand-primary sm:text-xs" iconSize="xs" />
+                <FormattedPrice price={price} sourceCurrency={priceSourceCurrency} className="text-[11px] font-bold text-brand-primary sm:text-xs" iconSize="xs" />
               )}
               </div>
             </div>

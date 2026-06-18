@@ -13,7 +13,7 @@ import { useWishlist } from "@/contexts/WishlistContext";
 import { cn } from "@/lib/utils";
 import { shouldUseUnoptimizedImage } from "@/lib/utils/image";
 import type { Dictionary } from "@/i18n";
-import { siteConfig, type Locale } from "@/config/site";
+import { type Locale } from "@/config/site";
 import type { SiteSettings, WPMenuItem } from "@/types/wordpress";
 import type { HeaderSettings, TopbarSettings } from "@/lib/api/wordpress";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -224,21 +224,12 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                   unoptimized={shouldUseUnoptimizedImage(siteSettings.logo.url)}
                   onError={() => setLogoError(true)}
                 />
-              ) : logoError ? (
-                <Image
-                  src="/images/logo-sasanperfumes.svg"
-                  alt={siteSettings?.site_name || siteConfig.name}
-                  width={220}
-                  height={142}
-                  className="h-12 w-auto md:h-16 xl:h-[70px]"
-                  style={{ width: "auto" }}
-                  priority
-                  unoptimized
-                />
-              ) : (
+              ) : siteSettings?.site_name ? (
                 <span className="font-title text-3xl tracking-[0.12em] text-brand-primary md:text-4xl">
-                  {siteSettings?.site_name || siteConfig.name}
+                  {siteSettings.site_name}
                 </span>
+              ) : (
+                <span className="sr-only">Home</span>
               )}
               </Link>
             </div>

@@ -242,11 +242,11 @@ function sasanperfumes_get_incoming_frontend_host(): string {
 
     $candidates = [];
     $candidates[] = $_SERVER['HTTP_X_FRONTEND_HOST'] ?? '';
-    $candidates[] = $_SERVER['HTTP_HOST'] ?? '';
+    $candidates[] = $_GET['frontend_host'] ?? '';
     $candidates[] = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? '';
     $candidates[] = $_SERVER['HTTP_ORIGIN'] ?? '';
     $candidates[] = $_SERVER['HTTP_REFERER'] ?? '';
-    $candidates[] = $_GET['frontend_host'] ?? '';
+    $candidates[] = $_SERVER['HTTP_HOST'] ?? '';
 
     foreach ($candidates as $candidate) {
         $normalized = sasanperfumes_normalize_rest_frontend_host(is_string($candidate) ? $candidate : '');
@@ -280,6 +280,13 @@ function sasanperfumes_find_blog_id_for_frontend_host(string $frontend_host): in
         'fields' => 'ids',
     ]);
 
+    $default_site_slugs = array(
+        'qa.shapehive.com' => 'qa',
+        'om.shapehive.com' => 'om',
+        'sa.shapehive.com' => 'sa',
+    );
+    $expected_slug = $default_site_slugs[$frontend_host] ?? '';
+
     foreach ((array) $sites as $site_id) {
         $site_frontend_url = trim((string) get_blog_option((int) $site_id, 'sasanperfumes_frontend_url', ''));
         if (!$site_frontend_url) {
@@ -290,6 +297,20 @@ function sasanperfumes_find_blog_id_for_frontend_host(string $frontend_host): in
         if ($site_host !== "" && $site_host === $frontend_host) {
             $target = (int) $site_id;
             break;
+        }
+
+        if ($expected_slug !== '') {
+            $details = get_blog_details((int) $site_id);
+            if ($details) {
+                $site_path = trim((string) ($details->path ?? ''), '/');
+                $site_domain = sasanperfumes_normalize_frontend_host((string) ($details->domain ?? ''));
+                $domain_prefix = explode('.', $site_domain)[0] ?? '';
+
+                if ($site_path === $expected_slug || $domain_prefix === $expected_slug) {
+                    $target = (int) $site_id;
+                    break;
+                }
+            }
         }
     }
 

@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { normalizeMarketHost } from "@/config/market";
 import { API_BASE, backendHeaders, fetchBackend, safeJsonResponse } from "@/lib/utils/backendFetch";
 
 export const dynamic = "force-dynamic";
@@ -13,29 +14,29 @@ const fallbackHomeSettings = {
   collections: null,
   banners: null,
   brandSlider: {
-    enabled: true,
-    title_en: "More from {brand}",
-    title_ar: "المزيد من {brand}",
-    count: 12,
-    cols_desktop: 4,
-    cols_tablet: 3,
-    cols_mobile: 2,
-    fallback: "category",
+    enabled: false,
   },
 };
-const homeSettingsEndpoints = [
-  `${API_BASE}/wp-json/sasanperfumes/v1/home-settings`,
-];
 
 function fallbackResponse() {
   return NextResponse.json(fallbackHomeSettings, {
     headers: {
       "Cache-Control": "no-store, max-age=0",
+      "Vary": "Host, X-Frontend-Host",
     },
   });
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const frontendHost = normalizeMarketHost(
+    request.headers.get("x-frontend-host") ||
+    request.headers.get("x-forwarded-host") ||
+    request.headers.get("host")
+  );
+  const homeSettingsEndpoints = [
+    `${API_BASE}/wp-json/sasanperfumes/v1/home-settings${frontendHost ? `?frontend_host=${encodeURIComponent(frontendHost)}` : ""}`,
+  ];
+
   try {
     for (const endpoint of homeSettingsEndpoints) {
       const response = await fetchBackend(endpoint, {
@@ -47,6 +48,7 @@ export async function GET() {
         return NextResponse.json(data, {
           headers: {
             "Cache-Control": "no-store, max-age=0",
+            "Vary": "Host, X-Frontend-Host",
           },
         });
       }
@@ -58,6 +60,7 @@ export async function GET() {
           return NextResponse.json(retryData, {
             headers: {
               "Cache-Control": "no-store, max-age=0",
+              "Vary": "Host, X-Frontend-Host",
             },
           });
         }

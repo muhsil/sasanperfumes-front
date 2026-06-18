@@ -16,15 +16,15 @@ export async function generateMetadata({
   const isRTL = locale === "ar";
 
   return generateSeoMetadata({
-    title: isRTL ? "ساسان للعطور | مواقعنا" : "Sasan Perfumes | Our Stores",
+    title: isRTL ? "شيب هايف | مواقعنا" : "ShapeHive | Our Stores",
     description: isRTL
-      ? "تفضل بزيارة مواقع ساسان للعطور في الإمارات لمعرفة أقرب فرع والحصول على تفاصيل الاتصال."
-      : "Find Sasan Perfumes store locations across the UAE and reach us for store details, directions, and contact information.",
+      ? "تفضل بزيارة مواقع شيب هايف في الإمارات لمعرفة أقرب فرع والحصول على تفاصيل الاتصال."
+      : "Find ShapeHive store locations across the UAE and reach us for store details, directions, and contact information.",
     locale: locale as Locale,
     pathname: "/store-listing",
     keywords: isRTL
-      ? ["ساسان للعطور", "مواقعنا", "الفروع", "الإمارات", "عطور", "معطر الشعر", "بخاخ الجسم", "أطقم هدايا", "تواصل معنا"]
-      : ["Sasan Perfumes", "Our Stores", "store listing", "store locations", "UAE perfume store", "hair mist", "all over spray", "gift sets"],
+      ? ["شيب هايف", "مواقعنا", "الفروع", "الإمارات", "عطور", "معطر الشعر", "بخاخ الجسم", "أطقم هدايا", "تواصل معنا"]
+      : ["ShapeHive", "Our Stores", "store listing", "store locations", "UAE perfume store", "hair mist", "all over spray", "gift sets"],
   });
 }
 

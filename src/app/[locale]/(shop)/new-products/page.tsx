@@ -5,6 +5,7 @@ import { getDictionary } from "@/i18n";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { getNewProducts, getFreeGiftProductIds, getBundleEnabledProductSlugs } from "@/lib/api/woocommerce";
 import { getPageSeo } from "@/lib/api/wordpress";
+import { getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
 import { NewProductsClient } from "./NewProductsClient";
@@ -19,8 +20,8 @@ interface NewProductsPageProps {
 const defaultSeo = {
   title: { en: "New Arrivals | Latest Luxury Perfumes & Oud Fragrances", ar: "منتجات جديدة | أحدث العطور والإصدارات الفاخرة" },
   description: {
-    en: "Discover our newest luxury perfumes, Arabian oud & aromatic oils from Sasan Perfumes. Handcrafted in the UAE. Free delivery on orders over 500 AED.",
-    ar: "اكتشف أحدث إصداراتنا من العطور الفاخرة والعود العربي والزيوت العطرية من ساسان للعطور. منتجات يدوية فاخرة من الإمارات. توصيل مجاني للطلبات فوق 500 درهم.",
+    en: "Discover our newest luxury perfumes, Arabian oud & aromatic oils from ShapeHive. Handcrafted in the UAE. Free delivery on orders over 500 AED.",
+    ar: "اكتشف أحدث إصداراتنا من العطور الفاخرة والعود العربي والزيوت العطرية من شيب هايف. منتجات يدوية فاخرة من الإمارات. توصيل مجاني للطلبات فوق 500 درهم.",
   },
   keywords: {
     en: ["new perfumes", "latest fragrances", "new arrivals perfume", "premium fragrance", "aromatic products", "UAE perfume", "new oud perfume", "latest Dubai perfume", "new women perfume", "new men cologne", "luxury perfume new arrival", "new musk perfume", "new amber fragrance", "latest Arabian perfume", "new vanilla perfume", "new perfume online", "new home fragrance", "new aromatic perfumes", "latest aromatic scents", "aromatic new arrivals", "new fragrance launch aromatic UAE"],
@@ -51,6 +52,10 @@ export default async function NewProductsPage({ params }: NewProductsPageProps) 
   const { locale } = await params;
   const dictionary = await getDictionary(locale as Locale);
   const isRTL = locale === "ar";
+  const [market, frontendHost] = await Promise.all([
+    getRequestMarket(),
+    getRequestFrontendHost(),
+  ]);
 
   const breadcrumbItems = [
     { name: dictionary.common.shop, href: `/${locale}/shop` },
@@ -58,9 +63,14 @@ export default async function NewProductsPage({ params }: NewProductsPageProps) 
   ];
 
   const [productsResult, giftProductIds, bundleProductSlugs] = await Promise.all([
-    getNewProducts({ per_page: 30, locale: locale as Locale }),
-    getFreeGiftProductIds(),
-    getBundleEnabledProductSlugs(),
+    getNewProducts({
+      per_page: 30,
+      locale: locale as Locale,
+      currency: market.defaultCurrency,
+      frontendHost,
+    }),
+    getFreeGiftProductIds(market.defaultCurrency, frontendHost),
+    getBundleEnabledProductSlugs(frontendHost),
   ]);
 
   const filteredProducts = productsResult.products.filter(

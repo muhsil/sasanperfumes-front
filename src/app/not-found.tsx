@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Home, ShoppingBag, Search, Sparkles } from "lucide-react";
 
 const categories: { name: string; icon: typeof Sparkles }[] = [];
@@ -17,17 +16,6 @@ export default function NotFound() {
         </div>
 
         <div className="container relative mx-auto max-w-4xl text-center">
-          <div className="mb-6">
-            <Image
-              src="/images/logo-sasanperfumes.svg"
-              alt="Sasan Perfumes"
-              width={120}
-              height={120}
-              className="mx-auto rounded-full object-cover shadow-lg"
-              style={{ width: 120, height: 120 }}
-            />
-          </div>
-
           <h1 className="mb-4 text-2xl font-bold text-brand-primary md:text-4xl">
             Looks like this page has drifted away...
           </h1>

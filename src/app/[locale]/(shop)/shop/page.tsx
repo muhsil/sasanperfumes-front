@@ -7,6 +7,7 @@ import { getDictionary } from "@/i18n";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { getProducts, getFreeGiftProductInfo, getBundleEnabledProductSlugs } from "@/lib/api/woocommerce";
 import { getPageSeo, getStaticPageContent, pickLocale, getFeatureToggles } from "@/lib/api/wordpress";
+import { getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
 import { ShopClient } from "./ShopClient";
@@ -62,6 +63,10 @@ export default async function ShopPage({ params }: ShopPageProps) {
   const dictionary = await getDictionary(locale as Locale);
   const isRTL = locale === "ar";
   const wp = await getStaticPageContent("shop");
+  const [market, frontendHost] = await Promise.all([
+    getRequestMarket(),
+    getRequestFrontendHost(),
+  ]);
 
   const subtitle = pickLocale(wp?.subtitle, locale,
     isRTL ? "اكتشف مجموعتنا الكاملة من المنتجات" : "Discover our complete collection of products"
@@ -74,9 +79,14 @@ export default async function ShopPage({ params }: ShopPageProps) {
   // Fetch products, gift product info (IDs and slugs), and bundle product slugs in parallel
   // Load enough products for a full fast-feeling first screen plus several rows.
   const [productsResult, giftProductInfo, bundleProductSlugs] = await Promise.all([
-    getProducts({ per_page: SHOP_PRODUCTS_PER_PAGE, locale: locale as Locale }),
-    getFreeGiftProductInfo(),
-    getBundleEnabledProductSlugs(),
+    getProducts({
+      per_page: SHOP_PRODUCTS_PER_PAGE,
+      locale: locale as Locale,
+      currency: market.defaultCurrency,
+      frontendHost,
+    }),
+    getFreeGiftProductInfo(market.defaultCurrency, frontendHost),
+    getBundleEnabledProductSlugs(frontendHost),
   ]);
 
   // Filter out gift products from the shop listing

@@ -61,6 +61,11 @@ export function generateProductJsonLd(product: {
   category?: string;
   ratingValue?: string;
   reviewCount?: number;
+  sellerName?: string;
+  sellerUrl?: string;
+  returnPolicyUrl?: string;
+  shippingCountry?: string;
+  shippingCurrency?: string;
 }) {
   // Use all images if available, otherwise fall back to single image
   const imageList = product.images && product.images.length > 0
@@ -106,19 +111,19 @@ export function generateProductJsonLd(product: {
       itemCondition: "https://schema.org/NewCondition",
       seller: {
         "@type": "Organization",
-        name: siteConfig.name,
-        url: siteConfig.url,
+        name: product.sellerName || siteConfig.name,
+        url: product.sellerUrl || siteConfig.url,
       },
       shippingDetails: {
         "@type": "OfferShippingDetails",
         shippingDestination: {
           "@type": "DefinedRegion",
-          addressCountry: "AE",
+          addressCountry: product.shippingCountry || "AE",
         },
         shippingRate: {
           "@type": "MonetaryAmount",
           value: "0",
-          currency: "AED",
+          currency: product.shippingCurrency || product.currency,
         },
         deliveryTime: {
           "@type": "ShippingDeliveryTime",
@@ -143,7 +148,7 @@ export function generateProductJsonLd(product: {
         merchantReturnDays: 14,
         returnMethod: "https://schema.org/ReturnByMail",
         returnFees: "https://schema.org/FreeReturn",
-        url: `${siteConfig.url}/en/returns`,
+        url: product.returnPolicyUrl || `${siteConfig.url}/en/returns`,
       },
     },
   };
@@ -166,17 +171,18 @@ export function generateBreadcrumbJsonLd(
 
 export function generateOrganizationJsonLd() {
   const socialLinks = Object.values(siteConfig.links).filter(Boolean);
+  const logo = siteConfig.logoUrl || siteConfig.faviconUrl;
 
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: siteConfig.name,
     url: siteConfig.url,
-    logo: `${siteConfig.url}/logo.png`,
-    description: "Sasan Perfumes is a UAE fragrance store offering perfumes, hair mist, all over sprays, gift sets, and private-label perfume support.",
+    ...(logo ? { logo } : {}),
+    description: siteConfig.description,
     contactPoint: {
       "@type": "ContactPoint",
-      telephone: "+971-50-607-1405",
+      telephone: siteConfig.contact.phone,
       contactType: "customer service",
       availableLanguage: ["English", "Arabic"],
       areaServed: ["AE", "SA", "KW", "BH", "QA", "OM"],
@@ -212,6 +218,7 @@ export function generateWebSiteJsonLd() {
 
 export function generateLocalBusinessJsonLd() {
   const socialLinks = Object.values(siteConfig.links).filter(Boolean);
+  const logo = siteConfig.logoUrl || siteConfig.faviconUrl;
 
   return [
     // Parent organization / online store
@@ -221,10 +228,10 @@ export function generateLocalBusinessJsonLd() {
       "@id": `${siteConfig.url}/#organization`,
       name: siteConfig.name,
       url: siteConfig.url,
-      image: `${siteConfig.url}/logo.png`,
-      description: "UAE fragrance store offering perfumes, hair mist, all over sprays, gift sets, and private-label perfume support.",
+      ...(logo ? { image: logo } : {}),
+      description: siteConfig.description,
       priceRange: "$$",
-      telephone: "+971-50-607-1405",
+      telephone: siteConfig.contact.phone,
       areaServed: [
         { "@type": "Country", name: "United Arab Emirates" },
         { "@type": "Country", name: "Saudi Arabia" },
@@ -278,7 +285,7 @@ export function generateStoreJsonLd(stores: {
   return stores.map((store) => ({
     "@context": "https://schema.org",
     "@type": "Store",
-    name: `Sasan Perfumes - ${store.name}`,
+    name: `${siteConfig.name} - ${store.name}`,
     address: {
       "@type": "PostalAddress",
       streetAddress: store.address,
@@ -316,7 +323,7 @@ export function generateContactPageJsonLd(params: {
   return {
     "@context": "https://schema.org",
     "@type": "ContactPage",
-    name: "Contact Sasan Perfumes",
+    name: `Contact ${siteConfig.name}`,
     url: params.url,
     mainEntity: {
       "@type": "Organization",

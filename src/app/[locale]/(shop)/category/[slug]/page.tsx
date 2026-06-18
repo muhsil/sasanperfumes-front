@@ -6,8 +6,9 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { getDictionary } from "@/i18n";
 import { generateMetadata as generateSeoMetadata, generateCollectionPageJsonLd, generateItemListJsonLd, generateBreadcrumbJsonLd } from "@/lib/utils/seo";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { getCategoryBySlug, getProductsByCategory, getCategories, getFreeGiftProductInfo, getBundleEnabledProductSlugs, getEnglishSlugFromLocalizedSlug, BESTSELLER_PRODUCT_SLUGS } from "@/lib/api/woocommerce";
+import { getCategoryBySlug, getProductsByCategory, getCategories, getFreeGiftProductInfo, getBundleEnabledProductSlugs, getEnglishSlugFromLocalizedSlug } from "@/lib/api/woocommerce";
 import { siteConfig, type Locale } from "@/config/site";
+import { getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
 import type { Metadata } from "next";
 import { CategoryClient } from "./CategoryClient";
 import { decodeHtmlEntities } from "@/lib/utils";
@@ -52,7 +53,11 @@ export async function generateMetadata({
   params,
 }: CategoryPageProps): Promise<Metadata> {
   const { locale, slug } = await params;
-  const category = await getCategoryBySlug(slug, locale as Locale);
+  const [market, frontendHost] = await Promise.all([
+    getRequestMarket(),
+    getRequestFrontendHost(),
+  ]);
+  const category = await getCategoryBySlug(slug, locale as Locale, market.defaultCurrency, frontendHost);
   const categoryName = decodeHtmlEntities(category?.name || slug.charAt(0).toUpperCase() + slug.slice(1));
 
   // Use English slug for canonical URL to prevent duplicate content
@@ -62,8 +67,8 @@ export async function generateMetadata({
   const categoryCount = category?.count || 0;
   const description =
     locale === "ar"
-      ? `تسوق ${categoryName} من ساسان للعطور. ${categoryCount > 0 ? `اكتشف ${categoryCount}+ منتج` : "اكتشف مجموعتنا"} من العطور الفاخرة المصنوعة يدوياً في الإمارات. توصيل مجاني للطلبات فوق 500 درهم.`
-      : `Shop ${categoryName} at Sasan Perfumes. ${categoryCount > 0 ? `Explore ${categoryCount}+ handcrafted` : "Explore our handcrafted"} luxury products made in the UAE. Free delivery on orders over 500 AED.`;
+      ? `تسوق ${categoryName} من شيب هايف. ${categoryCount > 0 ? `اكتشف ${categoryCount}+ منتج` : "اكتشف مجموعتنا"} من العطور الفاخرة المصنوعة يدوياً في الإمارات. توصيل مجاني للطلبات فوق 500 درهم.`
+      : `Shop ${categoryName} at ShapeHive. ${categoryCount > 0 ? `Explore ${categoryCount}+ handcrafted` : "Explore our handcrafted"} luxury products made in the UAE. Free delivery on orders over 500 AED.`;
 
   return generateSeoMetadata({
     title: locale === "ar"
@@ -73,8 +78,8 @@ export async function generateMetadata({
     locale: locale as Locale,
     pathname: `/category/${canonicalSlug}`,
     keywords: locale === "ar"
-      ? [categoryName, "عطور", "عطور فاخرة", "منتجات عطرية", "ساسان للعطور", "عطور الإمارات", "شراء عطور اون لاين", "عود عربي", "هدايا عطرية", "عطور مسك", "عطور عنبر", "عطور دبي", "أفضل عطور", "عطور نسائية", "عطور رجالية", `أروماتيك ${categoryName}`, `أفضل ${categoryName} الإمارات`, `${categoryName} بأسعار مناسبة`, "عطور أروماتيك أصلية", "روائح عطرية فاخرة", "تسوق عطور أروماتيك"]
-      : [categoryName, "perfume", "premium fragrance", "aromatic products", "Sasan Perfumes", "UAE perfume shop", "buy perfume online", "Arabian oud", "fragrance gifts", "musk perfume", "amber fragrance", "Dubai perfume", "best perfume", "women perfume", "men cologne", `aromatic ${categoryName.toLowerCase()}`, `best ${categoryName.toLowerCase()} UAE`, `${categoryName.toLowerCase()} affordable price`, "aromatic original perfume", "luxury aromatic scents", "shop aromatic fragrances"],
+      ? [categoryName, "عطور", "عطور فاخرة", "منتجات عطرية", "شيب هايف", "عطور الإمارات", "شراء عطور اون لاين", "عود عربي", "هدايا عطرية", "عطور مسك", "عطور عنبر", "عطور دبي", "أفضل عطور", "عطور نسائية", "عطور رجالية", `أروماتيك ${categoryName}`, `أفضل ${categoryName} الإمارات`, `${categoryName} بأسعار مناسبة`, "عطور أروماتيك أصلية", "روائح عطرية فاخرة", "تسوق عطور أروماتيك"]
+      : [categoryName, "perfume", "premium fragrance", "aromatic products", "ShapeHive", "UAE perfume shop", "buy perfume online", "Arabian oud", "fragrance gifts", "musk perfume", "amber fragrance", "Dubai perfume", "best perfume", "women perfume", "men cologne", `aromatic ${categoryName.toLowerCase()}`, `best ${categoryName.toLowerCase()} UAE`, `${categoryName.toLowerCase()} affordable price`, "aromatic original perfume", "luxury aromatic scents", "shop aromatic fragrances"],
   });
 }
 
@@ -111,6 +116,10 @@ async function CategorySeoSection({ slug, locale }: { slug: string; locale: Loca
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { locale, slug } = await params;
   const dictionary = await getDictionary(locale as Locale);
+  const [market, frontendHost] = await Promise.all([
+    getRequestMarket(),
+    getRequestFrontendHost(),
+  ]);
 
   // If the URL contains a non-ASCII slug (e.g., Arabic), redirect to the English slug
   // This prevents duplicate content issues where both Arabic-slug and English-slug URLs get indexed
@@ -134,7 +143,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   }
 
   // Fetch category and products from WooCommerce API
-  const category = await getCategoryBySlug(slug, locale as Locale);
+  const category = await getCategoryBySlug(slug, locale as Locale, market.defaultCurrency, frontendHost);
   
   if (!category) {
     notFound();
@@ -142,9 +151,14 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
   // Fetch products, gift product info (IDs and slugs), bundle product slugs, and subtitle in parallel
   const [{ products: allProducts }, giftProductInfo, bundleProductSlugs, categorySubtitle] = await Promise.all([
-    getProductsByCategory(slug, { per_page: 50, locale: locale as Locale }),
-    getFreeGiftProductInfo(),
-    getBundleEnabledProductSlugs(),
+    getProductsByCategory(slug, {
+      per_page: 50,
+      locale: locale as Locale,
+      currency: market.defaultCurrency,
+      frontendHost,
+    }),
+    getFreeGiftProductInfo(market.defaultCurrency, frontendHost),
+    getBundleEnabledProductSlugs(frontendHost),
     getCategorySubtitle(slug),
   ]);
 
@@ -157,12 +171,11 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   );
 
   // Sort products: bestsellers first (by tag), then apply category-specific ordering
-  const bestssellerSlugsSet = new Set(BESTSELLER_PRODUCT_SLUGS);
   const isPersonalCare = slug === "personal-care";
 
   const products = [...filteredProducts].sort((a, b) => {
-    const aIsBestseller = a.tags?.some(tag => tag.slug === "bestseller") || bestssellerSlugsSet.has(a.slug);
-    const bIsBestseller = b.tags?.some(tag => tag.slug === "bestseller") || bestssellerSlugsSet.has(b.slug);
+    const aIsBestseller = a.tags?.some(tag => tag.slug === "bestseller");
+    const bIsBestseller = b.tags?.some(tag => tag.slug === "bestseller");
 
     // Bestsellers always come first
     if (aIsBestseller && !bIsBestseller) return -1;

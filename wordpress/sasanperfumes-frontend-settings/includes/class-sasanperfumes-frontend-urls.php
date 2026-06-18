@@ -35,6 +35,7 @@ class sasanperfumes_Frontend_Urls {
         add_action('admin_bar_menu', array($this, 'rewrite_admin_bar_urls'), 999);
 
         add_filter('woocommerce_product_get_permalink', array($this, 'rewrite_wc_product_permalink'), 10, 2);
+        add_action('template_redirect', array($this, 'redirect_public_frontend_to_headless'), 1);
 
         // Google Listings & Ads (Merchant Center) - rewrite product URLs in feeds
         add_filter('woocommerce_gla_product_attribute_value_link', array($this, 'rewrite_gla_product_link'), 10, 2);
@@ -138,6 +139,44 @@ class sasanperfumes_Frontend_Urls {
         }
 
         return '';
+    }
+
+    public function redirect_public_frontend_to_headless() {
+        if (is_admin() || wp_doing_ajax() || wp_doing_cron()) {
+            return;
+        }
+
+        $request_uri = isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : '/';
+        if (
+            strpos($request_uri, '/wp-json/') === 0 ||
+            strpos($request_uri, '/wp-admin/') === 0 ||
+            strpos($request_uri, '/wp-login.php') === 0 ||
+            strpos($request_uri, '/xmlrpc.php') === 0
+        ) {
+            return;
+        }
+
+        $target_path = '/en';
+
+        if (is_singular()) {
+            $path = $this->get_frontend_path_for_post(get_queried_object());
+            if ($path) {
+                $target_path = $path;
+            }
+        } elseif (is_tax() || is_category() || is_tag()) {
+            $term = get_queried_object();
+            if ($term && isset($term->taxonomy)) {
+                $path = $this->get_frontend_path_for_term($term, $term->taxonomy);
+                if ($path) {
+                    $target_path = $path;
+                }
+            }
+        } elseif (function_exists('is_shop') && is_shop()) {
+            $target_path = '/en/shop';
+        }
+
+        wp_safe_redirect(trailingslashit($this->frontend_url) . ltrim($target_path, '/'), 301);
+        exit;
     }
 
     public function rewrite_page_link($link, $post_id) {

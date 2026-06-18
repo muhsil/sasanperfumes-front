@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import { API_BASE, backendHeaders, noCacheUrl } from "@/lib/utils/backendFetch";
+import { normalizeMarketHost } from "@/config/market";
 
 const FREE_GIFTS_CACHE_TTL = 5 * 60 * 1000;
 interface CachedRules {
@@ -16,8 +17,13 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const currency = searchParams.get("currency");
     const locale = searchParams.get("locale");
+    const frontendHost = normalizeMarketHost(
+      request.headers.get("x-frontend-host") ||
+      request.headers.get("x-forwarded-host") ||
+      request.headers.get("host")
+    );
 
-    const cacheKey = `${currency || ""}_${locale || ""}`;
+    const cacheKey = `${frontendHost || "default"}_${currency || ""}_${locale || ""}`;
     const cached = rulesCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < FREE_GIFTS_CACHE_TTL) {
       return NextResponse.json(cached.data, {
@@ -33,6 +39,9 @@ export async function GET(request: NextRequest) {
     }
     if (locale) {
       params.push(`lang=${encodeURIComponent(locale)}`);
+    }
+    if (frontendHost) {
+      params.push(`frontend_host=${encodeURIComponent(frontendHost)}`);
     }
     if (params.length > 0) {
       url += `?${params.join("&")}`;

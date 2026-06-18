@@ -1,7 +1,7 @@
 /**
  * Site Configuration
  * 
- * Main configuration file for the Sasan Perfumes frontend.
+ * Main configuration file for the ShapeHive frontend.
  * These values are read from environment variables when available,
  * with fallbacks for local development.
  */
@@ -48,10 +48,10 @@ export const mediaHostNames = Array.from(
 
 export const siteConfig = {
   // Site name - displayed in browser title, meta tags, etc.
-  name: "Sasan Perfumes",
+  name: "ShapeHive",
   
   // Site description - used for SEO meta description
-  description: "Sasan Perfumes is a UAE fragrance store for perfumes, hair mist, all over sprays, and gift-ready scent collections.",
+  description: "ShapeHive is a headless commerce storefront with region-specific products, content, and currencies.",
   
   // Frontend URL - reads from NEXT_PUBLIC_SITE_URL environment variable
   url: siteUrl,
@@ -65,13 +65,11 @@ export const siteConfig = {
 
   mediaHostNames: mediaHostNames,
 
-  authBackgroundImage:
-    process.env.NEXT_PUBLIC_AUTH_BACKGROUND_IMAGE ||
-    `${cmsUrl}/wp-content/uploads/2025/12/page-bg.jpg`,
+  authBackgroundImage: process.env.NEXT_PUBLIC_AUTH_BACKGROUND_IMAGE || "",
 
   // Optional brand assets for this copied frontend. Backend products still load
   // from WooCommerce, but the old backend logo/site name is not reused by default.
-  logoUrl: process.env.NEXT_PUBLIC_BRAND_LOGO_URL || "/images/logo-sasanperfumes.svg",
+  logoUrl: process.env.NEXT_PUBLIC_BRAND_LOGO_URL || "",
   faviconUrl: process.env.NEXT_PUBLIC_BRAND_FAVICON_URL || "",
   useBackendBrandAssets: process.env.NEXT_PUBLIC_USE_BACKEND_BRAND_ASSETS === "true",
   

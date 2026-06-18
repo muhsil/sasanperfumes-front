@@ -187,12 +187,18 @@ export default function StoreLocatorClient({ dict, locale, stores: storeList, co
                     <div key={store.id} className="group border border-[#e7ded7] bg-white">
                       {/* Store Image */}
                       <div className="relative h-48 overflow-hidden bg-[#f8f3ef]">
-                        <Image
-                          src={store.image}
-                          alt={isRTL ? store.nameAr : store.name}
-                          fill
-                          className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
+                        {store.image ? (
+                          <Image
+                            src={store.image}
+                            alt={isRTL ? store.nameAr : store.name}
+                            fill
+                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-5xl font-light text-brand-primary/20">
+                            {(isRTL ? store.nameAr : store.name).slice(0, 1)}
+                          </div>
+                        )}
                       </div>
 
                       {/* Store Details */}

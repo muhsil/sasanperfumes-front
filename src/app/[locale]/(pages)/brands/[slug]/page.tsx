@@ -4,6 +4,7 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { getBrand, getBrands, getFeatureToggles, pickLocale } from "@/lib/api/wordpress";
 import { getProducts } from "@/lib/api/woocommerce";
+import { getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
 import { shouldUseUnoptimizedImage } from "@/lib/utils/image";
 import { ProductListing } from "@/components/shop/ProductListing";
 import { BLUR_DATA_URL, cn, decodeHtmlEntities } from "@/lib/utils";
@@ -54,6 +55,10 @@ export default async function BrandDetailPage({ params }: BrandPageProps) {
   if (!toggles.sasanperfumes_brands_page_enabled) notFound();
   const brand = await getBrand(slug);
   if (!brand) notFound();
+  const [market, frontendHost] = await Promise.all([
+    getRequestMarket(),
+    getRequestFrontendHost(),
+  ]);
 
   const isRTL = locale === "ar";
   const brandName = decodeHtmlEntities(brand.name);
@@ -66,6 +71,8 @@ export default async function BrandDetailPage({ params }: BrandPageProps) {
     per_page: 20,
     locale: locale as Locale,
     brand: slug,
+    currency: market.defaultCurrency,
+    frontendHost,
   });
 
   const breadcrumbItems = [
@@ -201,23 +208,25 @@ export default async function BrandDetailPage({ params }: BrandPageProps) {
               {brand.notes.map((note, idx) => {
                 const noteTitle = decodeHtmlEntities(pickLocale(note.title, locale, ""));
                 const noteDesc = decodeHtmlEntities(pickLocale(note.description, locale, ""));
-                const noteImage = note.image?.trim() || "/images/sasanperfumes-placeholder.svg";
+                const noteImage = note.image?.trim() || "";
                 return (
                   <div
                     key={idx}
                     className="relative border-b border-white/10 px-5 py-8 transition-colors duration-300 hover:bg-[#2b2b2b]"
                   >
-                    <div className="mb-4 h-16 w-16 overflow-hidden rounded-full bg-white/10 transition-colors duration-300">
-                      <Image
-                        src={noteImage}
-                        alt={noteTitle || brandName}
-                        width={64}
-                        height={64}
-                        className="h-full w-full object-cover"
-                        style={{ objectPosition: "center" }}
-                        unoptimized={shouldUseUnoptimizedImage(noteImage)}
-                      />
-                    </div>
+                    {noteImage && (
+                      <div className="mb-4 h-16 w-16 overflow-hidden rounded-full bg-white/10 transition-colors duration-300">
+                        <Image
+                          src={noteImage}
+                          alt={noteTitle || brandName}
+                          width={64}
+                          height={64}
+                          className="h-full w-full object-cover"
+                          style={{ objectPosition: "center" }}
+                          unoptimized={shouldUseUnoptimizedImage(noteImage)}
+                        />
+                      </div>
+                    )}
                     {noteTitle && <h3 className="note-title mb-2 text-base font-medium text-white transition-colors duration-300 md:text-lg">{noteTitle}</h3>}
                     {noteDesc && <p className="note-desc text-xs leading-relaxed text-white/65 transition-colors duration-300">{noteDesc}</p>}
                   </div>

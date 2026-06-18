@@ -13,6 +13,7 @@ interface CheckoutFooterProps {
 
 export function CheckoutFooter({ locale, dictionary, siteSettings }: CheckoutFooterProps) {
   const currentYear = new Date().getFullYear();
+  const displaySiteName = siteSettings?.site_name?.trim() || "";
 
   const essentialLinks = [
     { name: dictionary.common.shop, href: `/${locale}/shop` },
@@ -35,11 +36,11 @@ export function CheckoutFooter({ locale, dictionary, siteSettings }: CheckoutFoo
                 style={{ width: "auto", height: "auto", maxHeight: "50px" }}
                 loading="lazy"
               />
-            ) : (
+            ) : displaySiteName ? (
               <span className="text-lg font-bold tracking-tight text-gray-900">
-                {siteSettings?.site_name || siteConfig.name}
+                {displaySiteName}
               </span>
-            )}
+            ) : null}
           </Link>
 
           <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
@@ -83,7 +84,7 @@ export function CheckoutFooter({ locale, dictionary, siteSettings }: CheckoutFoo
 
           <div className="flex w-full flex-col items-center gap-2 md:flex-row md:justify-between">
             <p className="text-center text-xs text-gray-500 md:text-left">
-              &copy; {currentYear} {siteConfig.name}. {dictionary.footer.copyright}
+              &copy; {currentYear}{displaySiteName ? ` ${displaySiteName}.` : ""} {dictionary.footer.copyright}
             </p>
           </div>
         </div>

@@ -6,6 +6,7 @@ import { SearchResultsClient } from "./SearchResultsClient";
 import { SearchPageLoadingShell } from "@/components/common/RouteLoading";
 import { getFreeGiftProductIds, getBundleEnabledProductSlugs } from "@/lib/api/woocommerce";
 import { getPageSeo } from "@/lib/api/wordpress";
+import { getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
 
 interface SearchPageProps {
   params: Promise<{ locale: string }>;
@@ -57,11 +58,15 @@ export default async function SearchPage({ params, searchParams }: SearchPagePro
   const { locale } = await params;
   const { q } = await searchParams;
   const query = typeof q === "string" ? q : "";
+  const [market, frontendHost] = await Promise.all([
+    getRequestMarket(),
+    getRequestFrontendHost(),
+  ]);
 
   // Fetch hidden gift product IDs and bundle product slugs in parallel
   const [hiddenGiftProductIds, bundleProductSlugs] = await Promise.all([
-    getFreeGiftProductIds(),
-    getBundleEnabledProductSlugs(),
+    getFreeGiftProductIds(market.defaultCurrency, frontendHost),
+    getBundleEnabledProductSlugs(frontendHost),
   ]);
 
   return (

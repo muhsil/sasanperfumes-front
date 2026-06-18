@@ -37,12 +37,15 @@ type HeroImageProps =
 
 function HeroImage(props: HeroImageProps) {
   const { src, alt, priority, loading, fetchPriority, sizes, className } = props;
-  const fallbackSrc = "/images/sasanperfumes-placeholder.svg";
   const [currentSrc, setCurrentSrc] = useState(src);
+  const [isBroken, setIsBroken] = useState(false);
 
   useEffect(() => {
     setCurrentSrc(src);
+    setIsBroken(false);
   }, [src]);
+
+  if (isBroken) return null;
 
   const sizeProps = props.fill ? { fill: true as const } : { width: props.width, height: props.height };
 
@@ -60,9 +63,7 @@ function HeroImage(props: HeroImageProps) {
       className={className}
       placeholder="blur"
       blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAICAIAAABPmPnhAAAAEUlEQVR4nGN4+vAWHsQwXKUBwlPSAflguX8AAAAASUVORK5CYII="
-      onError={() => {
-        if (currentSrc !== fallbackSrc) setCurrentSrc(fallbackSrc);
-      }}
+      onError={() => setIsBroken(true)}
     />
   );
 }
@@ -203,15 +204,7 @@ function SlideContent({ slide, index, locale }: { slide: HeroSliderSettings["sli
           />
         </>
       ) : (
-        <div className="flex h-full w-full items-center justify-center bg-gray-200">
-          <Image
-            src="/images/sasanperfumes-placeholder.svg"
-            alt="Sasan Perfumes"
-            width={200}
-            height={200}
-            className="object-contain opacity-20"
-          />
-        </div>
+        null
       )}
       <div className="absolute inset-0 bg-gradient-to-r from-black/52 via-black/18 to-black/32" />
       {textOverlay}

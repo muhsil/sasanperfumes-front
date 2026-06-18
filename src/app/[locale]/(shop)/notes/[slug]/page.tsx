@@ -5,8 +5,9 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getDictionary } from "@/i18n";
 import { generateMetadata as generateSeoMetadata, generateBreadcrumbJsonLd } from "@/lib/utils/seo";
-import { getProductsByNote, getFreeGiftProductInfo, getBundleEnabledProductSlugs, BESTSELLER_PRODUCT_SLUGS } from "@/lib/api/woocommerce";
+import { getProductsByNote, getFreeGiftProductInfo, getBundleEnabledProductSlugs } from "@/lib/api/woocommerce";
 import { siteConfig, type Locale } from "@/config/site";
+import { getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
 import type { Metadata } from "next";
 import { CategoryClient } from "../../category/[slug]/CategoryClient";
 import { notesSeoContent, ALL_NOTE_SLUGS } from "@/data/notes-seo-content";
@@ -52,8 +53,8 @@ export async function generateMetadata({
   const description = noteData
     ? (locale === "ar" ? noteData.description.ar : noteData.description.en)
     : locale === "ar"
-      ? `تسوق عطور ${noteName} من ساسان للعطور. اكتشف مجموعتنا من العطور الفاخرة بنوتة ${noteName}. توصيل مجاني للطلبات فوق 500 درهم.`
-      : `Shop ${noteName} perfumes at Sasan Perfumes. Explore our collection of luxury fragrances featuring ${noteName} notes. Free delivery on orders over 500 AED.`;
+      ? `تسوق عطور ${noteName} من شيب هايف. اكتشف مجموعتنا من العطور الفاخرة بنوتة ${noteName}. توصيل مجاني للطلبات فوق 500 درهم.`
+      : `Shop ${noteName} perfumes at ShapeHive. Explore our collection of luxury fragrances featuring ${noteName} notes. Free delivery on orders over 500 AED.`;
 
   return generateSeoMetadata({
     title,
@@ -61,8 +62,8 @@ export async function generateMetadata({
     locale: locale as Locale,
     pathname: `/notes/${slug}`,
     keywords: locale === "ar"
-      ? [noteName, `عطور ${noteName}`, "عطور", "عطور فاخرة", "ساسان للعطور", "عطور الإمارات", `${noteName} عطر`, "نوتات عطرية", "عطور أروماتيك", "شراء عطور أون لاين"]
-      : [noteName, `${noteName} perfume`, "perfume", "luxury fragrance", "Sasan Perfumes", "UAE perfume", `${noteName} fragrance`, "fragrance notes", "aromatic perfume", "buy perfume online"],
+      ? [noteName, `عطور ${noteName}`, "عطور", "عطور فاخرة", "شيب هايف", "عطور الإمارات", `${noteName} عطر`, "نوتات عطرية", "عطور أروماتيك", "شراء عطور أون لاين"]
+      : [noteName, `${noteName} perfume`, "perfume", "luxury fragrance", "ShapeHive", "UAE perfume", `${noteName} fragrance`, "fragrance notes", "aromatic perfume", "buy perfume online"],
   });
 }
 
@@ -70,6 +71,10 @@ export default async function NotePage({ params }: NotePageProps) {
   const { locale, slug } = await params;
   const dictionary = await getDictionary(locale as Locale);
   const isRTL = locale === "ar";
+  const [market, frontendHost] = await Promise.all([
+    getRequestMarket(),
+    getRequestFrontendHost(),
+  ]);
 
   // Try WP API first to get attribute mapping, then fall back to hardcoded SEO content
   const wpNote = await getNoteSeo(slug);
@@ -79,9 +84,13 @@ export default async function NotePage({ params }: NotePageProps) {
 
   // Fetch products with this note and supporting data in parallel
   const [{ products: allProducts }, giftProductInfo, bundleProductSlugs] = await Promise.all([
-    getProductsByNote(noteAttributeSlug, { locale: locale as Locale }),
-    getFreeGiftProductInfo(),
-    getBundleEnabledProductSlugs(),
+    getProductsByNote(noteAttributeSlug, {
+      locale: locale as Locale,
+      currency: market.defaultCurrency,
+      frontendHost,
+    }),
+    getFreeGiftProductInfo(market.defaultCurrency, frontendHost),
+    getBundleEnabledProductSlugs(frontendHost),
   ]);
 
   // If no products match this note, return 404
@@ -97,10 +106,9 @@ export default async function NotePage({ params }: NotePageProps) {
   );
 
   // Sort: bestsellers first
-  const bestsellerSlugsSet = new Set(BESTSELLER_PRODUCT_SLUGS);
   const products = [...filteredProducts].sort((a, b) => {
-    const aIsBestseller = a.tags?.some(tag => tag.slug === "bestseller") || bestsellerSlugsSet.has(a.slug);
-    const bIsBestseller = b.tags?.some(tag => tag.slug === "bestseller") || bestsellerSlugsSet.has(b.slug);
+    const aIsBestseller = a.tags?.some(tag => tag.slug === "bestseller");
+    const bIsBestseller = b.tags?.some(tag => tag.slug === "bestseller");
     if (aIsBestseller && !bIsBestseller) return -1;
     if (!aIsBestseller && bIsBestseller) return 1;
     return 0;

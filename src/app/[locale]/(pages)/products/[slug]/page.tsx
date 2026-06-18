@@ -7,9 +7,10 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { generateMetadata as generateSeoMetadata, generateFAQJsonLd } from "@/lib/utils/seo";
 import { getProductPageBySlug, getProductPages } from "@/lib/api/wordpress";
 import { getProductsByCategory, getNewProducts, getFeaturedProducts, getBestsellerProducts, getFreeGiftProductInfo, getBundleEnabledProductSlugs } from "@/lib/api/woocommerce";
+import { getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
 import { ProductSectionSkeleton } from "@/components/sections/ProductSection";
 import { ProductSection } from "@/components/sections";
-import { siteConfig, type Locale } from "@/config/site";
+import { siteConfig, type Currency, type Locale } from "@/config/site";
 import { getDictionary } from "@/i18n";
 import { ChevronRight } from "lucide-react";
 import type { Metadata } from "next";
@@ -63,11 +64,15 @@ async function ProductsBlock({
   locale,
   isRTL,
   dictionary,
+  currency,
+  frontendHost,
 }: {
   page: ProductPage;
   locale: Locale;
   isRTL: boolean;
   dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  currency: Currency;
+  frontendHost: string;
 }) {
   const { products: config } = page;
   if (!config.enabled) return null;
@@ -80,8 +85,8 @@ async function ProductsBlock({
     case "category":
       if (config.categorySlug) {
         const [localRes, enRes] = await Promise.all([
-          getProductsByCategory(config.categorySlug, { per_page: config.count, locale }),
-          getProductsByCategory(config.categorySlug, { per_page: config.count, locale: "en" }),
+          getProductsByCategory(config.categorySlug, { per_page: config.count, locale, currency, frontendHost }),
+          getProductsByCategory(config.categorySlug, { per_page: config.count, locale: "en", currency, frontendHost }),
         ]);
         productsRaw = localRes.products;
         productsEn = enRes.products;
@@ -89,8 +94,8 @@ async function ProductsBlock({
       break;
     case "featured": {
       const [localRes, enRes] = await Promise.all([
-        getFeaturedProducts({ per_page: config.count, locale }),
-        getFeaturedProducts({ per_page: config.count, locale: "en" }),
+        getFeaturedProducts({ per_page: config.count, locale, currency, frontendHost }),
+        getFeaturedProducts({ per_page: config.count, locale: "en", currency, frontendHost }),
       ]);
       productsRaw = localRes.products;
       productsEn = enRes.products;
@@ -98,8 +103,8 @@ async function ProductsBlock({
     }
     case "bestseller": {
       const [localRes, enRes] = await Promise.all([
-        getBestsellerProducts({ per_page: config.count, locale }),
-        getBestsellerProducts({ per_page: config.count, locale: "en" }),
+        getBestsellerProducts({ per_page: config.count, locale, currency, frontendHost }),
+        getBestsellerProducts({ per_page: config.count, locale: "en", currency, frontendHost }),
       ]);
       productsRaw = localRes.products;
       productsEn = enRes.products;
@@ -108,8 +113,8 @@ async function ProductsBlock({
     case "latest":
     default: {
       const [localRes, enRes] = await Promise.all([
-        getNewProducts({ per_page: config.count, locale }),
-        getNewProducts({ per_page: config.count, locale: "en" }),
+        getNewProducts({ per_page: config.count, locale, currency, frontendHost }),
+        getNewProducts({ per_page: config.count, locale: "en", currency, frontendHost }),
       ]);
       productsRaw = localRes.products;
       productsEn = enRes.products;
@@ -122,8 +127,8 @@ async function ProductsBlock({
   productsEn.forEach((p) => { englishSlugs[p.id] = p.slug; });
 
   const [giftInfo, bundleSlugs] = await Promise.all([
-    getFreeGiftProductInfo(),
-    getBundleEnabledProductSlugs(),
+    getFreeGiftProductInfo(currency, frontendHost),
+    getBundleEnabledProductSlugs(frontendHost),
   ]);
 
   const filteredProducts = productsRaw.filter(
@@ -320,6 +325,10 @@ export default async function DynamicProductPage({ params }: ProductPageProps) {
   const { locale, slug } = await params;
   const validLocale = locale as Locale;
   const isRTL = locale === "ar";
+  const [market, frontendHost] = await Promise.all([
+    getRequestMarket(),
+    getRequestFrontendHost(),
+  ]);
 
   const [page, dictionary] = await Promise.all([
     getProductPageBySlug(slug, validLocale),
@@ -357,7 +366,14 @@ export default async function DynamicProductPage({ params }: ProductPageProps) {
     hero: <HeroSection key="hero" page={page} isRTL={isRTL} />,
     products: (
       <Suspense key="products" fallback={<ProductSectionSkeleton />}>
-        <ProductsBlock page={page} locale={validLocale} isRTL={isRTL} dictionary={dictionary} />
+        <ProductsBlock
+          page={page}
+          locale={validLocale}
+          isRTL={isRTL}
+          dictionary={dictionary}
+          currency={market.defaultCurrency}
+          frontendHost={frontendHost}
+        />
       </Suspense>
     ),
     banners: <BannersBlock key="banners" page={page} isRTL={isRTL} />,

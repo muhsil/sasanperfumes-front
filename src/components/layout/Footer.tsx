@@ -97,7 +97,7 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
   const description = footerSettings?.description
     ? t(footerSettings.description)
     : locale === "ar"
-      ? "اكتشف العطور الفاخرة ومنتجات العناية العطرية المصنوعة بعناية في ساسان للعطور."
+      ? "اكتشف العطور الفاخرة ومنتجات العناية العطرية المصنوعة بعناية في شيب هايف."
       : (siteSettings?.tagline || "Premium fragrances and aromatic products crafted with care.");
 
   const social = footerSettings?.social;
@@ -135,6 +135,7 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
   const copyrightText = footerSettings?.copyright
     ? t(footerSettings.copyright)
     : dictionary.footer.copyright;
+  const displaySiteName = siteSettings?.site_name?.trim() || "";
 
   const poweredByText = footerSettings?.poweredBy
     ? t(footerSettings.poweredBy.text).trim()
@@ -166,17 +167,17 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
             {siteSettings?.logo?.url ? (
               <Image
                 src={siteSettings.logo.url}
-                alt={siteSettings.logo.alt || siteConfig.name}
+                alt={siteSettings.logo.alt || displaySiteName || "Logo"}
                 width={240}
                 height={96}
                 className="h-[100px] w-auto"
                 unoptimized={shouldUseUnoptimizedImage(siteSettings.logo.url)}
               />
-            ) : (
+            ) : displaySiteName ? (
               <span className="font-title text-2xl leading-none text-brand-ivory md:text-3xl">
-                {siteConfig.name}
+                {displaySiteName}
               </span>
-            )}
+            ) : null}
             <p className="mt-5 max-w-xl text-sm leading-7 text-brand-ivory/68">{description}</p>
           </div>
 
@@ -249,7 +250,7 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
 
         <div className="mt-8 flex flex-col items-center gap-3 border-t border-white/10 pt-6 md:flex-row md:justify-between">
           <p className="text-center text-xs text-brand-ivory/55 md:text-left">
-            &copy; {currentYear} {siteConfig.name}. {copyrightText}
+            &copy; {currentYear}{displaySiteName ? ` ${displaySiteName}.` : ""} {copyrightText}
           </p>
           {poweredByText && poweredByName && (
             <p className="text-center text-xs text-brand-ivory/55">

@@ -13,7 +13,7 @@ import { saveBundleData } from "@/lib/utils/bundleStorage";
 import type { WCProduct } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
 import { decodeHtmlEntities } from "@/lib/utils";
-import { BESTSELLER_PRODUCT_SLUGS, type BundleConfig } from "@/lib/api/woocommerce";
+import type { BundleConfig } from "@/lib/api/woocommerce";
 
 function sanitizeProductDescription(html: string): string {
   if (!html) return "";
@@ -72,10 +72,12 @@ interface ProductOption {
   id: number;
   name: string;
   price: number;
+  currencyCode: string;
   slug: string;
   image: string;
   category: CategoryFilter;
   categoryName: string;
+  isBestseller: boolean;
 }
 
 interface BuildYourOwnSetClientProps {
@@ -141,10 +143,12 @@ export function BuildYourOwnSetClient({
               id: fixedProduct.id,
               name: fixedProduct.name,
               price: parseInt(fixedProduct.prices.price) / Math.pow(10, fixedProduct.prices.currency_minor_unit),
+              currencyCode: fixedProduct.prices.currency_code,
               slug: fixedProduct.slug,
-              image: fixedProduct.images?.[0]?.src || "/images/placeholder-product.jpg",
+              image: fixedProduct.images?.[0]?.src || "",
               category,
               categoryName: fixedProduct.categories?.[0]?.name || "",
+              isBestseller: fixedProduct.tags?.some((tag) => tag.slug === "bestseller") || false,
             };
           }
         }
@@ -276,10 +280,12 @@ export function BuildYourOwnSetClient({
         price:
           parseInt(product.prices.price) /
           Math.pow(10, product.prices.currency_minor_unit),
+        currencyCode: product.prices.currency_code,
         slug: product.slug,
-        image: product.images?.[0]?.src || "/images/placeholder-product.jpg",
+        image: product.images?.[0]?.src || "",
         category,
         categoryName: product.categories?.[0]?.name || "",
+        isBestseller: product.tags?.some((tag) => tag.slug === "bestseller") || false,
       };
     });
   }, [products, eligibleProductIds, eligibleCategoryIds, excludeProductIds, excludeCategoryIds, getFreeGiftProductIds, bundleProduct]);
@@ -298,8 +304,6 @@ export function BuildYourOwnSetClient({
     });
     return categoriesWithProducts;
   }, [productOptions]);
-
-  const bestsellerSlugSet = useMemo(() => new Set(BESTSELLER_PRODUCT_SLUGS), []);
 
   const filteredProducts = useMemo(() => {
     const filtered = productOptions.filter((product) => {
@@ -349,14 +353,14 @@ export function BuildYourOwnSetClient({
     const bestsellers: ProductOption[] = [];
     const others: ProductOption[] = [];
     for (const product of filtered) {
-      if (bestsellerSlugSet.has(product.slug)) {
+      if (product.isBestseller) {
         bestsellers.push(product);
       } else {
         others.push(product);
       }
     }
     return [...bestsellers, ...others];
-  }, [productOptions, searchQuery, categoryFilter, activeSlotConfig, slotEligibleProductIds, slotEligibleCategoryIds, slotExcludeProductIds, slotExcludeCategoryIds, products, bestsellerSlugSet]);
+  }, [productOptions, searchQuery, categoryFilter, activeSlotConfig, slotEligibleProductIds, slotEligibleCategoryIds, slotExcludeProductIds, slotExcludeCategoryIds, products]);
 
   // Get the bundle product's base price from WooCommerce
   const bundleProductPrice = useMemo(() => {
@@ -496,13 +500,14 @@ export function BuildYourOwnSetClient({
     }
   };
 
-  const bundleImage = bundleProduct?.images?.[0]?.src || "/images/bundle-box.jpg";
+  const bundleImage = bundleProduct?.images?.[0]?.src || "";
+  const bundlePriceSourceCurrency = bundleProduct?.prices.currency_code || currency;
 
   const translations = {
     en: {
       title: "Build Your Own Set",
       description:
-        "Whether you're treating yourself or surprising someone special, our Sasan Perfumes Bundle Boxes bring together the finest in fragrance and body care.",
+        "Whether you're treating yourself or surprising someone special, our ShapeHive Bundle Boxes bring together the finest in fragrance and body care.",
       instructions:
         "Create a set that's as unique as your fragrance personality. Pick 3 or more products of your choice.",
       yourBox: "Your Box",
@@ -547,7 +552,7 @@ export function BuildYourOwnSetClient({
             ar:{
       title: "اصنع مجموعتك الخاصة",
       description:
-        "سواء كنت تدلل نفسك أو تفاجئ شخصًا مميزًا، فإن صناديق ساسان للعطور تجمع أفضل العطور ومنتجات العناية بالجسم.",
+        "سواء كنت تدلل نفسك أو تفاجئ شخصًا مميزًا، فإن صناديق شيب هايف تجمع أفضل العطور ومنتجات العناية بالجسم.",
       instructions:
         "أنشئ مجموعة فريدة مثل شخصيتك العطرية. اختر 3 منتجات أو أكثر من اختيارك.",
       yourBox: "صندوقك",
@@ -609,14 +614,16 @@ export function BuildYourOwnSetClient({
       <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
         {/* Product Image */}
         <div className="relative aspect-square overflow-hidden bg-gray-100">
-          <Image
-            src={bundleImage}
-            alt={bundleProduct?.name || t.title}
-            fill
-            sizes="(max-width: 1024px) 100vw, 50vw"
-            className="object-cover"
-            priority
-          />
+          {bundleImage ? (
+            <Image
+              src={bundleImage}
+              alt={bundleProduct?.name || t.title}
+              fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover"
+              priority
+            />
+          ) : null}
         </div>
 
         {/* Product Info */}
@@ -628,7 +635,11 @@ export function BuildYourOwnSetClient({
 
           {/* Price - Show bundle product price or calculated total */}
           <div className="text-xl font-bold text-gray-900">
-            <FormattedPrice price={bundleProductPrice > 0 ? bundleProductPrice : total} iconSize="md" />
+            <FormattedPrice
+              price={bundleProductPrice > 0 ? bundleProductPrice : total}
+              sourceCurrency={bundlePriceSourceCurrency}
+              iconSize="md"
+            />
           </div>
 
           {/* Description - Use product short_description from WordPress if available */}
@@ -667,19 +678,21 @@ export function BuildYourOwnSetClient({
                   {selections[index] ? (
                     <>
                                         <div className={`relative h-16 w-16 flex-shrink-0 overflow-hidden bg-white ${isSlotFixed(index) ? "opacity-90" : ""}`}>
-                                          <Image
-                                            src={selections[index]!.image}
-                                            alt={selections[index]!.name}
-                                            fill
-                                            className="object-cover"
-                                          />
+                                          {selections[index]!.image ? (
+                                            <Image
+                                              src={selections[index]!.image}
+                                              alt={selections[index]!.name}
+                                              fill
+                                              className="object-cover"
+                                            />
+                                          ) : null}
                                         </div>
                                                               <div className="flex-1 min-w-0 overflow-hidden">
                                                                 <p className="line-clamp-2 break-words font-medium text-gray-900 text-xs sm:text-sm uppercase">
                                                                   {selections[index]!.name}
                                                                 </p>
                                                                 <p className={`text-xs sm:text-sm ${isSlotFixed(index) ? "text-gray-500 font-medium" : isSlotFree(index) ? "text-green-600 font-semibold" : "text-brand-primary"}`}>
-                                                                  {isSlotFixed(index) ? t.fixed : isSlotFree(index) ? t.free : <FormattedPrice price={selections[index]!.price} iconSize="sm" />}
+                                                                  {isSlotFixed(index) ? t.fixed : isSlotFree(index) ? t.free : <FormattedPrice price={selections[index]!.price} sourceCurrency={selections[index]!.currencyCode} iconSize="sm" />}
                                                                 </p>
                                                               </div>
                                         {!isSlotFixed(index) && (
@@ -738,19 +751,21 @@ export function BuildYourOwnSetClient({
                   {selections[index] ? (
                     <>
                                         <div className={`relative h-16 w-16 flex-shrink-0 overflow-hidden bg-white ${isSlotFixed(index) ? "opacity-90" : ""}`}>
-                                          <Image
-                                            src={selections[index]!.image}
-                                            alt={selections[index]!.name}
-                                            fill
-                                            className="object-cover"
-                                          />
+                                          {selections[index]!.image ? (
+                                            <Image
+                                              src={selections[index]!.image}
+                                              alt={selections[index]!.name}
+                                              fill
+                                              className="object-cover"
+                                            />
+                                          ) : null}
                                         </div>
                                                               <div className="flex-1 min-w-0 overflow-hidden">
                                                                 <p className="line-clamp-2 break-words font-medium text-gray-900 text-xs sm:text-sm uppercase">
                                                                   {selections[index]!.name}
                                                                 </p>
                                                                 <p className={`text-xs sm:text-sm ${isSlotFixed(index) ? "text-gray-500 font-medium" : isSlotFree(index) ? "text-green-600 font-semibold" : "text-brand-primary"}`}>
-                                                                  {isSlotFixed(index) ? t.fixed : isSlotFree(index) ? t.free : <FormattedPrice price={selections[index]!.price} iconSize="sm" />}
+                                                                  {isSlotFixed(index) ? t.fixed : isSlotFree(index) ? t.free : <FormattedPrice price={selections[index]!.price} sourceCurrency={selections[index]!.currencyCode} iconSize="sm" />}
                                                                 </p>
                                                               </div>
                                         {!isSlotFixed(index) && (
@@ -799,21 +814,21 @@ export function BuildYourOwnSetClient({
                 {boxPrice > 0 && (
                   <div className="flex items-center justify-between text-sm text-gray-600">
                     <span>{t.boxPrice}</span>
-                    <span><FormattedPrice price={boxPrice} iconSize="sm" /></span>
+                    <span><FormattedPrice price={boxPrice} sourceCurrency={bundlePriceSourceCurrency} iconSize="sm" /></span>
                   </div>
                 )}
                 {/* Products Price (required items only) */}
                 {requiredProductsTotal > 0 && (
                   <div className="flex items-center justify-between text-sm text-gray-600">
                     <span>{t.products}</span>
-                    <span><FormattedPrice price={requiredProductsTotal} iconSize="sm" /></span>
+                    <span><FormattedPrice price={requiredProductsTotal} sourceCurrency={bundlePriceSourceCurrency} iconSize="sm" /></span>
                   </div>
                 )}
                 {/* Add-ons Price */}
                 {hasAddOns && addOnProductsTotal > 0 && (
                   <div className="flex items-center justify-between text-sm text-brand-gold">
                     <span>{t.addOns}</span>
-                    <span>+<FormattedPrice price={addOnProductsTotal} iconSize="sm" /></span>
+                    <span>+<FormattedPrice price={addOnProductsTotal} sourceCurrency={bundlePriceSourceCurrency} iconSize="sm" /></span>
                   </div>
                 )}
               </>
@@ -822,14 +837,14 @@ export function BuildYourOwnSetClient({
             {pricingMode === "fixed" && (
               <div className="flex items-center justify-between text-sm text-gray-600">
                 <span>{t.fixedPrice}</span>
-                <span><FormattedPrice price={fixedPrice} iconSize="sm" /></span>
+                <span><FormattedPrice price={fixedPrice} sourceCurrency={bundlePriceSourceCurrency} iconSize="sm" /></span>
               </div>
             )}
             {/* Total */}
             <div className="flex items-center justify-between pt-2 border-t border-gray-100">
               <span className="text-lg font-bold text-gray-900">{t.total}</span>
               <span className="text-xl font-bold text-gray-900">
-                <FormattedPrice price={total} iconSize="md" />
+                <FormattedPrice price={total} sourceCurrency={bundlePriceSourceCurrency} iconSize="md" />
               </span>
             </div>
           </div>
@@ -1013,12 +1028,14 @@ export function BuildYourOwnSetClient({
                       }`}
                     >
                       <div className="relative aspect-square overflow-hidden bg-gray-100">
-                        <Image
-                          src={product.image}
-                          alt={product.name}
-                          fill
-                          className="object-cover transition-transform group-hover:scale-105"
-                        />
+                        {product.image ? (
+                          <Image
+                            src={product.image}
+                            alt={product.name}
+                            fill
+                            className="object-cover transition-transform group-hover:scale-105"
+                          />
+                        ) : null}
                         {isDisabled && (
                           <div className="absolute inset-0 flex items-center justify-center bg-black/40">
                             <div className="rounded-full bg-white p-2">
@@ -1037,7 +1054,7 @@ export function BuildYourOwnSetClient({
                           </p>
                         )}
                         <p className={`mt-1 text-xs sm:text-sm font-semibold ${activeSlot !== null && isSlotFree(activeSlot) ? "text-green-600" : "text-brand-primary"}`}>
-                          {activeSlot !== null && isSlotFree(activeSlot) ? t.free : <FormattedPrice price={product.price} iconSize="sm" />}
+                          {activeSlot !== null && isSlotFree(activeSlot) ? t.free : <FormattedPrice price={product.price} sourceCurrency={product.currencyCode} iconSize="sm" />}
                         </p>
                       </div>
                       {!isDisabled && (

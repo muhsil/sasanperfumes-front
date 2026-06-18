@@ -37,9 +37,9 @@ export function ReferralProgram({ locale = "en", customerId }: ReferralProgramPr
     if (!info) return;
     const text = isAr
       ? `استخدم كودي ${info.referral_code} واحصل على خصم في عنبر!`
-      : `Use my code ${info.referral_code} to get a discount at Sasan Perfumes!`;
+      : `Use my code ${info.referral_code} to get a discount at ShapeHive!`;
     if (navigator.share) {
-      await navigator.share({ title: "Sasan Perfumes Referral", text, url: info.referral_url });
+      await navigator.share({ title: "ShapeHive Referral", text, url: info.referral_url });
     } else {
       copyLink();
     }

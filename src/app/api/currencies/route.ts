@@ -1,5 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { disableRuntimeCache, siteConfig } from "@/config/site";
+import { filterCurrenciesForMarket, getMarketByHost, normalizeMarketHost } from "@/config/market";
+import { backendHeaders } from "@/lib/utils/backendFetch";
 
 // Default currencies (fallback if WordPress API is unavailable)
 const DEFAULT_CURRENCIES = [
@@ -21,31 +23,48 @@ export interface CurrencyData {
 }
 
 // GET - Retrieve all currencies from WordPress API
-export async function GET() {
+function marketForRequest(request: NextRequest) {
+  return getMarketByHost(
+    request.headers.get("x-frontend-host") ||
+    request.headers.get("x-forwarded-host") ||
+    request.headers.get("host")
+  );
+}
+
+function marketCurrencyResponse(currencies: CurrencyData[], request: NextRequest) {
+  const market = marketForRequest(request);
+  const filtered = filterCurrenciesForMarket(currencies, market);
+  return filtered.length > 0 ? filtered : currencies.filter((currency) => currency.code === market.defaultCurrency);
+}
+
+export async function GET(request: NextRequest) {
   try {
-    // Try to fetch currencies from WordPress REST API (Sasan Perfumes Currencies plugin)
-    const wpApiUrl = `${siteConfig.apiUrl}/wp-json/sasanperfumes/v1/currencies`;
+    // Try to fetch currencies from WordPress REST API (ShapeHive Currencies plugin)
+    const frontendHost = normalizeMarketHost(
+      request.headers.get("x-frontend-host") ||
+      request.headers.get("x-forwarded-host") ||
+      request.headers.get("host")
+    );
+    const wpApiUrl = `${siteConfig.apiUrl}/wp-json/sasanperfumes/v1/currencies${frontendHost ? `?frontend_host=${encodeURIComponent(frontendHost)}` : ""}`;
     
     const response = await fetch(wpApiUrl, {
       ...(disableRuntimeCache ? { cache: "no-store" as const } : { next: { revalidate: 60 } }), // Cache for 60 seconds outside development
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: backendHeaders(),
     });
     
     if (response.ok) {
       const currencies = await response.json();
       if (Array.isArray(currencies) && currencies.length > 0) {
-        return NextResponse.json(currencies);
+        return NextResponse.json(marketCurrencyResponse(currencies, request));
       }
     }
     
     // If WordPress API fails or returns empty, use default currencies
     console.log("WordPress currencies API not available, using defaults");
-    return NextResponse.json(DEFAULT_CURRENCIES);
+    return NextResponse.json(marketCurrencyResponse(DEFAULT_CURRENCIES, request));
   } catch (error) {
     console.warn(`Failed to fetch currencies from WordPress: ${error instanceof Error ? error.message : String(error)}`);
     // Return default currencies on error
-    return NextResponse.json(DEFAULT_CURRENCIES);
+    return NextResponse.json(marketCurrencyResponse(DEFAULT_CURRENCIES, request));
   }
 }

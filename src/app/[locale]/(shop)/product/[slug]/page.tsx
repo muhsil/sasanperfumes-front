@@ -2,7 +2,8 @@ import { notFound, redirect } from "next/navigation";
 import { getProductBySlug, getRelatedProducts, getProducts, getEnglishSlugForProduct, getBundleConfig, getFreeGiftProductIds, getHiddenProductIds, getCategoryBySlug, getEnglishSlugForCategory, getProductUpsellIds, getProductsByIds } from "@/lib/api/woocommerce";
 import { getProductAddons } from "@/lib/api/wcpa";
 import { generateMetadata as generateSeoMetadata, generateProductJsonLd, generateBreadcrumbJsonLd } from "@/lib/utils/seo";
-import { getTopbarSettings, getProductMetaDescription, getFeatureToggles } from "@/lib/api/wordpress";
+import { getTopbarSettings, getProductMetaDescription, getFeatureToggles, getSiteSettings } from "@/lib/api/wordpress";
+import { getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
 import { ProductDetail } from "./ProductDetail";
 import { BuildYourOwnSetClient } from "../../build-your-own-set/BuildYourOwnSetClient";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
@@ -18,7 +19,7 @@ function isNonAsciiSlug(slug: string): boolean {
 }
 
 // Helper to generate product JSON-LD data from WCProduct
-function getProductJsonLdData(product: WCProduct, locale: string, slug: string) {
+function getProductJsonLdData(product: WCProduct, locale: string, slug: string, baseUrl = siteConfig.url, siteName = siteConfig.name) {
   const minorUnit = product.prices.currency_minor_unit || 2;
   const divisor = Math.pow(10, minorUnit);
   const price = (parseInt(product.prices.price, 10) / divisor).toFixed(2);
@@ -33,11 +34,15 @@ function getProductJsonLdData(product: WCProduct, locale: string, slug: string) 
     currency: product.prices.currency_code,
     sku: product.sku || undefined,
     availability: product.is_in_stock ? "InStock" : "OutOfStock",
-    url: `${siteConfig.url}/${locale}/product/${slug}`,
-    brandName: siteConfig.name,
+    url: `${baseUrl}/${locale}/product/${slug}`,
+    brandName: siteName,
     category: primaryCategory ? decodeHtmlEntities(primaryCategory) : undefined,
     ratingValue: product.average_rating || undefined,
     reviewCount: product.review_count || undefined,
+    sellerName: siteName,
+    sellerUrl: baseUrl,
+    returnPolicyUrl: `${baseUrl}/${locale}/returns`,
+    shippingCurrency: product.prices.currency_code,
   });
 }
 
@@ -74,12 +79,18 @@ export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {
   const { locale, slug } = await params;
+  const [market, frontendHost] = await Promise.all([
+    getRequestMarket(),
+    getRequestFrontendHost(),
+  ]);
 
   // Fetch product and backend-generated meta description in parallel
-  const [product, backendMetaDesc] = await Promise.all([
-    getProductBySlug(slug, locale as Locale),
+  const [product, backendMetaDesc, siteSettings] = await Promise.all([
+    getProductBySlug(slug, locale as Locale, market.defaultCurrency, frontendHost),
     getProductMetaDescription(slug, locale as Locale),
+    getSiteSettings(locale as Locale),
   ]);
+  const siteName = siteSettings.site_name || siteConfig.name;
 
   if (!product) {
     return generateSeoMetadata({
@@ -158,8 +169,8 @@ export async function generateMetadata({
       : "";
 
     const productDescription = locale === "ar"
-      ? `${rawDescription ? rawDescription + ". " : ""}${productName} من ${siteConfig.name}.${olfactorySnippet}${notesSnippet}${priceValue ? " السعر: " + priceValue + " درهم." : ""} توصيل مجاني للطلبات فوق 500 درهم.`
-      : `${rawDescription ? rawDescription + ". " : ""}${productName} by ${siteConfig.name}.${olfactorySnippet}${notesSnippet}${priceValue ? " Price: " + priceValue + " AED." : ""} Free delivery on orders over 500 AED.`;
+      ? `${rawDescription ? rawDescription + ". " : ""}${productName} من ${siteName}.${olfactorySnippet}${notesSnippet}${priceValue ? " السعر: " + priceValue + " " + product.prices.currency_code + "." : ""}`
+      : `${rawDescription ? rawDescription + ". " : ""}${productName} by ${siteName}.${olfactorySnippet}${notesSnippet}${priceValue ? " Price: " + priceValue + " " + product.prices.currency_code + "." : ""}`;
 
     trimmedDescription = productDescription.length > 160
       ? productDescription.slice(0, 160).replace(/\s+\S*$/, "") + "..."
@@ -183,8 +194,8 @@ export async function generateMetadata({
       ...olfactoryKeywords,
       ...noteKeywords,
       ...(locale === "ar"
-        ? ["عطور", "شراء عطور", "عطور فاخرة", "عطور الإمارات", "عطور دبي", "عود عربي", "هدايا عطرية", "ساسان للعطور", "عطور فخمة", "شراء عطر أون لاين", "عطور مسك", "عطور عنبر", "عطور فانيلا", "عطور عود", "أفضل عطور الإمارات"]
-        : ["perfume", "buy fragrance", "luxury perfume UAE", "Dubai perfume", "Arabian oud", "fragrance gift", "premium scent", "Sasan Perfumes", "niche perfume", "buy perfume online", "musk perfume", "amber fragrance", "vanilla perfume", "oud fragrance", "best perfume UAE"]),
+        ? ["عطور", "شراء عطور", "عطور فاخرة", "عطور الإمارات", "عطور دبي", "عود عربي", "هدايا عطرية", "شيب هايف", "عطور فخمة", "شراء عطر أون لاين", "عطور مسك", "عطور عنبر", "عطور فانيلا", "عطور عود", "أفضل عطور الإمارات"]
+        : ["perfume", "buy fragrance", "luxury perfume UAE", "Dubai perfume", "Arabian oud", "fragrance gift", "premium scent", siteName, "niche perfume", "buy perfume online", "musk perfume", "amber fragrance", "vanilla perfume", "oud fragrance", "best perfume UAE"]),
     ],
   });
 
@@ -198,14 +209,19 @@ export async function generateMetadata({
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { locale, slug } = await params;
+  const [market, frontendHost] = await Promise.all([
+    getRequestMarket(),
+    getRequestFrontendHost(),
+  ]);
+  const frontendBaseUrl = frontendHost ? `https://${frontendHost}` : siteConfig.url;
   
   // If the URL contains a non-ASCII slug (e.g., Arabic), find the product and redirect to English slug
   if (isNonAsciiSlug(slug)) {
     // Try to find the product using the Arabic slug
-    const product = await getProductBySlug(slug, locale as Locale);
+    const product = await getProductBySlug(slug, locale as Locale, market.defaultCurrency, frontendHost);
     if (product) {
       // Get the English slug for this product
-      const englishSlug = await getEnglishSlugForProduct(product.id);
+      const englishSlug = await getEnglishSlugForProduct(product.id, frontendHost);
       if (englishSlug && englishSlug !== slug) {
         // Redirect to the English slug URL
         redirect(`/${locale}/product/${englishSlug}`);
@@ -221,14 +237,16 @@ export default async function ProductPage({ params }: ProductPageProps) {
   // For English slugs, fetch the product with the current locale for localized content
   // Also start fetching hidden IDs, bundle config, and topbar settings in parallel
   // This eliminates the waterfall of sequential API calls
-  const [product, hiddenGiftProductIds, hiddenCatalogProductIds, bundleConfig, topbarSettings, featureToggles] = await Promise.all([
-    getProductBySlug(slug, locale as Locale),
-    getFreeGiftProductIds(),
-    getHiddenProductIds(),
-    getBundleConfig(slug, locale as Locale),
+  const [product, hiddenGiftProductIds, hiddenCatalogProductIds, bundleConfig, topbarSettings, featureToggles, siteSettings] = await Promise.all([
+    getProductBySlug(slug, locale as Locale, market.defaultCurrency, frontendHost),
+    getFreeGiftProductIds(market.defaultCurrency, frontendHost),
+    getHiddenProductIds(frontendHost),
+    getBundleConfig(slug, locale as Locale, frontendHost),
     getTopbarSettings(),
     getFeatureToggles(),
+    getSiteSettings(locale as Locale),
   ]);
+  const siteName = siteSettings.site_name || siteConfig.name;
 
   if (!product) {
     notFound();
@@ -250,6 +268,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
     const { products: bundleProducts } = await getProducts({
       per_page: 100,
       locale: locale as Locale,
+      currency: market.defaultCurrency,
+      frontendHost,
     });
     
     const breadcrumbItems = [
@@ -265,7 +285,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     
     return (
       <>
-        <JsonLd data={getProductJsonLdData(product, locale, slug)} />
+        <JsonLd data={getProductJsonLdData(product, locale, slug, frontendBaseUrl, siteName)} />
         <div className="container mx-auto px-5 md:px-7 lg:px-12 py-3">
           <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} contained={false} />
           <BuildYourOwnSetClient
@@ -288,13 +308,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
     getRelatedProducts(product, {
       per_page: 12,
       locale: locale as Locale,
+      currency: market.defaultCurrency,
+      frontendHost,
     }),
     getProductAddons(product.id, { locale: locale as Locale }),
-    getProductBySlug(slug, "en"),
-    getProductUpsellIds(product.id, locale as Locale),
+    getProductBySlug(slug, "en", market.defaultCurrency, frontendHost),
+    getProductUpsellIds(product.id, locale as Locale, frontendHost),
     // Pre-fetch the English category slug in parallel (saves a sequential call later)
     primaryCategory?.id
-      ? getEnglishSlugForCategory(primaryCategory.id, locale as Locale)
+      ? getEnglishSlugForCategory(primaryCategory.id, locale as Locale, market.defaultCurrency, frontendHost)
       : Promise.resolve(null),
   ]);
 
@@ -312,10 +334,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
   // Fetch upsell products and localized category in parallel
   const [upsellProductsRaw, localizedCategory] = await Promise.all([
     linkedIds.upsell_ids.length > 0
-      ? getProductsByIds(linkedIds.upsell_ids, locale as Locale)
+      ? getProductsByIds(linkedIds.upsell_ids, locale as Locale, market.defaultCurrency, frontendHost)
       : Promise.resolve([]),
     englishCategorySlug
-      ? getCategoryBySlug(englishCategorySlug, locale as Locale)
+      ? getCategoryBySlug(englishCategorySlug, locale as Locale, market.defaultCurrency, frontendHost)
       : Promise.resolve(null),
   ]);
 
@@ -326,15 +348,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const localizedCategoryName = localizedCategory?.name || primaryCategory?.name || null;
 
   const breadcrumbJsonLd = generateBreadcrumbJsonLd([
-    { name: locale === "ar" ? "الرئيسية" : "Home", url: `${siteConfig.url}/${locale}` },
-    { name: locale === "ar" ? "المتجر" : "Shop", url: `${siteConfig.url}/${locale}/shop` },
-    ...(localizedCategoryName && englishCategorySlug ? [{ name: decodeHtmlEntities(localizedCategoryName), url: `${siteConfig.url}/${locale}/category/${englishCategorySlug}` }] : []),
-    { name: decodeHtmlEntities(product.name), url: `${siteConfig.url}/${locale}/product/${slug}` },
+    { name: locale === "ar" ? "الرئيسية" : "Home", url: `${frontendBaseUrl}/${locale}` },
+    { name: locale === "ar" ? "المتجر" : "Shop", url: `${frontendBaseUrl}/${locale}/shop` },
+    ...(localizedCategoryName && englishCategorySlug ? [{ name: decodeHtmlEntities(localizedCategoryName), url: `${frontendBaseUrl}/${locale}/category/${englishCategorySlug}` }] : []),
+    { name: decodeHtmlEntities(product.name), url: `${frontendBaseUrl}/${locale}/product/${slug}` },
   ]);
 
   return (
     <>
-      <JsonLd data={getProductJsonLdData(product, locale, slug)} />
+      <JsonLd data={getProductJsonLdData(product, locale, slug, frontendBaseUrl, siteName)} />
       <JsonLd data={breadcrumbJsonLd} />
       <ProductDetail
         product={product}

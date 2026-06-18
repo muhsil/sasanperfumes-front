@@ -4,6 +4,7 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { getProducts, getProductBySlug, getBundleConfig } from "@/lib/api/woocommerce";
 import { getPageSeo } from "@/lib/api/wordpress";
+import { getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
 import { BuildYourOwnSetClient } from "./BuildYourOwnSetClient";
@@ -18,8 +19,8 @@ interface BuildYourOwnSetPageProps {
 const defaultSeo = {
   title: { en: "Build Your Own Set | Custom Luxury Perfume Gift Bundle", ar: "اصنع مجموعتك | طقم عطور مخصص هدية فاخرة" },
   description: {
-    en: "Create a unique fragrance gift set. Pick 3+ products from perfumes, oud, oils & home fragrances. The perfect luxury gift from Sasan Perfumes. Free delivery over 500 AED.",
-    ar: "أنشئ مجموعة عطور فريدة من اختيارك. اختر 3 منتجات أو أكثر من العطور والزيوت واللوشن ومعطرات المنزل. هدية مثالية من ساسان للعطور. توصيل مجاني للطلبات فوق 500 درهم.",
+    en: "Create a unique fragrance gift set. Pick 3+ products from perfumes, oud, oils & home fragrances. The perfect luxury gift from ShapeHive. Free delivery over 500 AED.",
+    ar: "أنشئ مجموعة عطور فريدة من اختيارك. اختر 3 منتجات أو أكثر من العطور والزيوت واللوشن ومعطرات المنزل. هدية مثالية من شيب هايف. توصيل مجاني للطلبات فوق 500 درهم.",
   },
   keywords: {
     en: ["custom fragrance set", "perfume gift set", "build your own perfume", "fragrance bundle", "perfume collection", "gift set", "luxury perfume gift", "perfume gift box", "custom perfume bundle", "birthday perfume gift", "wedding fragrance gift", "anniversary perfume set", "UAE perfume gift set", "oud gift set", "aromatic custom perfume set", "build your own aromatic gift", "personalized aromatic fragrance", "create aromatic gift box UAE"],
@@ -51,6 +52,10 @@ export default async function BuildYourOwnSetPage({
 }: BuildYourOwnSetPageProps) {
   const { locale } = await params;
   const isRTL = locale === "ar";
+  const [market, frontendHost] = await Promise.all([
+    getRequestMarket(),
+    getRequestFrontendHost(),
+  ]);
 
   const breadcrumbItems = [
     {
@@ -69,9 +74,11 @@ export default async function BuildYourOwnSetPage({
     getProducts({
       per_page: 100,
       locale: locale as Locale,
+      currency: market.defaultCurrency,
+      frontendHost,
     }),
-    getProductBySlug("build-your-own-set", locale as Locale),
-    getBundleConfig("build-your-own-set", locale as Locale),
+    getProductBySlug("build-your-own-set", locale as Locale, market.defaultCurrency, frontendHost),
+    getBundleConfig("build-your-own-set", locale as Locale, frontendHost),
   ]);
 
   return (

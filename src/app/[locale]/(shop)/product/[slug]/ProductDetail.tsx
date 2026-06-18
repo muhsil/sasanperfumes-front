@@ -32,7 +32,6 @@ import type { WCPAForm, WCPAFormValues } from "@/types/wcpa";
 import { siteConfig, type Locale } from "@/config/site";
 import { decodeHtmlEntities, BLUR_DATA_URL, cn, formatProductDisplayName } from "@/lib/utils";
 import { shouldUseUnoptimizedImage } from "@/lib/utils/image";
-import { BESTSELLER_PRODUCT_SLUGS } from "@/lib/api/woocommerce";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { triggerHaptic } from "@/lib/utils/haptics";
 import { fbTrackViewContent } from "@/lib/utils/fbpixel";
@@ -891,7 +890,8 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
   const productTags = (product.tags || []).filter((tag, index, tags) =>
     tags.findIndex((candidate) => candidate.slug === tag.slug) === index
   );
-  const extraBadgeSlugs = BESTSELLER_PRODUCT_SLUGS.includes(product.slug) ? ["bestseller"] : [];
+  const extraBadgeSlugs: string[] = [];
+  const priceSourceCurrency = product.prices.currency_code;
 
   const handleAddToCart = async () => {
     triggerHaptic();
@@ -1465,12 +1465,14 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                   <div className="flex flex-wrap items-end gap-4">
                      <FormattedPrice
                        price={parseInt(displayPrice.price) / Math.pow(10, displayPrice.currency_minor_unit)}
+                       sourceCurrency={displayPrice.currency_code || priceSourceCurrency}
                        className="text-xl font-semibold text-brand-primary sm:text-[1.55rem] md:text-[2rem]"
                        iconSize="sm"
                      />
                     {isOnSale && (
                       <FormattedPrice
                         price={parseInt(displayPrice.regular_price || displayPrice.price) / Math.pow(10, displayPrice.currency_minor_unit)}
+                        sourceCurrency={displayPrice.currency_code || priceSourceCurrency}
                         className="text-sm text-brand-primary/40"
                         iconSize="xs"
                         strikethrough
@@ -1901,6 +1903,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               {hasPrice ? (
                 <FormattedPrice
                   price={parseInt(product.prices.price) / Math.pow(10, product.prices.currency_minor_unit)}
+                  sourceCurrency={priceSourceCurrency}
                   className="text-xs font-normal text-brand-primary/80 sm:text-sm"
                   iconSize="sm"
                 />

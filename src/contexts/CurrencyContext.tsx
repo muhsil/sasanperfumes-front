@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
 import { getCookie, setCookie } from "cookies-next";
 import { siteConfig, API_BASE_CURRENCY, type Currency } from "@/config/site";
+import { filterCurrenciesForMarket, isCurrencyAllowedForMarket, internationalMarket, type MarketConfig } from "@/config/market";
 
 // Default currencies (will be replaced by API data)
 const DEFAULT_CURRENCIES: CurrencyData[] = [
@@ -63,11 +64,21 @@ const setStoredCurrency = (currency: Currency): void => {
   }
 };
 
-export function CurrencyProvider({ children }: { children: React.ReactNode }) {
+interface CurrencyProviderProps {
+  children: React.ReactNode;
+  market?: MarketConfig;
+}
+
+export function CurrencyProvider({ children, market = internationalMarket }: CurrencyProviderProps) {
+  const defaultCurrency = market.defaultCurrency || siteConfig.defaultCurrency;
+  const defaultMarketCurrencies = filterCurrenciesForMarket(DEFAULT_CURRENCIES, market);
+
   // Always initialize with default currency to match server-rendered HTML
   // and avoid hydration mismatch (React error #418)
-  const [currency, setCurrencyState] = useState<Currency>(siteConfig.defaultCurrency);
-  const [currencies, setCurrencies] = useState<CurrencyData[]>(DEFAULT_CURRENCIES);
+  const [currency, setCurrencyState] = useState<Currency>(defaultCurrency);
+  const [currencies, setCurrencies] = useState<CurrencyData[]>(
+    defaultMarketCurrencies.length > 0 ? defaultMarketCurrencies : DEFAULT_CURRENCIES
+  );
   const [isLoading, setIsLoading] = useState(true);
   const hasHydrated = useRef(false);
   const hasFetchedCurrencies = useRef(false);
@@ -75,10 +86,10 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   // Restore currency from localStorage after hydration to avoid server/client mismatch
   useEffect(() => {
     const stored = getStoredCurrency();
-    if (stored && stored !== siteConfig.defaultCurrency) {
+    if (stored && stored !== defaultCurrency && isCurrencyAllowedForMarket(stored, market)) {
       setCurrencyState(stored);
     }
-  }, []);
+  }, [defaultCurrency, market]);
 
   // Fetch currencies from API on mount
   useEffect(() => {
@@ -91,7 +102,8 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
         if (response.ok) {
           const data = await response.json();
           if (Array.isArray(data) && data.length > 0) {
-            setCurrencies(data);
+            const marketCurrencies = filterCurrenciesForMarket(data, market);
+            setCurrencies(marketCurrencies.length > 0 ? marketCurrencies : defaultMarketCurrencies);
           }
         }
       } catch (error) {
@@ -103,7 +115,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     };
 
     fetchCurrencies();
-  }, []);
+  }, [defaultMarketCurrencies, market]);
 
   // Load currency from cookie after hydration and after currencies are loaded
   useEffect(() => {
@@ -112,12 +124,24 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     hasHydrated.current = true;
     
     const savedCurrency = getCookie(CURRENCY_COOKIE_NAME) as Currency | undefined;
-    if (savedCurrency && currencies.some((c) => c.code === savedCurrency)) {
+    if (
+      savedCurrency &&
+      isCurrencyAllowedForMarket(savedCurrency, market) &&
+      currencies.some((c) => c.code === savedCurrency)
+    ) {
       setCurrencyState(savedCurrency);
+    } else if (!currencies.some((c) => c.code === currency)) {
+      setCurrencyState(defaultCurrency);
+      setCookie(CURRENCY_COOKIE_NAME, defaultCurrency, {
+        maxAge: 60 * 60 * 24 * 365,
+        path: "/",
+      });
+      setStoredCurrency(defaultCurrency);
     }
-  }, [currencies, isLoading]);
+  }, [currencies, currency, defaultCurrency, isLoading, market]);
 
   const setCurrency = useCallback((newCurrency: Currency) => {
+    if (!isCurrencyAllowedForMarket(newCurrency, market)) return;
     setCurrencyState(newCurrency);
     // Save to both cookie (for SSR) and localStorage (for instant client-side reads)
     setCookie(CURRENCY_COOKIE_NAME, newCurrency, {
@@ -125,7 +149,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
       path: "/",
     });
     setStoredCurrency(newCurrency);
-  }, []);
+  }, [market]);
 
   const getCurrencyInfo = useCallback(() => {
     return currencies.find((c) => c.code === currency) || currencies[0];

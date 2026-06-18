@@ -71,6 +71,7 @@ export function QuickViewModal({ product, locale, isOpen, onClose, englishSlug }
   const priceDivider = Math.pow(10, product.prices.currency_minor_unit);
   const price = parseInt(product.prices.price || "0") / priceDivider;
   const regularPrice = parseInt(product.prices.regular_price || product.prices.price || "0") / priceDivider;
+  const priceSourceCurrency = product.prices.currency_code;
   const hasPrice = Number.isFinite(price) && price > 0;
   const canPurchase = !isOutOfStock && product.is_purchasable && hasPrice;
 
@@ -271,11 +272,11 @@ export function QuickViewModal({ product, locale, isOpen, onClose, englishSlug }
               <span className="text-lg font-bold text-brand-primary/45">{isRTL ? "غير متاح" : "Unavailable"}</span>
             ) : product.on_sale ? (
               <>
-                <FormattedPrice price={price} className="text-lg font-bold text-brand-primary" iconSize="sm" />
-                <FormattedPrice price={regularPrice} className="text-sm font-medium text-brand-primary/35" iconSize="xs" strikethrough />
+                <FormattedPrice price={price} sourceCurrency={priceSourceCurrency} className="text-lg font-bold text-brand-primary" iconSize="sm" />
+                <FormattedPrice price={regularPrice} sourceCurrency={priceSourceCurrency} className="text-sm font-medium text-brand-primary/35" iconSize="xs" strikethrough />
               </>
             ) : (
-              <FormattedPrice price={price} className="text-lg font-bold text-brand-primary" iconSize="sm" />
+              <FormattedPrice price={price} sourceCurrency={priceSourceCurrency} className="text-lg font-bold text-brand-primary" iconSize="sm" />
             )}
           </div>
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProducts } from "@/lib/api/woocommerce";
+import { getMarketByHost, normalizeMarketHost } from "@/config/market";
 import { buildSearchSuggestion, createSearchIndexEntry, mergeRankedSearchEntries, normalizeSearchText, rankSearchEntries } from "@/lib/search";
 import type { Locale } from "@/config/site";
 import type { WCProduct, WCProductsResponse } from "@/types/woocommerce";
@@ -31,11 +32,14 @@ function dedupeProducts(products: WCProduct[]): WCProduct[] {
   return deduped;
 }
 
-async function loadAllProducts(locale: Locale): Promise<WCProduct[]> {
+async function loadAllProducts(locale: Locale, frontendHost: string): Promise<WCProduct[]> {
+  const market = getMarketByHost(frontendHost);
   const firstPage = await getProducts({
     page: 1,
     per_page: SEARCH_INDEX_PAGE_SIZE,
     locale,
+    currency: market.defaultCurrency,
+    frontendHost,
     orderby: "date",
     order: "desc",
   });
@@ -54,6 +58,8 @@ async function loadAllProducts(locale: Locale): Promise<WCProduct[]> {
         page,
         per_page: SEARCH_INDEX_PAGE_SIZE,
         locale,
+        currency: market.defaultCurrency,
+        frontendHost,
         orderby: "date",
         order: "desc",
       })
@@ -68,8 +74,8 @@ async function loadAllProducts(locale: Locale): Promise<WCProduct[]> {
   return dedupeProducts(products);
 }
 
-async function getSearchIndex(locale: Locale) {
-  const cacheKey = locale;
+async function getSearchIndex(locale: Locale, frontendHost: string) {
+  const cacheKey = `${frontendHost || "default"}:${locale}`;
   const cached = searchIndexCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < SEARCH_INDEX_CACHE_TTL) {
     return cached.entries;
@@ -81,7 +87,7 @@ async function getSearchIndex(locale: Locale) {
   }
 
   const loading = (async () => {
-    const products = await loadAllProducts(locale);
+    const products = await loadAllProducts(locale, frontendHost);
     const entries = products.map((product) => createSearchIndexEntry(product));
     searchIndexCache.set(cacheKey, { timestamp: Date.now(), entries });
     return entries;
@@ -102,6 +108,12 @@ function shouldUseFuzzyFallback(query: string, exactTopScore: number, exactCount
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
+  const frontendHost = normalizeMarketHost(
+    request.headers.get("x-frontend-host") ||
+    request.headers.get("x-forwarded-host") ||
+    request.headers.get("host")
+  );
+  const market = getMarketByHost(frontendHost);
   const locale = (searchParams.get("locale") as Locale) || "en";
   const query = searchParams.get("q") || "";
   const perPage = Math.min(Math.max(parseInt(searchParams.get("per_page") || "12", 10), 1), 40);
@@ -113,6 +125,7 @@ export async function GET(request: NextRequest) {
       {
         headers: {
           "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+          "Vary": "Host, X-Frontend-Host",
         },
       }
     );
@@ -123,6 +136,8 @@ export async function GET(request: NextRequest) {
       search: normalizedQuery,
       per_page: Math.max(perPage * 4, perPage),
       locale,
+      currency: market.defaultCurrency,
+      frontendHost,
     });
 
     const exactEntries = exactResults.products.map((product) => createSearchIndexEntry(product));
@@ -132,7 +147,7 @@ export async function GET(request: NextRequest) {
     let rankedProducts = rankedExact;
 
     if (shouldUseFuzzyFallback(query, bestExactScore, rankedExact.length)) {
-      const fuzzyEntries = await getSearchIndex(locale);
+      const fuzzyEntries = await getSearchIndex(locale, frontendHost);
       const rankedFuzzy = rankSearchEntries(query, fuzzyEntries);
       rankedProducts = mergeRankedSearchEntries(rankedExact, rankedFuzzy);
     }
@@ -159,6 +174,7 @@ export async function GET(request: NextRequest) {
       {
         headers: {
           "Cache-Control": "public, s-maxage=120, stale-while-revalidate=600",
+          "Vary": "Host, X-Frontend-Host",
         },
       }
     );

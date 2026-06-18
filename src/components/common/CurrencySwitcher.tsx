@@ -61,6 +61,7 @@ export function CurrencySwitcher({ className, locale = "en" }: CurrencySwitcherP
   const isRTL = locale === "ar";
 
   const currentCurrency = currencies.find((c) => c.code === currency);
+  const isLockedCurrency = currencies.length <= 1;
 
   const handleEscapeKey = useCallback((event: KeyboardEvent) => {
     if (event.key === "Escape") {
@@ -92,6 +93,7 @@ export function CurrencySwitcher({ className, locale = "en" }: CurrencySwitcherP
   };
 
   const handleButtonClick = () => {
+    if (isLockedCurrency) return;
     setIsOpen(true);
   };
 
@@ -117,14 +119,15 @@ export function CurrencySwitcher({ className, locale = "en" }: CurrencySwitcherP
           className
         )}
         aria-label={t.selectCurrency}
-        aria-haspopup="dialog"
+        aria-haspopup={isLockedCurrency ? undefined : "dialog"}
+        aria-disabled={isLockedCurrency}
       >
         <CountryFlag currencyCode={currentCurrency?.code || "AED"} size={20} />
         {currentCurrency?.symbol && currentCurrency.symbol !== currentCurrency.code && (
           <span className="font-semibold text-brand-primary">{currentCurrency.symbol}</span>
         )}
         <span>{currentCurrency?.code}</span>
-        <ChevronDown className="h-3 w-3 text-brand-muted" />
+        {!isLockedCurrency && <ChevronDown className="h-3 w-3 text-brand-muted" />}
       </button>
 
       {/* Premium Currency Modal */}

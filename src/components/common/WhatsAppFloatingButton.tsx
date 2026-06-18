@@ -59,12 +59,12 @@ export function WhatsAppFloatingButton({
 
   const defaultMessage = locale === "ar"
     ? "مرحباً، أود معرفة المزيد عن منتجاتكم وخدماتكم."
-    : "Hello Sasan Perfumes, I would like to know more about your products and services.";
+    : "Hello ShapeHive, I would like to know more about your products and services.";
   const legacyName = ["Fragrance", "Network"].join(" ");
   const legacySlug = ["fragrance", "network"].join("");
   const safeMessage = (message || defaultMessage)
-    .replaceAll(legacyName, "Sasan Perfumes")
-    .replaceAll(legacySlug, "Sasan Perfumes");
+    .replaceAll(legacyName, "ShapeHive")
+    .replaceAll(legacySlug, "ShapeHive");
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(safeMessage)}`;
 
   const isCartPage = pathname?.includes("/cart");

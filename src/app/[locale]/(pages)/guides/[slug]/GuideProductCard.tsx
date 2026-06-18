@@ -12,7 +12,6 @@ import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { triggerHaptic } from "@/lib/utils/haptics";
-import { BESTSELLER_PRODUCT_SLUGS } from "@/lib/api/woocommerce";
 import type { WCProduct } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
 
@@ -89,10 +88,8 @@ export function GuideProductCard({
 
   const mainImage = product.images[0];
   const isOutOfStock = !product.is_in_stock;
-  const isBestseller =
-    BESTSELLER_PRODUCT_SLUGS.includes(productSlug) ||
-    BESTSELLER_PRODUCT_SLUGS.includes(product.slug) ||
-    product.tags?.some((tag) => tag.slug === "bestseller");
+  const isBestseller = product.tags?.some((tag) => tag.slug === "bestseller");
+  const priceSourceCurrency = product.prices.currency_code;
 
   return (
     <article className="group overflow-hidden border border-[#e7ded7] bg-white">
@@ -147,15 +144,7 @@ export function GuideProductCard({
                   onError={() => setImageError(true)}
                 />
               ) : (
-                <div className="flex h-full items-center justify-center bg-gray-100">
-                  <Image
-                    src="/images/sasanperfumes-placeholder.svg"
-                    alt="Sasan Perfumes"
-                    width={120}
-                    height={120}
-                    className="object-contain opacity-30"
-                  />
-                </div>
+                <div className="h-full bg-gray-100" aria-hidden="true" />
               )}
             </div>
           </Link>
@@ -201,6 +190,7 @@ export function GuideProductCard({
                       parseInt(product.prices.price) /
                       Math.pow(10, product.prices.currency_minor_unit)
                     }
+                    sourceCurrency={priceSourceCurrency}
                     className="text-lg font-bold text-brand-primary"
                     iconSize="sm"
                   />
@@ -209,6 +199,7 @@ export function GuideProductCard({
                       parseInt(product.prices.regular_price) /
                       Math.pow(10, product.prices.currency_minor_unit)
                     }
+                    sourceCurrency={priceSourceCurrency}
                     className="text-sm text-gray-400"
                     iconSize="xs"
                     strikethrough
@@ -220,6 +211,7 @@ export function GuideProductCard({
                     parseInt(product.prices.price) /
                     Math.pow(10, product.prices.currency_minor_unit)
                   }
+                  sourceCurrency={priceSourceCurrency}
                   className="text-lg font-bold text-brand-primary"
                   iconSize="sm"
                 />

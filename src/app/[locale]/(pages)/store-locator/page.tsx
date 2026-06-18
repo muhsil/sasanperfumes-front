@@ -41,7 +41,7 @@ export default async function StoreLocatorPage({ params }: StoreLocatorPageProps
     region: item.region || "",
     country: item.country || "",
     googleMapsUrl: item.google_maps_url || "",
-    image: item.image || "/images/placeholder-hero.svg",
+    image: item.image || "",
   })).map((s, i) => ({ ...s, id: i + 1 }));
 
   const content = {

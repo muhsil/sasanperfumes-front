@@ -11,7 +11,6 @@ import { cn, decodeHtmlEntities, getProductSlugFromPermalink } from "@/lib/utils
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { BESTSELLER_PRODUCT_SLUGS } from "@/lib/api/woocommerce";
 import type { WCProduct } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
 
@@ -89,9 +88,8 @@ export function WCProductListCard({
 
   // Check if this product is a bundle product
   const isBundleProduct = bundleProductSlugs.includes(productSlug) || bundleProductSlugs.includes(product.slug);
-  const extraBadgeSlugs = BESTSELLER_PRODUCT_SLUGS.includes(productSlug) || BESTSELLER_PRODUCT_SLUGS.includes(product.slug)
-    ? ["bestseller"]
-    : [];
+  const extraBadgeSlugs: string[] = [];
+  const priceSourceCurrency = product.prices.currency_code;
 
   return (
     <article className={cn("group relative", className)}>
@@ -174,11 +172,13 @@ export function WCProductListCard({
                 <>
                   <FormattedPrice
                     price={parseInt(product.prices.price) / Math.pow(10, product.prices.currency_minor_unit)}
+                    sourceCurrency={priceSourceCurrency}
                     className="font-medium text-brand-primary"
                     iconSize="xs"
                   />
                   <FormattedPrice
                     price={parseInt(product.prices.regular_price) / Math.pow(10, product.prices.currency_minor_unit)}
+                    sourceCurrency={priceSourceCurrency}
                     className="text-brand-muted/50 line-through"
                     iconSize="xs"
                   />
@@ -186,6 +186,7 @@ export function WCProductListCard({
               ) : (
                 <FormattedPrice
                   price={parseInt(product.prices.price) / Math.pow(10, product.prices.currency_minor_unit)}
+                  sourceCurrency={priceSourceCurrency}
                   className="font-medium text-brand-primary"
                   iconSize="xs"
                 />
