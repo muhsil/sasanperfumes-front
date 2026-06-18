@@ -1,8 +1,8 @@
 <?php
 /**
- * Sasan Perfumes WhatsApp Floating Button Settings
+ * ShapeHive WhatsApp Floating Button Settings
  *
- * Admin: sasanperfumes â†’ WhatsApp Button
+ * Admin: sasanperfumes → WhatsApp Button
  * REST:  GET /sasanperfumes/v1/whatsapp
  *
  * @package sasanperfumes_Frontend_Settings
@@ -38,8 +38,8 @@ function sasanperfumes_wa_render() {
 
     $enabled  = get_option('sasanperfumes_whatsapp_enabled', '1');
     $number   = get_option('sasanperfumes_whatsapp_number', '');
-    $msgEn    = get_option('sasanperfumes_whatsapp_message_en', 'Hello Sasan Perfumes, I would like to know more about your products and services.');
-    $msgAr    = get_option('sasanperfumes_whatsapp_message_ar', 'Ù…Ø±Ø­Ø¨Ø§Ù‹ØŒ Ø£ÙˆØ¯ Ù…Ø¹Ø±ÙØ© Ø§Ù„Ù…Ø²ÙŠØ¯ Ø¹Ù† Ù…Ù†ØªØ¬Ø§ØªÙƒÙ… ÙˆØ®Ø¯Ù…Ø§ØªÙƒÙ….');
+    $msgEn    = get_option('sasanperfumes_whatsapp_message_en', 'Hello ShapeHive, I would like to know more about your products and services.');
+    $msgAr    = get_option('sasanperfumes_whatsapp_message_ar', 'مرحباً، أود معرفة المزيد عن منتجاتكم وخدماتكم.');
     $desktop  = get_option('sasanperfumes_whatsapp_show_desktop', '1');
     $mobile   = get_option('sasanperfumes_whatsapp_show_mobile', '1');
     $position = get_option('sasanperfumes_whatsapp_position', 'bottom-left');
@@ -76,8 +76,8 @@ add_action('rest_api_init', function () {
                 'enabled'     => (bool) get_option('sasanperfumes_whatsapp_enabled', true),
                 'number'      => get_option('sasanperfumes_whatsapp_number', ''),
                 'message'     => [
-                    'en' => get_option('sasanperfumes_whatsapp_message_en', 'Hello Sasan Perfumes, I would like to know more about your products and services.'),
-                    'ar' => get_option('sasanperfumes_whatsapp_message_ar', 'Ù…Ø±Ø­Ø¨Ø§Ù‹ØŒ Ø£ÙˆØ¯ Ù…Ø¹Ø±ÙØ© Ø§Ù„Ù…Ø²ÙŠØ¯ Ø¹Ù† Ù…Ù†ØªØ¬Ø§ØªÙƒÙ… ÙˆØ®Ø¯Ù…Ø§ØªÙƒÙ….'),
+                    'en' => get_option('sasanperfumes_whatsapp_message_en', 'Hello ShapeHive, I would like to know more about your products and services.'),
+                    'ar' => get_option('sasanperfumes_whatsapp_message_ar', 'مرحباً، أود معرفة المزيد عن منتجاتكم وخدماتكم.'),
                 ],
                 'showDesktop' => (bool) get_option('sasanperfumes_whatsapp_show_desktop', true),
                 'showMobile'  => (bool) get_option('sasanperfumes_whatsapp_show_mobile', true),

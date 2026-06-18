@@ -1,9 +1,9 @@
 <?php
 /**
- * Sasan Perfumes Stock Alerts â€” Back in Stock Notifications
+ * ShapeHive Stock Alerts — Back in Stock Notifications
  *
  * Stores email subscriptions in a custom DB table.
- * Sends emails when a product transitions from out_of_stock â†’ instock.
+ * Sends emails when a product transitions from out_of_stock → instock.
  *
  * REST endpoints:
  *   POST /sasanperfumes/v1/stock-alerts           { product_id, email, locale }
@@ -132,11 +132,11 @@ function sasanperfumes_stock_alerts_on_stock_change($product_id, $status, $produ
 
     foreach ($alerts as $alert) {
         $subject = $alert->locale === 'ar'
-            ? "Ù…Ù†ØªØ¬Ùƒ Ø§Ù„Ù…ÙØ¶Ù„ Ø¹Ø§Ø¯ Ø¥Ù„Ù‰ Ø§Ù„Ù…Ø®Ø²ÙˆÙ†! - {$product_name}"
+            ? "منتجك المفضل عاد إلى المخزون! - {$product_name}"
             : "Back in Stock: {$product_name}";
 
         $body = $alert->locale === 'ar'
-            ? "<p>Ù…Ø±Ø­Ø¨Ø§Ù‹ØŒ</p><p>Ø§Ù„Ù…Ù†ØªØ¬ Ø§Ù„Ø°ÙŠ Ø·Ù„Ø¨Øª Ø¥Ø´Ø¹Ø§Ø±Ø§Ù‹ Ø¹Ù†Ù‡ Ø£ØµØ¨Ø­ Ù…ØªÙˆÙØ±Ø§Ù‹ Ø§Ù„Ø¢Ù†.</p><p><strong>{$product_name}</strong></p><p><a href='{$product_url}' style='background:#4A1633;color:#fff;padding:12px 24px;text-decoration:none;border-radius:4px;display:inline-block;margin-top:16px'>Ø§Ø·Ù„Ø¨ Ø§Ù„Ø¢Ù†</a></p>"
+            ? "<p>مرحباً،</p><p>المنتج الذي طلبت إشعاراً عنه أصبح متوفراً الآن.</p><p><strong>{$product_name}</strong></p><p><a href='{$product_url}' style='background:#4A1633;color:#fff;padding:12px 24px;text-decoration:none;border-radius:4px;display:inline-block;margin-top:16px'>اطلب الآن</a></p>"
             : "<p>Good news! A product you requested is back in stock.</p><p><strong>{$product_name}</strong></p><p><a href='{$product_url}' style='background:#4A1633;color:#fff;padding:12px 24px;text-decoration:none;border-radius:4px;display:inline-block;margin-top:16px'>Shop Now</a></p>";
 
         wp_mail($alert->email, $subject, $body, ['Content-Type: text/html; charset=UTF-8']);
@@ -145,7 +145,7 @@ function sasanperfumes_stock_alerts_on_stock_change($product_id, $status, $produ
 }
 
 // ---------------------------------------------------------------------------
-// Admin menu â€” view subscribers
+// Admin menu — view subscribers
 // ---------------------------------------------------------------------------
 
 function sasanperfumes_stock_alerts_register_menu() {
@@ -176,7 +176,7 @@ function sasanperfumes_stock_alerts_render_admin() {
                     <td><?=esc_html($r->email)?></td>
                     <td><?=esc_html($r->locale)?></td>
                     <td><?=$r->created_at?></td>
-                    <td><?=$r->notified_at ?: 'â€”'?></td>
+                    <td><?=$r->notified_at ?: '—'?></td>
                 </tr>
             <?php endforeach; ?>
             <?php if (empty($rows)): ?><tr><td colspan="6">No subscribers yet.</td></tr><?php endif; ?>

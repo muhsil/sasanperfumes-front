@@ -1,15 +1,15 @@
 <?php
 /**
- * Sasan Perfumes Feature Toggles â€” Centralized enable/disable for pages & sections
+ * ShapeHive Feature Toggles — Centralized enable/disable for pages & sections
  *
- * Admin: sasanperfumes â†’ Feature Toggles
+ * Admin: sasanperfumes → Feature Toggles
  * REST API: GET /sasanperfumes/v1/feature-toggles
  *
  * @since 6.7.0
  */
 if (!defined('ABSPATH')) exit;
 
-// â”€â”€ Toggle Definitions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Toggle Definitions ─────────────────────────────────────
 function sasanperfumes_ft_toggles() {
     return [
         // Page toggles
@@ -76,12 +76,12 @@ function sasanperfumes_ft_save_value($toggle, $enabled) {
     update_option($toggle['key'], $enabled ? 1 : 0);
 }
 
-// â”€â”€ Admin Menu â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Admin Menu ─────────────────────────────────────────────
 add_action('admin_menu', function() {
     add_submenu_page('sasanperfumes-settings', 'Feature Toggles', 'Feature Toggles', 'manage_options', 'sasanperfumes-feature-toggles', 'sasanperfumes_ft_render');
 });
 
-// â”€â”€ Admin Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Admin Page ─────────────────────────────────────────────
 function sasanperfumes_ft_render() {
     if (!current_user_can('manage_options')) return;
 
@@ -135,24 +135,24 @@ function sasanperfumes_ft_render() {
             <tbody>
             <?php
             $ref = [
-                ['Size Guide',     'sasanperfumes_size_guide_enabled',          'sasanperfumes â†’ Advanced'],
-                ['Loyalty',        'sasanperfumes_loyalty_enabled',             'sasanperfumes â†’ Loyalty Points'],
-                ['Scent Guide',    'sasanperfumes_scent_guide_section_enabled', 'sasanperfumes â†’ Advanced'],
-                ['Brands Slider',  'sasanperfumes_brands_slider_enabled',      'sasanperfumes â†’ Brands Slider'],
-                ['Popup',          'sasanperfumes_popup_enabled',               'sasanperfumes â†’ Promotions'],
-                ['Chat Widget',    'sasanperfumes_chat_enabled',                'sasanperfumes â†’ Advanced'],
-                ['Gift Wrap',      'sasanperfumes_gift_wrap_enabled',           'sasanperfumes â†’ Advanced'],
-                ['Video Hero',     'sasanperfumes_video_hero_enabled',          'sasanperfumes â†’ Advanced'],
-                ['Hero Slider',    'sasanperfumes_hero_enabled',                'sasanperfumes â†’ Home Page â†’ Hero'],
-                ['Categories',     'sasanperfumes_categories_enabled',          'sasanperfumes â†’ Home Page â†’ Categories'],
-                ['Collections',    'sasanperfumes_collections_enabled',         'sasanperfumes â†’ Home Page â†’ Collections'],
-                ['Banners',        'sasanperfumes_banners_enabled',             'sasanperfumes â†’ Home Page â†’ Banners'],
-                ['Topbar',         'sasanperfumes_topbar_enabled',              'sasanperfumes â†’ Header & Topbar'],
-                ['Why Choose Us',  'sasanperfumes_home_wcus_enabled',           'sasanperfumes â†’ Home Sections'],
-                ['Our Story',      'sasanperfumes_home_story_enabled',          'sasanperfumes â†’ Home Sections'],
-                ['Home FAQ',       'sasanperfumes_home_faq_enabled',            'sasanperfumes â†’ Home Sections'],
-                ['Home SEO Content','sasanperfumes_home_seo_enabled',           'sasanperfumes â†’ Home Sections'],
-                ['WhatsApp Button','sasanperfumes_whatsapp_enabled',            'sasanperfumes â†’ WhatsApp Button'],
+                ['Size Guide',     'sasanperfumes_size_guide_enabled',          'sasanperfumes → Advanced'],
+                ['Loyalty',        'sasanperfumes_loyalty_enabled',             'sasanperfumes → Loyalty Points'],
+                ['Scent Guide',    'sasanperfumes_scent_guide_section_enabled', 'sasanperfumes → Advanced'],
+                ['Brands Slider',  'sasanperfumes_brands_slider_enabled',      'sasanperfumes → Brands Slider'],
+                ['Popup',          'sasanperfumes_popup_enabled',               'sasanperfumes → Promotions'],
+                ['Chat Widget',    'sasanperfumes_chat_enabled',                'sasanperfumes → Advanced'],
+                ['Gift Wrap',      'sasanperfumes_gift_wrap_enabled',           'sasanperfumes → Advanced'],
+                ['Video Hero',     'sasanperfumes_video_hero_enabled',          'sasanperfumes → Advanced'],
+                ['Hero Slider',    'sasanperfumes_hero_enabled',                'sasanperfumes → Home Page → Hero'],
+                ['Categories',     'sasanperfumes_categories_enabled',          'sasanperfumes → Home Page → Categories'],
+                ['Collections',    'sasanperfumes_collections_enabled',         'sasanperfumes → Home Page → Collections'],
+                ['Banners',        'sasanperfumes_banners_enabled',             'sasanperfumes → Home Page → Banners'],
+                ['Topbar',         'sasanperfumes_topbar_enabled',              'sasanperfumes → Header & Topbar'],
+                ['Why Choose Us',  'sasanperfumes_home_wcus_enabled',           'sasanperfumes → Home Sections'],
+                ['Our Story',      'sasanperfumes_home_story_enabled',          'sasanperfumes → Home Sections'],
+                ['Home FAQ',       'sasanperfumes_home_faq_enabled',            'sasanperfumes → Home Sections'],
+                ['Home SEO Content','sasanperfumes_home_seo_enabled',           'sasanperfumes → Home Sections'],
+                ['WhatsApp Button','sasanperfumes_whatsapp_enabled',            'sasanperfumes → WhatsApp Button'],
             ];
             foreach ($ref as $r) {
                 $raw = get_option($r[1]);
@@ -167,7 +167,7 @@ function sasanperfumes_ft_render() {
     <?php
 }
 
-// â”€â”€ REST API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── REST API ─────────────────────────────────────────────
 add_action('rest_api_init', function() {
     sasanperfumes_register_rest_route( '/feature-toggles', [
         'methods'             => 'GET',

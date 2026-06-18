@@ -1,5 +1,5 @@
 /**
- * Theme configuration for Sasan Perfumes.
+ * Theme configuration for ShapeHive.
  * Single source of truth for all core brand colors.
  */
 

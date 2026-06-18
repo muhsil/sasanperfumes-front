@@ -1,6 +1,6 @@
 <?php
 /**
- * Sasan Perfumes Forms Module
+ * ShapeHive Forms Module
  * 
  * Handles contact form and newsletter submissions via REST API.
  * Uses WordPress wp_mail() function to send emails.

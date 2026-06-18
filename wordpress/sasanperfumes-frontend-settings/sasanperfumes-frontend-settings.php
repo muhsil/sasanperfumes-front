@@ -4,7 +4,7 @@
  * Plugin URI: https://cms.shapehive.com
  * Description: Admin dashboard and REST API endpoints for sasanperfumes with Media Library upload, dynamic slides, layout options, Bundles Creator, and Free Gift functionality.
  * Version: 6.6.8
- * Author: Sasan Perfumes
+ * Author: ShapeHive
  * License: GPL v2 or later
  */
 
@@ -331,7 +331,7 @@ require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-product
 // Include Footer Settings module (dynamic footer content with EN/AR support)
 require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-footer-settings.php';
 
-// â”€â”€ NEW FEATURE MODULES (v6.6.0) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── NEW FEATURE MODULES (v6.6.0) ─────────────────────────────────────────
 // Promotions: popup settings, badge tag config, sale date injection
 require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-promotions.php';
 

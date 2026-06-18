@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { normalizeMarketHost } from "@/config/market";
 import { API_BASE, backendHeaders, fetchBackend, safeJsonResponse } from "@/lib/utils/backendFetch";
-import { getFrontendHostFromRequestHeaders } from "@/lib/market/server";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -30,7 +29,9 @@ function fallbackResponse() {
 
 export async function GET(request: NextRequest) {
   const frontendHost = normalizeMarketHost(
-    getFrontendHostFromRequestHeaders(request.headers)
+    request.headers.get("x-frontend-host") ||
+    request.headers.get("x-forwarded-host") ||
+    request.headers.get("host")
   );
   const homeSettingsEndpoints = [
     `${API_BASE}/wp-json/sasanperfumes/v1/home-settings${frontendHost ? `?frontend_host=${encodeURIComponent(frontendHost)}` : ""}`,

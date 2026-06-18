@@ -1,36 +1,45 @@
-import { NextResponse } from "next/server";
-import { siteConfig } from "@/config/site";
+import { PillRowSkeleton, ProductGridSkeleton, Skeleton } from "@/components/common/Skeleton";
 
-export async function GET() {
-  const content = `# ${siteConfig.name}
+function CollectionHeaderLoading() {
+  return (
+    <section className="section-band text-brand-primary">
+      <div className="mb-0 border-b border-brand-border/70 bg-brand-beige/45 px-5 py-6 md:px-7 lg:px-12">
+        <PillRowSkeleton count={8} />
+      </div>
 
-> UAE perfume store for everyday fragrances, hair mist, all over sprays, and gift sets
+      <div className="flex flex-col gap-6 px-5 py-8 md:flex-row md:items-center md:gap-8 md:px-7 md:pb-8 lg:gap-12 lg:px-12">
+        <div className="flex-1">
+          <Skeleton className="h-9 w-32 md:h-12" />
+          <Skeleton className="mt-3 h-5 w-full max-w-[420px]" />
+        </div>
+      </div>
+    </section>
+  );
+}
 
-## About
-Sasan Perfumes is a UAE fragrance store offering perfumes, hair mist, all over sprays, and gift-ready scent collections online.
+function ProductToolbarLoading() {
+  return (
+    <div className="section-band relative flex items-center justify-between gap-4 px-5 py-3 text-brand-primary md:px-7 lg:px-12">
+      <Skeleton className="hidden h-4 w-24 md:block" />
+      <div className="flex items-center gap-5 md:ms-auto">
+        <div className="hidden items-center gap-3 md:flex">
+          <Skeleton className="h-8 w-8 rounded-full" />
+          <Skeleton className="h-8 w-8 rounded-full" />
+          <Skeleton className="h-8 w-8 rounded-full" />
+        </div>
+        <span className="hidden h-5 w-px bg-brand-border/80 md:block" aria-hidden="true" />
+        <Skeleton className="h-4 w-28" />
+      </div>
+    </div>
+  );
+}
 
-## Links
-- Website: ${siteConfig.url}
-- Shop: ${siteConfig.url}/en/shop
-- About Us: ${siteConfig.url}/en/about-us
-- Contact: ${siteConfig.url}/en/contact-us
-- Full LLM Context: ${siteConfig.url}/llms-full.txt
-
-## Product Categories
-- Perfumes: ${siteConfig.url}/en/category/perfumes
-- All Over Spray: ${siteConfig.url}/en/category/all-over-spray
-- Hair Mist: ${siteConfig.url}/en/category/sasan-hair-mist
-- Gift Sets: ${siteConfig.url}/en/category/gift-set
-
-## Languages
-- English: ${siteConfig.url}/en
-- Arabic: ${siteConfig.url}/ar
-`;
-
-  return new NextResponse(content, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "public, max-age=86400, s-maxage=86400",
-    },
-  });
+export default function ShopLoading() {
+  return (
+    <div className="bg-transparent text-brand-primary">
+      <CollectionHeaderLoading />
+      <ProductToolbarLoading />
+      <ProductGridSkeleton count={12} columns={6} />
+    </div>
+  );
 }

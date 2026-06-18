@@ -1,36 +1,47 @@
-import { NextResponse } from "next/server";
-import { siteConfig } from "@/config/site";
+import { Skeleton } from "@/components/common/Skeleton";
 
-export async function GET() {
-  const content = `# ${siteConfig.name}
+export default function AccountLoading() {
+  return (
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="container mx-auto px-5 md:px-7 lg:px-12">
+        <Skeleton className="mb-8 h-8 w-48 md:h-10" />
 
-> UAE perfume store for everyday fragrances, hair mist, all over sprays, and gift sets
+        <div className="grid gap-8 lg:grid-cols-3">
+          {/* Profile card skeleton */}
+          <div className="lg:col-span-1">
+            <div className="rounded-lg bg-white p-6 shadow-sm">
+              <div className="flex flex-col items-center text-center">
+                <Skeleton className="mb-4 h-24 w-24 rounded-full" />
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="mt-2 h-4 w-48" />
+                <Skeleton className="mt-2 h-4 w-24" />
+              </div>
+            </div>
+          </div>
 
-## About
-Sasan Perfumes is a UAE fragrance store offering perfumes, hair mist, all over sprays, and gift-ready scent collections online.
-
-## Links
-- Website: ${siteConfig.url}
-- Shop: ${siteConfig.url}/en/shop
-- About Us: ${siteConfig.url}/en/about-us
-- Contact: ${siteConfig.url}/en/contact-us
-- Full LLM Context: ${siteConfig.url}/llms-full.txt
-
-## Product Categories
-- Perfumes: ${siteConfig.url}/en/category/perfumes
-- All Over Spray: ${siteConfig.url}/en/category/all-over-spray
-- Hair Mist: ${siteConfig.url}/en/category/sasan-hair-mist
-- Gift Sets: ${siteConfig.url}/en/category/gift-set
-
-## Languages
-- English: ${siteConfig.url}/en
-- Arabic: ${siteConfig.url}/ar
-`;
-
-  return new NextResponse(content, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "public, max-age=86400, s-maxage=86400",
-    },
-  });
+          {/* Menu items skeleton */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="rounded-lg bg-white shadow-sm">
+              <ul className="divide-y">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <li key={i} className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <Skeleton className="h-12 w-12 rounded-full" />
+                        <div>
+                          <Skeleton className="h-5 w-24" />
+                          <Skeleton className="mt-1 h-4 w-40" />
+                        </div>
+                      </div>
+                      <Skeleton className="h-5 w-5" />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

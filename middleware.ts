@@ -11,6 +11,9 @@ const MARKET_PREFIX_SEGMENTS = new Set<string>(["qa", "om", "sa"]);
 const LOCALE_SEGMENTS = new Set<string>(["en", "ar"]);
 const KNOWN_CANONICAL_HOSTS = [
   "shapehive.com",
+  "qa.shapehive.com",
+  "om.shapehive.com",
+  "sa.shapehive.com",
 ];
 
 function parseHost(value: string | undefined): string {
@@ -42,6 +45,9 @@ function getAllowedHosts(): string[] {
     ...canonicalHosts,
     "cms.shapehive.com",
     "shapehive.com",
+    "qa.shapehive.com",
+    "om.shapehive.com",
+    "sa.shapehive.com",
     cmsHostname,
     ...mediaHostNames,
   ]);

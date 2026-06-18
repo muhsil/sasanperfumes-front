@@ -1,36 +1,28 @@
-import { NextResponse } from "next/server";
-import { siteConfig } from "@/config/site";
+import { Suspense } from "react";
+import OrderConfirmationClient from "./OrderConfirmationClient";
 
-export async function GET() {
-  const content = `# ${siteConfig.name}
+interface PageProps {
+  params: Promise<{ locale: string }>;
+}
 
-> UAE perfume store for everyday fragrances, hair mist, all over sprays, and gift sets
+function LoadingFallback({ locale }: { locale: string }) {
+  const isRTL = locale === "ar";
+  return (
+    <div className="container mx-auto flex min-h-[60vh] items-center justify-center px-5 md:px-7 lg:px-12 py-8">
+      <div className="text-center">
+        <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-gray-900"></div>
+        <p className="text-gray-600">{isRTL ? "جاري التحميل..." : "Loading..."}</p>
+      </div>
+    </div>
+  );
+}
 
-## About
-Sasan Perfumes is a UAE fragrance store offering perfumes, hair mist, all over sprays, and gift-ready scent collections online.
-
-## Links
-- Website: ${siteConfig.url}
-- Shop: ${siteConfig.url}/en/shop
-- About Us: ${siteConfig.url}/en/about-us
-- Contact: ${siteConfig.url}/en/contact-us
-- Full LLM Context: ${siteConfig.url}/llms-full.txt
-
-## Product Categories
-- Perfumes: ${siteConfig.url}/en/category/perfumes
-- All Over Spray: ${siteConfig.url}/en/category/all-over-spray
-- Hair Mist: ${siteConfig.url}/en/category/sasan-hair-mist
-- Gift Sets: ${siteConfig.url}/en/category/gift-set
-
-## Languages
-- English: ${siteConfig.url}/en
-- Arabic: ${siteConfig.url}/ar
-`;
-
-  return new NextResponse(content, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "public, max-age=86400, s-maxage=86400",
-    },
-  });
+export default async function OrderConfirmationPage({ params }: PageProps) {
+  const { locale } = await params;
+  
+  return (
+    <Suspense fallback={<LoadingFallback locale={locale} />}>
+      <OrderConfirmationClient locale={locale} />
+    </Suspense>
+  );
 }

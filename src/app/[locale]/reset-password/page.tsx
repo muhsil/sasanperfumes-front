@@ -1,36 +1,37 @@
-import { NextResponse } from "next/server";
-import { siteConfig } from "@/config/site";
+import { Suspense } from "react";
+import ResetPasswordForm from "./ResetPasswordForm";
+import { AuthBackground } from "@/components/common/AuthBackground";
 
-export async function GET() {
-  const content = `# ${siteConfig.name}
+interface ResetPasswordPageProps {
+  params: Promise<{ locale: string }>;
+}
 
-> UAE perfume store for everyday fragrances, hair mist, all over sprays, and gift sets
+function LoadingFallback() {
+  return (
+    <AuthBackground showImage={false} className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-8 md:py-12">
+      <div className="w-full max-w-md">
+        <div className="luxury-panel p-5 md:p-7">
+          <div className="mb-8 text-center">
+            <div className="h-8 w-48 mx-auto skeleton-shimmer rounded"></div>
+            <div className="h-4 w-64 mx-auto mt-4 skeleton-shimmer rounded"></div>
+          </div>
+          <div className="space-y-5">
+            <div className="h-12 skeleton-shimmer rounded"></div>
+            <div className="h-12 skeleton-shimmer rounded"></div>
+            <div className="h-12 skeleton-shimmer rounded"></div>
+          </div>
+        </div>
+      </div>
+    </AuthBackground>
+  );
+}
 
-## About
-Sasan Perfumes is a UAE fragrance store offering perfumes, hair mist, all over sprays, and gift-ready scent collections online.
-
-## Links
-- Website: ${siteConfig.url}
-- Shop: ${siteConfig.url}/en/shop
-- About Us: ${siteConfig.url}/en/about-us
-- Contact: ${siteConfig.url}/en/contact-us
-- Full LLM Context: ${siteConfig.url}/llms-full.txt
-
-## Product Categories
-- Perfumes: ${siteConfig.url}/en/category/perfumes
-- All Over Spray: ${siteConfig.url}/en/category/all-over-spray
-- Hair Mist: ${siteConfig.url}/en/category/sasan-hair-mist
-- Gift Sets: ${siteConfig.url}/en/category/gift-set
-
-## Languages
-- English: ${siteConfig.url}/en
-- Arabic: ${siteConfig.url}/ar
-`;
-
-  return new NextResponse(content, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "public, max-age=86400, s-maxage=86400",
-    },
-  });
+export default async function ResetPasswordPage({ params }: ResetPasswordPageProps) {
+  const { locale } = await params;
+  
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <ResetPasswordForm locale={locale} />
+    </Suspense>
+  );
 }

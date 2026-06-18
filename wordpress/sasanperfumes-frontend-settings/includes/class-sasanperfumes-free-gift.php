@@ -1,9 +1,9 @@
 <?php
 /**
- * Sasan Perfumes Free Gift - Free Gift Rules Functionality
+ * ShapeHive Free Gift - Free Gift Rules Functionality
  * 
  * Handles admin page, REST API endpoints, and product hiding
- * for the Sasan Perfumes Free Gift feature.
+ * for the ShapeHive Free Gift feature.
  * 
  * @package sasanperfumes_Frontend_Settings
  * @since 5.9.0
@@ -12,7 +12,7 @@
 if (!defined('ABSPATH')) exit;
 
 /**
- * Initialize Sasan Perfumes Free Gift
+ * Initialize ShapeHive Free Gift
  */
 function sasanperfumes_free_gift_init() {
     // Admin menu
@@ -178,7 +178,7 @@ function sasanperfumes_free_gifts_render_admin_page() {
                         </tr>
                         <tr>
                             <th>Message (AR)</th>
-                            <td><input type="text" name="sasanperfumes_free_gifts_rules[${ruleIndex}][message_ar]" class="large-text" dir="rtl" placeholder="ØªÙ‡Ø§Ù†ÙŠÙ†Ø§! Ù„Ù‚Ø¯ Ø­ØµÙ„Øª Ø¹Ù„Ù‰ Ù‡Ø¯ÙŠØ© Ù…Ø¬Ø§Ù†ÙŠØ©!"></td>
+                            <td><input type="text" name="sasanperfumes_free_gifts_rules[${ruleIndex}][message_ar]" class="large-text" dir="rtl" placeholder="تهانينا! لقد حصلت على هدية مجانية!"></td>
                         </tr>
                         <tr>
                             <th>Hide from Shop</th>
@@ -266,7 +266,7 @@ function sasanperfumes_free_gifts_render_rule_row($index, $rule, $products, $cur
             </tr>
             <tr>
                 <th>Message (AR)</th>
-                <td><input type="text" name="sasanperfumes_free_gifts_rules[<?php echo $index; ?>][message_ar]" value="<?php echo esc_attr($message_ar); ?>" class="large-text" dir="rtl" placeholder="ØªÙ‡Ø§Ù†ÙŠÙ†Ø§! Ù„Ù‚Ø¯ Ø­ØµÙ„Øª Ø¹Ù„Ù‰ Ù‡Ø¯ÙŠØ© Ù…Ø¬Ø§Ù†ÙŠØ©!"></td>
+                <td><input type="text" name="sasanperfumes_free_gifts_rules[<?php echo $index; ?>][message_ar]" value="<?php echo esc_attr($message_ar); ?>" class="large-text" dir="rtl" placeholder="تهانينا! لقد حصلت على هدية مجانية!"></td>
             </tr>
             <tr>
                 <th>Hide from Shop</th>
@@ -544,5 +544,5 @@ function sasanperfumes_enforce_published_products_in_rest_api($query) {
     }
 }
 
-// Initialize Sasan Perfumes Free Gift
+// Initialize ShapeHive Free Gift
 sasanperfumes_free_gift_init();

@@ -1,9 +1,17 @@
-import { normalizeMarketHost } from "@/config/market";
-
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") {
     return;
   }
+
+  const normalizeFrontendHost = (value: string): string => {
+    return value
+      .trim()
+      .toLowerCase()
+      .replace(/^https?:\/\//, "")
+      .split("/")[0]
+      .split(":")[0]
+      .replace(/^www\./, "");
+  };
 
   const headersToRecord = (headers?: HeadersInit): Record<string, string> => {
     if (!headers) return {};
@@ -26,21 +34,12 @@ export async function register() {
       const requestHeaders = await getRequestHeaders();
       const explicitHost = requestHeaders.get("x-frontend-host");
       const forwardedHost = requestHeaders.get("x-forwarded-host");
-      const market = requestHeaders.get("x-market");
       const host = requestHeaders.get("host");
       const origin = requestHeaders.get("origin");
       const referer = requestHeaders.get("referer");
       const candidates = [explicitHost, forwardedHost, host, origin, referer];
       const selected = candidates.find((item) => Boolean(item)) ?? "";
-      const normalized = normalizeMarketHost(selected);
-      if (market) {
-        const normalizedBaseHost = normalizeMarketHost(requestHeaders.get("host") || requestHeaders.get("x-forwarded-host") || "");
-        const baseHost = normalizedBaseHost.split("/")[0];
-        if (baseHost && normalized !== `${baseHost}/${market}`) {
-          return `${baseHost}/${market}`;
-        }
-      }
-      return normalized;
+      return normalizeFrontendHost(selected);
     } catch {
       return "";
     }

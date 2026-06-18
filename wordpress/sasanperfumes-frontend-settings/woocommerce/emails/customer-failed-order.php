@@ -1,6 +1,6 @@
 <?php
 /**
- * Customer failed order email - Sasan Perfumes Custom Style
+ * Customer failed order email - ShapeHive Custom Style
  *
  * This template can be overridden by copying it to yourtheme/woocommerce/emails/customer-failed-order.php.
  *
@@ -11,9 +11,10 @@
 defined( 'ABSPATH' ) || exit;
 
 // Frontend app URL for headless setup
-$frontend_url = function_exists('sasanperfumes_get_frontend_url') ? sasanperfumes_get_frontend_url() : get_site_url();
-$order_url = sasanperfumes_build_frontend_localized_url('en', 'account/orders/' . $order->get_id() . '/');
-$checkout_url = sasanperfumes_build_frontend_localized_url('en', 'checkout/');
+$frontend_url = 'https://shapehive.com';
+// Correct URL structure: /en/account/orders/{id}/
+$order_url = $frontend_url . '/en/account/orders/' . $order->get_id() . '/';
+$checkout_url = $frontend_url . '/en/checkout/';
 
 /*
  * @hooked WC_Emails::email_header() Output the email header

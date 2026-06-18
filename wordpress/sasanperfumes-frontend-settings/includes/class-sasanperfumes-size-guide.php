@@ -1,12 +1,12 @@
 <?php
 /**
- * Sasan Perfumes Size Guide Manager
+ * ShapeHive Size Guide Manager
  *
  * Provides a proper manual size guide system for fashion/clothing products.
  * Replaces the raw JSON textarea approach with a structured builder.
  *
  * Architecture:
- *  - CPT `sasanperfumes_size_guide` â€” one post per template (Shirt, Pant, Shorts, Jacket, etc.)
+ *  - CPT `sasanperfumes_size_guide` — one post per template (Shirt, Pant, Shorts, Jacket, etc.)
  *  - Template data stored in post meta (chart columns/rows, measurement sections)
  *  - Category assignment stored in template meta
  *  - Product-level override stored in product post meta `_sasanperfumes_size_guide_id`
@@ -69,7 +69,7 @@ function sasanperfumes_sg_register_menu() {
 }
 
 // ---------------------------------------------------------------------------
-// Meta Boxes â€” Template Editor
+// Meta Boxes — Template Editor
 // ---------------------------------------------------------------------------
 
 function sasanperfumes_sg_add_meta_boxes() {
@@ -92,7 +92,7 @@ function sasanperfumes_sg_mb_basic($post) {
         </tr>
         <tr>
             <th>Title (AR)</th>
-            <td><input type="text" name="sg_title_ar" value="<?= esc_attr($g('_sg_title_ar')) ?>" class="large-text" dir="rtl" placeholder="Ø¯Ù„ÙŠÙ„ Ù…Ù‚Ø§Ø³Ø§Øª Ø§Ù„Ù‚Ù…ØµØ§Ù†"></td>
+            <td><input type="text" name="sg_title_ar" value="<?= esc_attr($g('_sg_title_ar')) ?>" class="large-text" dir="rtl" placeholder="دليل مقاسات القمصان"></td>
         </tr>
         <tr>
             <th>Default Unit</th>
@@ -111,19 +111,19 @@ function sasanperfumes_sg_mb_basic($post) {
                         <option value="<?= $v ?>" <?= selected($g('_sg_fit_type', 'regular'), $v, false) ?>><?= $l ?></option>
                     <?php endforeach; ?>
                 </select>
-                <p class="description">Shown as a scale indicator in the modal: Slim â€” Regular â€” Oversized</p>
+                <p class="description">Shown as a scale indicator in the modal: Slim — Regular — Oversized</p>
             </td>
         </tr>
         <tr>
             <th>Measurement Note (EN)</th>
             <td>
-                <input type="text" name="sg_note_en" value="<?= esc_attr($g('_sg_note_en', 'This data was obtained from manually measuring the product, it may be off by 1â€“2 CM.')) ?>" class="large-text">
+                <input type="text" name="sg_note_en" value="<?= esc_attr($g('_sg_note_en', 'This data was obtained from manually measuring the product, it may be off by 1–2 CM.')) ?>" class="large-text">
                 <p class="description">Shown below the size table in the modal.</p>
             </td>
         </tr>
         <tr>
             <th>Measurement Note (AR)</th>
-            <td><input type="text" name="sg_note_ar" value="<?= esc_attr($g('_sg_note_ar', 'ØªÙ… Ø§Ù„Ø­ØµÙˆÙ„ Ø¹Ù„Ù‰ Ù‡Ø°Ù‡ Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ù…Ù† Ù‚ÙŠØ§Ø³ Ø§Ù„Ù…Ù†ØªØ¬ ÙŠØ¯ÙˆÙŠØ§Ù‹ØŒ ÙˆÙ‚Ø¯ ÙŠÙƒÙˆÙ† Ù‡Ù†Ø§Ùƒ ÙØ§Ø±Ù‚ ÙŠØµÙ„ Ø¥Ù„Ù‰ 1â€“2 Ø³Ù….')) ?>" class="large-text" dir="rtl"></td>
+            <td><input type="text" name="sg_note_ar" value="<?= esc_attr($g('_sg_note_ar', 'تم الحصول على هذه البيانات من قياس المنتج يدوياً، وقد يكون هناك فارق يصل إلى 1–2 سم.')) ?>" class="large-text" dir="rtl"></td>
         </tr>
         <tr>
             <th>Enable Body Chart</th>
@@ -142,7 +142,7 @@ function sasanperfumes_sg_render_chart_builder($post, $meta_key_columns, $meta_k
     $cols_json = json_encode($columns, JSON_UNESCAPED_UNICODE);
     $rows_json = json_encode($rows, JSON_UNESCAPED_UNICODE);
     ?>
-    <p class="description">Define columns first, then add measurement rows. Measurements can be entered in CM; IN values are auto-calculated (Ã·2.54) if left blank.</p>
+    <p class="description">Define columns first, then add measurement rows. Measurements can be entered in CM; IN values are auto-calculated (÷2.54) if left blank.</p>
 
     <!-- Load sample data buttons -->
     <div style="margin:12px 0 6px;display:flex;gap:8px;flex-wrap:wrap;">
@@ -189,12 +189,12 @@ function sasanperfumes_sg_render_chart_builder($post, $meta_key_columns, $meta_k
         var SAMPLES = {
             shirt: {
                 columns: [
-                    {key:'size',label_en:'Size',label_ar:'Ø§Ù„Ù…Ù‚Ø§Ø³',type:'text'},
-                    {key:'chest',label_en:'Chest',label_ar:'Ø§Ù„ØµØ¯Ø±',type:'measurement'},
-                    {key:'length',label_en:'Length',label_ar:'Ø§Ù„Ø·ÙˆÙ„',type:'measurement'},
-                    {key:'shoulder',label_en:'Shoulder',label_ar:'Ø§Ù„ÙƒØªÙ',type:'measurement'},
-                    {key:'sleeve',label_en:'Sleeve Length',label_ar:'Ø·ÙˆÙ„ Ø§Ù„ÙƒÙ…',type:'measurement'},
-                    {key:'cuff',label_en:'Cuff',label_ar:'Ø§Ù„ÙƒÙØ©',type:'measurement'}
+                    {key:'size',label_en:'Size',label_ar:'المقاس',type:'text'},
+                    {key:'chest',label_en:'Chest',label_ar:'الصدر',type:'measurement'},
+                    {key:'length',label_en:'Length',label_ar:'الطول',type:'measurement'},
+                    {key:'shoulder',label_en:'Shoulder',label_ar:'الكتف',type:'measurement'},
+                    {key:'sleeve',label_en:'Sleeve Length',label_ar:'طول الكم',type:'measurement'},
+                    {key:'cuff',label_en:'Cuff',label_ar:'الكفة',type:'measurement'}
                 ],
                 rows: [
                     {size:'S',chest:{cm:'98.7',in:'38.9'},length:{cm:'56',in:'22.0'},shoulder:{cm:'44',in:'17.3'},sleeve:{cm:'19.5',in:'7.7'},cuff:{cm:'38.5',in:'15.2'}},
@@ -205,13 +205,13 @@ function sasanperfumes_sg_render_chart_builder($post, $meta_key_columns, $meta_k
             },
             pant: {
                 columns: [
-                    {key:'size',label_en:'Size',label_ar:'Ø§Ù„Ù…Ù‚Ø§Ø³',type:'text'},
-                    {key:'waist',label_en:'Waist',label_ar:'Ø§Ù„Ø®ØµØ±',type:'measurement'},
-                    {key:'hip',label_en:'Hip',label_ar:'Ø§Ù„ÙˆØ±Ùƒ',type:'measurement'},
-                    {key:'front_rise',label_en:'Front Rise',label_ar:'Ø§Ù„Ø§Ø±ØªÙØ§Ø¹ Ø§Ù„Ø£Ù…Ø§Ù…ÙŠ',type:'measurement'},
-                    {key:'thigh',label_en:'Thigh',label_ar:'Ø§Ù„ÙØ®Ø°',type:'measurement'},
-                    {key:'inseam',label_en:'Inseam',label_ar:'Ø§Ù„Ø®ÙŠØ§Ø·Ø© Ø§Ù„Ø¯Ø§Ø®Ù„ÙŠØ©',type:'measurement'},
-                    {key:'leg_opening',label_en:'Leg Opening',label_ar:'ÙØªØ­Ø© Ø§Ù„Ø³Ø§Ù‚',type:'measurement'}
+                    {key:'size',label_en:'Size',label_ar:'المقاس',type:'text'},
+                    {key:'waist',label_en:'Waist',label_ar:'الخصر',type:'measurement'},
+                    {key:'hip',label_en:'Hip',label_ar:'الورك',type:'measurement'},
+                    {key:'front_rise',label_en:'Front Rise',label_ar:'الارتفاع الأمامي',type:'measurement'},
+                    {key:'thigh',label_en:'Thigh',label_ar:'الفخذ',type:'measurement'},
+                    {key:'inseam',label_en:'Inseam',label_ar:'الخياطة الداخلية',type:'measurement'},
+                    {key:'leg_opening',label_en:'Leg Opening',label_ar:'فتحة الساق',type:'measurement'}
                 ],
                 rows: [
                     {size:'30',waist:{cm:'78',in:'30.7'},hip:{cm:'96',in:'37.8'},front_rise:{cm:'27',in:'10.6'},thigh:{cm:'58',in:'22.8'},inseam:{cm:'76',in:'29.9'},leg_opening:{cm:'34',in:'13.4'}},
@@ -222,13 +222,13 @@ function sasanperfumes_sg_render_chart_builder($post, $meta_key_columns, $meta_k
             },
             short: {
                 columns: [
-                    {key:'size',label_en:'Size',label_ar:'Ø§Ù„Ù…Ù‚Ø§Ø³',type:'text'},
-                    {key:'waist',label_en:'Waist',label_ar:'Ø§Ù„Ø®ØµØ±',type:'measurement'},
-                    {key:'hip',label_en:'Hip',label_ar:'Ø§Ù„ÙˆØ±Ùƒ',type:'measurement'},
-                    {key:'rise',label_en:'Rise',label_ar:'Ø§Ù„Ø§Ø±ØªÙØ§Ø¹',type:'measurement'},
-                    {key:'thigh',label_en:'Thigh',label_ar:'Ø§Ù„ÙØ®Ø°',type:'measurement'},
-                    {key:'inseam',label_en:'Inseam',label_ar:'Ø§Ù„Ø®ÙŠØ§Ø·Ø© Ø§Ù„Ø¯Ø§Ø®Ù„ÙŠØ©',type:'measurement'},
-                    {key:'leg_opening',label_en:'Leg Opening',label_ar:'ÙØªØ­Ø© Ø§Ù„Ø³Ø§Ù‚',type:'measurement'}
+                    {key:'size',label_en:'Size',label_ar:'المقاس',type:'text'},
+                    {key:'waist',label_en:'Waist',label_ar:'الخصر',type:'measurement'},
+                    {key:'hip',label_en:'Hip',label_ar:'الورك',type:'measurement'},
+                    {key:'rise',label_en:'Rise',label_ar:'الارتفاع',type:'measurement'},
+                    {key:'thigh',label_en:'Thigh',label_ar:'الفخذ',type:'measurement'},
+                    {key:'inseam',label_en:'Inseam',label_ar:'الخياطة الداخلية',type:'measurement'},
+                    {key:'leg_opening',label_en:'Leg Opening',label_ar:'فتحة الساق',type:'measurement'}
                 ],
                 rows: [
                     {size:'S',waist:{cm:'76',in:'29.9'},hip:{cm:'98',in:'38.6'},rise:{cm:'28',in:'11.0'},thigh:{cm:'62',in:'24.4'},inseam:{cm:'18',in:'7.1'},leg_opening:{cm:'54',in:'21.3'}},
@@ -239,12 +239,12 @@ function sasanperfumes_sg_render_chart_builder($post, $meta_key_columns, $meta_k
             },
             jacket: {
                 columns: [
-                    {key:'size',label_en:'Size',label_ar:'Ø§Ù„Ù…Ù‚Ø§Ø³',type:'text'},
-                    {key:'chest',label_en:'Chest',label_ar:'Ø§Ù„ØµØ¯Ø±',type:'measurement'},
-                    {key:'length',label_en:'Length',label_ar:'Ø§Ù„Ø·ÙˆÙ„',type:'measurement'},
-                    {key:'shoulder',label_en:'Shoulder',label_ar:'Ø§Ù„ÙƒØªÙ',type:'measurement'},
-                    {key:'sleeve',label_en:'Sleeve Length',label_ar:'Ø·ÙˆÙ„ Ø§Ù„ÙƒÙ…',type:'measurement'},
-                    {key:'hem',label_en:'Hem',label_ar:'Ø§Ù„Ø­Ø§Ø´ÙŠØ©',type:'measurement'}
+                    {key:'size',label_en:'Size',label_ar:'المقاس',type:'text'},
+                    {key:'chest',label_en:'Chest',label_ar:'الصدر',type:'measurement'},
+                    {key:'length',label_en:'Length',label_ar:'الطول',type:'measurement'},
+                    {key:'shoulder',label_en:'Shoulder',label_ar:'الكتف',type:'measurement'},
+                    {key:'sleeve',label_en:'Sleeve Length',label_ar:'طول الكم',type:'measurement'},
+                    {key:'hem',label_en:'Hem',label_ar:'الحاشية',type:'measurement'}
                 ],
                 rows: [
                     {size:'S',chest:{cm:'98',in:'38.6'},length:{cm:'68',in:'26.8'},shoulder:{cm:'43',in:'16.9'},sleeve:{cm:'62',in:'24.4'},hem:{cm:'96',in:'37.8'}},
@@ -278,7 +278,7 @@ function sasanperfumes_sg_render_chart_builder($post, $meta_key_columns, $meta_k
                     '<td><input type="text" value="'+escAttr(col.label_en)+'" style="width:100%" data-col="'+ci+'" data-field="label_en"></td>'+
                     '<td><input type="text" value="'+escAttr(col.label_ar||'')+'" style="width:100%" dir="rtl" data-col="'+ci+'" data-field="label_ar"></td>'+
                     '<td><select data-col="'+ci+'" data-field="type"><option value="text"'+(col.type==='text'?' selected':'')+'>Text</option><option value="measurement"'+(col.type==='measurement'?' selected':'')+'>Measurement (CM/IN)</option></select></td>'+
-                    '<td><button type="button" class="button button-small" data-remove-col="'+ci+'" style="color:red">âœ•</button></td>';
+                    '<td><button type="button" class="button button-small" data-remove-col="'+ci+'" style="color:red">✕</button></td>';
                 tbody.appendChild(tr);
             });
             renderRowsTable();
@@ -317,7 +317,7 @@ function sasanperfumes_sg_render_chart_builder($post, $meta_key_columns, $meta_k
                         td += '<td><input type="text" value="'+escAttr(row[k]||'')+'" style="width:100%" data-row="'+ri+'" data-col="'+k+'" data-unit="text"></td>';
                     }
                 });
-                td += '<td><button type="button" class="button button-small" data-remove-row="'+ri+'" style="color:red">âœ•</button></td>';
+                td += '<td><button type="button" class="button button-small" data-remove-row="'+ri+'" style="color:red">✕</button></td>';
                 tr.innerHTML = td;
                 tbody.appendChild(tr);
             });
@@ -558,7 +558,7 @@ function sasanperfumes_sg_save_meta($post_id, $post) {
     }
     update_post_meta($post_id, '_sg_enable_body_chart', !empty($_POST['sg_enable_body_chart']) ? 1 : 0);
 
-    // Chart data â€” stored as JSON arrays
+    // Chart data — stored as JSON arrays
     foreach (['sg_pc' => ['_sg_product_columns', '_sg_product_rows'], 'sg_bc' => ['_sg_body_columns', '_sg_body_rows']] as $prefix => $metas) {
         $cols_json = stripslashes($_POST[$prefix.'_cols_json'] ?? '[]');
         $rows_json = stripslashes($_POST[$prefix.'_rows_json'] ?? '[]');
@@ -610,7 +610,7 @@ function sasanperfumes_sg_resolve_template_for_product($product_id) {
         if ($post && $post->post_status === 'publish') return $post;
     }
 
-    // 2. Category assignment â€” find template that has this product's category
+    // 2. Category assignment — find template that has this product's category
     $cat_ids = wp_get_post_terms($product_id, 'product_cat', ['fields' => 'ids']);
     if (is_wp_error($cat_ids) || empty($cat_ids)) return null;
 
@@ -659,7 +659,7 @@ function sasanperfumes_sg_format_template($post) {
         'title'       => ['en' => $g('_sg_title_en', get_the_title($post)), 'ar' => $g('_sg_title_ar')],
         'default_unit'=> $g('_sg_default_unit', 'cm'),
         'fit_type'    => $g('_sg_fit_type', 'regular'),
-        'note'        => ['en' => $g('_sg_note_en', 'This data was obtained from manually measuring the product, it may be off by 1â€“2 CM.'), 'ar' => $g('_sg_note_ar')],
+        'note'        => ['en' => $g('_sg_note_en', 'This data was obtained from manually measuring the product, it may be off by 1–2 CM.'), 'ar' => $g('_sg_note_ar')],
         'product_chart'        => $product_chart,
         'body_chart'           => $body_chart,
         'measurement_sections' => is_array($sections) ? $sections : [],
@@ -704,11 +704,11 @@ function sasanperfumes_sg_api_get($request) {
 
 function sasanperfumes_sg_default_measurement_sections() {
     return [
-        ['title_en' => 'Chest', 'title_ar' => 'Ø§Ù„ØµØ¯Ø±', 'desc_en' => 'Measure from the stitches below the armpits on one side to the other.', 'desc_ar' => 'Ù‚Ù… Ø¨Ø§Ù„Ù‚ÙŠØ§Ø³ Ù…Ù† Ø§Ù„Ø®ÙŠØ§Ø·Ø© Ø£Ø³ÙÙ„ Ø§Ù„Ø¥Ø¨Ø· Ù…Ù† Ø¬Ù‡Ø© Ø¥Ù„Ù‰ Ø§Ù„Ø¬Ù‡Ø© Ø§Ù„Ø£Ø®Ø±Ù‰.', 'image_url' => ''],
-        ['title_en' => 'Length', 'title_ar' => 'Ø§Ù„Ø·ÙˆÙ„', 'desc_en' => 'Measure from the highest shoulder point down to the bottom hem.', 'desc_ar' => 'Ù‚Ù… Ø¨Ø§Ù„Ù‚ÙŠØ§Ø³ Ù…Ù† Ø£Ø¹Ù„Ù‰ Ù†Ù‚Ø·Ø© ÙÙŠ Ø§Ù„ÙƒØªÙ Ø­ØªÙ‰ Ø§Ù„Ø­Ø§ÙØ© Ø§Ù„Ø³ÙÙ„ÙŠØ©.', 'image_url' => ''],
-        ['title_en' => 'Shoulder', 'title_ar' => 'Ø§Ù„ÙƒØªÙ', 'desc_en' => 'Measure straight across from one shoulder seam to the other.', 'desc_ar' => 'Ù‚Ù… Ø¨Ø§Ù„Ù‚ÙŠØ§Ø³ Ø¨Ø´ÙƒÙ„ Ù…Ø³ØªÙ‚ÙŠÙ… Ù…Ù† Ø®ÙŠØ§Ø·Ø© Ø§Ù„ÙƒØªÙ Ø¥Ù„Ù‰ Ø®ÙŠØ§Ø·Ø© Ø§Ù„ÙƒØªÙ Ø§Ù„Ø£Ø®Ø±Ù‰.', 'image_url' => ''],
-        ['title_en' => 'Sleeve Length', 'title_ar' => 'Ø·ÙˆÙ„ Ø§Ù„ÙƒÙ…', 'desc_en' => 'Measure from the shoulder seam to the end of the sleeve.', 'desc_ar' => 'Ù‚Ù… Ø¨Ø§Ù„Ù‚ÙŠØ§Ø³ Ù…Ù† Ø®ÙŠØ§Ø·Ø© Ø§Ù„ÙƒØªÙ Ø­ØªÙ‰ Ù†Ù‡Ø§ÙŠØ© Ø§Ù„ÙƒÙ….', 'image_url' => ''],
-        ['title_en' => 'Waist', 'title_ar' => 'Ø§Ù„Ø®ØµØ±', 'desc_en' => 'Measure straight across the waistband from one side to the other.', 'desc_ar' => 'Ù‚Ù… Ø¨Ø§Ù„Ù‚ÙŠØ§Ø³ Ø¨Ø´ÙƒÙ„ Ù…Ø³ØªÙ‚ÙŠÙ… Ø¹Ø¨Ø± Ø§Ù„Ø®ØµØ± Ù…Ù† Ø¬Ù‡Ø© Ø¥Ù„Ù‰ Ø§Ù„Ø¬Ù‡Ø© Ø§Ù„Ø£Ø®Ø±Ù‰.', 'image_url' => ''],
-        ['title_en' => 'Inseam', 'title_ar' => 'Ø§Ù„Ø®ÙŠØ§Ø·Ø© Ø§Ù„Ø¯Ø§Ø®Ù„ÙŠØ©', 'desc_en' => 'Measure from the crotch seam down to the bottom hem.', 'desc_ar' => 'Ù‚Ù… Ø¨Ø§Ù„Ù‚ÙŠØ§Ø³ Ù…Ù† Ø®ÙŠØ§Ø·Ø© Ø£Ø³ÙÙ„ Ø§Ù„ÙˆØ³Ø· Ø­ØªÙ‰ Ø§Ù„Ø­Ø§ÙØ© Ø§Ù„Ø³ÙÙ„ÙŠØ©.', 'image_url' => ''],
+        ['title_en' => 'Chest', 'title_ar' => 'الصدر', 'desc_en' => 'Measure from the stitches below the armpits on one side to the other.', 'desc_ar' => 'قم بالقياس من الخياطة أسفل الإبط من جهة إلى الجهة الأخرى.', 'image_url' => ''],
+        ['title_en' => 'Length', 'title_ar' => 'الطول', 'desc_en' => 'Measure from the highest shoulder point down to the bottom hem.', 'desc_ar' => 'قم بالقياس من أعلى نقطة في الكتف حتى الحافة السفلية.', 'image_url' => ''],
+        ['title_en' => 'Shoulder', 'title_ar' => 'الكتف', 'desc_en' => 'Measure straight across from one shoulder seam to the other.', 'desc_ar' => 'قم بالقياس بشكل مستقيم من خياطة الكتف إلى خياطة الكتف الأخرى.', 'image_url' => ''],
+        ['title_en' => 'Sleeve Length', 'title_ar' => 'طول الكم', 'desc_en' => 'Measure from the shoulder seam to the end of the sleeve.', 'desc_ar' => 'قم بالقياس من خياطة الكتف حتى نهاية الكم.', 'image_url' => ''],
+        ['title_en' => 'Waist', 'title_ar' => 'الخصر', 'desc_en' => 'Measure straight across the waistband from one side to the other.', 'desc_ar' => 'قم بالقياس بشكل مستقيم عبر الخصر من جهة إلى الجهة الأخرى.', 'image_url' => ''],
+        ['title_en' => 'Inseam', 'title_ar' => 'الخياطة الداخلية', 'desc_en' => 'Measure from the crotch seam down to the bottom hem.', 'desc_ar' => 'قم بالقياس من خياطة أسفل الوسط حتى الحافة السفلية.', 'image_url' => ''],
     ];
 }

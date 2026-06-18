@@ -1,12 +1,12 @@
 <?php
 /**
- * Sasan Perfumes Guide Pages
+ * ShapeHive Guide Pages
  * 
  * Custom Post Type for SEO guide pages, replacing the hardcoded guides.ts file.
  * Each guide has: hero (eyebrow, title, intro), products (repeater), content blocks,
- * FAQs, SEO fields, and related guides â€” all with EN/AR bilingual support.
+ * FAQs, SEO fields, and related guides — all with EN/AR bilingual support.
  * 
- * Admin: sasanperfumes â†’ Guides (CPT submenu)
+ * Admin: sasanperfumes → Guides (CPT submenu)
  * REST API: GET /sasanperfumes/v1/guides and GET /sasanperfumes/v1/guides/{slug}
  * 
  * @package sasanperfumes_Frontend_Settings
@@ -117,7 +117,7 @@ function sasanperfumes_guide_products_metabox($post) {
             <table class="form-table">
                 <tr><th>Product</th><td><?php sasanperfumes_f_product("sasanperfumes_guide_products[{$i}][slug]", $p['slug']??''); ?></td></tr>
                 <tr><th>Rank</th><td><input type="number" name="sasanperfumes_guide_products[<?php echo $i; ?>][rank]" value="<?php echo esc_attr($p['rank']??($i+1)); ?>" class="small-text" min="1"></td></tr>
-                <tr><th>Pick Reason (EN)</th><td><input type="text" name="sasanperfumes_guide_products[<?php echo $i; ?>][pick_reason_en]" value="<?php echo esc_attr($p['pick_reason_en']??''); ?>" class="large-text" placeholder="e.g. Best Overall â€” Signature Dark Musk"></td></tr>
+                <tr><th>Pick Reason (EN)</th><td><input type="text" name="sasanperfumes_guide_products[<?php echo $i; ?>][pick_reason_en]" value="<?php echo esc_attr($p['pick_reason_en']??''); ?>" class="large-text" placeholder="e.g. Best Overall — Signature Dark Musk"></td></tr>
                 <tr><th>Pick Reason (AR)</th><td><input type="text" name="sasanperfumes_guide_products[<?php echo $i; ?>][pick_reason_ar]" value="<?php echo esc_attr($p['pick_reason_ar']??''); ?>" class="large-text" dir="rtl"></td></tr>
                 <tr><th>Description (EN)</th><td><textarea name="sasanperfumes_guide_products[<?php echo $i; ?>][desc_en]" rows="3" class="large-text"><?php echo esc_textarea($p['desc_en']??''); ?></textarea></td></tr>
                 <tr><th>Description (AR)</th><td><textarea name="sasanperfumes_guide_products[<?php echo $i; ?>][desc_ar]" rows="3" class="large-text" dir="rtl"><?php echo esc_textarea($p['desc_ar']??''); ?></textarea></td></tr>
@@ -254,7 +254,7 @@ function sasanperfumes_guide_save_meta($post_id, $post) {
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
     if (!current_user_can('edit_post', $post_id)) return;
 
-    // Slug â€” auto-generate from title if empty
+    // Slug — auto-generate from title if empty
     $slug = sanitize_title($_POST['sasanperfumes_guide_slug'] ?? '');
     if (empty($slug)) {
         $slug = sanitize_title($post->post_title);
@@ -523,8 +523,9 @@ function sasanperfumes_get_guide_by_slug($request) {
 function sasanperfumes_guide_row_actions($actions, $post) {
     if ($post->post_type !== 'sasanperfumes_guide') return $actions;
     $slug = get_post_meta($post->ID, '_sasanperfumes_guide_slug', true) ?: sanitize_title($post->post_title);
-    $actions['view_en'] = '<a href="' . esc_url(sasanperfumes_build_frontend_localized_url('en', 'guides/' . $slug)) . '" target="_blank">View EN</a>';
-    $actions['view_ar'] = '<a href="' . esc_url(sasanperfumes_build_frontend_localized_url('ar', 'guides/' . $slug)) . '" target="_blank">View AR</a>';
+    $base = untrailingslashit(sasanperfumes_get_frontend_url());
+    $actions['view_en'] = '<a href="' . esc_url($base . '/en/guides/' . $slug) . '" target="_blank">View EN</a>';
+    $actions['view_ar'] = '<a href="' . esc_url($base . '/ar/guides/' . $slug) . '" target="_blank">View AR</a>';
     return $actions;
 }
 
@@ -532,10 +533,11 @@ function sasanperfumes_guide_row_actions($actions, $post) {
 function sasanperfumes_guide_view_links($post) {
     if ($post->post_type !== 'sasanperfumes_guide') return;
     $slug = get_post_meta($post->ID, '_sasanperfumes_guide_slug', true) ?: sanitize_title($post->post_title);
+    $base = untrailingslashit(sasanperfumes_get_frontend_url());
     echo '<div class="notice notice-info inline" style="margin:10px 0;padding:10px 15px;">';
     echo '<strong>View on site:</strong> ';
-    echo '<a href="' . esc_url(sasanperfumes_build_frontend_localized_url('en', 'guides/' . $slug)) . '" target="_blank" class="button button-small" style="margin-left:8px;">View EN</a> ';
-    echo '<a href="' . esc_url(sasanperfumes_build_frontend_localized_url('ar', 'guides/' . $slug)) . '" target="_blank" class="button button-small" style="margin-left:4px;">View AR</a>';
+    echo '<a href="' . esc_url($base . '/en/guides/' . $slug) . '" target="_blank" class="button button-small" style="margin-left:8px;">View EN</a> ';
+    echo '<a href="' . esc_url($base . '/ar/guides/' . $slug) . '" target="_blank" class="button button-small" style="margin-left:4px;">View AR</a>';
     echo '</div>';
 }
 

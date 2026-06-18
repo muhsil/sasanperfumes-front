@@ -1,6 +1,6 @@
 <?php
 /**
- * Customer Reset Password email - Sasan Perfumes Custom Style
+ * Customer Reset Password email - ShapeHive Custom Style
  *
  * This template can be overridden by copying it to yourtheme/woocommerce/emails/customer-reset-password.php.
  *
@@ -11,11 +11,9 @@
 defined( 'ABSPATH' ) || exit;
 
 // Frontend app URL for headless setup
-$frontend_url = function_exists('sasanperfumes_get_frontend_url') ? sasanperfumes_get_frontend_url() : get_site_url();
-$reset_url = sasanperfumes_build_frontend_localized_url(
-	'en',
-	'reset-password/?key=' . rawurlencode( $reset_key ) . '&login=' . rawurlencode( $user_login )
-);
+$frontend_url = 'https://shapehive.com';
+// Correct URL structure: /en/reset-password/?key=...&login=...
+$reset_url = $frontend_url . '/en/reset-password/?key=' . rawurlencode( $reset_key ) . '&login=' . rawurlencode( $user_login );
 
 /*
  * @hooked WC_Emails::email_header() Output the email header

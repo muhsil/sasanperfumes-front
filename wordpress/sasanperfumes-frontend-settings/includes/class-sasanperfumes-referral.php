@@ -1,6 +1,6 @@
 <?php
 /**
- * Sasan Perfumes Referral Program
+ * ShapeHive Referral Program
  *
  * Each customer gets a unique referral code. When a new user registers
  * using that code (via ?ref=CODE in the URL, stored in a cookie/meta),
@@ -85,9 +85,9 @@ function sasanperfumes_referral_get_settings() {
         'referrer_discount'    => (float) sasanperfumes_referral_opt('referrer_discount', 25),
         'referee_discount'     => (float) sasanperfumes_referral_opt('referee_discount', 15),
         'title_en'             => sasanperfumes_referral_opt('title_en', 'Refer a Friend'),
-        'title_ar'             => sasanperfumes_referral_opt('title_ar', 'Ø£Ø­Ù„ ØµØ¯ÙŠÙ‚Ø§Ù‹'),
+        'title_ar'             => sasanperfumes_referral_opt('title_ar', 'أحل صديقاً'),
         'desc_en'              => sasanperfumes_referral_opt('desc_en', 'Share your code and both get a discount!'),
-        'desc_ar'              => sasanperfumes_referral_opt('desc_ar', 'Ø´Ø§Ø±Ùƒ ÙƒÙˆØ¯Ùƒ ÙˆÙƒÙ„Ø§ÙƒÙ…Ø§ ÙŠØ­ØµÙ„ Ø¹Ù„Ù‰ Ø®ØµÙ…!'),
+        'desc_ar'              => sasanperfumes_referral_opt('desc_ar', 'شارك كودك وكلاكما يحصل على خصم!'),
     ]);
 }
 
@@ -171,7 +171,7 @@ function sasanperfumes_referral_save_settings() {
     update_option('sasanperfumes_referral_referrer_discount', (float) ($_POST['referrer_discount'] ?? 25));
     update_option('sasanperfumes_referral_referee_discount',  (float) ($_POST['referee_discount']  ?? 15));
     update_option('sasanperfumes_referral_title_en',          sanitize_text_field($_POST['title_en'] ?? 'Refer a Friend'));
-    update_option('sasanperfumes_referral_title_ar',          sanitize_text_field($_POST['title_ar'] ?? 'Ø£Ø­Ù„ ØµØ¯ÙŠÙ‚Ø§Ù‹'));
+    update_option('sasanperfumes_referral_title_ar',          sanitize_text_field($_POST['title_ar'] ?? 'أحل صديقاً'));
     update_option('sasanperfumes_referral_desc_en',           sanitize_textarea_field($_POST['desc_en'] ?? ''));
     update_option('sasanperfumes_referral_desc_ar',           sanitize_textarea_field($_POST['desc_ar'] ?? ''));
     wp_redirect(admin_url('admin.php?page=sasanperfumes-referral&saved=1')); exit;
@@ -192,9 +192,9 @@ function sasanperfumes_referral_render_page() {
                 <tr><th>Referrer discount (AED)</th><td><input type="number" step="1" name="referrer_discount" value="<?=esc_attr($g('sasanperfumes_referral_referrer_discount',25))?>"><br><small>Reward for the person who shared the code</small></td></tr>
                 <tr><th>New customer discount (AED)</th><td><input type="number" step="1" name="referee_discount" value="<?=esc_attr($g('sasanperfumes_referral_referee_discount',15))?>"><br><small>Reward for the new customer who used the code</small></td></tr>
                 <tr><th>Title (EN)</th><td><input type="text" name="title_en" value="<?=esc_attr($g('sasanperfumes_referral_title_en','Refer a Friend'))?>" class="large-text"></td></tr>
-                <tr><th>Title (AR)</th><td><input type="text" name="title_ar" value="<?=esc_attr($g('sasanperfumes_referral_title_ar','Ø£Ø­Ù„ ØµØ¯ÙŠÙ‚Ø§Ù‹'))?>" class="large-text" dir="rtl"></td></tr>
+                <tr><th>Title (AR)</th><td><input type="text" name="title_ar" value="<?=esc_attr($g('sasanperfumes_referral_title_ar','أحل صديقاً'))?>" class="large-text" dir="rtl"></td></tr>
                 <tr><th>Description (EN)</th><td><textarea name="desc_en" rows="3" class="large-text"><?=esc_textarea($g('sasanperfumes_referral_desc_en','Share your code and both get a discount!'))?></textarea></td></tr>
-                <tr><th>Description (AR)</th><td><textarea name="desc_ar" rows="3" class="large-text" dir="rtl"><?=esc_textarea($g('sasanperfumes_referral_desc_ar','Ø´Ø§Ø±Ùƒ ÙƒÙˆØ¯Ùƒ ÙˆÙƒÙ„Ø§ÙƒÙ…Ø§ ÙŠØ­ØµÙ„ Ø¹Ù„Ù‰ Ø®ØµÙ…!'))?></textarea></td></tr>
+                <tr><th>Description (AR)</th><td><textarea name="desc_ar" rows="3" class="large-text" dir="rtl"><?=esc_textarea($g('sasanperfumes_referral_desc_ar','شارك كودك وكلاكما يحصل على خصم!'))?></textarea></td></tr>
             </table>
             <?php submit_button('Save Referral Settings'); ?>
         </form>

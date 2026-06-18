@@ -1,6 +1,6 @@
 <?php
 /**
- * Sasan Perfumes Notes CPT â€” Fragrance Notes as Custom Post Type
+ * ShapeHive Notes CPT — Fragrance Notes as Custom Post Type
  *
  * Each note is an individual post with bilingual fields (EN/AR).
  * Pattern follows class-sasanperfumes-guide-pages.php.
@@ -50,7 +50,7 @@ function sasanperfumes_note_add_meta_boxes() {
 }
 
 /**
- * Product Mapping metabox â€” links this Note to a WooCommerce pa_notes attribute
+ * Product Mapping metabox — links this Note to a WooCommerce pa_notes attribute
  */
 function sasanperfumes_note_mapping_metabox($post) {
     $id = $post->ID;
@@ -61,7 +61,7 @@ function sasanperfumes_note_mapping_metabox($post) {
     echo '<strong>How product mapping works:</strong><br>';
     echo '&bull; Products are loaded <strong>automatically</strong> from WooCommerce based on the <code>pa_notes</code> product attribute.<br>';
     echo '&bull; Select the matching attribute value below to link this Note page to the correct products.<br>';
-    echo '&bull; Arabic product details (name, image, price) come <strong>automatically</strong> from WooCommerce/WPML â€” no need to select them separately.<br>';
+    echo '&bull; Arabic product details (name, image, price) come <strong>automatically</strong> from WooCommerce/WPML — no need to select them separately.<br>';
     echo '&bull; To add/remove products from this page, edit each product in <strong>WooCommerce &rarr; Products</strong> and change its Notes attribute.';
     echo '</div>';
 
@@ -72,12 +72,12 @@ function sasanperfumes_note_mapping_metabox($post) {
     echo '<table class="form-table">';
     echo '<tr><th>WooCommerce Attribute</th><td>';
     echo '<select name="_sasanperfumes_note_attribute_slug" style="min-width:300px;">';
-    echo '<option value="">(auto â€” use page slug)</option>';
+    echo '<option value="">(auto — use page slug)</option>';
     foreach ($terms as $term) {
         $count = $term->count;
         $sel = selected($saved_attr, $term->slug, false);
         echo '<option value="' . esc_attr($term->slug) . '"' . $sel . '>';
-        echo esc_html($term->name) . ' (' . $term->slug . ') â€” ' . $count . ' product' . ($count !== 1 ? 's' : '');
+        echo esc_html($term->name) . ' (' . $term->slug . ') — ' . $count . ' product' . ($count !== 1 ? 's' : '');
         echo '</option>';
     }
     echo '</select>';
@@ -213,8 +213,9 @@ function sasanperfumes_note_rest_all() {
 function sasanperfumes_note_row_actions($actions, $post) {
     if ($post->post_type !== 'sasanperfumes_note') return $actions;
     $slug = get_post_meta($post->ID, '_sasanperfumes_note_slug', true) ?: sanitize_title($post->post_title);
-    $actions['view_en'] = '<a href="' . esc_url(sasanperfumes_build_frontend_localized_url('en', 'notes/' . $slug)) . '" target="_blank">View EN</a>';
-    $actions['view_ar'] = '<a href="' . esc_url(sasanperfumes_build_frontend_localized_url('ar', 'notes/' . $slug)) . '" target="_blank">View AR</a>';
+    $base = untrailingslashit(sasanperfumes_get_frontend_url());
+    $actions['view_en'] = '<a href="' . esc_url($base . '/en/notes/' . $slug) . '" target="_blank">View EN</a>';
+    $actions['view_ar'] = '<a href="' . esc_url($base . '/ar/notes/' . $slug) . '" target="_blank">View AR</a>';
     return $actions;
 }
 
@@ -222,10 +223,11 @@ function sasanperfumes_note_row_actions($actions, $post) {
 function sasanperfumes_note_view_links($post) {
     if ($post->post_type !== 'sasanperfumes_note') return;
     $slug = get_post_meta($post->ID, '_sasanperfumes_note_slug', true) ?: sanitize_title($post->post_title);
+    $base = untrailingslashit(sasanperfumes_get_frontend_url());
     echo '<div class="notice notice-info inline" style="margin:10px 0;padding:10px 15px;">';
     echo '<strong>View on site:</strong> ';
-    echo '<a href="' . esc_url(sasanperfumes_build_frontend_localized_url('en', 'notes/' . $slug)) . '" target="_blank" class="button button-small" style="margin-left:8px;">View EN</a> ';
-    echo '<a href="' . esc_url(sasanperfumes_build_frontend_localized_url('ar', 'notes/' . $slug)) . '" target="_blank" class="button button-small" style="margin-left:4px;">View AR</a>';
+    echo '<a href="' . esc_url($base . '/en/notes/' . $slug) . '" target="_blank" class="button button-small" style="margin-left:8px;">View EN</a> ';
+    echo '<a href="' . esc_url($base . '/ar/notes/' . $slug) . '" target="_blank" class="button button-small" style="margin-left:4px;">View AR</a>';
     echo '</div>';
 }
 

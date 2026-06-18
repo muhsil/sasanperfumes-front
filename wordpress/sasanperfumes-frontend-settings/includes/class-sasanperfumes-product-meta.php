@@ -1,6 +1,6 @@
 <?php
 /**
- * Sasan Perfumes Product Meta - Dynamic Product Meta Description Generation
+ * ShapeHive Product Meta - Dynamic Product Meta Description Generation
  *
  * Provides REST API endpoint for auto-generating SEO meta descriptions
  * for WooCommerce products based on product data (name, description,
@@ -178,11 +178,11 @@ function sasanperfumes_auto_generate_product_meta_desc($product, $lang = 'en') {
 /**
  * Build English meta description (150-160 chars target).
  *
- * Format: "{short_desc}. {name} by Sasan Perfumes. Fragrance family: {olfactory}. Notes: {notes}. Price: {price} AED. Free delivery on orders over 500 AED."
+ * Format: "{short_desc}. {name} by ShapeHive. Fragrance family: {olfactory}. Notes: {notes}. Price: {price} AED. Free delivery on orders over 500 AED."
  * Truncated at word boundary to max 160 characters.
  */
 function sasanperfumes_build_english_product_meta_desc($name, $short_desc, $category, $olfactory, $notes, $price) {
-    $brand = 'Sasan Perfumes';
+    $brand = 'ShapeHive';
 
     // Start with short description snippet if available (truncate at ~80 chars)
     $desc_snippet = '';
@@ -227,11 +227,11 @@ function sasanperfumes_build_english_product_meta_desc($name, $short_desc, $cate
 /**
  * Build Arabic meta description (150-160 chars target).
  *
- * Format: "{short_desc}. {name} Ù…Ù† Sasan Perfumes. Ø¹Ø§Ø¦Ù„Ø© Ø§Ù„Ø¹Ø·Ø±: {olfactory}. Ø§Ù„Ù…ÙƒÙˆÙ†Ø§Øª: {notes}. Ø§Ù„Ø³Ø¹Ø±: {price} Ø¯Ø±Ù‡Ù…. ØªÙˆØµÙŠÙ„ Ù…Ø¬Ø§Ù†ÙŠ Ù„Ù„Ø·Ù„Ø¨Ø§Øª ÙÙˆÙ‚ 500 Ø¯Ø±Ù‡Ù…."
+ * Format: "{short_desc}. {name} من ShapeHive. عائلة العطر: {olfactory}. المكونات: {notes}. السعر: {price} درهم. توصيل مجاني للطلبات فوق 500 درهم."
  * Truncated at word boundary to max 160 characters.
  */
 function sasanperfumes_build_arabic_product_meta_desc($name, $short_desc, $category, $olfactory, $notes, $price) {
-    $brand = 'Sasan Perfumes';
+    $brand = 'ShapeHive';
 
     $desc_snippet = '';
     if (!empty($short_desc)) {
@@ -249,22 +249,22 @@ function sasanperfumes_build_arabic_product_meta_desc($name, $short_desc, $categ
         $parts[] = $desc_snippet . '.';
     }
 
-    $parts[] = "{$name} Ù…Ù† {$brand}.";
+    $parts[] = "{$name} من {$brand}.";
 
     if (!empty($olfactory)) {
-        $parts[] = "Ø¹Ø§Ø¦Ù„Ø© Ø§Ù„Ø¹Ø·Ø±: {$olfactory}.";
+        $parts[] = "عائلة العطر: {$olfactory}.";
     }
 
     if (!empty($notes)) {
-        $parts[] = 'Ø§Ù„Ù…ÙƒÙˆÙ†Ø§Øª: ' . implode('ØŒ ', $notes) . '.';
+        $parts[] = 'المكونات: ' . implode('، ', $notes) . '.';
     }
 
     if (!empty($price)) {
         $formatted_price = intval($price);
-        $parts[] = "Ø§Ù„Ø³Ø¹Ø±: {$formatted_price} Ø¯Ø±Ù‡Ù….";
+        $parts[] = "السعر: {$formatted_price} درهم.";
     }
 
-    $parts[] = 'ØªÙˆØµÙŠÙ„ Ù…Ø¬Ø§Ù†ÙŠ Ù„Ù„Ø·Ù„Ø¨Ø§Øª ÙÙˆÙ‚ 500 Ø¯Ø±Ù‡Ù….';
+    $parts[] = 'توصيل مجاني للطلبات فوق 500 درهم.';
 
     $description = implode(' ', $parts);
 

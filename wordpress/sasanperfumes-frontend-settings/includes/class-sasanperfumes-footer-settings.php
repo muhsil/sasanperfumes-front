@@ -1,6 +1,6 @@
 <?php
 /**
- * Sasan Perfumes Footer Settings
+ * ShapeHive Footer Settings
  * 
  * Admin page and REST API endpoint for dynamic footer content.
  * Supports bilingual (EN/AR) fields for all text content,
@@ -93,11 +93,11 @@ function sasanperfumes_render_footer_general_tab() {
     <table class="form-table">
         <tr>
             <th>Description (EN)</th>
-            <td><textarea name="sasanperfumes_footer_description_en" rows="3" class="large-text"><?php echo esc_textarea(get_theme_mod('sasanperfumes_footer_description_en', 'Discover premium fragrances, perfumes, and scent products at Sasan Perfumes. Shop our exclusive collection of luxury scents with delivery across the UAE and GCC.')); ?></textarea></td>
+            <td><textarea name="sasanperfumes_footer_description_en" rows="3" class="large-text"><?php echo esc_textarea(get_theme_mod('sasanperfumes_footer_description_en', 'Discover premium fragrances, perfumes, and aromatic products at ShapeHive. Shop our exclusive collection of luxury scents with delivery across the UAE and GCC.')); ?></textarea></td>
         </tr>
         <tr>
             <th>Description (AR)</th>
-            <td><textarea name="sasanperfumes_footer_description_ar" rows="3" class="large-text" dir="rtl"><?php echo esc_textarea(get_theme_mod('sasanperfumes_footer_description_ar', 'Ø§ÙƒØªØ´Ù Ø§Ù„Ø¹Ø·ÙˆØ± Ø§Ù„ÙØ§Ø®Ø±Ø© ÙˆÙ…Ù†ØªØ¬Ø§Øª Ø§Ù„Ø¹Ù†Ø§ÙŠØ© Ø§Ù„Ø¹Ø·Ø±ÙŠØ© Ø§Ù„Ù…ØµÙ†ÙˆØ¹Ø© Ø¨Ø¹Ù†Ø§ÙŠØ© ÙÙŠ Sasan Perfumes.')); ?></textarea></td>
+            <td><textarea name="sasanperfumes_footer_description_ar" rows="3" class="large-text" dir="rtl"><?php echo esc_textarea(get_theme_mod('sasanperfumes_footer_description_ar', 'اكتشف العطور الفاخرة ومنتجات العناية العطرية المصنوعة بعناية في ShapeHive.')); ?></textarea></td>
         </tr>
     </table>
 
@@ -110,7 +110,7 @@ function sasanperfumes_render_footer_general_tab() {
         </tr>
         <tr>
             <th>Copyright Text (AR)</th>
-            <td><input type="text" name="sasanperfumes_footer_copyright_ar" value="<?php echo esc_attr(get_theme_mod('sasanperfumes_footer_copyright_ar', 'Ø¬Ù…ÙŠØ¹ Ø§Ù„Ø­Ù‚ÙˆÙ‚ Ù…Ø­ÙÙˆØ¸Ø©.')); ?>" class="regular-text" dir="rtl"></td>
+            <td><input type="text" name="sasanperfumes_footer_copyright_ar" value="<?php echo esc_attr(get_theme_mod('sasanperfumes_footer_copyright_ar', 'جميع الحقوق محفوظة.')); ?>" class="regular-text" dir="rtl"></td>
         </tr>
     </table>
 
@@ -122,7 +122,7 @@ function sasanperfumes_render_footer_general_tab() {
         </tr>
         <tr>
             <th>Title (AR)</th>
-            <td><input type="text" name="sasanperfumes_footer_newsletter_title_ar" value="<?php echo esc_attr(get_theme_mod('sasanperfumes_footer_newsletter_title_ar', 'Ø§Ù„Ù†Ø´Ø±Ø© Ø§Ù„Ø¥Ø®Ø¨Ø§Ø±ÙŠØ©')); ?>" class="regular-text" dir="rtl"></td>
+            <td><input type="text" name="sasanperfumes_footer_newsletter_title_ar" value="<?php echo esc_attr(get_theme_mod('sasanperfumes_footer_newsletter_title_ar', 'النشرة الإخبارية')); ?>" class="regular-text" dir="rtl"></td>
         </tr>
         <tr>
             <th>Subtitle (EN)</th>
@@ -130,7 +130,7 @@ function sasanperfumes_render_footer_general_tab() {
         </tr>
         <tr>
             <th>Subtitle (AR)</th>
-            <td><input type="text" name="sasanperfumes_footer_newsletter_subtitle_ar" value="<?php echo esc_attr(get_theme_mod('sasanperfumes_footer_newsletter_subtitle_ar', 'Ø§Ø´ØªØ±Ùƒ ÙÙŠ Ù†Ø´Ø±ØªÙ†Ø§ Ø§Ù„Ø¥Ø®Ø¨Ø§Ø±ÙŠØ© Ù„Ù„Ø­ØµÙˆÙ„ Ø¹Ù„Ù‰ Ø§Ù„ØªØ­Ø¯ÙŠØ«Ø§Øª ÙˆØ§Ù„Ø¹Ø±ÙˆØ¶ Ø§Ù„Ø­ØµØ±ÙŠØ©.')); ?>" class="large-text" dir="rtl"></td>
+            <td><input type="text" name="sasanperfumes_footer_newsletter_subtitle_ar" value="<?php echo esc_attr(get_theme_mod('sasanperfumes_footer_newsletter_subtitle_ar', 'اشترك في نشرتنا الإخبارية للحصول على التحديثات والعروض الحصرية.')); ?>" class="large-text" dir="rtl"></td>
         </tr>
         <tr>
             <th>Button Text (EN)</th>
@@ -138,7 +138,7 @@ function sasanperfumes_render_footer_general_tab() {
         </tr>
         <tr>
             <th>Button Text (AR)</th>
-            <td><input type="text" name="sasanperfumes_footer_newsletter_button_ar" value="<?php echo esc_attr(get_theme_mod('sasanperfumes_footer_newsletter_button_ar', 'Ø§Ø´ØªØ±Ùƒ')); ?>" class="regular-text" dir="rtl"></td>
+            <td><input type="text" name="sasanperfumes_footer_newsletter_button_ar" value="<?php echo esc_attr(get_theme_mod('sasanperfumes_footer_newsletter_button_ar', 'اشترك')); ?>" class="regular-text" dir="rtl"></td>
         </tr>
         <tr>
             <th>Placeholder (EN)</th>
@@ -146,7 +146,7 @@ function sasanperfumes_render_footer_general_tab() {
         </tr>
         <tr>
             <th>Placeholder (AR)</th>
-            <td><input type="text" name="sasanperfumes_footer_newsletter_placeholder_ar" value="<?php echo esc_attr(get_theme_mod('sasanperfumes_footer_newsletter_placeholder_ar', 'Ø£Ø¯Ø®Ù„ Ø¨Ø±ÙŠØ¯Ùƒ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ')); ?>" class="regular-text" dir="rtl"></td>
+            <td><input type="text" name="sasanperfumes_footer_newsletter_placeholder_ar" value="<?php echo esc_attr(get_theme_mod('sasanperfumes_footer_newsletter_placeholder_ar', 'أدخل بريدك الإلكتروني')); ?>" class="regular-text" dir="rtl"></td>
         </tr>
     </table>
 
@@ -158,7 +158,7 @@ function sasanperfumes_render_footer_general_tab() {
         </tr>
         <tr>
             <th>Text (AR)</th>
-            <td><input type="text" name="sasanperfumes_footer_powered_text_ar" value="<?php echo esc_attr(get_theme_mod('sasanperfumes_footer_powered_text_ar', 'Ù…Ø¯Ø¹ÙˆÙ… Ù…Ù†')); ?>" class="regular-text" dir="rtl"></td>
+            <td><input type="text" name="sasanperfumes_footer_powered_text_ar" value="<?php echo esc_attr(get_theme_mod('sasanperfumes_footer_powered_text_ar', 'مدعوم من')); ?>" class="regular-text" dir="rtl"></td>
         </tr>
         <tr>
             <th>Name (EN)</th>
@@ -178,22 +178,22 @@ function sasanperfumes_render_footer_general_tab() {
 
 function sasanperfumes_footer_default_quick_links() {
     return array(
-        array('label_en' => 'Home',          'label_ar' => 'Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©',       'url' => '/'),
-        array('label_en' => 'Shop',          'label_ar' => 'Ø§Ù„Ù…ØªØ¬Ø±',         'url' => '/shop'),
-        array('label_en' => 'About Us',      'label_ar' => 'Ù…Ù† Ù†Ø­Ù†',         'url' => '/about'),
-        array('label_en' => 'Contact',       'label_ar' => 'Ø§ØªØµÙ„ Ø¨Ù†Ø§',       'url' => '/contact'),
-        array('label_en' => 'Store Locator', 'label_ar' => 'Ù…ÙˆØ§Ù‚Ø¹ Ø§Ù„Ù…ØªØ§Ø¬Ø±', 'url' => '/store-locator'),
+        array('label_en' => 'Home',          'label_ar' => 'الرئيسية',       'url' => '/'),
+        array('label_en' => 'Shop',          'label_ar' => 'المتجر',         'url' => '/shop'),
+        array('label_en' => 'About Us',      'label_ar' => 'من نحن',         'url' => '/about'),
+        array('label_en' => 'Contact',       'label_ar' => 'اتصل بنا',       'url' => '/contact'),
+        array('label_en' => 'Store Locator', 'label_ar' => 'مواقع المتاجر', 'url' => '/store-locator'),
     );
 }
 
 function sasanperfumes_footer_default_cs_links() {
     return array(
-        array('label_en' => 'FAQ',                  'label_ar' => 'Ø§Ù„Ø£Ø³Ø¦Ù„Ø© Ø§Ù„Ø´Ø§Ø¦Ø¹Ø©',   'url' => '/faq'),
-        array('label_en' => 'Shipping Information', 'label_ar' => 'Ù…Ø¹Ù„ÙˆÙ…Ø§Øª Ø§Ù„Ø´Ø­Ù†',     'url' => '/shipping'),
-        array('label_en' => 'Return Policy',        'label_ar' => 'Ø³ÙŠØ§Ø³Ø© Ø§Ù„Ø¥Ø±Ø¬Ø§Ø¹',    'url' => '/returns'),
-        array('label_en' => 'Track Order',          'label_ar' => 'ØªØªØ¨Ø¹ Ø§Ù„Ø·Ù„Ø¨',        'url' => '/track-order'),
-        array('label_en' => 'Privacy Policy',       'label_ar' => 'Ø³ÙŠØ§Ø³Ø© Ø§Ù„Ø®ØµÙˆØµÙŠØ©',   'url' => '/privacy'),
-        array('label_en' => 'Terms & Conditions',   'label_ar' => 'Ø§Ù„Ø´Ø±ÙˆØ· ÙˆØ§Ù„Ø£Ø­ÙƒØ§Ù…',  'url' => '/terms-and-conditions'),
+        array('label_en' => 'FAQ',                  'label_ar' => 'الأسئلة الشائعة',   'url' => '/faq'),
+        array('label_en' => 'Shipping Information', 'label_ar' => 'معلومات الشحن',     'url' => '/shipping'),
+        array('label_en' => 'Return Policy',        'label_ar' => 'سياسة الإرجاع',    'url' => '/returns'),
+        array('label_en' => 'Track Order',          'label_ar' => 'تتبع الطلب',        'url' => '/track-order'),
+        array('label_en' => 'Privacy Policy',       'label_ar' => 'سياسة الخصوصية',   'url' => '/privacy'),
+        array('label_en' => 'Terms & Conditions',   'label_ar' => 'الشروط والأحكام',  'url' => '/terms-and-conditions'),
     );
 }
 
@@ -224,7 +224,7 @@ function sasanperfumes_render_footer_links_tab() {
         </tr>
         <tr>
             <th>Quick Links Heading (AR)</th>
-            <td><input type="text" name="sasanperfumes_footer_quick_heading_ar" value="<?php echo esc_attr(get_theme_mod('sasanperfumes_footer_quick_heading_ar', 'Ø±ÙˆØ§Ø¨Ø· Ø³Ø±ÙŠØ¹Ø©')); ?>" class="regular-text" dir="rtl"></td>
+            <td><input type="text" name="sasanperfumes_footer_quick_heading_ar" value="<?php echo esc_attr(get_theme_mod('sasanperfumes_footer_quick_heading_ar', 'روابط سريعة')); ?>" class="regular-text" dir="rtl"></td>
         </tr>
         <tr>
             <th>Customer Service Heading (EN)</th>
@@ -232,7 +232,7 @@ function sasanperfumes_render_footer_links_tab() {
         </tr>
         <tr>
             <th>Customer Service Heading (AR)</th>
-            <td><input type="text" name="sasanperfumes_footer_cs_heading_ar" value="<?php echo esc_attr(get_theme_mod('sasanperfumes_footer_cs_heading_ar', 'Ø®Ø¯Ù…Ø© Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡')); ?>" class="regular-text" dir="rtl"></td>
+            <td><input type="text" name="sasanperfumes_footer_cs_heading_ar" value="<?php echo esc_attr(get_theme_mod('sasanperfumes_footer_cs_heading_ar', 'خدمة العملاء')); ?>" class="regular-text" dir="rtl"></td>
         </tr>
     </table>
 
@@ -469,42 +469,42 @@ function sasanperfumes_get_footer_settings() {
 
     return array(
         'description' => array(
-            'en' => get_theme_mod('sasanperfumes_footer_description_en', 'Discover premium fragrances, perfumes, and scent products at Sasan Perfumes. Shop our exclusive collection of luxury scents with delivery across the UAE and GCC.'),
-            'ar' => get_theme_mod('sasanperfumes_footer_description_ar', 'Ø§ÙƒØªØ´Ù Ø§Ù„Ø¹Ø·ÙˆØ± Ø§Ù„ÙØ§Ø®Ø±Ø© ÙˆÙ…Ù†ØªØ¬Ø§Øª Ø§Ù„Ø¹Ù†Ø§ÙŠØ© Ø§Ù„Ø¹Ø·Ø±ÙŠØ© Ø§Ù„Ù…ØµÙ†ÙˆØ¹Ø© Ø¨Ø¹Ù†Ø§ÙŠØ© ÙÙŠ Sasan Perfumes.'),
+            'en' => get_theme_mod('sasanperfumes_footer_description_en', 'Discover premium fragrances, perfumes, and aromatic products at ShapeHive. Shop our exclusive collection of luxury scents with delivery across the UAE and GCC.'),
+            'ar' => get_theme_mod('sasanperfumes_footer_description_ar', 'اكتشف العطور الفاخرة ومنتجات العناية العطرية المصنوعة بعناية في ShapeHive.'),
         ),
         'copyright' => array(
             'en' => get_theme_mod('sasanperfumes_footer_copyright_en', 'All rights reserved.'),
-            'ar' => get_theme_mod('sasanperfumes_footer_copyright_ar', 'Ø¬Ù…ÙŠØ¹ Ø§Ù„Ø­Ù‚ÙˆÙ‚ Ù…Ø­ÙÙˆØ¸Ø©.'),
+            'ar' => get_theme_mod('sasanperfumes_footer_copyright_ar', 'جميع الحقوق محفوظة.'),
         ),
         'newsletter' => array(
             'title' => array(
                 'en' => get_theme_mod('sasanperfumes_footer_newsletter_title_en', 'Newsletter'),
-                'ar' => get_theme_mod('sasanperfumes_footer_newsletter_title_ar', 'Ø§Ù„Ù†Ø´Ø±Ø© Ø§Ù„Ø¥Ø®Ø¨Ø§Ø±ÙŠØ©'),
+                'ar' => get_theme_mod('sasanperfumes_footer_newsletter_title_ar', 'النشرة الإخبارية'),
             ),
             'subtitle' => array(
                 'en' => get_theme_mod('sasanperfumes_footer_newsletter_subtitle_en', 'Subscribe to our newsletter for updates and exclusive offers.'),
-                'ar' => get_theme_mod('sasanperfumes_footer_newsletter_subtitle_ar', 'Ø§Ø´ØªØ±Ùƒ ÙÙŠ Ù†Ø´Ø±ØªÙ†Ø§ Ø§Ù„Ø¥Ø®Ø¨Ø§Ø±ÙŠØ© Ù„Ù„Ø­ØµÙˆÙ„ Ø¹Ù„Ù‰ Ø§Ù„ØªØ­Ø¯ÙŠØ«Ø§Øª ÙˆØ§Ù„Ø¹Ø±ÙˆØ¶ Ø§Ù„Ø­ØµØ±ÙŠØ©.'),
+                'ar' => get_theme_mod('sasanperfumes_footer_newsletter_subtitle_ar', 'اشترك في نشرتنا الإخبارية للحصول على التحديثات والعروض الحصرية.'),
             ),
             'buttonText' => array(
                 'en' => get_theme_mod('sasanperfumes_footer_newsletter_button_en', 'Subscribe'),
-                'ar' => get_theme_mod('sasanperfumes_footer_newsletter_button_ar', 'Ø§Ø´ØªØ±Ùƒ'),
+                'ar' => get_theme_mod('sasanperfumes_footer_newsletter_button_ar', 'اشترك'),
             ),
             'placeholder' => array(
                 'en' => get_theme_mod('sasanperfumes_footer_newsletter_placeholder_en', 'Enter your email'),
-                'ar' => get_theme_mod('sasanperfumes_footer_newsletter_placeholder_ar', 'Ø£Ø¯Ø®Ù„ Ø¨Ø±ÙŠØ¯Ùƒ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ'),
+                'ar' => get_theme_mod('sasanperfumes_footer_newsletter_placeholder_ar', 'أدخل بريدك الإلكتروني'),
             ),
         ),
         'quickLinks' => array(
             'heading' => array(
                 'en' => get_theme_mod('sasanperfumes_footer_quick_heading_en', 'Quick Links'),
-                'ar' => get_theme_mod('sasanperfumes_footer_quick_heading_ar', 'Ø±ÙˆØ§Ø¨Ø· Ø³Ø±ÙŠØ¹Ø©'),
+                'ar' => get_theme_mod('sasanperfumes_footer_quick_heading_ar', 'روابط سريعة'),
             ),
             'items' => $quick_links,
         ),
         'customerService' => array(
             'heading' => array(
                 'en' => get_theme_mod('sasanperfumes_footer_cs_heading_en', 'Customer Service'),
-                'ar' => get_theme_mod('sasanperfumes_footer_cs_heading_ar', 'Ø®Ø¯Ù…Ø© Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡'),
+                'ar' => get_theme_mod('sasanperfumes_footer_cs_heading_ar', 'خدمة العملاء'),
             ),
             'items' => $cs_links,
         ),
@@ -519,7 +519,7 @@ function sasanperfumes_get_footer_settings() {
         'poweredBy' => array(
             'text' => array(
                 'en' => get_theme_mod('sasanperfumes_footer_powered_text_en', 'Powered by'),
-                'ar' => get_theme_mod('sasanperfumes_footer_powered_text_ar', 'Ù…Ø¯Ø¹ÙˆÙ… Ù…Ù†'),
+                'ar' => get_theme_mod('sasanperfumes_footer_powered_text_ar', 'مدعوم من'),
             ),
             'name' => array(
                 'en' => get_theme_mod('sasanperfumes_footer_powered_name_en', ''),

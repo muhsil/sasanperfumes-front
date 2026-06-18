@@ -38,7 +38,7 @@ export async function GET() {
 
         for (const img of images) {
           if (!img.src) continue;
-          const categoryNames = product.categories?.map((c) => decodeHtmlEntities(c.name)).join(", ") || "Sasan Perfumes";
+          const categoryNames = product.categories?.map((c) => decodeHtmlEntities(c.name)).join(", ") || "ShapeHive";
           xml += `
     <image:image>
       <image:loc>${escapeXml(img.src)}</image:loc>
@@ -71,7 +71,7 @@ export async function GET() {
     <image:image>
       <image:loc>${escapeXml(category.image.src)}</image:loc>
       <image:title>${escapeXml(decodeHtmlEntities(category.name))}</image:title>
-      <image:caption>${escapeXml(`${decodeHtmlEntities(category.name)} - Sasan Perfumes`)}</image:caption>
+      <image:caption>${escapeXml(`${decodeHtmlEntities(category.name)} - ShapeHive`)}</image:caption>
     </image:image>
   </url>`;
       }

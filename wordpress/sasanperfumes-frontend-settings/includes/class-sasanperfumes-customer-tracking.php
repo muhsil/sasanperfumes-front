@@ -1,6 +1,6 @@
 <?php
 /**
- * Sasan Perfumes Customer Tracking - Order Tracking Data Display
+ * ShapeHive Customer Tracking - Order Tracking Data Display
  * 
  * Displays customer tracking data (landing page, referrer, UTM params,
  * device info, pages visited) on the WooCommerce order admin page.
@@ -12,7 +12,7 @@
 if (!defined('ABSPATH')) exit;
 
 /**
- * Initialize Sasan Perfumes Customer Tracking
+ * Initialize ShapeHive Customer Tracking
  */
 function sasanperfumes_customer_tracking_init() {
     // Add meta box to WooCommerce order page
@@ -36,7 +36,7 @@ function sasanperfumes_customer_tracking_add_meta_box() {
     // Add for traditional order edit screen
     add_meta_box(
         'sasanperfumes-customer-tracking',
-        'ðŸ“Š Customer Tracking',
+        '📊 Customer Tracking',
         'sasanperfumes_customer_tracking_render_meta_box',
         'shop_order',
         'side',
@@ -47,7 +47,7 @@ function sasanperfumes_customer_tracking_add_meta_box() {
     if ($screen && $screen !== 'shop_order') {
         add_meta_box(
             'sasanperfumes-customer-tracking',
-            'ðŸ“Š Customer Tracking',
+            '📊 Customer Tracking',
             'sasanperfumes_customer_tracking_render_meta_box',
             $screen,
             'side',
@@ -77,19 +77,19 @@ function sasanperfumes_customer_tracking_render_meta_box($post_or_order) {
 
     // Tracking meta keys and their display labels
     $tracking_fields = array(
-        '_tracking_landing_page'     => array('label' => 'Landing Page', 'icon' => 'ðŸ”—'),
-        '_tracking_referrer'         => array('label' => 'Referrer', 'icon' => 'â†©ï¸'),
-        '_tracking_first_visit'      => array('label' => 'First Visit', 'icon' => 'ðŸ•'),
-        '_tracking_utm_source'       => array('label' => 'UTM Source', 'icon' => 'ðŸ“¢'),
-        '_tracking_utm_medium'       => array('label' => 'UTM Medium', 'icon' => 'ðŸ“¡'),
-        '_tracking_utm_campaign'     => array('label' => 'UTM Campaign', 'icon' => 'ðŸŽ¯'),
-        '_tracking_utm_term'         => array('label' => 'UTM Term', 'icon' => 'ðŸ”'),
-        '_tracking_utm_content'      => array('label' => 'UTM Content', 'icon' => 'ðŸ“'),
-        '_tracking_device_type'      => array('label' => 'Device', 'icon' => 'ðŸ“±'),
-        '_tracking_browser'          => array('label' => 'Browser', 'icon' => 'ðŸŒ'),
-        '_tracking_screen_resolution'=> array('label' => 'Screen', 'icon' => 'ðŸ–¥ï¸'),
-        '_tracking_pages_viewed'     => array('label' => 'Pages Viewed', 'icon' => 'ðŸ“„'),
-        '_tracking_locale'           => array('label' => 'Locale', 'icon' => 'ðŸŒ'),
+        '_tracking_landing_page'     => array('label' => 'Landing Page', 'icon' => '🔗'),
+        '_tracking_referrer'         => array('label' => 'Referrer', 'icon' => '↩️'),
+        '_tracking_first_visit'      => array('label' => 'First Visit', 'icon' => '🕐'),
+        '_tracking_utm_source'       => array('label' => 'UTM Source', 'icon' => '📢'),
+        '_tracking_utm_medium'       => array('label' => 'UTM Medium', 'icon' => '📡'),
+        '_tracking_utm_campaign'     => array('label' => 'UTM Campaign', 'icon' => '🎯'),
+        '_tracking_utm_term'         => array('label' => 'UTM Term', 'icon' => '🔍'),
+        '_tracking_utm_content'      => array('label' => 'UTM Content', 'icon' => '📝'),
+        '_tracking_device_type'      => array('label' => 'Device', 'icon' => '📱'),
+        '_tracking_browser'          => array('label' => 'Browser', 'icon' => '🌐'),
+        '_tracking_screen_resolution'=> array('label' => 'Screen', 'icon' => '🖥️'),
+        '_tracking_pages_viewed'     => array('label' => 'Pages Viewed', 'icon' => '📄'),
+        '_tracking_locale'           => array('label' => 'Locale', 'icon' => '🌍'),
     );
 
     $has_tracking_data = false;
@@ -123,7 +123,7 @@ function sasanperfumes_customer_tracking_render_meta_box($post_or_order) {
         if ($landing_page) {
             $short_url = sasanperfumes_tracking_shorten_url($landing_page);
             echo '<div class="sasanperfumes-tracking-row">';
-            echo '<span class="sasanperfumes-tracking-label">ðŸ”— Landing Page</span>';
+            echo '<span class="sasanperfumes-tracking-label">🔗 Landing Page</span>';
             echo '<span class="sasanperfumes-tracking-value"><a href="' . esc_url($landing_page) . '" target="_blank" title="' . esc_attr($landing_page) . '">' . esc_html($short_url) . '</a></span>';
             echo '</div>';
         }
@@ -131,7 +131,7 @@ function sasanperfumes_customer_tracking_render_meta_box($post_or_order) {
         if ($referrer) {
             $display_referrer = $referrer === '(direct)' ? '(direct)' : sasanperfumes_tracking_shorten_url($referrer);
             echo '<div class="sasanperfumes-tracking-row">';
-            echo '<span class="sasanperfumes-tracking-label">â†©ï¸ Referrer</span>';
+            echo '<span class="sasanperfumes-tracking-label">↩️ Referrer</span>';
             if ($referrer !== '(direct)') {
                 echo '<span class="sasanperfumes-tracking-value"><a href="' . esc_url($referrer) . '" target="_blank" title="' . esc_attr($referrer) . '">' . esc_html($display_referrer) . '</a></span>';
             } else {
@@ -143,7 +143,7 @@ function sasanperfumes_customer_tracking_render_meta_box($post_or_order) {
         if ($first_visit) {
             $formatted_date = date('M j, Y g:i A', strtotime($first_visit));
             echo '<div class="sasanperfumes-tracking-row">';
-            echo '<span class="sasanperfumes-tracking-label">ðŸ• First Visit</span>';
+            echo '<span class="sasanperfumes-tracking-label">🕐 First Visit</span>';
             echo '<span class="sasanperfumes-tracking-value">' . esc_html($formatted_date) . '</span>';
             echo '</div>';
         }
@@ -163,11 +163,11 @@ function sasanperfumes_customer_tracking_render_meta_box($post_or_order) {
         echo '<h4 style="margin:0 0 8px;padding:0 0 4px;border-bottom:1px solid #eee;font-size:12px;text-transform:uppercase;color:#666;">UTM Parameters</h4>';
 
         $utm_fields = array(
-            array('label' => 'ðŸ“¢ Source', 'value' => $utm_source),
-            array('label' => 'ðŸ“¡ Medium', 'value' => $utm_medium),
-            array('label' => 'ðŸŽ¯ Campaign', 'value' => $utm_campaign),
-            array('label' => 'ðŸ” Term', 'value' => $utm_term),
-            array('label' => 'ðŸ“ Content', 'value' => $utm_content),
+            array('label' => '📢 Source', 'value' => $utm_source),
+            array('label' => '📡 Medium', 'value' => $utm_medium),
+            array('label' => '🎯 Campaign', 'value' => $utm_campaign),
+            array('label' => '🔍 Term', 'value' => $utm_term),
+            array('label' => '📝 Content', 'value' => $utm_content),
         );
 
         foreach ($utm_fields as $utm) {
@@ -193,7 +193,7 @@ function sasanperfumes_customer_tracking_render_meta_box($post_or_order) {
         echo '<h4 style="margin:0 0 8px;padding:0 0 4px;border-bottom:1px solid #eee;font-size:12px;text-transform:uppercase;color:#666;">Device & Browser</h4>';
 
         if ($device_type) {
-            $device_icon = $device_type === 'mobile' ? 'ðŸ“±' : ($device_type === 'tablet' ? 'ðŸ“²' : 'ðŸ–¥ï¸');
+            $device_icon = $device_type === 'mobile' ? '📱' : ($device_type === 'tablet' ? '📲' : '🖥️');
             echo '<div class="sasanperfumes-tracking-row">';
             echo '<span class="sasanperfumes-tracking-label">' . $device_icon . ' Device</span>';
             echo '<span class="sasanperfumes-tracking-value">' . esc_html(ucfirst($device_type)) . '</span>';
@@ -202,21 +202,21 @@ function sasanperfumes_customer_tracking_render_meta_box($post_or_order) {
 
         if ($browser) {
             echo '<div class="sasanperfumes-tracking-row">';
-            echo '<span class="sasanperfumes-tracking-label">ðŸŒ Browser</span>';
+            echo '<span class="sasanperfumes-tracking-label">🌐 Browser</span>';
             echo '<span class="sasanperfumes-tracking-value">' . esc_html($browser) . '</span>';
             echo '</div>';
         }
 
         if ($screen_resolution) {
             echo '<div class="sasanperfumes-tracking-row">';
-            echo '<span class="sasanperfumes-tracking-label">ðŸ–¥ï¸ Screen</span>';
+            echo '<span class="sasanperfumes-tracking-label">🖥️ Screen</span>';
             echo '<span class="sasanperfumes-tracking-value">' . esc_html($screen_resolution) . '</span>';
             echo '</div>';
         }
 
         if ($locale) {
             echo '<div class="sasanperfumes-tracking-row">';
-            echo '<span class="sasanperfumes-tracking-label">ðŸŒ Locale</span>';
+            echo '<span class="sasanperfumes-tracking-label">🌍 Locale</span>';
             echo '<span class="sasanperfumes-tracking-value">' . esc_html(strtoupper($locale)) . '</span>';
             echo '</div>';
         }
@@ -234,7 +234,7 @@ function sasanperfumes_customer_tracking_render_meta_box($post_or_order) {
 
         if ($pages_viewed) {
             echo '<div class="sasanperfumes-tracking-row">';
-            echo '<span class="sasanperfumes-tracking-label">ðŸ“„ Pages Viewed</span>';
+            echo '<span class="sasanperfumes-tracking-label">📄 Pages Viewed</span>';
             echo '<span class="sasanperfumes-tracking-value"><strong>' . esc_html($pages_viewed) . '</strong></span>';
             echo '</div>';
         }
@@ -243,7 +243,7 @@ function sasanperfumes_customer_tracking_render_meta_box($post_or_order) {
             $pages = json_decode($pages_list, true);
             if (is_array($pages) && !empty($pages)) {
                 echo '<div class="sasanperfumes-tracking-pages">';
-                echo '<span class="sasanperfumes-tracking-label" style="display:block;margin-bottom:4px;">ðŸ“‹ Pages List</span>';
+                echo '<span class="sasanperfumes-tracking-label" style="display:block;margin-bottom:4px;">📋 Pages List</span>';
                 echo '<ol style="margin:4px 0 0 16px;padding:0;font-size:11px;line-height:1.6;color:#555;">';
                 foreach ($pages as $page) {
                     echo '<li>' . esc_html($page) . '</li>';

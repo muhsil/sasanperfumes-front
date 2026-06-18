@@ -1,36 +1,27 @@
-import { NextResponse } from "next/server";
-import { siteConfig } from "@/config/site";
+import type { Metadata } from "next";
+import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
+import { type Locale } from "@/config/site";
 
-export async function GET() {
-  const content = `# ${siteConfig.name}
+interface CartLayoutProps {
+  children: React.ReactNode;
+  params: Promise<{ locale: string }>;
+}
 
-> UAE perfume store for everyday fragrances, hair mist, all over sprays, and gift sets
-
-## About
-Sasan Perfumes is a UAE fragrance store offering perfumes, hair mist, all over sprays, and gift-ready scent collections online.
-
-## Links
-- Website: ${siteConfig.url}
-- Shop: ${siteConfig.url}/en/shop
-- About Us: ${siteConfig.url}/en/about-us
-- Contact: ${siteConfig.url}/en/contact-us
-- Full LLM Context: ${siteConfig.url}/llms-full.txt
-
-## Product Categories
-- Perfumes: ${siteConfig.url}/en/category/perfumes
-- All Over Spray: ${siteConfig.url}/en/category/all-over-spray
-- Hair Mist: ${siteConfig.url}/en/category/sasan-hair-mist
-- Gift Sets: ${siteConfig.url}/en/category/gift-set
-
-## Languages
-- English: ${siteConfig.url}/en
-- Arabic: ${siteConfig.url}/ar
-`;
-
-  return new NextResponse(content, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "public, max-age=86400, s-maxage=86400",
-    },
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return generateSeoMetadata({
+    title: locale === "ar" ? "سلة التسوق" : "Shopping Cart",
+    description: locale === "ar" ? "عرض سلة التسوق الخاصة بك" : "View your shopping cart",
+    locale: locale as Locale,
+    pathname: "/cart",
+    noIndex: true,
   });
+}
+
+export default function CartLayout({ children }: CartLayoutProps) {
+  return <>{children}</>;
 }

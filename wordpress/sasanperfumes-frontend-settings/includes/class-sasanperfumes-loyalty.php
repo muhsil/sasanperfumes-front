@@ -1,12 +1,12 @@
 <?php
 /**
- * Sasan Perfumes Loyalty Points & Rewards
+ * ShapeHive Loyalty Points & Rewards
  *
  * Awards points on order completion, redeemable as discount coupons.
  *
  * REST endpoints:
  *   GET  /sasanperfumes/v1/loyalty           ?customer_id=   (auth required)
- *   POST /sasanperfumes/v1/loyalty/redeem    { customer_id, points }  â†’ returns coupon_code
+ *   POST /sasanperfumes/v1/loyalty/redeem    { customer_id, points }  → returns coupon_code
  *
  * Settings (sasanperfumes > Loyalty):
  *   - points_per_aed     : points earned per 1 AED spent  (default: 1)
@@ -81,8 +81,8 @@ function sasanperfumes_loyalty_get_settings() {
         'points_per_aed'    => (float) sasanperfumes_loyalty_opt('points_per_aed', 1),
         'aed_per_point'     => (float) sasanperfumes_loyalty_opt('aed_per_point', 0.05),
         'min_redeem_points' => (int)   sasanperfumes_loyalty_opt('min_redeem_points', 100),
-        'label_en'          => sasanperfumes_loyalty_opt('label_en', 'Sasan Perfumes Points'),
-        'label_ar'          => sasanperfumes_loyalty_opt('label_ar', 'Ù†Ù‚Ø§Ø· Ø¹Ù†Ø¨Ø±'),
+        'label_en'          => sasanperfumes_loyalty_opt('label_en', 'ShapeHive Points'),
+        'label_ar'          => sasanperfumes_loyalty_opt('label_ar', 'نقاط عنبر'),
     ]);
 }
 
@@ -207,7 +207,7 @@ function sasanperfumes_loyalty_award_points(int $order_id) {
         'date'    => current_time('mysql'),
     ]);
 
-    $order->add_order_note("Awarded {$points} Sasan Perfumes loyalty points to customer.");
+    $order->add_order_note("Awarded {$points} ShapeHive loyalty points to customer.");
 }
 
 // ---------------------------------------------------------------------------
@@ -224,8 +224,8 @@ function sasanperfumes_loyalty_save_settings() {
     update_option('sasanperfumes_loyalty_points_per_aed',    (float) ($_POST['sasanperfumes_loyalty_points_per_aed']  ?? 1));
     update_option('sasanperfumes_loyalty_aed_per_point',     (float) ($_POST['sasanperfumes_loyalty_aed_per_point']   ?? 0.05));
     update_option('sasanperfumes_loyalty_min_redeem_points', (int)   ($_POST['sasanperfumes_loyalty_min_redeem_points'] ?? 100));
-    update_option('sasanperfumes_loyalty_label_en',          sanitize_text_field($_POST['sasanperfumes_loyalty_label_en'] ?? 'Sasan Perfumes Points'));
-    update_option('sasanperfumes_loyalty_label_ar',          sanitize_text_field($_POST['sasanperfumes_loyalty_label_ar'] ?? 'Ù†Ù‚Ø§Ø· Ø¹Ù†Ø¨Ø±'));
+    update_option('sasanperfumes_loyalty_label_en',          sanitize_text_field($_POST['sasanperfumes_loyalty_label_en'] ?? 'ShapeHive Points'));
+    update_option('sasanperfumes_loyalty_label_ar',          sanitize_text_field($_POST['sasanperfumes_loyalty_label_ar'] ?? 'نقاط عنبر'));
     wp_redirect(admin_url('admin.php?page=sasanperfumes-loyalty&saved=1')); exit;
 }
 
@@ -267,8 +267,8 @@ function sasanperfumes_loyalty_render_page() {
                 <tr><th>Points per AED spent</th><td><input type="number" step="0.1" name="sasanperfumes_loyalty_points_per_aed" value="<?=esc_attr($g('sasanperfumes_loyalty_points_per_aed',1))?>"><br><small>e.g. 1 = earn 1 point per AED</small></td></tr>
                 <tr><th>AED value per point</th><td><input type="number" step="0.01" name="sasanperfumes_loyalty_aed_per_point" value="<?=esc_attr($g('sasanperfumes_loyalty_aed_per_point',0.05))?>"><br><small>e.g. 0.05 = each point = 0.05 AED discount</small></td></tr>
                 <tr><th>Min points to redeem</th><td><input type="number" name="sasanperfumes_loyalty_min_redeem_points" value="<?=esc_attr($g('sasanperfumes_loyalty_min_redeem_points',100))?>"></td></tr>
-                <tr><th>Program name (EN)</th><td><input type="text" name="sasanperfumes_loyalty_label_en" value="<?=esc_attr($g('sasanperfumes_loyalty_label_en','Sasan Perfumes Points'))?>" class="regular-text"></td></tr>
-                <tr><th>Program name (AR)</th><td><input type="text" name="sasanperfumes_loyalty_label_ar" value="<?=esc_attr($g('sasanperfumes_loyalty_label_ar','Ù†Ù‚Ø§Ø· Ø¹Ù†Ø¨Ø±'))?>" class="regular-text" dir="rtl"></td></tr>
+                <tr><th>Program name (EN)</th><td><input type="text" name="sasanperfumes_loyalty_label_en" value="<?=esc_attr($g('sasanperfumes_loyalty_label_en','ShapeHive Points'))?>" class="regular-text"></td></tr>
+                <tr><th>Program name (AR)</th><td><input type="text" name="sasanperfumes_loyalty_label_ar" value="<?=esc_attr($g('sasanperfumes_loyalty_label_ar','نقاط عنبر'))?>" class="regular-text" dir="rtl"></td></tr>
             </table>
             <?php submit_button('Save Loyalty Settings'); ?>
         </form>

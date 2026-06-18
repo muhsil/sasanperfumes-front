@@ -94,12 +94,12 @@ function appendQueryParam(url: string, key: string, value: string): string {
 }
 
 const legacyBrandNames = [
-  ["Sasan", "Perfumes"].join(" "),
-  ["Sasan", "Perfumes"].join(" "),
-  ["Sasan", "Perfumes"].join(" "),
+  ["Aromatic", "Scents", "Lab"].join(" "),
+  ["Aromatics", "Scents", "Lab"].join(" "),
+  ["aromatic", "scents", "lab"].join(" "),
   ["Emirates", "Pride"].join(" "),
   ["Fragrance", "Network"].join(" "),
-  "Ø£Ø±ÙˆÙ…Ø§ØªÙŠÙƒ Ø³ÙŠÙ†ØªØ³ Ù„Ø§Ø¨",
+  "أروماتيك سينتس لاب",
 ];
 const legacyMediaHosts = [["cms", ["fragrance", "network"].join(""), "ae"].join(".")];
 
@@ -1152,11 +1152,11 @@ export async function getFooterMenu(locale?: Locale): Promise<WPMenu | null> {
 
 // Default mobile bar items when WordPress settings are empty
 const defaultMobileBarItems: MobileBarItem[] = [
-  { icon: "home", label: "Home", labelAr: "Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©", url: "/" },
-  { icon: "grid", label: "Categories", labelAr: "Ø§Ù„ÙØ¦Ø§Øª", url: "/shop" },
-  { icon: "search", label: "Search", labelAr: "Ø¨Ø­Ø«", url: "/search" },
-  { icon: "heart", label: "Wishlist", labelAr: "Ø§Ù„Ù…ÙØ¶Ù„Ø©", url: "/wishlist" },
-  { icon: "user", label: "Account", labelAr: "Ø­Ø³Ø§Ø¨ÙŠ", url: "/account" },
+  { icon: "home", label: "Home", labelAr: "الرئيسية", url: "/" },
+  { icon: "grid", label: "Categories", labelAr: "الفئات", url: "/shop" },
+  { icon: "search", label: "Search", labelAr: "بحث", url: "/search" },
+  { icon: "heart", label: "Wishlist", labelAr: "المفضلة", url: "/wishlist" },
+  { icon: "user", label: "Account", labelAr: "حسابي", url: "/account" },
 ];
 
 // Fetch SEO settings from WordPress Plugin API
@@ -1275,15 +1275,15 @@ export async function getMobileBarSettings(locale?: Locale): Promise<MobileBarSe
   // Use default items if no items are configured
   const items = hasConfiguredItems
     ? data.items.map((item) => {
-        // Override "Categories" label with "Menu" / "Ø§Ù„Ù‚Ø§Ø¦Ù…Ø©"
+        // Override "Categories" label with "Menu" / "القائمة"
         const isCategoriesItem = item.icon === "grid" || 
           (item.url && item.url.includes("categories")) || 
           item.label?.toLowerCase() === "categories" || 
-          item.labelAr === "Ø§Ù„ÙØ¦Ø§Øª";
+          item.labelAr === "الفئات";
         return {
           icon: item.icon || "",
           label: isCategoriesItem ? "Menu" : (item.label || ""),
-          labelAr: isCategoriesItem ? "Ø§Ù„Ù‚Ø§Ø¦Ù…Ø©" : (item.labelAr || ""),
+          labelAr: isCategoriesItem ? "القائمة" : (item.labelAr || ""),
           url: item.url || "",
         };
       })
@@ -1295,7 +1295,7 @@ export async function getMobileBarSettings(locale?: Locale): Promise<MobileBarSe
   };
 }
 
-// Default topbar settings â€” no hardcoded text; show only dynamic content from backend
+// Default topbar settings — no hardcoded text; show only dynamic content from backend
 const defaultTopbarSettings: TopbarSettings = {
   enabled: false,
   text: "",
@@ -1338,50 +1338,50 @@ export async function getTopbarSettings(locale?: Locale): Promise<TopbarSettings
   };
 }
 
-// â”€â”€â”€ Footer Settings â”€â”€â”€
+// ─── Footer Settings ───
 const defaultFooterSettings: FooterSettings = {
   description: {
-    en: "Discover Sasan Perfumes, a UAE fragrance destination for perfumes, hair mist, all over sprays, and gift-ready scent collections.",
-    ar: "Ø§ÙƒØªØ´Ù Ø´ÙŠØ¨ Ù‡Ø§ÙŠÙØŒ ÙˆØ¬Ù‡ØªÙƒ ÙÙŠ Ø§Ù„Ø¥Ù…Ø§Ø±Ø§Øª Ù„Ù„Ø¹Ø·ÙˆØ±ØŒ Ù…Ø¹Ø·Ø±Ø§Øª Ø§Ù„Ø´Ø¹Ø±ØŒ Ø¨Ø®Ø§Ø®Ø§Øª Ø§Ù„Ø¬Ø³Ù…ØŒ ÙˆÙ…Ø¬Ù…ÙˆØ¹Ø§Øª Ø§Ù„Ù‡Ø¯Ø§ÙŠØ§ Ø§Ù„Ø¹Ø·Ø±ÙŠØ©.",
+    en: "Discover ShapeHive, a UAE fragrance destination for perfumes, hair mist, all over sprays, and gift-ready scent collections.",
+    ar: "اكتشف شيب هايف، وجهتك في الإمارات للعطور، معطرات الشعر، بخاخات الجسم، ومجموعات الهدايا العطرية.",
   },
   copyright: {
     en: "All rights reserved.",
-    ar: "Ø¬Ù…ÙŠØ¹ Ø§Ù„Ø­Ù‚ÙˆÙ‚ Ù…Ø­ÙÙˆØ¸Ø©.",
+    ar: "جميع الحقوق محفوظة.",
   },
   newsletter: {
-    title: { en: "Stay in the Scent Loop", ar: "Ø§Ø¨Ù‚ÙŽ ÙÙŠ Ø¹Ø§Ù„Ù… Ø§Ù„Ø¹Ø·ÙˆØ±" },
+    title: { en: "Stay in the Scent Loop", ar: "ابقَ في عالم العطور" },
     subtitle: {
       en: "Subscribe to receive updates, access to exclusive deals, and more.",
-      ar: "Ø§Ø´ØªØ±Ùƒ Ù„ØªÙ„Ù‚ÙŠ Ø§Ù„ØªØ­Ø¯ÙŠØ«Ø§Øª ÙˆØ§Ù„ÙˆØµÙˆÙ„ Ø¥Ù„Ù‰ Ø§Ù„Ø¹Ø±ÙˆØ¶ Ø§Ù„Ø­ØµØ±ÙŠØ© ÙˆØ§Ù„Ù…Ø²ÙŠØ¯.",
+      ar: "اشترك لتلقي التحديثات والوصول إلى العروض الحصرية والمزيد.",
     },
-    buttonText: { en: "Subscribe", ar: "Ø§Ø´ØªØ±Ùƒ" },
+    buttonText: { en: "Subscribe", ar: "اشترك" },
     placeholder: {
       en: "Enter your email address",
-      ar: "Ø£Ø¯Ø®Ù„ Ø¨Ø±ÙŠØ¯Ùƒ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ",
+      ar: "أدخل بريدك الإلكتروني",
     },
   },
   quickLinks: {
-    heading: { en: "Quick Links", ar: "Ø±ÙˆØ§Ø¨Ø· Ø³Ø±ÙŠØ¹Ø©" },
+    heading: { en: "Quick Links", ar: "روابط سريعة" },
     items: [
-      { label: { en: "Home", ar: "Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©" }, url: "/" },
-      { label: { en: "Shop", ar: "Ø§Ù„Ù…ØªØ¬Ø±" }, url: "/shop" },
-      { label: { en: "Perfumes", ar: "Ø§Ù„Ø¹Ø·ÙˆØ±" }, url: "/category/perfumes" },
-      { label: { en: "All Over Spray", ar: "Ø¨Ø®Ø§Ø® Ø§Ù„Ø¬Ø³Ù…" }, url: "/category/all-over-spray" },
-      { label: { en: "Hair Mist", ar: "Ù…Ø¹Ø·Ø± Ø§Ù„Ø´Ø¹Ø±" }, url: "/category/sasan-hair-mist" },
-      { label: { en: "Gift Sets", ar: "Ø£Ø·Ù‚Ù… Ø§Ù„Ù‡Ø¯Ø§ÙŠØ§" }, url: "/category/gift-set" },
-      { label: { en: "Contact", ar: "ØªÙˆØ§ØµÙ„ Ù…Ø¹Ù†Ø§" }, url: "/contact" },
+      { label: { en: "Home", ar: "الرئيسية" }, url: "/" },
+      { label: { en: "Shop", ar: "المتجر" }, url: "/shop" },
+      { label: { en: "Perfumes", ar: "العطور" }, url: "/category/perfumes" },
+      { label: { en: "All Over Spray", ar: "بخاخ الجسم" }, url: "/category/all-over-spray" },
+      { label: { en: "Hair Mist", ar: "معطر الشعر" }, url: "/category/sasan-hair-mist" },
+      { label: { en: "Gift Sets", ar: "أطقم الهدايا" }, url: "/category/gift-set" },
+      { label: { en: "Contact", ar: "تواصل معنا" }, url: "/contact" },
     ],
   },
   customerService: {
-    heading: { en: "Customer Service", ar: "Ø®Ø¯Ù…Ø© Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡" },
+    heading: { en: "Customer Service", ar: "خدمة العملاء" },
     items: [
-      { label: { en: "FAQ", ar: "Ø§Ù„Ø£Ø³Ø¦Ù„Ø© Ø§Ù„Ø´Ø§Ø¦Ø¹Ø©" }, url: "/faq" },
-      { label: { en: "Shipping Information", ar: "Ù…Ø¹Ù„ÙˆÙ…Ø§Øª Ø§Ù„Ø´Ø­Ù†" }, url: "/shipping" },
-      { label: { en: "Return Policy", ar: "Ø³ÙŠØ§Ø³Ø© Ø§Ù„Ø¥Ø±Ø¬Ø§Ø¹" }, url: "/returns" },
-      { label: { en: "Track Order", ar: "ØªØªØ¨Ø¹ Ø§Ù„Ø·Ù„Ø¨" }, url: "/track-order" },
-      { label: { en: "Privacy Policy", ar: "Ø³ÙŠØ§Ø³Ø© Ø§Ù„Ø®ØµÙˆØµÙŠØ©" }, url: "/privacy" },
-      { label: { en: "Terms & Conditions", ar: "Ø§Ù„Ø´Ø±ÙˆØ· ÙˆØ§Ù„Ø£Ø­ÙƒØ§Ù…" }, url: "/terms-and-conditions" },
-      { label: { en: "Private Labeling", ar: "Ø§Ù„ØªØµÙ†ÙŠØ¹ Ø§Ù„Ø®Ø§Øµ" }, url: "/private-labeling" },
+      { label: { en: "FAQ", ar: "الأسئلة الشائعة" }, url: "/faq" },
+      { label: { en: "Shipping Information", ar: "معلومات الشحن" }, url: "/shipping" },
+      { label: { en: "Return Policy", ar: "سياسة الإرجاع" }, url: "/returns" },
+      { label: { en: "Track Order", ar: "تتبع الطلب" }, url: "/track-order" },
+      { label: { en: "Privacy Policy", ar: "سياسة الخصوصية" }, url: "/privacy" },
+      { label: { en: "Terms & Conditions", ar: "الشروط والأحكام" }, url: "/terms-and-conditions" },
+      { label: { en: "Private Labeling", ar: "التصنيع الخاص" }, url: "/private-labeling" },
     ],
   },
   social: {
@@ -1393,7 +1393,7 @@ const defaultFooterSettings: FooterSettings = {
     whatsapp: "https://wa.me/971506071405",
   },
   poweredBy: {
-    text: { en: "Powered by", ar: "Ù…Ø¯Ø¹ÙˆÙ… Ù…Ù†" },
+    text: { en: "Powered by", ar: "مدعوم من" },
     name: { en: "", ar: "" },
     url: "",
   },
@@ -1426,16 +1426,16 @@ export async function getFooterSettings(): Promise<FooterSettings> {
   const legacyCustomerServiceUrls = ["/faq", "/shipping", "/returns", "/track-order", "/privacy", "/terms-and-conditions", "/private-labeling"];
 
   const liveQuickLinks: FooterSettings["quickLinks"]["items"] = [
-    { label: { en: "About Us", ar: "Ù…Ù† Ù†Ø­Ù†" }, url: "/about-us" },
-    { label: { en: "Our Stores", ar: "Ù…ÙˆØ§Ù‚Ø¹Ù†Ø§" }, url: "/store-listing" },
+    { label: { en: "About Us", ar: "من نحن" }, url: "/about-us" },
+    { label: { en: "Our Stores", ar: "مواقعنا" }, url: "/store-listing" },
     { label: { en: "B2B", ar: "B2B" }, url: "#" },
   ];
 
   const liveCustomerServiceLinks: FooterSettings["customerService"]["items"] = [
-    { label: { en: "Contact Us", ar: "ØªÙˆØ§ØµÙ„ Ù…Ø¹Ù†Ø§" }, url: "/contact-us" },
-    { label: { en: "Delivery Policy", ar: "Ø³ÙŠØ§Ø³Ø© Ø§Ù„ØªØ³Ù„ÙŠÙ…" }, url: "/privacy-policy" },
-    { label: { en: "Exchange & Return Policy", ar: "Ø³ÙŠØ§Ø³Ø© Ø§Ù„Ø§Ø³ØªØ¨Ø¯Ø§Ù„ ÙˆØ§Ù„Ø¥Ø±Ø¬Ø§Ø¹" }, url: "/refund_returns" },
-    { label: { en: "Payment Policy", ar: "Ø³ÙŠØ§Ø³Ø© Ø§Ù„Ø¯ÙØ¹" }, url: "/refund_returns" },
+    { label: { en: "Contact Us", ar: "تواصل معنا" }, url: "/contact-us" },
+    { label: { en: "Delivery Policy", ar: "سياسة التسليم" }, url: "/privacy-policy" },
+    { label: { en: "Exchange & Return Policy", ar: "سياسة الاستبدال والإرجاع" }, url: "/refund_returns" },
+    { label: { en: "Payment Policy", ar: "سياسة الدفع" }, url: "/refund_returns" },
   ];
 
   const quickLinkUrls = settings.quickLinks.items.map((item) => item.url);
@@ -1712,8 +1712,8 @@ export async function getMegaMenuData(locale?: Locale): Promise<MegaMenuData | n
     (item) => 
       item.title.toLowerCase() === "shop all" || 
       item.title.toLowerCase() === "shop" ||
-      item.title === "ØªØ³ÙˆÙ‚" ||
-      item.title === "ØªØ³ÙˆÙ‚ Ø§Ù„ÙƒÙ„"
+      item.title === "تسوق" ||
+      item.title === "تسوق الكل"
   );
 
   if (!shopAllItem || !shopAllItem.children || shopAllItem.children.length === 0) {
@@ -1767,7 +1767,7 @@ export async function getMegaMenuData(locale?: Locale): Promise<MegaMenuData | n
   };
 }
 
-// â”€â”€â”€ Product Pages (sasanperfumes_product_page CPT) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Product Pages (sasanperfumes_product_page CPT) ─────────────────────────
 
 /**
  * Fetch all published product pages from the custom REST endpoint.
@@ -1800,7 +1800,7 @@ export async function getProductPageBySlug(slug: string, locale?: Locale): Promi
   return data ? rebrandApiContent(data) : null;
 }
 
-// â”€â”€â”€ Category SEO Content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Category SEO Content ─────────────────────────────────────────
 
 export async function getCategorySeoContent(slug: string): Promise<CategorySeoContent | null> {
   const data = await fetchWPAPI<CategorySeoContent>(
@@ -1818,7 +1818,7 @@ export async function getAllCategorySeoContent(): Promise<Record<string, Categor
   return rebrandApiContent(data ?? {});
 }
 
-// â”€â”€â”€ Category Subtitle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Category Subtitle ────────────────────────────────────────────
 
 export async function getCategorySubtitle(slug: string): Promise<{ en: string; ar: string } | null> {
   const data = await fetchWPAPI<{ subtitle: { en: string; ar: string } }>(
@@ -1831,13 +1831,13 @@ export async function getCategorySubtitle(slug: string): Promise<{ en: string; a
   return subtitle;
 }
 
-// â”€â”€â”€ Home Sections (Why Choose Us, Our Story, FAQ, SEO) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Home Sections (Why Choose Us, Our Story, FAQ, SEO) ──────────
 
 const defaultHomeSections: HomeSections = {
-  whyChooseUs: { enabled: true, eyebrow: { en: 'Our Promise', ar: 'ØªÙ…ÙŠØ²Ù†Ø§' }, title: { en: '', ar: '' }, subtitle: { en: '', ar: '' }, items: [] },
-  ourStory: { enabled: true, eyebrow: { en: 'Discover Our Journey', ar: 'Ø§ÙƒØªØ´Ù Ù‚ØµØªÙ†Ø§' }, title: { en: '', ar: '' }, description1: { en: '', ar: '' }, description2: { en: '', ar: '' }, image: '', stats: [] },
-  faq: { enabled: true, eyebrow: { en: 'Help', ar: 'Ù…Ø³Ø§Ø¹Ø¯Ø©' }, title: { en: '', ar: '' }, subtitle: { en: '', ar: '' }, items: [] },
-  seoContent: { enabled: true, title: { en: 'Shop Premium Perfumes Online in the UAE', ar: 'ØªØ³ÙˆÙ‚ Ø§Ù„Ø¹Ø·ÙˆØ± Ø§Ù„ÙØ§Ø®Ø±Ø© Ø§ÙˆÙ† Ù„Ø§ÙŠÙ† ÙÙŠ Ø§Ù„Ø¥Ù…Ø§Ø±Ø§Øª' }, paragraphs: [] },
+  whyChooseUs: { enabled: true, eyebrow: { en: 'Our Promise', ar: 'تميزنا' }, title: { en: '', ar: '' }, subtitle: { en: '', ar: '' }, items: [] },
+  ourStory: { enabled: true, eyebrow: { en: 'Discover Our Journey', ar: 'اكتشف قصتنا' }, title: { en: '', ar: '' }, description1: { en: '', ar: '' }, description2: { en: '', ar: '' }, image: '', stats: [] },
+  faq: { enabled: true, eyebrow: { en: 'Help', ar: 'مساعدة' }, title: { en: '', ar: '' }, subtitle: { en: '', ar: '' }, items: [] },
+  seoContent: { enabled: true, title: { en: 'Shop Premium Perfumes Online in the UAE', ar: 'تسوق العطور الفاخرة اون لاين في الإمارات' }, paragraphs: [] },
 };
 
 export async function getHomeSections(): Promise<HomeSections> {
@@ -1848,7 +1848,7 @@ export async function getHomeSections(): Promise<HomeSections> {
   return rebrandApiContent(data ?? defaultHomeSections);
 }
 
-// â”€â”€â”€ Guide Pages (sasanperfumes_guide CPT) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Guide Pages (sasanperfumes_guide CPT) ─────────────────────────────────
 
 export async function getGuidePages(): Promise<GuidePage[]> {
   const data = await fetchWPAPI<GuidePage[]>(
@@ -1866,18 +1866,18 @@ export async function getGuidePageBySlug(slug: string): Promise<GuidePage | null
   return data ? rebrandApiContent(data) : null;
 }
 
-// â”€â”€â”€ Static Pages (About, Contact, FAQ, Privacy, Terms, Shipping, Returns) â”€â”€â”€
+// ─── Static Pages (About, Contact, FAQ, Privacy, Terms, Shipping, Returns) ───
 
 // Bilingual field from API: { en: string, ar: string }
 interface BilingualField { en: string; ar: string; }
 
-// Generic static page API response â€” all fields are bilingual objects or repeater arrays
+// Generic static page API response — all fields are bilingual objects or repeater arrays
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type StaticPageResponse = Record<string, BilingualField | any[]>;
 
 /**
  * Fetch static page content from /sasanperfumes/v1/pages/{slug}.
- * Returns null if API is unreachable â€” caller should fall back to dictionary.
+ * Returns null if API is unreachable — caller should fall back to dictionary.
  */
 export async function getStaticPageContent(slug: string): Promise<StaticPageResponse | null> {
   const data = await fetchWPAPI<StaticPageResponse>(
@@ -1946,7 +1946,7 @@ export function mapFAQGroups(items: BilingualField | any[] | undefined, locale: 
   return Array.from(groups.values());
 }
 
-// â”€â”€â”€ Product Meta Descriptions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Product Meta Descriptions ────────────────────────────────────
 
 interface ProductMetaResponse {
   meta_description: string;
@@ -1979,7 +1979,7 @@ export async function getProductMetaDescription(
   return data.meta_description;
 }
 
-// â”€â”€â”€ Notes SEO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Notes SEO ────────────────────────────────────────────────────
 
 interface NoteSeoResponse {
   name: BilingualField;
@@ -1995,7 +1995,7 @@ export async function getNoteSeo(slug: string): Promise<NoteSeoResponse | null> 
   );
 }
 
-// â”€â”€â”€ Brands â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Brands ───────────────────────────────────────────────────────
 
 export interface BrandItem {
   id: number;
@@ -2045,7 +2045,7 @@ export async function getBrandsPageSettings(): Promise<BrandsPageSettings | null
   return data ? rebrandApiContent(data) : null;
 }
 
-// â”€â”€â”€ Services â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Services ─────────────────────────────────────────────────────
 
 export interface ServiceItem {
   id: number;
@@ -2095,7 +2095,7 @@ export async function getServicesPageSettings(): Promise<ServicesPageSettings | 
   return data ? rebrandApiContent(data) : null;
 }
 
-// â”€â”€â”€ Blog (WordPress Posts) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Blog (WordPress Posts) ───────────────────────────────────────
 
 export interface BlogPost {
   id: number;
@@ -2176,7 +2176,7 @@ export async function getBlogPost(slug: string): Promise<BlogPost | null> {
   });
 }
 
-// â”€â”€â”€ Feature Toggles â”€â”€â”€
+// ─── Feature Toggles ───
 export interface FeatureToggles {
   sasanperfumes_shop_enabled: boolean;
   sasanperfumes_about_enabled: boolean;
@@ -2295,7 +2295,7 @@ export async function getFeatureToggles(): Promise<FeatureToggles> {
   return normalizeFeatureToggles(data);
 }
 
-// â”€â”€â”€ Private Labeling â”€â”€â”€
+// ─── Private Labeling ───
 interface BilingualField {
   en: string;
   ar: string;
@@ -2378,7 +2378,7 @@ export async function getPrivateLabelingData(): Promise<PrivateLabelingData | nu
   });
 }
 
-// â”€â”€â”€ WhatsApp Settings â”€â”€â”€
+// ─── WhatsApp Settings ───
 export interface WhatsAppSettings {
   enabled: boolean;
   number: string;
@@ -2395,7 +2395,7 @@ export async function getWhatsAppSettings(): Promise<WhatsAppSettings | null> {
   });
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Brands Slider Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// â”€â”€â”€ Brands Slider â”€â”€â”€
 
 export interface BrandsSliderData {
   enabled: boolean;

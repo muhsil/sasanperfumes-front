@@ -1,7 +1,7 @@
 /**
  * Site Configuration
  * 
- * Main configuration file for the Sasan Perfumes frontend.
+ * Main configuration file for the ShapeHive frontend.
  * These values are read from environment variables when available,
  * with fallbacks for local development.
  */
@@ -41,15 +41,17 @@ export const mediaHostNames = Array.from(
   new Set([
     cmsHostname,
     "cms.shapehive.com",
+    "om.shapehive.com",
+    "sa.shapehive.com",
   ])
 );
 
 export const siteConfig = {
   // Site name - displayed in browser title, meta tags, etc.
-  name: "Sasan Perfumes",
+  name: "ShapeHive",
   
   // Site description - used for SEO meta description
-  description: "Sasan Perfumes is a headless commerce storefront with region-specific products, content, and currencies.",
+  description: "ShapeHive is a headless commerce storefront with region-specific products, content, and currencies.",
   
   // Frontend URL - reads from NEXT_PUBLIC_SITE_URL environment variable
   url: siteUrl,
@@ -126,7 +128,7 @@ export const localeConfig = {
     hrefLang: "en",
   },
   ar: {
-    name: "Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©",
+    name: "العربية",
     dir: "rtl" as const,
     hrefLang: "ar",
   },

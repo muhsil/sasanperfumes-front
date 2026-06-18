@@ -1,12 +1,12 @@
 <?php
 /**
- * Sasan Perfumes Field Helpers â€” Small reusable field components
+ * ShapeHive Field Helpers — Small reusable field components
  * Used by page-fields, notes-cpt, and other modules.
  * @since 6.3.0
  */
 if (!defined('ABSPATH')) exit;
 
-/* â”€â”€ Render helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Render helpers ─────────────────────────────────────── */
 
 /** Text input */
 function sasanperfumes_f_text($name, $val, $a = []) {
@@ -36,7 +36,7 @@ function sasanperfumes_f_render($name, $val, $type = 'text', $a = []) {
     else { sasanperfumes_f_text($name, $val, $a); }
 }
 
-/* â”€â”€ Post-meta bilingual helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Post-meta bilingual helpers ────────────────────────── */
 
 /** Render bilingual field pair from post_meta */
 function sasanperfumes_f_bi($post_id, $prefix, $key, $label, $type = 'text', $a = []) {
@@ -58,7 +58,7 @@ function sasanperfumes_f_enable($post_id, $prefix) {
     echo '</td></tr>';
 }
 
-/* â”€â”€ Repeater helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Repeater helper ────────────────────────────────────── */
 
 /** Render repeater from post_meta */
 function sasanperfumes_f_repeater($post_id, $meta_key, $label, $fields, $defaults = []) {
@@ -84,7 +84,7 @@ function sasanperfumes_f_repeater($post_id, $meta_key, $label, $fields, $default
     echo '</div>';
 }
 
-/* â”€â”€ Save helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Save helpers ───────────────────────────────────────── */
 
 /** Save bilingual field pair from POST to post_meta */
 function sasanperfumes_f_save_bi($post_id, $prefix, $key, $type = 'text') {
@@ -118,7 +118,7 @@ function sasanperfumes_f_save_check($post_id, $meta_key) {
     update_post_meta($post_id, $meta_key, isset($_POST[$meta_key]) ? '1' : '0');
 }
 
-/* â”€â”€ Product selector helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Product selector helper ────────────────────────────── */
 
 /** Render a product selector with AJAX search + preview */
 function sasanperfumes_f_product($name, $slug = '') {
@@ -130,7 +130,7 @@ function sasanperfumes_f_product($name, $slug = '') {
     echo '</div>';
 }
 
-/* â”€â”€ API helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── API helpers ────────────────────────────────────────── */
 
 /** Get bilingual value from post_meta for API response */
 function sasanperfumes_f_api_bi($post_id, $prefix, $key, $def_en = '', $def_ar = '') {

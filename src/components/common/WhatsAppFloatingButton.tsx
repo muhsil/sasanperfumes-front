@@ -58,13 +58,13 @@ export function WhatsAppFloatingButton({
   if (!isMobile && !showDesktop) return null;
 
   const defaultMessage = locale === "ar"
-    ? "Ù…Ø±Ø­Ø¨Ø§Ù‹ØŒ Ø£ÙˆØ¯ Ù…Ø¹Ø±ÙØ© Ø§Ù„Ù…Ø²ÙŠØ¯ Ø¹Ù† Ù…Ù†ØªØ¬Ø§ØªÙƒÙ… ÙˆØ®Ø¯Ù…Ø§ØªÙƒÙ…."
-    : "Hello Sasan Perfumes, I would like to know more about your products and services.";
+    ? "مرحباً، أود معرفة المزيد عن منتجاتكم وخدماتكم."
+    : "Hello ShapeHive, I would like to know more about your products and services.";
   const legacyName = ["Fragrance", "Network"].join(" ");
   const legacySlug = ["fragrance", "network"].join("");
   const safeMessage = (message || defaultMessage)
-    .replaceAll(legacyName, "Sasan Perfumes")
-    .replaceAll(legacySlug, "Sasan Perfumes");
+    .replaceAll(legacyName, "ShapeHive")
+    .replaceAll(legacySlug, "ShapeHive");
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(safeMessage)}`;
 
   const isCartPage = pathname?.includes("/cart");
@@ -125,7 +125,7 @@ export function WhatsAppFloatingButton({
             `}
           >
             <span className="text-[#25D366] font-semibold">
-              {locale === "ar" ? "ØªØ­Ø¯Ø« Ù…Ø¹Ù†Ø§!" : "Chat with us!"}
+              {locale === "ar" ? "تحدث معنا!" : "Chat with us!"}
             </span>
           </div>
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * Sasan Perfumes Brand Pages
+ * ShapeHive Brand Pages
  *
  * Extended brand metadata for product brands.
  * Stores banner images, descriptions, perfume notes, and SEO fields
@@ -15,7 +15,7 @@
 
 if (!defined('ABSPATH')) exit;
 
-// â”€â”€ REST API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── REST API ───────────────────────────────────────────────────────
 
 add_action('rest_api_init', function () {
     sasanperfumes_register_rest_route( '/brands', [
@@ -99,7 +99,7 @@ function sasanperfumes_brands_page_settings() {
     ];
 }
 
-// â”€â”€ Term meta fields on product_brand edit screen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Term meta fields on product_brand edit screen ───────────────────
 
 add_action('product_brand_edit_form_fields', function ($term) {
     $id = $term->term_id;
@@ -202,7 +202,7 @@ add_action('edited_product_brand', function ($term_id) {
     update_term_meta($term_id, '_sasanperfumes_brand_notes', $notes);
 }, 10, 1);
 
-// â”€â”€ Admin: Brands Page Settings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Admin: Brands Page Settings ────────────────────────────────────
 
 add_action('admin_menu', function () {
     add_submenu_page(
