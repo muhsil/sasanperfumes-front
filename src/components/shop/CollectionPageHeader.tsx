@@ -75,7 +75,7 @@ export function CollectionPageHeader({
         </div>
       )}
 
-      <div className="flex flex-col gap-4 px-4 py-6 md:flex-row md:items-center md:gap-8 md:px-7 md:py-8 lg:gap-12 lg:px-12">
+      <div className="flex flex-col gap-4 px-4 py-6 md:flex-row md:items-start md:gap-8 md:px-7 md:py-8 lg:gap-12 lg:px-12">
         {image && (
           <div className="shrink-0">
             <Image
@@ -88,7 +88,7 @@ export function CollectionPageHeader({
           </div>
         )}
         <div className="flex-1">
-          <h1 className="font-title text-[28px] leading-none text-brand-primary md:text-[44px]">
+          <h1 className="font-title text-[24px] leading-none text-brand-primary md:text-[36px]">
             {decodeHtmlEntities(title)}
           </h1>
           {subtitle && (

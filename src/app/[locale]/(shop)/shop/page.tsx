@@ -104,6 +104,7 @@ export default async function ShopPage({ params }: ShopPageProps) {
         <ShopClient
           products={filteredProducts}
           locale={locale as Locale}
+          toolbarTitle={dictionary.common.shop}
           initialTotal={filteredTotal}
           initialTotalPages={productsResult.totalPages}
           giftProductIds={giftProductInfo.ids}

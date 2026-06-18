@@ -24,6 +24,7 @@ interface ProductListingProps {
   locale: Locale;
   isLoading?: boolean;
   className?: string;
+  toolbarTitle?: string;
   showToolbar?: boolean;
   toolbarClassName?: string;
   bundleProductSlugs?: string[];
@@ -123,6 +124,7 @@ export function ProductListing({
   locale,
   isLoading = false,
   className,
+  toolbarTitle,
   showToolbar = true,
   toolbarClassName,
   bundleProductSlugs = [],
@@ -168,15 +170,33 @@ export function ProductListing({
     <div className={cn("bg-transparent pb-4 pt-3 md:pt-6", className)}>
       {showToolbar && (
         <div className={cn("mb-3 md:mb-6", toolbarClassName)}>
-          <ProductViewToggle
-            viewMode={viewMode}
-            gridColumns={gridColumns}
-            onViewModeChange={handleViewModeChange}
-            onGridColumnsChange={handleGridColumnsChange}
-            locale={locale}
-            sortBy={sortBy}
-            onSortChange={handleSortChange}
-          />
+          {toolbarTitle ? (
+            <div className="section-band relative flex items-center justify-between gap-3 px-4 py-2 text-brand-primary md:gap-4 md:px-7 md:py-3">
+              <h2 className="truncate text-[15px] font-semibold leading-tight md:text-[17px] lg:text-[20px]">
+                {toolbarTitle}
+              </h2>
+              <ProductViewToggle
+                viewMode={viewMode}
+                gridColumns={gridColumns}
+                onViewModeChange={handleViewModeChange}
+                onGridColumnsChange={handleGridColumnsChange}
+                locale={locale}
+                sortBy={sortBy}
+                onSortChange={handleSortChange}
+                variant="compact"
+              />
+            </div>
+          ) : (
+            <ProductViewToggle
+              viewMode={viewMode}
+              gridColumns={gridColumns}
+              onViewModeChange={handleViewModeChange}
+              onGridColumnsChange={handleGridColumnsChange}
+              locale={locale}
+              sortBy={sortBy}
+              onSortChange={handleSortChange}
+            />
+          )}
         </div>
       )}
 

@@ -18,6 +18,7 @@ interface ProductViewToggleProps {
   className?: string;
   sortBy?: SortOption;
   onSortChange?: (sort: SortOption) => void;
+  variant?: "full" | "compact";
 }
 
 const translations = {
@@ -58,6 +59,7 @@ export function ProductViewToggle({
   className,
   sortBy = "default",
   onSortChange,
+  variant = "full",
 }: ProductViewToggleProps) {
   void viewMode;
   void _gridColumns;
@@ -81,6 +83,59 @@ export function ProductViewToggle({
     onSortChange?.(value);
     setIsDrawerOpen(false);
   };
+
+  if (variant === "compact") {
+    return (
+      <>
+        <button
+          type="button"
+          onClick={() => setIsDrawerOpen(true)}
+          className={cn(
+            "flex items-center gap-2 rounded-full border border-brand-border/70 bg-transparent px-3 py-1.5 text-xs font-semibold lowercase text-brand-primary shadow-[0_8px_20px_rgba(20,15,10,0.06)] transition-colors hover:border-brand-primary/35",
+            isRTL && "flex-row-reverse",
+            className
+          )}
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          <span>{t.filterSort}</span>
+        </button>
+
+        <Drawer
+          isOpen={isDrawerOpen}
+          onClose={() => setIsDrawerOpen(false)}
+          position="right"
+          size="sm"
+          title={t.filterSort}
+          dir={isRTL ? "rtl" : "ltr"}
+          bodyClassName="p-0"
+        >
+          <div className="border-b border-brand-border/40 p-5">
+            <p className="mb-3 text-[11px] font-semibold uppercase text-brand-primary/50">
+              {t.sortBy}
+            </p>
+            <div className="space-y-1">
+              {sortOptions.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => handleSortClick(option.value)}
+                  className={cn(
+                    "flex w-full items-center justify-between rounded-full px-4 py-2.5 text-[13px] font-semibold transition-colors hover:bg-brand-beige",
+                    sortBy === option.value
+                      ? "bg-brand-beige text-brand-primary"
+                      : "text-brand-primary/65"
+                  )}
+                >
+                  <span>{option.label}</span>
+                  {sortBy === option.value && <Check className="h-4 w-4" />}
+                </button>
+              ))}
+            </div>
+          </div>
+        </Drawer>
+      </>
+    );
+  }
 
   return (
     <>

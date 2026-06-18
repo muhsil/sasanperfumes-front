@@ -39,6 +39,7 @@ function setCachedProducts(
 interface ShopClientProps {
   products: WCProduct[];
   locale: Locale;
+  toolbarTitle?: string;
   initialTotal?: number;
   initialTotalPages?: number;
   giftProductIds?: number[];
@@ -49,6 +50,7 @@ interface ShopClientProps {
 export function ShopClient({ 
   products: initialProducts, 
   locale,
+  toolbarTitle,
   initialTotal = 0,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   initialTotalPages = 1,
@@ -157,6 +159,7 @@ export function ShopClient({
       <ProductListing
         products={products}
         locale={locale}
+        toolbarTitle={toolbarTitle}
         showToolbar={true}
         bundleProductSlugs={bundleProductSlugs}
       />

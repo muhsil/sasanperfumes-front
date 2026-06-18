@@ -233,7 +233,12 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       />
 
       <Suspense fallback={<ProductGridSkeleton count={12} columns={6} />}>
-        <CategoryClient products={products} locale={locale as Locale} bundleProductSlugs={bundleProductSlugs} />
+        <CategoryClient
+          products={products}
+          locale={locale as Locale}
+          toolbarTitle={categoryName}
+          bundleProductSlugs={bundleProductSlugs}
+        />
       </Suspense>
 
       {/* SEO content — fetched from WP backend, falls back to hardcoded */}

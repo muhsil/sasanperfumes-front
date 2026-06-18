@@ -75,8 +75,11 @@ function getLiveHeaderMenuKey(item: MenuItemLike): string | null {
   if (title.includes("all over spray") || url.includes("all-over-spray")) {
     return "all-over-spray";
   }
-  if (title === "fragrance" || title === "shop" || url === "/shop" || url.includes("/shop?")) {
+  if (title.includes("fragrance") || title === "shop" || title === "shop all" || url === "/shop" || url.includes("/shop?") || title.includes("العطور")) {
     return "fragrance";
+  }
+  if (title === "shop all" || title === "shopall" || title === "all shop" || url.includes("/shop-all") || url.includes("/shopall")) {
+    return "shop-all";
   }
   if (title.includes("hair mist") || url.includes("sasan-hair-mist")) {
     return "hair-mist";
@@ -90,7 +93,7 @@ function getLiveHeaderMenuKey(item: MenuItemLike): string | null {
 
 function shouldUseLiveHeaderNavigation(items: MenuItemLike[]): boolean {
   const matches = new Set(items.map((item) => getLiveHeaderMenuKey(item)).filter(Boolean));
-  return matches.size >= 3;
+  return matches.size >= 2;
 }
 
 /**
@@ -239,7 +242,8 @@ export function normalizeMenuUrl(url: string, locale: Locale): string {
     normalizedUrl = `/${normalizedUrl}`;
   }
 
-  const lowerPath = normalizedUrl.toLowerCase().replace(/\/$/, "");
+  const [normalizedPath, normalizedSearch] = normalizedUrl.split("?");
+  const lowerPath = normalizedPath.toLowerCase().replace(/\/$/, "");
   const aliasMap = new Map<string, string>([
     ["/about-us", "/about-us"],
     ["/about", "/about-us"],
@@ -258,33 +262,42 @@ export function normalizeMenuUrl(url: string, locale: Locale): string {
     ["/hair-mist", "/category/sasan-hair-mist"],
     ["/oud-dakhoon", "/category/oud-perfumes"],
     ["/fragrance", "/shop"],
+    ["/shop-all", "/shop"],
+    ["/shopall", "/shop"],
   ]);
 
   if (aliasMap.has(lowerPath)) {
-    normalizedUrl = aliasMap.get(lowerPath) || normalizedUrl;
+    normalizedUrl = `${aliasMap.get(lowerPath)}${normalizedSearch ? `?${normalizedSearch}` : ""}`;
+  } else if (normalizedSearch) {
+    normalizedUrl = `${normalizedPath}?${normalizedSearch}`;
   }
 
-  if (normalizedUrl.startsWith("/category/")) {
-    const slug = normalizedUrl.replace("/category/", "").replace(/\/$/, "");
+  const normalizedUrlPath = normalizedUrl.split("?")[0];
+  const normalizedQuery = normalizedUrl.includes("?") ? normalizedUrl.slice(normalizedUrl.indexOf("?")) : "";
+
+  if (normalizedUrlPath === "/" || normalizedUrlPath === "") {
+    return `/${locale}${normalizedQuery}`;
+  }
+
+  if (normalizedUrlPath.startsWith("/category/")) {
+    const slug = normalizedUrlPath.replace("/category/", "").replace(/\/$/, "");
     return `/${locale}/category/${slug}`;
   }
 
-  if (normalizedUrl.startsWith("/product-category/")) {
-    const slug = normalizedUrl.replace("/product-category/", "").replace(/\/$/, "");
+  if (normalizedUrlPath.startsWith("/product-category/")) {
+    const slug = normalizedUrlPath.replace("/product-category/", "").replace(/\/$/, "");
     return `/${locale}/category/${slug}`;
   }
 
-  if (normalizedUrl === "/" || normalizedUrl === "") {
-    return `/${locale}`;
+  if (normalizedUrlPath === "/fragrance" || normalizedUrlPath === "/fragrance/") {
+    return `/${locale}/shop`;
   }
 
-  if (normalizedUrl.startsWith("/shop")) {
-    const queryIndex = normalizedUrl.indexOf("?");
-    const query = queryIndex >= 0 ? normalizedUrl.slice(queryIndex) : "";
-    return `/${locale}/shop${query}`;
+  if (normalizedUrlPath.startsWith("/shop")) {
+    return `/${locale}${normalizedUrlPath}${normalizedQuery}`;
   }
 
-  if (normalizedUrl.startsWith("/")) {
+  if (normalizedUrlPath.startsWith("/")) {
     return `/${locale}${normalizedUrl}`;
   }
 
@@ -321,12 +334,73 @@ export function getDynamicNavigationItems(
     }));
   }
 
-  return topLevelItems.map((item) => ({
+  const normalizedItems = topLevelItems
+    .map((item, index) => {
+      const title = locale === "ar" ? translateToArabic(item.title) : decodeHtmlEntities(item.title);
+    const href = normalizeMenuUrl(item.url, locale);
+    const normalizedTitle = title.toLowerCase().trim();
+    const normalizedHref = href.toLowerCase();
+    const [hrefPath, hrefQuery = ""] = normalizedHref.split("?");
+    const isFragrance =
+      normalizedTitle.includes("fragrance") ||
+      normalizedTitle.includes("fragrance &") ||
+      normalizedTitle.includes("العطور") ||
+      hrefPath.includes("/fragrance");
+    const isShop =
+      normalizedTitle === "shop" ||
+      normalizedTitle === "shop all" ||
+      normalizedTitle === "shopall" ||
+      hrefPath === `/${locale}/shop` ||
+      hrefPath === `/${locale}/shop/`;
+    const shopHref = `/${locale}/shop${hrefQuery ? `?${hrefQuery}` : ""}`;
+
+      return {
+        id: item.id,
+        name: title,
+        href: isFragrance || isShop ? shopHref : href,
+        hasMegaMenu: shouldHaveMegaMenu(item.title),
+        hasBrandsMegaMenu: shouldHaveBrandsMegaMenu(item.title),
+        __order: index,
+      };
+    })
+    .filter((item) => {
+      const lower = item.name.toLowerCase().trim();
+      return lower !== "";
+    });
+
+  const hasShopAll = normalizedItems.some((item) => {
+    const normalized = item.name.toLowerCase().trim();
+    const href = item.href.toLowerCase();
+    return normalized === "shop all" || normalized === "shop" || href === `/${locale}/shop` || href.startsWith(`/${locale}/shop?`);
+  });
+
+  const withShopAll = hasShopAll
+    ? normalizedItems
+    : [
+        {
+          id: -1,
+          name: locale === "ar" ? "تسوق الكل" : "Shop All",
+          href: `/${locale}/shop`,
+          hasMegaMenu: true,
+          hasBrandsMegaMenu: false,
+          __order: -1,
+        },
+        ...normalizedItems,
+      ];
+
+  const uniqueItems = withShopAll
+    .sort((a, b) => a.__order - b.__order)
+    .filter((item, index, items) => {
+      const href = item.href.toLowerCase();
+      return !items.slice(0, index).some((other) => other.href.toLowerCase() === href);
+    });
+
+  return uniqueItems.map((item) => ({
     id: item.id,
-    name: locale === "ar" ? translateToArabic(item.title) : decodeHtmlEntities(item.title),
-    href: normalizeMenuUrl(item.url, locale),
-    hasMegaMenu: shouldHaveMegaMenu(item.title),
-    hasBrandsMegaMenu: shouldHaveBrandsMegaMenu(item.title),
+    name: item.name,
+    href: item.href,
+    hasMegaMenu: item.hasMegaMenu,
+    hasBrandsMegaMenu: item.hasBrandsMegaMenu,
   }));
 }
 

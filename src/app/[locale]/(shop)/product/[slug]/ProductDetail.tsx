@@ -446,7 +446,7 @@ function FullscreenGallery({ images, selectedIndex, onClose, onSelectImage, prod
           type="button"
           onClick={handleZoomOut}
           disabled={zoomLevel <= 1}
-          className="rounded-full p-1.5 text-white transition-colors hover:bg-white/20 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="rounded-full p-1.5 text-white transition-colors hover:bg-transparent/20 disabled:opacity-40 disabled:cursor-not-allowed"
           aria-label={isRTL ? "تصغير" : "Zoom out"}
         >
           <ZoomOut className="h-5 w-5" />
@@ -458,7 +458,7 @@ function FullscreenGallery({ images, selectedIndex, onClose, onSelectImage, prod
           type="button"
           onClick={handleZoomIn}
           disabled={zoomLevel >= 3}
-          className="rounded-full p-1.5 text-white transition-colors hover:bg-white/20 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="rounded-full p-1.5 text-white transition-colors hover:bg-transparent/20 disabled:opacity-40 disabled:cursor-not-allowed"
           aria-label={isRTL ? "تكبير" : "Zoom in"}
         >
           <ZoomIn className="h-5 w-5" />
@@ -467,7 +467,7 @@ function FullscreenGallery({ images, selectedIndex, onClose, onSelectImage, prod
           <button
             type="button"
             onClick={handleResetZoom}
-            className="ml-2 rounded-full p-1.5 text-white transition-colors hover:bg-white/20"
+            className="ml-2 rounded-full p-1.5 text-white transition-colors hover:bg-transparent/20"
             aria-label={isRTL ? "إعادة تعيين" : "Reset zoom"}
           >
             <Move className="h-5 w-5" />
@@ -1051,7 +1051,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
   const renderImageGallery = () => {
     if (imageCount === 0) {
       return (
-        <div className="relative aspect-[10/11] w-full overflow-hidden bg-[#f8f3ef]">
+        <div className="relative aspect-[10/11] w-full overflow-hidden bg-transparent">
           <div className="flex h-full items-center justify-center">
             <span className="text-gray-400">{isRTL ? "لا توجد صورة" : "No image"}</span>
           </div>
@@ -1078,14 +1078,14 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               ref={mobileGalleryScrollerRef}
               onScroll={handleMobileGalleryScroll}
               data-product-gallery-scroller
-              className="flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden scroll-smooth bg-white [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+               className="flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden scroll-smooth bg-transparent [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
               {images.map((image, index) => (
                 <button
                   key={`${image.id}-${index}`}
                   type="button"
                   onClick={() => selectGalleryImage(index, { openFullscreen: true })}
-                  className="group relative block min-w-full snap-center overflow-hidden bg-white"
+                   className="group relative block min-w-full snap-center overflow-hidden bg-transparent"
                   aria-label={`View image ${index + 1}`}
                 >
                   <div className="relative aspect-[4/5] w-full min-[430px]:aspect-[10/11]">
@@ -1120,14 +1120,14 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               <button
                 type="button"
                 onClick={goToPreviousImage}
-                className="absolute left-3 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-brand-border/70 bg-brand-ivory/95 text-brand-primary shadow-[0_10px_24px_rgba(20,15,10,0.12)]"
+                className="absolute left-3 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-brand-border/70 bg-transparent text-brand-primary shadow-[0_10px_24px_rgba(20,15,10,0.12)]"
                 aria-label={isRTL ? "الصورة السابقة" : "Previous image"}
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
               <div
                 ref={galleryThumbsRef}
-                className="mx-9 flex snap-x gap-2 overflow-x-auto rounded-full border border-brand-border/70 bg-brand-ivory/95 p-1.5 shadow-[0_12px_28px_rgba(20,15,10,0.1)] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                className="mx-9 flex snap-x gap-2 overflow-x-auto rounded-full border border-brand-border/70 bg-transparent p-1.5 shadow-[0_12px_28px_rgba(20,15,10,0.1)] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
               >
                 {images.map((image, index) => (
                   <button
@@ -1136,7 +1136,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                     onClick={() => selectGalleryImage(index)}
                     data-gallery-thumb={index}
                     className={cn(
-                      "relative h-14 w-14 shrink-0 snap-center overflow-hidden rounded-md border bg-white transition-all",
+                      "relative h-14 w-14 shrink-0 snap-center overflow-hidden rounded-md border bg-transparent transition-all",
                       selectedImage === index
                         ? "border-brand-primary ring-2 ring-brand-primary/15"
                         : "border-brand-border/70 opacity-75"
@@ -1160,7 +1160,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               <button
                 type="button"
                 onClick={goToNextImage}
-                className="absolute right-3 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-brand-border/70 bg-brand-ivory/95 text-brand-primary shadow-[0_10px_24px_rgba(20,15,10,0.12)]"
+                className="absolute right-3 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-brand-border/70 bg-transparent text-brand-primary shadow-[0_10px_24px_rgba(20,15,10,0.12)]"
                 aria-label={isRTL ? "الصورة التالية" : "Next image"}
               >
                 <ChevronRight className="h-4 w-4" />
@@ -1189,7 +1189,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                 type="button"
                 onClick={() => setSelectedImage(index)}
                 className={cn(
-                  "relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-md border bg-white transition-all lg:h-[86px] lg:w-full",
+                  "relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-md border bg-transparent transition-all lg:h-[86px] lg:w-full",
                   selectedImage === index
                     ? "border-brand-primary ring-2 ring-brand-primary/10"
                     : "border-brand-border/70 opacity-70 hover:border-brand-primary/45 hover:opacity-100"
@@ -1217,14 +1217,14 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
             <button
               type="button"
               onClick={goToPreviousImage}
-              className="absolute left-1/2 top-1.5 z-10 hidden h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full border border-brand-border/70 bg-brand-ivory/95 text-brand-primary shadow-[0_12px_28px_rgba(20,15,10,0.12)] transition hover:border-brand-primary/45 hover:bg-white md:flex"
+              className="absolute left-1/2 top-1.5 z-10 hidden h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full border border-brand-border/70 bg-transparent text-brand-primary shadow-[0_12px_28px_rgba(20,15,10,0.12)] transition hover:border-brand-primary/45 hover:bg-transparent md:flex"
               aria-label="Previous image"
             >
               <ChevronLeft className="h-4 w-4 rotate-90" />
             </button>
             <div
               ref={galleryThumbsRef}
-              className="flex max-h-[calc(100vh-180px)] snap-y flex-col gap-2 overflow-y-auto rounded-lg border border-brand-border/70 bg-brand-ivory/95 px-1.5 py-11 shadow-[0_14px_34px_rgba(20,15,10,0.1)] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              className="flex max-h-[calc(100vh-180px)] snap-y flex-col gap-2 overflow-y-auto rounded-lg border border-brand-border/70 bg-transparent px-1.5 py-11 shadow-[0_14px_34px_rgba(20,15,10,0.1)] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
               {images.map((image, index) => (
                 <button
@@ -1233,7 +1233,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                   onClick={() => selectGalleryImage(index)}
                   data-gallery-thumb={index}
                   className={cn(
-                    "relative h-[76px] w-full shrink-0 snap-center overflow-hidden rounded-md border bg-white transition-all lg:h-[86px]",
+                    "relative h-[76px] w-full shrink-0 snap-center overflow-hidden rounded-md border bg-transparent transition-all lg:h-[86px]",
                     selectedImage === index
                       ? "border-brand-primary ring-2 ring-brand-primary/15"
                       : "border-brand-border/70 opacity-70 hover:border-brand-primary/45 hover:opacity-100"
@@ -1257,7 +1257,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
             <button
               type="button"
               onClick={goToNextImage}
-              className="absolute bottom-1.5 left-1/2 z-10 hidden h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full border border-brand-border/70 bg-brand-ivory/95 text-brand-primary shadow-[0_12px_28px_rgba(20,15,10,0.12)] transition hover:border-brand-primary/45 hover:bg-white md:flex"
+              className="absolute bottom-1.5 left-1/2 z-10 hidden h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full border border-brand-border/70 bg-transparent text-brand-primary shadow-[0_12px_28px_rgba(20,15,10,0.12)] transition hover:border-brand-primary/45 hover:bg-transparent md:flex"
               aria-label="Next image"
             >
               <ChevronRight className="h-4 w-4 rotate-90" />
@@ -1270,7 +1270,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
             type="button"
             onClick={() => setIsFullscreen(true)}
             data-product-gallery-main
-            className="group relative aspect-[4/5] w-full cursor-zoom-in overflow-hidden rounded-lg border border-brand-border/70 bg-white shadow-[0_18px_42px_rgba(20,15,10,0.08)]"
+             className="group relative aspect-[4/5] w-full cursor-zoom-in overflow-hidden rounded-lg border border-brand-border/70 bg-transparent shadow-[0_18px_42px_rgba(20,15,10,0.08)]"
           >
             <Image
               key={`${activeImage.id}-${activeImageSrc}`}
@@ -1300,7 +1300,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               <button
                 type="button"
                 onClick={goToPreviousImage}
-                className="absolute left-3 top-1/2 z-10 -translate-y-1/2 rounded-full border border-brand-border/70 bg-brand-ivory/95 p-2 text-brand-primary shadow-md transition hover:border-brand-primary/45 hover:bg-white"
+                className="absolute left-3 top-1/2 z-10 -translate-y-1/2 rounded-full border border-brand-border/70 bg-transparent p-2 text-brand-primary shadow-md transition hover:border-brand-primary/45 hover:bg-transparent"
                 aria-label={isRTL ? "الصورة السابقة" : "Previous image"}
               >
                 <ChevronLeft className="h-5 w-5" />
@@ -1308,7 +1308,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               <button
                 type="button"
                 onClick={goToNextImage}
-                className="absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full border border-brand-border/70 bg-brand-ivory/95 p-2 text-brand-primary shadow-md transition hover:border-brand-primary/45 hover:bg-white"
+                className="absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full border border-brand-border/70 bg-transparent p-2 text-brand-primary shadow-md transition hover:border-brand-primary/45 hover:bg-transparent"
                 aria-label={isRTL ? "الصورة التالية" : "Next image"}
               >
                 <ChevronRight className="h-5 w-5" />
@@ -1319,7 +1319,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           <button
             type="button"
             onClick={() => setIsFullscreen(true)}
-            className="absolute right-4 top-4 z-10 rounded-full border border-brand-border/70 bg-brand-ivory/95 p-2 text-brand-primary shadow-sm transition hover:scale-105 hover:shadow-md"
+            className="absolute right-4 top-4 z-10 rounded-full border border-brand-border/70 bg-transparent p-2 text-brand-primary shadow-sm transition hover:scale-105 hover:shadow-md"
             aria-label={isRTL ? "تكبير الصورة" : "Zoom image"}
           >
             <ZoomIn className="h-4 w-4" />
@@ -1331,19 +1331,19 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
             <button
               type="button"
               onClick={goToPreviousImage}
-              className="absolute left-1 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-brand-border/70 bg-brand-ivory/95 text-brand-primary shadow-[0_12px_28px_rgba(20,15,10,0.12)] transition hover:border-brand-primary/45 hover:bg-white"
+              className="absolute left-1 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-brand-border/70 bg-transparent text-brand-primary shadow-[0_12px_28px_rgba(20,15,10,0.12)] transition hover:border-brand-primary/45 hover:bg-transparent"
               aria-label={isRTL ? "الصورة السابقة" : "Previous image"}
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <div className="flex snap-x gap-2 overflow-x-auto rounded-full border border-brand-border/70 bg-brand-ivory/95 px-11 py-1.5 shadow-[0_14px_34px_rgba(20,15,10,0.1)] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex snap-x gap-2 overflow-x-auto rounded-full border border-brand-border/70 bg-transparent px-11 py-1.5 shadow-[0_14px_34px_rgba(20,15,10,0.1)] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {images.map((image, index) => (
                 <button
                   key={`${image.id}-thumb-slider-${index}`}
                   type="button"
                   onClick={() => setSelectedImage(index)}
                   className={cn(
-                    "relative h-[68px] w-[68px] shrink-0 snap-center overflow-hidden rounded-md border bg-white transition-all lg:h-[76px] lg:w-[76px]",
+                  "relative h-[68px] w-[68px] shrink-0 snap-center overflow-hidden rounded-md border bg-transparent transition-all lg:h-[76px] lg:w-[76px]",
                     selectedImage === index
                       ? "border-brand-primary ring-2 ring-brand-primary/15"
                       : "border-brand-border/70 opacity-70 hover:border-brand-primary/45 hover:opacity-100"
@@ -1367,7 +1367,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
             <button
               type="button"
               onClick={goToNextImage}
-              className="absolute right-1 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-brand-border/70 bg-brand-ivory/95 text-brand-primary shadow-[0_12px_28px_rgba(20,15,10,0.12)] transition hover:border-brand-primary/45 hover:bg-white"
+              className="absolute right-1 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-brand-border/70 bg-transparent text-brand-primary shadow-[0_12px_28px_rgba(20,15,10,0.12)] transition hover:border-brand-primary/45 hover:bg-transparent"
               aria-label={isRTL ? "الصورة التالية" : "Next image"}
             >
               <ChevronRight className="h-4 w-4" />
@@ -1393,23 +1393,23 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           </div>
         </div>
 
-        <div className="w-full px-0">
-          <div className="grid w-full gap-x-8 gap-y-7 px-4 pb-8 md:px-6 lg:grid-cols-[minmax(0,1.08fr)_minmax(380px,0.92fr)] lg:gap-x-10 xl:grid-cols-[minmax(0,1.12fr)_minmax(420px,0.88fr)]">
+        <div className="w-full px-4 pb-2 md:px-6 lg:px-10">
+          <div className="grid w-full items-start gap-x-8 gap-y-7 pb-8 lg:grid-cols-[minmax(0,1.08fr)_minmax(380px,0.92fr)] lg:gap-x-10 xl:grid-cols-[minmax(0,1.12fr)_minmax(420px,0.88fr)]">
         {/* Product Gallery */}
         <div className="min-w-0">
           {renderImageGallery()}
         </div>
 
         {/* Product Info */}
-        <aside className="min-w-0 pb-8 pt-2 text-brand-primary md:pb-10 md:pt-6 lg:pt-6">
-          <div className="rounded-3xl border border-brand-border/65 bg-white p-5 shadow-[0_14px_40px_rgba(20,15,10,0.07)] md:p-7">
+        <aside className="min-w-0 pb-8 pt-0 text-brand-primary md:pb-10 md:pt-0 lg:pt-0">
+          <div className="rounded-3xl border border-brand-border/65 bg-transparent p-5 md:p-7">
             <div className="mx-auto flex w-full flex-col items-stretch space-y-0">
           {/* Category + Brand row */}
           <div className="mb-4 flex w-full flex-wrap items-center gap-x-2 gap-y-2 self-start">
             {primaryCategory && categorySlugForUrl && (
               <Link
                 href={`/${locale}/category/${categorySlugForUrl}`}
-                className="rounded-full border border-brand-border/70 bg-brand-ivory px-3 py-1.5 text-[10px] font-semibold uppercase leading-none text-brand-primary transition-colors hover:border-brand-primary/45 hover:bg-brand-beige"
+                className="rounded-full border border-brand-border/70 bg-transparent px-3 py-1.5 text-[10px] font-semibold uppercase leading-none text-brand-primary transition-colors hover:border-brand-primary/45 hover:bg-transparent"
               >
                 {decodeHtmlEntities(primaryCategory.name)}
               </Link>
@@ -1427,7 +1427,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           </div>
 
           {/* Title */}
-            <h1 className="font-title w-full text-[24px] leading-tight text-brand-primary sm:text-[28px] md:text-[32px] lg:text-[38px]">
+            <h1 className="font-title w-full text-[18px] leading-tight text-brand-primary sm:text-[21px] md:text-[24px] lg:text-[28px]">
               {productDisplayName}
             </h1>
 
@@ -1452,7 +1452,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           )}
 
           {/* Price and stock indicator */}
-          <div className="mt-5 rounded-2xl border border-brand-border/70 bg-brand-ivory/45 p-4">
+          <div className="mt-5 rounded-2xl border border-brand-border/70 bg-transparent p-4">
             {(() => {
               const displayPrice = getDisplayPrice(product, selectedVariation);
               const isOnSale = selectedVariation?.sale_price || product.on_sale;
@@ -1463,11 +1463,11 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               ) : (
                 <div className="space-y-3">
                   <div className="flex flex-wrap items-end gap-4">
-                    <FormattedPrice
-                      price={parseInt(displayPrice.price) / Math.pow(10, displayPrice.currency_minor_unit)}
-                      className="text-3xl font-semibold text-brand-primary sm:text-[2rem]"
-                      iconSize="sm"
-                    />
+                     <FormattedPrice
+                       price={parseInt(displayPrice.price) / Math.pow(10, displayPrice.currency_minor_unit)}
+                       className="text-xl font-semibold text-brand-primary sm:text-[1.55rem] md:text-[2rem]"
+                       iconSize="sm"
+                     />
                     {isOnSale && (
                       <FormattedPrice
                         price={parseInt(displayPrice.regular_price || displayPrice.price) / Math.pow(10, displayPrice.currency_minor_unit)}
@@ -1499,7 +1499,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
 
 
           {/* Trust, reward and urgency block */}
-          <div className="rounded-2xl border border-brand-border/70 bg-white/80 p-4">
+          <div className="rounded-2xl border border-brand-border/70 bg-transparent p-4">
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2 text-sm font-medium text-brand-primary">
                 {isOutOfStock ? (
@@ -1657,7 +1657,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                                 ? "cursor-not-allowed border-brand-border/70 bg-transparent text-brand-primary/30 line-through opacity-50"
                                 : isSelected
                                 ? "border-brand-primary bg-brand-primary text-white shadow-[0_10px_20px_rgba(24,18,10,0.2)]"
-                                : "border-brand-border/80 bg-white text-brand-primary hover:border-brand-primary/80"
+                                : "border-brand-border/80 bg-transparent text-brand-primary hover:border-brand-primary/80"
                             )}
                           >
                             {decodeHtmlEntities(term.name)}
@@ -1686,7 +1686,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           {/* Add to Cart Section */}
           <div ref={ctaSectionRef} className="flex flex-col gap-4 pt-5">
             <div className="grid gap-3 sm:grid-cols-[minmax(150px,1fr)_auto]">
-              <div className="flex h-12 items-center justify-between overflow-hidden rounded-full border border-brand-border/80 bg-brand-ivory/80">
+              <div className="flex h-12 items-center justify-between overflow-hidden rounded-full border border-brand-border/80 bg-transparent">
                 <button
                   type="button"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -1724,7 +1724,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                 type="button"
                 onClick={handleWishlistToggle}
                 disabled={isAddingToWishlist}
-                className={`flex h-12 min-w-[56px] items-center justify-center rounded-full border border-brand-border/80 bg-white text-sm font-semibold text-brand-primary transition-colors duration-300 hover:border-brand-primary hover:bg-brand-primary hover:text-white ${isAddingToWishlist ? "cursor-not-allowed opacity-50" : ""}`}
+                className={`flex h-12 min-w-[56px] items-center justify-center rounded-full border border-brand-border/80 bg-transparent text-sm font-semibold text-brand-primary transition-colors duration-300 hover:border-brand-primary hover:bg-brand-primary hover:text-white ${isAddingToWishlist ? "cursor-not-allowed opacity-50" : ""}`}
                 aria-label={isWishlisted ? (isRTL ? "إزالة من المفضلة" : "Remove from wishlist") : (isRTL ? "أضف إلى المفضلة" : "Add to wishlist")}
               >
                 <Heart className={`h-5 w-5 ${isWishlisted ? "fill-current" : ""}`} />
@@ -1838,17 +1838,19 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           products={upsellProducts}
           currentProductId={product.id}
           locale={locale}
+          className="pb-2 pt-1"
           title={isRTL ? "منتجات موصى بها" : "Recommended Products"}
           subtitle={isRTL ? "منتجات مختارة لك" : "Hand-picked for you"}
         />
       )}
 
       {/* Related Products (category-based) */}
-      <div className="pb-16">
+      <div className="mt-6 pb-20">
         <RelatedProducts
           products={relatedProducts}
           currentProductId={product.id}
           locale={locale}
+          className="pt-2"
         />
       </div>
 
@@ -1875,7 +1877,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
       {/* Sticky Add to Cart Bar */}
       <div
         className={cn(
-          "fixed inset-x-3 bottom-20 z-40 rounded-[20px] border border-brand-border/70 bg-white/95 px-3 py-3 shadow-[0_16px_44px_rgba(20,15,10,0.18)] backdrop-blur-xl transition-all duration-300 md:hidden",
+          "fixed inset-x-3 bottom-20 z-40 rounded-[20px] border border-brand-border/70 bg-transparent px-3 py-3 shadow-[0_16px_44px_rgba(20,15,10,0.18)] backdrop-blur-xl transition-all duration-300 md:hidden",
           !canPurchaseProduct && "hidden",
           showStickyAddToCart ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"
         )}
@@ -1883,7 +1885,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           <div className="grid items-center gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
           <div className="flex min-w-0 items-center gap-3">
             {stickyImage && (
-              <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-white sm:h-14 sm:w-14">
+              <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-transparent sm:h-14 sm:w-14">
                 <Image
                   src={stickyImage.src || stickyImage.thumbnail}
                   alt={product.name}
@@ -1956,3 +1958,4 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
       </div>
   );
 }
+

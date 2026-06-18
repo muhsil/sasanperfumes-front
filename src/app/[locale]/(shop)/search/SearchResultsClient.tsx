@@ -135,7 +135,7 @@ export function SearchResultsClient({
   return (
     <div className="min-h-screen bg-[#f8f3ef] text-brand-primary" dir={isRTL ? "rtl" : "ltr"}>
       <section className="px-5 pb-10 pt-12 md:px-7 md:pb-12 md:pt-16 lg:px-12">
-        <h1 className="max-w-[900px] text-[28px] font-normal leading-tight tracking-normal md:text-[36px] lg:text-[42px]">
+        <h1 className="max-w-[900px] text-[24px] font-normal leading-tight tracking-normal md:text-[32px] lg:text-[38px]">
           {query ? (
             <>
               {t.resultsFor} &ldquo;{query}&rdquo;
