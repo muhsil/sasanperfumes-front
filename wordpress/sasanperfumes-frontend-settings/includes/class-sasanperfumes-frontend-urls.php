@@ -35,6 +35,8 @@ class sasanperfumes_Frontend_Urls {
         add_action('admin_bar_menu', array($this, 'rewrite_admin_bar_urls'), 999);
 
         add_filter('woocommerce_product_get_permalink', array($this, 'rewrite_wc_product_permalink'), 10, 2);
+        add_action('plugins_loaded', array($this, 'redirect_public_request_to_headless_early'), 0);
+        add_action('init', array($this, 'redirect_public_request_to_headless_early'), 0);
         add_action('template_redirect', array($this, 'redirect_public_frontend_to_headless'), 1);
 
         // Google Listings & Ads (Merchant Center) - rewrite product URLs in feeds
@@ -141,17 +143,56 @@ class sasanperfumes_Frontend_Urls {
         return '';
     }
 
+    public function redirect_public_request_to_headless_early() {
+        if (is_admin() || wp_doing_ajax() || wp_doing_cron()) {
+            return;
+        }
+
+        $request_uri = isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : '/';
+        $path = parse_url($request_uri, PHP_URL_PATH);
+        $path = $path ? $path : '/';
+
+        if (
+            $path === '/wp-json' ||
+            strpos($path, '/wp-json/') === 0 ||
+            $path === '/wp-admin' ||
+            strpos($path, '/wp-admin/') === 0 ||
+            strpos($path, '/wp-login.php') === 0 ||
+            strpos($path, '/xmlrpc.php') === 0 ||
+            strpos($path, '/wp-content/') === 0 ||
+            strpos($path, '/wp-includes/') === 0 ||
+            strpos($path, '/wp-cron.php') === 0
+        ) {
+            return;
+        }
+
+        $target_path = '/en';
+        if ($path !== '/' && $path !== '') {
+            $target_path = $path;
+            if (strpos($target_path, '/en') !== 0 && strpos($target_path, '/ar') !== 0) {
+                $target_path = '/en' . (strpos($target_path, '/') === 0 ? $target_path : '/' . $target_path);
+            }
+        }
+
+        wp_safe_redirect(trailingslashit($this->frontend_url) . ltrim($target_path, '/'), 301);
+        exit;
+    }
+
     public function redirect_public_frontend_to_headless() {
         if (is_admin() || wp_doing_ajax() || wp_doing_cron()) {
             return;
         }
 
         $request_uri = isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : '/';
+        $request_path = parse_url($request_uri, PHP_URL_PATH);
+        $request_path = $request_path ? $request_path : '/';
         if (
-            strpos($request_uri, '/wp-json/') === 0 ||
-            strpos($request_uri, '/wp-admin/') === 0 ||
-            strpos($request_uri, '/wp-login.php') === 0 ||
-            strpos($request_uri, '/xmlrpc.php') === 0
+            $request_path === '/wp-json' ||
+            strpos($request_path, '/wp-json/') === 0 ||
+            $request_path === '/wp-admin' ||
+            strpos($request_path, '/wp-admin/') === 0 ||
+            strpos($request_path, '/wp-login.php') === 0 ||
+            strpos($request_path, '/xmlrpc.php') === 0
         ) {
             return;
         }

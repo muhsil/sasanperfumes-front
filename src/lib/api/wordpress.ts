@@ -676,7 +676,7 @@ async function fetchWPAPI<T>(
       }
 
       try {
-        return JSON.parse(text.replace(/^\uFEFF/, "")) as T;
+        return JSON.parse(text.replace(/^\uFEFF+/, "")) as T;
       } catch {
         console.warn(`WordPress API returned invalid JSON (${url})`);
         return null;
