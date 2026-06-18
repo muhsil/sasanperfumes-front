@@ -85,6 +85,8 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
   const { cartItemsCount, setIsCartOpen } = useCart();
   const { setIsAccountDrawerOpen } = useAuth();
   const { wishlistItemsCount } = useWishlist();
+  const isHomePage = pathname === `/${locale}` || pathname === `/${locale}/` || pathname === "/";
+  const isTransparentHomeHeader = isHomePage && !isScrolled && headerSettings?.sticky !== false;
 
   const handleBrandsMouseEnter = useCallback(() => {
     if (brandsMegaMenuTimeoutRef.current) clearTimeout(brandsMegaMenuTimeoutRef.current);
@@ -136,7 +138,11 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
     <>
       <header
         className={cn(
-          headerSettings?.sticky !== false ? "sticky top-0 z-50" : "relative z-50",
+          isTransparentHomeHeader
+            ? "absolute inset-x-0 top-0 z-50"
+            : headerSettings?.sticky !== false
+              ? "sticky top-0 z-50"
+              : "relative z-50",
           "w-full bg-transparent transition-all duration-300",
           isScrolled && "shadow-[0_18px_48px_rgba(20,15,10,0.18)]"
         )}
@@ -184,7 +190,9 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
               "mx-auto flex h-[4rem] max-w-[80rem] items-center justify-between rounded-full border border-brand-border/70 px-5 py-1.5 transition-all duration-300 md:h-[5rem] md:px-5 xl:grid xl:grid-cols-[minmax(230px,1fr)_minmax(0,2fr)_minmax(230px,1fr)] xl:gap-5 xl:px-6",
               isScrolled
                 ? "bg-brand-ivory shadow-[0_12px_30px_rgba(20,15,10,0.12)]"
-                : "bg-brand-ivory/96 shadow-[0_16px_40px_rgba(20,15,10,0.12)] backdrop-blur-xl"
+                : isTransparentHomeHeader
+                  ? "bg-transparent shadow-none"
+                  : "bg-brand-ivory/96 shadow-[0_16px_40px_rgba(20,15,10,0.12)] backdrop-blur-xl"
             )}
           >
             {/* Left: Search + Currency + Language (desktop) / Mobile menu button */}
@@ -192,7 +200,10 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
               {/* Mobile menu button */}
               <button
                 type="button"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-brand-border/45 bg-brand-ivory/90 text-brand-primary transition-colors hover:border-brand-primary/40 hover:bg-brand-beige md:h-10 md:w-10 xl:hidden"
+                className={cn(
+                  "inline-flex h-9 w-9 items-center justify-center rounded-full border border-brand-border/45 text-brand-primary transition-colors hover:border-brand-primary/40 md:h-10 md:w-10 xl:hidden",
+                  isTransparentHomeHeader ? "bg-transparent hover:bg-brand-ivory/90" : "bg-brand-ivory/90 hover:bg-brand-beige"
+                )}
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               >
                 <span className="sr-only">{dictionary.navigation.menu}</span>
@@ -281,7 +292,10 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
               {/* Mobile search */}
               <button
                 type="button"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-brand-border/45 bg-brand-ivory/90 text-brand-primary transition-colors hover:border-brand-primary/40 hover:bg-brand-beige md:h-10 md:w-10 xl:hidden"
+                className={cn(
+                  "inline-flex h-9 w-9 items-center justify-center rounded-full border border-brand-border/45 text-brand-primary transition-colors hover:border-brand-primary/40 md:h-10 md:w-10 xl:hidden",
+                  isTransparentHomeHeader ? "bg-transparent hover:bg-brand-ivory/90" : "bg-brand-ivory/90 hover:bg-brand-beige"
+                )}
                 onClick={() => setIsSearchDrawerOpen(true)}
                 aria-label={dictionary.common.searchPlaceholder || "Search"}
               >
@@ -304,7 +318,10 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
               <button
                 type="button"
                 onClick={() => setIsAccountDrawerOpen(true)}
-                className="relative hidden h-10 w-10 items-center justify-center rounded-full border border-brand-border/45 bg-brand-ivory/90 text-brand-primary transition-all hover:border-brand-primary/40 hover:bg-brand-beige md:flex"
+                className={cn(
+                  "relative hidden h-10 w-10 items-center justify-center rounded-full border border-brand-border/45 text-brand-primary transition-all hover:border-brand-primary/40 md:flex",
+                  isTransparentHomeHeader ? "bg-transparent hover:bg-brand-ivory/90" : "bg-brand-ivory/90 hover:bg-brand-beige"
+                )}
                 aria-label={dictionary.account.myAccount}
               >
                 <User className="h-5 w-5" />
@@ -313,7 +330,10 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
               {/* Desktop wishlist */}
               <Link
                 href={`/${locale}/wishlist`}
-                className="relative hidden h-10 w-10 items-center justify-center rounded-full border border-brand-border/45 bg-brand-ivory/90 text-brand-primary transition-all hover:border-brand-primary/40 hover:bg-brand-beige md:flex"
+                className={cn(
+                  "relative hidden h-10 w-10 items-center justify-center rounded-full border border-brand-border/45 text-brand-primary transition-all hover:border-brand-primary/40 md:flex",
+                  isTransparentHomeHeader ? "bg-transparent hover:bg-brand-ivory/90" : "bg-brand-ivory/90 hover:bg-brand-beige"
+                )}
                 aria-label={dictionary.account.wishlist}
               >
                 <Heart className="h-5 w-5" />
@@ -327,7 +347,10 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
               {/* Cart (all screens) */}
               <button
                 type="button"
-                className="relative flex h-9 w-9 items-center justify-center rounded-full border border-brand-border/45 bg-brand-ivory/90 text-brand-primary transition-all hover:border-brand-primary/40 hover:bg-brand-beige md:h-10 md:w-10"
+                className={cn(
+                  "relative flex h-9 w-9 items-center justify-center rounded-full border border-brand-border/45 text-brand-primary transition-all hover:border-brand-primary/40 md:h-10 md:w-10",
+                  isTransparentHomeHeader ? "bg-transparent hover:bg-brand-ivory/90" : "bg-brand-ivory/90 hover:bg-brand-beige"
+                )}
                 onClick={() => setIsCartOpen(true)}
                 aria-label={dictionary.common.cart}
               >
