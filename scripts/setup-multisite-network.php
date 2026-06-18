@@ -75,4 +75,3 @@ echo "Updated network default frontend URL: {$network_default}\n";
 echo "Updated network frontend host map with " . count($host_map) . " entries\n";
 echo "Checked {$updated['sites']} sites; mapped {$updated['matched']} with host/path conventions.\n";
 echo "Done.\n";
-?> 
