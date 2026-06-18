@@ -7,7 +7,8 @@ const DEV_ALLOWED_HOSTS = ["localhost", "127.0.0.1", "::1", "localhost:3000"];
 const CANONICAL_HOSTS_ENV = process.env.NEXT_PUBLIC_CANONICAL_HOSTS || process.env.CANONICAL_HOSTS || "";
 const DEFAULT_CANONICAL_HOST = "shapehive.com";
 const SHAPEHIVE_HOST_SUFFIX = ".shapehive.com";
-const LEGACY_MARKET_SUBDOMAINS = new Set<string>(["qa", "om", "sa"]);
+const MARKET_PREFIX_SEGMENTS = new Set<string>(["qa", "om", "sa"]);
+const LOCALE_SEGMENTS = new Set<string>(["en", "ar"]);
 const KNOWN_CANONICAL_HOSTS = [
   "shapehive.com",
 ];
@@ -32,15 +33,6 @@ function normalizeHost(value: string | undefined): string {
   const parsed = parseHost(value);
   if (!parsed) return "";
   return parsed.replace(/:\d+$/, "").trim();
-}
-
-function getLegacyMarketFromHost(host: string): string {
-  const normalized = normalizeHost(host).toLowerCase();
-  if (!normalized) return "";
-  const legacyMatch = normalized.match(/^([a-z0-9-]+)\.shapehive\.com$/);
-  if (!legacyMatch || !legacyMatch[1]) return "";
-  const candidate = legacyMatch[1];
-  return LEGACY_MARKET_SUBDOMAINS.has(candidate) ? candidate : "";
 }
 
 function getAllowedHosts(): string[] {
@@ -100,26 +92,26 @@ function isCanonicalHost(request: NextRequest) {
   return isKnownCanonical;
 }
 
-function enforceLegacyMarketHostRedirect(request: NextRequest) {
-  const rawHost =
-    request.headers.get("host") ||
-    request.headers.get("x-forwarded-host") ||
-    request.nextUrl.host ||
-    "";
-  const host = normalizeHost(rawHost);
-  const market = getLegacyMarketFromHost(host);
-  if (!market) return;
-
+function enforceMarketLocalePathOrder(request: NextRequest) {
   const pathname = request.nextUrl.pathname || "/";
-  const firstSegment = pathname.split("/").filter(Boolean)[0] || "";
-  const targetPath =
-    firstSegment === market ? pathname : `/${market}${pathname === "/" ? "" : pathname}`;
+  const segments = pathname.split("/").filter(Boolean);
+  if (segments.length < 2) return;
+
+  const firstSegment = segments[0]?.toLowerCase();
+  const secondSegment = segments[1]?.toLowerCase();
+  if (!firstSegment || !secondSegment) return;
+
+  if (!LOCALE_SEGMENTS.has(firstSegment) || !MARKET_PREFIX_SEGMENTS.has(secondSegment)) {
+    return;
+  }
+
+  const redirectPath =
+    `/${secondSegment}/${firstSegment}` + (segments.length > 2 ? `/${segments.slice(2).join("/")}` : "");
+
+  if (redirectPath === pathname) return;
 
   const redirectUrl = request.nextUrl.clone();
-  redirectUrl.protocol = "https:";
-  redirectUrl.hostname = DEFAULT_CANONICAL_HOST;
-  redirectUrl.pathname = targetPath;
-
+  redirectUrl.pathname = redirectPath;
   return NextResponse.redirect(redirectUrl, 308);
 }
 
@@ -136,9 +128,9 @@ function enforceCanonicalHost(request: NextRequest) {
 }
 
 export function middleware(request: NextRequest) {
-  const legacyHostRedirect = enforceLegacyMarketHostRedirect(request);
-  if (legacyHostRedirect) {
-    return legacyHostRedirect;
+  const marketLocaleOrderRedirect = enforceMarketLocalePathOrder(request);
+  if (marketLocaleOrderRedirect) {
+    return marketLocaleOrderRedirect;
   }
 
   const canonicalRedirect = enforceCanonicalHost(request);

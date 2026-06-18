@@ -94,9 +94,14 @@ WC_CONSUMER_SECRET=cs_xxxxx
 Market frontends:
 ```
 https://shapehive.com/        -> intl market (default currency/country logic)
-https://shapehive.com/qa      -> Qatar market
-https://shapehive.com/om      -> Oman market
-https://shapehive.com/sa      -> Saudi market
+https://shapehive.com/en      -> intl in English
+https://shapehive.com/ar      -> intl in Arabic
+https://shapehive.com/qa/en   -> Qatar market in English
+https://shapehive.com/qa/ar   -> Qatar market in Arabic
+https://shapehive.com/om/en   -> Oman market in English
+https://shapehive.com/om/ar   -> Oman market in Arabic
+https://shapehive.com/sa/en   -> Saudi market in English
+https://shapehive.com/sa/ar   -> Saudi market in Arabic
 ```
 
 All market routes use one backend:

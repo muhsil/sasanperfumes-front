@@ -9,7 +9,7 @@ Sasan Perfumes is a headless ecommerce storefront. The frontend is a Next.js app
 | Project | Sasan Perfumes |
 | Frontend | Next.js 16, React 19, TypeScript |
 | Backend | WordPress, WooCommerce, CoCart, WPGraphQL, custom plugin |
-| Production storefront(s) | `https://shapehive.com`, `https://shapehive.com/qa`, `https://shapehive.com/om`, `https://shapehive.com/sa` |
+| Production storefront(s) | `https://shapehive.com`, `https://shapehive.com/en`, `https://shapehive.com/ar`, `https://shapehive.com/qa/en`, `https://shapehive.com/qa/ar`, `https://shapehive.com/om/en`, `https://shapehive.com/om/ar`, `https://shapehive.com/sa/en`, `https://shapehive.com/sa/ar` |
 | CMS/API | `https://cms.shapehive.com` |
 | WordPress REST base | `https://cms.shapehive.com/wp-json` |
 | Custom REST namespace | `sasanperfumes/v1` |
@@ -230,7 +230,8 @@ npx next build --webpack
 
 Market routing:
 
-- Market prefixes are optional; supported prefixes: `qa`, `om`, `sa`.
+ - Legacy subdomain hosts are retired (`qa.shapehive.com`, `om.shapehive.com`, `sa.shapehive.com`).
+ - Market prefixes are optional; supported prefixes: `qa`, `om`, `sa`.
 - URL pattern is `/{market}/{locale}/...` (for market routes) or `/{locale}/...` for default intl.
 - Market is resolved by the first path segment (`/qa`, `/om`, `/sa`) under `shapehive.com`.
 - Example: `https://shapehive.com/qa/en/product/mimosa-glow`.

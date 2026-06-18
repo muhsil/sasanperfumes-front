@@ -44,6 +44,7 @@ The plugin uses one CMS backend (`cms.shapehive.com`) with a shared dataset and 
 - Base intl host: `shapehive.com`
 - Route rule used by the frontend links: `/{market(optional)}/{locale}/{slug}` (locale is `en` or `ar`)
 - Keep URL order as market-first (`/qa/en`, `/om/ar`, `/sa/en`). Any `/en/qa` style request is normalized to market-first by the frontend middleware, but keep canonical content links as market-first.
+- Legacy subdomain hosts are retired (`qa.shapehive.com`, `om.shapehive.com`, `sa.shapehive.com`) and are not part of the live routing plan.
 
 Network mapping is handled by the WordPress multisite helper in:
 
@@ -72,6 +73,16 @@ You can also configure it manually from Network Admin:
 ```
 
 5. Save.
+
+6. Confirm legacy subdomain paths return 403/404 at the host level and are not configured in live domain settings.
+
+7. Retire legacy network sites if they are still present:
+
+```bash
+wp eval-file scripts/retire-legacy-shapehive-sites.php -- --archive
+```
+
+Use `--delete` only if you want to permanently remove those sites instead of archiving.
 
 After setup, test from each entry point:
 

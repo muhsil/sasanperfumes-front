@@ -24,8 +24,6 @@ function sasanperfumes_normalize_frontend_host(?string $host): string {
     $normalized = preg_replace('/[?#].*$/', '', $normalized);
     if (!$normalized) return '';
 
-    $normalized = preg_replace('/^([a-z0-9-]+)\.cms\.shapehive\.com$/', '$1.shapehive.com', $normalized);
-
     return preg_replace('/:\d+$/', '', $normalized);
 }
 
@@ -65,22 +63,6 @@ function sasanperfumes_normalize_frontend_host_with_market(?string $host): strin
 
     $host_part = strtolower(trim($host_part));
     if (!$host_part) return '';
-
-    if (preg_match('/^([a-z0-9-]+)\.cms\.shapehive\.com$/', $host_part)) {
-        $host_part = str_replace('.cms.shapehive.com', '.shapehive.com', $host_part);
-    }
-
-    if (preg_match('/^([a-z0-9-]+)\.shapehive\.com$/', $host_part, $subdomain_match)) {
-        $subdomain = (string) ($subdomain_match[1] ?? '');
-        if (in_array($subdomain, array('qa', 'om', 'sa'), true)) {
-            $host_part = 'shapehive.com/' . $subdomain;
-            if (empty($parts[1])) {
-                return $host_part;
-            }
-        } elseif ($subdomain === 'cms') {
-            $host_part = 'shapehive.com';
-        }
-    }
 
     if (empty($parts[1])) {
         return $host_part;
@@ -533,10 +515,7 @@ function sasanperfumes_find_blog_id_for_frontend_host(string $frontend_host): in
             $details = get_blog_details((int) $site_id);
             if ($details) {
                 $site_path = trim((string) ($details->path ?? ''), '/');
-                $site_domain = sasanperfumes_normalize_frontend_host((string) ($details->domain ?? ''));
-                $domain_prefix = explode('.', $site_domain)[0] ?? '';
-
-                if ($site_path === $expected_slug || $domain_prefix === $expected_slug) {
+                if ($site_path === $expected_slug) {
                     $target = (int) $site_id;
                     break;
                 }
