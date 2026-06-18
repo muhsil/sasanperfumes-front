@@ -139,7 +139,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
       <header
         className={cn(
           isTransparentHomeHeader
-            ? "absolute inset-x-0 top-0 z-50"
+            ? "absolute inset-x-0 top-2 z-50"
             : headerSettings?.sticky !== false
               ? "sticky top-0 z-50"
               : "relative z-50",
@@ -191,7 +191,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
               isScrolled
                 ? "bg-brand-ivory shadow-[0_12px_30px_rgba(20,15,10,0.12)]"
                 : isTransparentHomeHeader
-                  ? "bg-transparent shadow-none"
+                  ? "border-white/35 bg-white/18 shadow-[0_18px_45px_rgba(20,15,10,0.12)] backdrop-blur-md"
                   : "bg-brand-ivory/96 shadow-[0_16px_40px_rgba(20,15,10,0.12)] backdrop-blur-xl"
             )}
           >
