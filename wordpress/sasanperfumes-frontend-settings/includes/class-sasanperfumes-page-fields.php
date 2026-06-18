@@ -1,9 +1,9 @@
 <?php
 /**
- * ShapeHive Page Fields — Custom metaboxes on native WordPress Pages
+ * Sasan Perfumes Page Fields â€” Custom metaboxes on native WordPress Pages
  *
  * Content for: about, contact, faq, privacy, terms-and-conditions, shipping, returns, shop, home
- * Each page gets a sidebar "ShapeHive Page Type" selector + content metaboxes.
+ * Each page gets a sidebar "Sasan Perfumes Page Type" selector + content metaboxes.
  *
  * REST API: GET /sasanperfumes/v1/pages/{slug}
  * REST API: GET /sasanperfumes/v1/home-sections
@@ -64,7 +64,7 @@ function sasanperfumes_pf_api_bi($post_id, $key) {
 }
 
 /* ================================================================
-   PAGE TYPE CONFIGS — defines fields for each page type
+   PAGE TYPE CONFIGS â€” defines fields for each page type
    ================================================================ */
 
 function sasanperfumes_pf_configs() {
@@ -422,7 +422,7 @@ function sasanperfumes_pf_configs() {
 }
 
 /* ================================================================
-   HOME SECTIONS CONFIG — Why Choose Us, Our Story, FAQ, SEO Content
+   HOME SECTIONS CONFIG â€” Why Choose Us, Our Story, FAQ, SEO Content
    ================================================================ */
 
 function sasanperfumes_pf_home_sections() {
@@ -486,12 +486,12 @@ function sasanperfumes_pf_home_sections() {
    DETECT PAGE TYPE
    ================================================================ */
 
-/** Get the ShapeHive page type for a given post */
+/** Get the Sasan Perfumes page type for a given post */
 function sasanperfumes_pf_get_type($post_id) {
     return get_post_meta($post_id, '_sasanperfumes_page_type', true);
 }
 
-/** Find the WP Page ID for a given ShapeHive page type */
+/** Find the WP Page ID for a given Sasan Perfumes page type */
 function sasanperfumes_pf_find_page($type) {
     // Check cached option first
     $id = (int) get_option("sasanperfumes_page_id_{$type}", 0);
@@ -536,9 +536,9 @@ function sasanperfumes_pf_find_page($type) {
 
 function sasanperfumes_pf_add_metaboxes() {
     // Sidebar: page type selector (on all pages)
-    add_meta_box('sasanperfumes_page_type', 'ShapeHive Page Type', 'sasanperfumes_pf_type_metabox', 'page', 'side', 'high');
+    add_meta_box('sasanperfumes_page_type', 'Sasan Perfumes Page Type', 'sasanperfumes_pf_type_metabox', 'page', 'side', 'high');
 
-    // Content metaboxes: only show if page has an ShapeHive type assigned
+    // Content metaboxes: only show if page has an Sasan Perfumes type assigned
     global $post;
     if (!$post) return;
     $type = sasanperfumes_pf_get_type($post->ID);
@@ -546,9 +546,9 @@ function sasanperfumes_pf_add_metaboxes() {
 
     $configs = sasanperfumes_pf_configs();
     if (isset($configs[$type])) {
-        add_meta_box('sasanperfumes_page_content', $configs[$type]['label'] . ' — Content Fields', 'sasanperfumes_pf_content_metabox', 'page', 'normal', 'high');
+        add_meta_box('sasanperfumes_page_content', $configs[$type]['label'] . ' â€” Content Fields', 'sasanperfumes_pf_content_metabox', 'page', 'normal', 'high');
         if (!empty($configs[$type]['repeaters'])) {
-            add_meta_box('sasanperfumes_page_repeaters', $configs[$type]['label'] . ' — Repeaters', 'sasanperfumes_pf_repeaters_metabox', 'page', 'normal', 'default');
+            add_meta_box('sasanperfumes_page_repeaters', $configs[$type]['label'] . ' â€” Repeaters', 'sasanperfumes_pf_repeaters_metabox', 'page', 'normal', 'default');
         }
     }
 
@@ -561,17 +561,17 @@ function sasanperfumes_pf_add_metaboxes() {
     }
 }
 
-/** Sidebar: ShapeHive Page Type selector */
+/** Sidebar: Sasan Perfumes Page Type selector */
 function sasanperfumes_pf_type_metabox($post) {
     wp_nonce_field('sasanperfumes_pf_save', 'sasanperfumes_pf_nonce');
     $current = sasanperfumes_pf_get_type($post->ID);
-    $types = [''=>'— None —'] + array_map(fn($c) => $c['label'], sasanperfumes_pf_configs()) + ['home'=>'Home Page'];
+    $types = [''=>'â€” None â€”'] + array_map(fn($c) => $c['label'], sasanperfumes_pf_configs()) + ['home'=>'Home Page'];
     echo '<select name="_sasanperfumes_page_type" style="width:100%">';
     foreach ($types as $val => $label) {
         echo '<option value="'.esc_attr($val).'"'.selected($current, $val, false).'>'.esc_html($label).'</option>';
     }
     echo '</select>';
-    echo '<p class="description">Select the ShapeHive page type. Save to see content fields.</p>';
+    echo '<p class="description">Select the Sasan Perfumes page type. Save to see content fields.</p>';
 }
 
 /** Content metabox: bilingual fields */

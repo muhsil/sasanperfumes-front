@@ -36,10 +36,10 @@ export function ReferralProgram({ locale = "en", customerId }: ReferralProgramPr
   const share = async () => {
     if (!info) return;
     const text = isAr
-      ? `استخدم كودي ${info.referral_code} واحصل على خصم في عنبر!`
-      : `Use my code ${info.referral_code} to get a discount at ShapeHive!`;
+      ? `Ø§Ø³ØªØ®Ø¯Ù… ÙƒÙˆØ¯ÙŠ ${info.referral_code} ÙˆØ§Ø­ØµÙ„ Ø¹Ù„Ù‰ Ø®ØµÙ… ÙÙŠ Ø¹Ù†Ø¨Ø±!`
+      : `Use my code ${info.referral_code} to get a discount at Sasan Perfumes!`;
     if (navigator.share) {
-      await navigator.share({ title: "ShapeHive Referral", text, url: info.referral_url });
+      await navigator.share({ title: "Sasan Perfumes Referral", text, url: info.referral_url });
     } else {
       copyLink();
     }
@@ -66,11 +66,11 @@ export function ReferralProgram({ locale = "en", customerId }: ReferralProgramPr
       <div className="mb-4 grid grid-cols-2 gap-3">
         <div className="rounded-lg border border-brand-border/70 bg-white p-3 text-center">
           <p className="text-lg font-bold text-brand-primary">AED {settings.referrer_discount}</p>
-          <p className="text-xs text-gray-500">{isAr ? "مكافأتك" : "Your reward"}</p>
+          <p className="text-xs text-gray-500">{isAr ? "Ù…ÙƒØ§ÙØ£ØªÙƒ" : "Your reward"}</p>
         </div>
         <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-center">
           <p className="text-lg font-bold text-green-600">AED {settings.referee_discount}</p>
-          <p className="text-xs text-gray-500">{isAr ? "مكافأة صديقك" : "Friend's discount"}</p>
+          <p className="text-xs text-gray-500">{isAr ? "Ù…ÙƒØ§ÙØ£Ø© ØµØ¯ÙŠÙ‚Ùƒ" : "Friend's discount"}</p>
         </div>
       </div>
 
@@ -83,25 +83,25 @@ export function ReferralProgram({ locale = "en", customerId }: ReferralProgramPr
           {/* Referral count */}
           <p className="mb-3 text-sm text-brand-muted">
             {isAr
-              ? `لقد أحلت ${info.referral_count} شخصاً حتى الآن`
+              ? `Ù„Ù‚Ø¯ Ø£Ø­Ù„Øª ${info.referral_count} Ø´Ø®ØµØ§Ù‹ Ø­ØªÙ‰ Ø§Ù„Ø¢Ù†`
               : `You've referred ${info.referral_count} ${info.referral_count === 1 ? "person" : "people"} so far`}
           </p>
 
           {/* Referral URL */}
           <div className="mb-3 rounded-lg border border-brand-border/70 bg-white px-3 py-2">
-            <p className="mb-1 text-[10px] uppercase text-gray-400">{isAr ? "رابطك" : "Your Link"}</p>
+            <p className="mb-1 text-[10px] uppercase text-gray-400">{isAr ? "Ø±Ø§Ø¨Ø·Ùƒ" : "Your Link"}</p>
             <p className="truncate text-xs font-medium text-gray-700">{info.referral_url}</p>
           </div>
 
           {/* Code */}
           <div className="mb-4 flex items-center gap-2 rounded-lg border border-dashed border-brand-primary/35 bg-brand-beige/45 px-4 py-3">
             <div className="flex-1">
-              <p className="text-[10px] uppercase text-gray-400">{isAr ? "كودك" : "Your Code"}</p>
+              <p className="text-[10px] uppercase text-gray-400">{isAr ? "ÙƒÙˆØ¯Ùƒ" : "Your Code"}</p>
               <p className="font-mono text-xl font-bold text-brand-primary">{info.referral_code}</p>
             </div>
             <button onClick={copyLink} className="flex items-center gap-1 rounded-lg bg-brand-primary px-3 py-2 text-xs font-medium text-white hover:bg-brand-primary-dark">
               {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-              {copied ? (isAr ? "تم" : "Copied!") : (isAr ? "نسخ" : "Copy")}
+              {copied ? (isAr ? "ØªÙ…" : "Copied!") : (isAr ? "Ù†Ø³Ø®" : "Copy")}
             </button>
           </div>
 
@@ -111,7 +111,7 @@ export function ReferralProgram({ locale = "en", customerId }: ReferralProgramPr
             className="flex w-full items-center justify-center gap-2 rounded-md border border-brand-primary/45 py-2.5 text-sm font-medium text-brand-primary transition-colors hover:bg-brand-beige"
           >
             <Share2 className="h-4 w-4" />
-            {isAr ? "مشاركة الكود" : "Share Your Code"}
+            {isAr ? "Ù…Ø´Ø§Ø±ÙƒØ© Ø§Ù„ÙƒÙˆØ¯" : "Share Your Code"}
           </button>
         </>
       )}

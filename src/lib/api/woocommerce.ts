@@ -86,9 +86,9 @@ interface FetchAPIResponse<T> {
 function getProductUILabels(locale?: Locale) {
   const isArabic = locale === "ar";
   return {
-    inStockText: isArabic ? "متوفر" : "In Stock",
-    outOfStockText: isArabic ? "غير متوفر" : "Out of Stock",
-    addToCartText: isArabic ? "أضف للسلة" : "Add to Cart",
+    inStockText: isArabic ? "Ù…ØªÙˆÙØ±" : "In Stock",
+    outOfStockText: isArabic ? "ØºÙŠØ± Ù…ØªÙˆÙØ±" : "Out of Stock",
+    addToCartText: isArabic ? "Ø£Ø¶Ù Ù„Ù„Ø³Ù„Ø©" : "Add to Cart",
   };
 }
 
@@ -200,7 +200,7 @@ export async function getProducts(params?: {
     if (params?.category) searchParams.set("category", params.category);
     if (params?.brand) searchParams.set("brand", params.brand);
     if (params?.search) searchParams.set("search", params.search);
-    // When searching, don't override with menu_order — let WooCommerce use its default search ordering
+    // When searching, don't override with menu_order â€” let WooCommerce use its default search ordering
     // For non-search requests, default to menu_order asc for WP Admin drag-and-drop control
     if (params?.search) {
       if (params?.orderby) searchParams.set("orderby", params.orderby);
@@ -890,7 +890,7 @@ export interface SlotConfig {
   exclude_products?: number[];
 }
 
-// Bundle Configuration API (from ShapeHive Bundles Creator plugin)
+// Bundle Configuration API (from Sasan Perfumes Bundles Creator plugin)
 export interface BundleConfig {
   product_id: number;
   bundle_id?: string;

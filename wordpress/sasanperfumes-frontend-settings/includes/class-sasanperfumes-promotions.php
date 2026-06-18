@@ -1,6 +1,6 @@
 <?php
 /**
- * ShapeHive Promotions
+ * Sasan Perfumes Promotions
  *
  * Handles:
  * 1. Promotional popup settings (admin + REST API)
@@ -54,7 +54,7 @@ function sasanperfumes_get_popup_settings() {
         'body_en'       => get_option('sasanperfumes_popup_body_en', ''),
         'body_ar'       => get_option('sasanperfumes_popup_body_ar', ''),
         'btn_text_en'   => get_option('sasanperfumes_popup_btn_text_en', 'Shop Now'),
-        'btn_text_ar'   => get_option('sasanperfumes_popup_btn_text_ar', 'تسوق الآن'),
+        'btn_text_ar'   => get_option('sasanperfumes_popup_btn_text_ar', 'ØªØ³ÙˆÙ‚ Ø§Ù„Ø¢Ù†'),
         'btn_url'       => get_option('sasanperfumes_popup_btn_url', '/shop'),
         'image_url'     => get_option('sasanperfumes_popup_image_url', ''),
         'coupon_code'   => get_option('sasanperfumes_popup_coupon_code', ''),
@@ -64,11 +64,11 @@ function sasanperfumes_get_popup_settings() {
 
 function sasanperfumes_get_badge_tags() {
     $defaults = [
-        ['tag_slug' => 'new',       'label_en' => 'New',       'label_ar' => 'جديد',     'color' => '#22c55e'],
-        ['tag_slug' => 'hot',       'label_en' => 'Hot',       'label_ar' => 'رائج',     'color' => '#ef4444'],
-        ['tag_slug' => 'limited',   'label_en' => 'Limited',   'label_ar' => 'محدود',   'color' => '#f97316'],
-        ['tag_slug' => 'bestseller','label_en' => 'Bestseller','label_ar' => 'الأكثر مبيعاً','color' => '#8b5cf6'],
-        ['tag_slug' => 'exclusive', 'label_en' => 'Exclusive', 'label_ar' => 'حصري',    'color' => '#4A1633'],
+        ['tag_slug' => 'new',       'label_en' => 'New',       'label_ar' => 'Ø¬Ø¯ÙŠØ¯',     'color' => '#22c55e'],
+        ['tag_slug' => 'hot',       'label_en' => 'Hot',       'label_ar' => 'Ø±Ø§Ø¦Ø¬',     'color' => '#ef4444'],
+        ['tag_slug' => 'limited',   'label_en' => 'Limited',   'label_ar' => 'Ù…Ø­Ø¯ÙˆØ¯',   'color' => '#f97316'],
+        ['tag_slug' => 'bestseller','label_en' => 'Bestseller','label_ar' => 'Ø§Ù„Ø£ÙƒØ«Ø± Ù…Ø¨ÙŠØ¹Ø§Ù‹','color' => '#8b5cf6'],
+        ['tag_slug' => 'exclusive', 'label_en' => 'Exclusive', 'label_ar' => 'Ø­ØµØ±ÙŠ',    'color' => '#4A1633'],
     ];
     $saved = get_option('sasanperfumes_badge_tags', $defaults);
     return rest_ensure_response(['badge_tags' => $saved]);
@@ -117,7 +117,7 @@ function sasanperfumes_promotions_save_popup() {
         'sasanperfumes_popup_body_en'      => wp_kses_post($_POST['sasanperfumes_popup_body_en']           ?? ''),
         'sasanperfumes_popup_body_ar'      => wp_kses_post($_POST['sasanperfumes_popup_body_ar']           ?? ''),
         'sasanperfumes_popup_btn_text_en'  => sanitize_text_field($_POST['sasanperfumes_popup_btn_text_en'] ?? 'Shop Now'),
-        'sasanperfumes_popup_btn_text_ar'  => sanitize_text_field($_POST['sasanperfumes_popup_btn_text_ar'] ?? 'تسوق الآن'),
+        'sasanperfumes_popup_btn_text_ar'  => sanitize_text_field($_POST['sasanperfumes_popup_btn_text_ar'] ?? 'ØªØ³ÙˆÙ‚ Ø§Ù„Ø¢Ù†'),
         'sasanperfumes_popup_btn_url'      => sasanperfumes_sanitize_link($_POST['sasanperfumes_popup_btn_url']    ?? '/shop'),
         'sasanperfumes_popup_image_url'    => esc_url_raw($_POST['sasanperfumes_popup_image_url']          ?? ''),
         'sasanperfumes_popup_coupon_code'  => sanitize_text_field($_POST['sasanperfumes_popup_coupon_code'] ?? ''),
@@ -195,10 +195,10 @@ function sasanperfumes_promotions_render_popup_tab() {
             <tr><th>Body (EN)</th><td><textarea name="sasanperfumes_popup_body_en" rows="4" class="large-text"><?=esc_textarea($g('sasanperfumes_popup_body_en'))?></textarea></td></tr>
             <tr><th>Body (AR)</th><td><textarea name="sasanperfumes_popup_body_ar" rows="4" class="large-text" dir="rtl"><?=esc_textarea($g('sasanperfumes_popup_body_ar'))?></textarea></td></tr>
             <tr><th>Button Text (EN)</th><td><input type="text" name="sasanperfumes_popup_btn_text_en" value="<?=esc_attr($g('sasanperfumes_popup_btn_text_en','Shop Now'))?>" class="regular-text"></td></tr>
-            <tr><th>Button Text (AR)</th><td><input type="text" name="sasanperfumes_popup_btn_text_ar" value="<?=esc_attr($g('sasanperfumes_popup_btn_text_ar','تسوق الآن'))?>" class="regular-text" dir="rtl"></td></tr>
+            <tr><th>Button Text (AR)</th><td><input type="text" name="sasanperfumes_popup_btn_text_ar" value="<?=esc_attr($g('sasanperfumes_popup_btn_text_ar','ØªØ³ÙˆÙ‚ Ø§Ù„Ø¢Ù†'))?>" class="regular-text" dir="rtl"></td></tr>
             <tr><th>Button URL</th><td><input type="text" name="sasanperfumes_popup_btn_url" value="<?=esc_attr($g('sasanperfumes_popup_btn_url','/shop'))?>" class="large-text"></td></tr>
             <tr><th>Image</th><td><?php sasanperfumes_image_field('sasanperfumes_popup_image_url', $g('sasanperfumes_popup_image_url')); ?><br><small>Leave empty for text-only popup</small></td></tr>
-            <tr><th>Coupon Code</th><td><input type="text" name="sasanperfumes_popup_coupon_code" value="<?=esc_attr($g('sasanperfumes_popup_coupon_code'))?>" class="regular-text"><br><small>Optional — displayed in popup to encourage checkout</small></td></tr>
+            <tr><th>Coupon Code</th><td><input type="text" name="sasanperfumes_popup_coupon_code" value="<?=esc_attr($g('sasanperfumes_popup_coupon_code'))?>" class="regular-text"><br><small>Optional â€” displayed in popup to encourage checkout</small></td></tr>
         </table>
         <?php submit_button('Save Popup Settings'); ?>
     </form>
@@ -207,15 +207,15 @@ function sasanperfumes_promotions_render_popup_tab() {
 
 function sasanperfumes_promotions_render_badges_tab() {
     $defaults = [
-        ['tag_slug'=>'new','label_en'=>'New','label_ar'=>'جديد','color'=>'#22c55e'],
-        ['tag_slug'=>'hot','label_en'=>'Hot','label_ar'=>'رائج','color'=>'#ef4444'],
-        ['tag_slug'=>'limited','label_en'=>'Limited','label_ar'=>'محدود','color'=>'#f97316'],
-        ['tag_slug'=>'bestseller','label_en'=>'Bestseller','label_ar'=>'الأكثر مبيعاً','color'=>'#8b5cf6'],
-        ['tag_slug'=>'exclusive','label_en'=>'Exclusive','label_ar'=>'حصري','color'=>'#4A1633'],
+        ['tag_slug'=>'new','label_en'=>'New','label_ar'=>'Ø¬Ø¯ÙŠØ¯','color'=>'#22c55e'],
+        ['tag_slug'=>'hot','label_en'=>'Hot','label_ar'=>'Ø±Ø§Ø¦Ø¬','color'=>'#ef4444'],
+        ['tag_slug'=>'limited','label_en'=>'Limited','label_ar'=>'Ù…Ø­Ø¯ÙˆØ¯','color'=>'#f97316'],
+        ['tag_slug'=>'bestseller','label_en'=>'Bestseller','label_ar'=>'Ø§Ù„Ø£ÙƒØ«Ø± Ù…Ø¨ÙŠØ¹Ø§Ù‹','color'=>'#8b5cf6'],
+        ['tag_slug'=>'exclusive','label_en'=>'Exclusive','label_ar'=>'Ø­ØµØ±ÙŠ','color'=>'#4A1633'],
     ];
     $tags = get_option('sasanperfumes_badge_tags', $defaults);
     ?>
-    <p>Map WooCommerce product tag slugs to badge labels. Add tags to products in WooCommerce → Products → Tags.</p>
+    <p>Map WooCommerce product tag slugs to badge labels. Add tags to products in WooCommerce â†’ Products â†’ Tags.</p>
     <form method="post" action="<?= admin_url('admin-post.php') ?>">
         <?php wp_nonce_field('sasanperfumes_save_badge_tags'); ?>
         <input type="hidden" name="action" value="sasanperfumes_save_badge_tags">

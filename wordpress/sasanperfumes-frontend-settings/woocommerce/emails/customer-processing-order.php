@@ -1,6 +1,6 @@
 <?php
 /**
- * Customer processing order email - ShapeHive Custom Style
+ * Customer processing order email - Sasan Perfumes Custom Style
  *
  * This template can be overridden by copying it to yourtheme/woocommerce/emails/customer-processing-order.php.
  *
@@ -11,9 +11,8 @@
 defined( 'ABSPATH' ) || exit;
 
 // Frontend app URL for headless setup
-$frontend_url = 'https://shapehive.com';
-// Correct URL structure: /en/account/orders/{id}/
-$order_url = $frontend_url . '/en/account/orders/' . $order->get_id() . '/';
+$frontend_url = function_exists('sasanperfumes_get_frontend_url') ? sasanperfumes_get_frontend_url() : get_site_url();
+$order_url = sasanperfumes_build_frontend_localized_url('en', 'account/orders/' . $order->get_id() . '/');
 
 /*
  * @hooked WC_Emails::email_header() Output the email header
@@ -26,7 +25,7 @@ do_action( 'woocommerce_email_header', $email_heading, $email ); ?>
 	<?php
 	printf(
 		/* translators: %s: Site title */
-		esc_html__( 'Just to let you know — we\'ve received your order #%1$s, and it is now being processed at %2$s.', 'woocommerce' ),
+		esc_html__( 'Just to let you know â€” we\'ve received your order #%1$s, and it is now being processed at %2$s.', 'woocommerce' ),
 		$order->get_order_number(),
 		esc_html( get_bloginfo( 'name', 'display' ) )
 	);

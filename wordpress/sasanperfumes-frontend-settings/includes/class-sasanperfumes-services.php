@@ -1,9 +1,9 @@
 <?php
 /**
- * ShapeHive Services CPT
+ * Sasan Perfumes Services CPT
  *
  * Custom Post Type for services with REST API endpoints.
- * Admin: sasanperfumes → Services
+ * Admin: sasanperfumes â†’ Services
  * REST: GET /sasanperfumes/v1/services, GET /sasanperfumes/v1/services/{slug}
  *
  * @package sasanperfumes_Frontend_Settings
@@ -12,7 +12,7 @@
 
 if (!defined('ABSPATH')) exit;
 
-// ── Register CPT ───────────────────────────────────────────────────
+// â”€â”€ Register CPT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 add_action('init', function () {
     register_post_type('sasanperfumes_service', [
@@ -37,7 +37,7 @@ add_action('init', function () {
     ]);
 });
 
-// ── Metaboxes ──────────────────────────────────────────────────────
+// â”€â”€ Metaboxes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 add_action('add_meta_boxes', function () {
     add_meta_box('sasanperfumes_service_fields', 'Service Details', 'sasanperfumes_service_fields_render', 'sasanperfumes_service', 'normal', 'high');
@@ -144,7 +144,7 @@ add_action('save_post_sasanperfumes_service', function ($post_id) {
     update_post_meta($post_id, '_sasanperfumes_service_features', $features);
 });
 
-// ── REST API ───────────────────────────────────────────────────────
+// â”€â”€ REST API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 add_action('rest_api_init', function () {
     sasanperfumes_register_rest_route( '/services', [
@@ -234,7 +234,7 @@ function sasanperfumes_services_page_settings() {
     ];
 }
 
-// ── Admin: Services Page Settings ──────────────────────────────────
+// â”€â”€ Admin: Services Page Settings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 add_action('admin_menu', function () {
     add_submenu_page(

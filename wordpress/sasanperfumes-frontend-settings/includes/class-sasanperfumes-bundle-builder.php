@@ -1,9 +1,9 @@
 <?php
 /**
- * ShapeHive Bundle Builder - Bundle Creator Functionality
+ * Sasan Perfumes Bundle Builder - Bundle Creator Functionality
  * 
  * Handles REST API endpoints, product metabox, and CoCart integration
- * for the ShapeHive Bundle Builder feature.
+ * for the Sasan Perfumes Bundle Builder feature.
  * 
  * @package sasanperfumes_Frontend_Settings
  * @since 5.9.0
@@ -12,7 +12,7 @@
 if (!defined('ABSPATH')) exit;
 
 /**
- * Initialize ShapeHive Bundle Builder
+ * Initialize Sasan Perfumes Bundle Builder
  */
 function sasanperfumes_bundle_builder_init() {
     // REST API endpoints
@@ -424,7 +424,7 @@ function sasanperfumes_bundles_sanitize_bundle($data) {
 function sasanperfumes_bundle_builder_add_metabox() {
     add_meta_box(
         'sasanperfumes_bundle_settings',
-        'ShapeHive Bundle Settings',
+        'Sasan Perfumes Bundle Settings',
         'sasanperfumes_bundle_metabox_render',
         'product',
         'side',
@@ -1216,5 +1216,5 @@ function sasanperfumes_bundle_items_save_to_order($item, $cart_item_key, $values
     }
 }
 
-// Initialize ShapeHive Bundle Builder
+// Initialize Sasan Perfumes Bundle Builder
 sasanperfumes_bundle_builder_init();

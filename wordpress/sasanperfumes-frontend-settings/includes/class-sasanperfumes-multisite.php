@@ -9,17 +9,111 @@
 
 if (!defined('ABSPATH')) exit;
 
+function sasanperfumes_normalize_frontend_host_segment($segment): string {
+    $normalized = strtolower(trim((string) $segment));
+    if (!$normalized) return '';
+    return trim($normalized, " \t\n\r\0\x0B");
+}
+
 function sasanperfumes_normalize_frontend_host(?string $host): string {
     $normalized = strtolower(trim((string) $host));
     if (!$normalized) return '';
 
+    $normalized = preg_replace('/\s+/', '', $normalized);
+    if (!$normalized) return '';
+    $normalized = preg_replace('/[?#].*$/', '', $normalized);
+    if (!$normalized) return '';
+
+    $normalized = preg_replace('/^([a-z0-9-]+)\.cms\.shapehive\.com$/', '$1.shapehive.com', $normalized);
+
     return preg_replace('/:\d+$/', '', $normalized);
+}
+
+function sasanperfumes_normalize_frontend_host_with_market(?string $host): string {
+    $normalized = strtolower(trim((string) $host));
+    if (!$normalized) return '';
+
+    $known_markets = array('qa', 'om', 'sa');
+
+    $normalized = preg_replace('/\s+/', '', $normalized);
+    if (!$normalized) return '';
+    $normalized = preg_replace('/[?#].*$/', '', $normalized);
+    if (!$normalized) return '';
+
+    $path = '';
+    $work = $normalized;
+    if (strpos($work, '://') !== false) {
+        $parsed = @parse_url($work);
+        if (is_array($parsed)) {
+            $host = (string) ($parsed['host'] ?? '');
+            $path = (string) ($parsed['path'] ?? '');
+            if (array_key_exists('query', $parsed) && $path !== '') {
+                // Keep path for marker matching only, never for query strings.
+            }
+            $normalized = $host . ($path ? '/' . ltrim($path, '/') : '');
+        }
+    }
+
+    $normalized = preg_replace('/^https?:\/\//', '', $normalized);
+    if (!$normalized) return '';
+
+    $parts = explode('/', $normalized, 2);
+    if (count($parts) === 0) return '';
+
+    $host_part = preg_replace('/:\d+$/', '', $parts[0]);
+    $host_part = preg_replace('/^www\./', '', $host_part);
+
+    $host_part = strtolower(trim($host_part));
+    if (!$host_part) return '';
+
+    if (preg_match('/^([a-z0-9-]+)\.cms\.shapehive\.com$/', $host_part)) {
+        $host_part = str_replace('.cms.shapehive.com', '.shapehive.com', $host_part);
+    }
+
+    if (preg_match('/^([a-z0-9-]+)\.shapehive\.com$/', $host_part, $subdomain_match)) {
+        $subdomain = (string) ($subdomain_match[1] ?? '');
+        if (in_array($subdomain, array('qa', 'om', 'sa'), true)) {
+            $host_part = 'shapehive.com/' . $subdomain;
+            if (empty($parts[1])) {
+                return $host_part;
+            }
+        } elseif ($subdomain === 'cms') {
+            $host_part = 'shapehive.com';
+        }
+    }
+
+    if (empty($parts[1])) {
+        return $host_part;
+    }
+
+    $path_segments = array_values(array_filter(explode('/', $parts[1]), 'strlen'));
+    if (empty($path_segments)) {
+        return $host_part;
+    }
+
+    $market_prefix = sasanperfumes_normalize_frontend_host_segment($path_segments[0]);
+    if (in_array($market_prefix, $known_markets, true)) {
+        return $host_part . '/' . $market_prefix;
+    }
+
+    return $host_part;
+}
+
+function sasanperfumes_parse_frontend_host_parts(string $frontend_host): array {
+    $normalized = sasanperfumes_normalize_frontend_host_with_market($frontend_host);
+    if (!$normalized) return array('host' => '', 'market' => '');
+
+    $parts = explode('/', $normalized, 2);
+    return array(
+        'host' => (string) ($parts[0] ?? ''),
+        'market' => (string) ($parts[1] ?? ''),
+    );
 }
 
 function sasanperfumes_get_frontend_host(): string {
     $home_url = home_url();
     if (!$home_url) return '';
-    return sasanperfumes_normalize_frontend_host(parse_url($home_url, PHP_URL_HOST));
+    return sasanperfumes_normalize_frontend_host_with_market($home_url);
 }
 
 function sasanperfumes_parse_frontend_url_map($raw_map): array {
@@ -33,7 +127,7 @@ function sasanperfumes_parse_frontend_url_map($raw_map): array {
     $map = [];
     foreach ($raw_map as $host => $url) {
         if (!is_string($host) || !is_string($url)) continue;
-        $host_key = sasanperfumes_normalize_frontend_host($host);
+        $host_key = sasanperfumes_normalize_frontend_host_with_market($host);
         if (!$host_key) continue;
         $clean_url = trim($url);
         if (!$clean_url) continue;
@@ -46,6 +140,96 @@ function sasanperfumes_parse_frontend_url_map($raw_map): array {
 function sasanperfumes_format_frontend_url_map_text(array $map): string {
     if (empty($map)) return '';
     return wp_json_encode($map, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+}
+
+/**
+ * Return only the base frontend origin/path used for building links.
+ * Removes known market path segments so route builders can add them explicitly.
+ */
+function sasanperfumes_get_frontend_url_root(?string $frontend_url = ''): string {
+    $raw = trim((string) ($frontend_url ?: sasanperfumes_get_frontend_url()));
+    if ($raw === '') return '';
+
+    $parts = @parse_url($raw);
+    if (!is_array($parts) || empty($parts['host'])) {
+        return untrailingslashit($raw);
+    }
+
+    $scheme = isset($parts['scheme']) ? (string) $parts['scheme'] : 'https';
+    $host = (string) $parts['host'];
+    $path = trim((string) ($parts['path'] ?? ''), '/');
+    $normalized_host = sasanperfumes_normalize_frontend_host_with_market(
+        $host . ($path !== '' ? '/' . $path : '')
+    );
+    if (!$normalized_host) return untrailingslashit($raw);
+
+    $host_parts = explode('/', $normalized_host, 2);
+    $base_host = trim((string) ($host_parts[0] ?? ''));
+    if ($base_host === '') {
+        return untrailingslashit($raw);
+    }
+
+    $base = $scheme . '://' . $base_host;
+
+    if (!empty($parts['port'])) {
+        $base .= ':' . $parts['port'];
+    }
+
+    $base_path = $path;
+    $market = sasanperfumes_frontend_market_for_url($raw);
+    if ($base_path === '') {
+        if (!$market) {
+            $base_path = trim((string) ($host_parts[1] ?? ''), '/');
+        }
+    } elseif ($market !== '' && $base_path === $market) {
+        $base_path = '';
+    }
+
+    if ($base_path !== '') {
+        $base .= '/' . $base_path;
+    }
+
+    return untrailingslashit($base);
+}
+
+/**
+ * Resolve market prefix from a frontend URL for route building.
+ */
+function sasanperfumes_frontend_market_for_url(string $frontend_url = ''): string {
+    $normalized = sasanperfumes_normalize_frontend_host_with_market(
+        $frontend_url !== '' ? $frontend_url : sasanperfumes_get_frontend_url()
+    );
+    if (!$normalized) return '';
+
+    $parts = sasanperfumes_parse_frontend_host_parts($normalized);
+    return (string) ($parts['market'] ?? '');
+}
+
+/**
+ * Build a locale-aware frontend URL with optional market context.
+ */
+function sasanperfumes_build_frontend_localized_url(string $locale, string $path = '', string $frontend_url = ''): string {
+    $frontend_url = trim($frontend_url ?: sasanperfumes_get_frontend_url());
+    if ($frontend_url === '') return '';
+
+    $base_url = sasanperfumes_get_frontend_url_root($frontend_url);
+    if ($base_url === '') return '';
+
+    $market = sasanperfumes_frontend_market_for_url($frontend_url);
+    $segments = [];
+
+    if ($market !== '') {
+        $segments[] = $market;
+    }
+
+    $segments[] = in_array($locale, ['en', 'ar'], true) ? $locale : 'en';
+
+    $clean_path = trim((string) $path);
+    if ($clean_path !== '') {
+        $segments[] = ltrim($clean_path, '/');
+    }
+
+    return untrailingslashit($base_url) . '/' . implode('/', array_filter($segments, 'strlen'));
 }
 
 function sasanperfumes_get_frontend_url_map(): array {
@@ -63,9 +247,9 @@ function sasanperfumes_get_frontend_url_map(): array {
 function sasanperfumes_get_frontend_url_map_example(): array {
     return array(
         'cms.shapehive.com' => 'https://shapehive.com',
-        'qa.shapehive.com' => 'https://qa.shapehive.com',
-        'om.shapehive.com' => 'https://om.shapehive.com',
-        'sa.shapehive.com' => 'https://sa.shapehive.com',
+        'shapehive.com/qa' => 'https://shapehive.com/qa',
+        'shapehive.com/om' => 'https://shapehive.com/om',
+        'shapehive.com/sa' => 'https://shapehive.com/sa',
     );
 }
 
@@ -104,7 +288,7 @@ function sasanperfumes_render_multisite_frontend_settings_page() {
                     </td>
                 </tr>
                 <tr>
-                    <th scope="row"><label for="sasanperfumes_frontend_url_map">Host mapping (JSON)</label></th>
+                  <th scope="row"><label for="sasanperfumes_frontend_url_map">Host mapping (JSON)</label></th>
                     <td>
                         <textarea
                             id="sasanperfumes_frontend_url_map"
@@ -118,9 +302,9 @@ function sasanperfumes_render_multisite_frontend_settings_page() {
                         </p>
                         <pre><code>{
   "cms.shapehive.com": "https://shapehive.com",
-  "qa.shapehive.com": "https://qa.shapehive.com",
-  "om.shapehive.com": "https://om.shapehive.com",
-  "sa.shapehive.com": "https://sa.shapehive.com"
+  "shapehive.com/qa": "https://shapehive.com/qa",
+  "shapehive.com/om": "https://shapehive.com/om",
+  "shapehive.com/sa": "https://shapehive.com/sa"
 }</code></pre>
                         <p class="description">
                             Enter host names exactly as used by each site (without ports).
@@ -195,6 +379,16 @@ function sasanperfumes_get_frontend_url($fallback = 'https://shapehive.com'): st
 
     $site_url = trim((string) get_option('sasanperfumes_frontend_url', ''));
     if ($site_url !== '') {
+        $normalized = sasanperfumes_normalize_frontend_host_with_market($site_url);
+        if ($normalized !== '') {
+            $parts = parse_url($site_url);
+            $scheme = isset($parts['scheme']) ? (string) $parts['scheme'] : 'https';
+            if (strpos($normalized, '/') === false) {
+                return untrailingslashit($scheme . '://' . $normalized);
+            }
+            return untrailingslashit($scheme . '://' . $normalized);
+        }
+
         return untrailingslashit($site_url);
     }
 
@@ -215,38 +409,54 @@ function sasanperfumes_get_frontend_url($fallback = 'https://shapehive.com'): st
 }
 
 function sasanperfumes_normalize_rest_frontend_host(?string $host): string {
-    if (!is_string($host)) {
+    if (!is_string($host)) return "";
+
+    $selected = strtolower(trim($host));
+    if (!$selected) return "";
+    $selected = preg_replace('/\s+/', '', $selected);
+    if (!$selected) return "";
+
+    if (strpos($selected, ",") !== false) {
+        $parts = explode(",", $selected);
+        $selected = trim($parts[0]);
+    }
+
+    return sasanperfumes_normalize_frontend_host_with_market($selected);
+}
+
+function sasanperfumes_build_frontend_host_from_market(string $market, string $referenceHost = ""): string {
+    $normalized_market = sasanperfumes_normalize_frontend_host_segment($market);
+    if (!$normalized_market || !in_array($normalized_market, array("qa", "om", "sa"), true)) {
         return "";
     }
 
-    $clean = strtolower(trim($host));
-    if (!$clean) return "";
-
-    if (strpos($clean, ",") !== false) {
-        $parts = explode(",", $clean);
-        $clean = trim($parts[0]);
+    $normalized_host = sasanperfumes_normalize_frontend_host($referenceHost);
+    if (!$normalized_host) {
+        return "";
     }
 
-    $clean = preg_replace('/^https?:\/\//', "", $clean);
-    if (!$clean) return "";
-
-    $clean = preg_replace('/\/.*$/', "", $clean);
-    $clean = preg_replace('/:\d+$/', "", $clean);
-    $clean = trim($clean, " \t\n\r\0\x0B");
-
-    return preg_replace('/^www\./', "", $clean);
+    return $normalized_host . "/" . $normalized_market;
 }
 
 function sasanperfumes_get_incoming_frontend_host(): string {
     if (!is_multisite()) return '';
 
     $candidates = [];
+    $referer_host = $_SERVER['HTTP_REFERER'] ?? '';
+    $origin_host = $_SERVER['HTTP_ORIGIN'] ?? '';
+    $forwarded_host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? '';
+    $host_header = $_SERVER['HTTP_HOST'] ?? '';
+    $market_candidate = $_SERVER['HTTP_X_MARKET'] ?? '';
+
     $candidates[] = $_SERVER['HTTP_X_FRONTEND_HOST'] ?? '';
     $candidates[] = $_GET['frontend_host'] ?? '';
-    $candidates[] = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? '';
-    $candidates[] = $_SERVER['HTTP_ORIGIN'] ?? '';
-    $candidates[] = $_SERVER['HTTP_REFERER'] ?? '';
-    $candidates[] = $_SERVER['HTTP_HOST'] ?? '';
+    $candidates[] = sasanperfumes_build_frontend_host_from_market((string) $market_candidate, (string) $forwarded_host);
+    $candidates[] = sasanperfumes_build_frontend_host_from_market((string) $market_candidate, (string) $host_header);
+    $candidates[] = $market_candidate;
+    $candidates[] = $forwarded_host;
+    $candidates[] = $origin_host;
+    $candidates[] = $referer_host;
+    $candidates[] = $host_header;
 
     foreach ($candidates as $candidate) {
         $normalized = sasanperfumes_normalize_rest_frontend_host(is_string($candidate) ? $candidate : '');
@@ -269,11 +479,14 @@ function sasanperfumes_find_blog_id_for_frontend_host(string $frontend_host): in
     }
 
     $target = 0;
-    $frontend_host = sasanperfumes_normalize_frontend_host($frontend_host);
+    $frontend_host = sasanperfumes_normalize_frontend_host_with_market($frontend_host);
     if ($frontend_host === "") {
         $cache[$frontend_host] = 0;
         return 0;
     }
+    $frontend_host_parts = sasanperfumes_parse_frontend_host_parts($frontend_host);
+    $frontend_host_base = $frontend_host_parts['host'];
+    $frontend_market = $frontend_host_parts['market'];
 
     $sites = get_sites([
         'number' => 0,
@@ -281,11 +494,19 @@ function sasanperfumes_find_blog_id_for_frontend_host(string $frontend_host): in
     ]);
 
     $default_site_slugs = array(
-        'qa.shapehive.com' => 'qa',
-        'om.shapehive.com' => 'om',
-        'sa.shapehive.com' => 'sa',
+        'shapehive.com/qa' => 'qa',
+        'shapehive.com/om' => 'om',
+        'shapehive.com/sa' => 'sa',
+        'localhost/qa' => 'qa',
+        'localhost/om' => 'om',
+        'localhost/sa' => 'sa',
+        '127.0.0.1/qa' => 'qa',
+        '127.0.0.1/om' => 'om',
+        '127.0.0.1/sa' => 'sa',
     );
-    $expected_slug = $default_site_slugs[$frontend_host] ?? '';
+    $expected_slug = $frontend_market !== ''
+        ? $frontend_market
+        : ($default_site_slugs[$frontend_host] ?? ($default_site_slugs[$frontend_host_base] ?? ''));
 
     foreach ((array) $sites as $site_id) {
         $site_frontend_url = trim((string) get_blog_option((int) $site_id, 'sasanperfumes_frontend_url', ''));
@@ -293,8 +514,17 @@ function sasanperfumes_find_blog_id_for_frontend_host(string $frontend_host): in
             $site_frontend_url = get_home_url((int) $site_id);
         }
 
+        $site_frontend_url_with_market = sasanperfumes_normalize_frontend_host_with_market($site_frontend_url);
         $site_host = sasanperfumes_normalize_frontend_host($site_frontend_url);
         if ($site_host !== "" && $site_host === $frontend_host) {
+            $target = (int) $site_id;
+            break;
+        }
+
+        if (
+            $site_frontend_url_with_market !== "" &&
+            $site_frontend_url_with_market === $frontend_host
+        ) {
             $target = (int) $site_id;
             break;
         }

@@ -1,39 +1,36 @@
-import { Skeleton } from "@/components/common/Skeleton";
+import { NextResponse } from "next/server";
+import { siteConfig } from "@/config/site";
 
-export default function OrdersLoading() {
-  return (
-    <div className="container mx-auto px-5 md:px-7 lg:px-12 py-8">
-      <Skeleton className="mb-2 h-8 w-32" />
-      <Skeleton className="mb-8 h-4 w-48" />
+export async function GET() {
+  const content = `# ${siteConfig.name}
 
-      <div className="rounded-lg bg-white shadow-sm">
-        {/* Table header */}
-        <div className="hidden border-b p-4 md:grid md:grid-cols-12 md:gap-4">
-          <Skeleton className="col-span-3 h-4 w-16" />
-          <Skeleton className="col-span-2 h-4 w-12" />
-          <Skeleton className="col-span-2 h-4 w-16" />
-          <Skeleton className="col-span-2 h-4 w-12" />
-          <Skeleton className="col-span-3 h-4 w-20" />
-        </div>
+> UAE perfume store for everyday fragrances, hair mist, all over sprays, and gift sets
 
-        {/* Order rows */}
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="border-b p-4">
-            <div className="grid items-center gap-4 md:grid-cols-12">
-              <div className="md:col-span-3">
-                <Skeleton className="h-4 w-24" />
-              </div>
-              <Skeleton className="md:col-span-2 h-4 w-20" />
-              <Skeleton className="md:col-span-2 h-4 w-16" />
-              <Skeleton className="md:col-span-2 h-4 w-16" />
-              <div className="flex gap-2 md:col-span-3">
-                <Skeleton className="h-8 w-20" />
-                <Skeleton className="h-8 w-20" />
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+## About
+Sasan Perfumes is a UAE fragrance store offering perfumes, hair mist, all over sprays, and gift-ready scent collections online.
+
+## Links
+- Website: ${siteConfig.url}
+- Shop: ${siteConfig.url}/en/shop
+- About Us: ${siteConfig.url}/en/about-us
+- Contact: ${siteConfig.url}/en/contact-us
+- Full LLM Context: ${siteConfig.url}/llms-full.txt
+
+## Product Categories
+- Perfumes: ${siteConfig.url}/en/category/perfumes
+- All Over Spray: ${siteConfig.url}/en/category/all-over-spray
+- Hair Mist: ${siteConfig.url}/en/category/sasan-hair-mist
+- Gift Sets: ${siteConfig.url}/en/category/gift-set
+
+## Languages
+- English: ${siteConfig.url}/en
+- Arabic: ${siteConfig.url}/ar
+`;
+
+  return new NextResponse(content, {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Cache-Control": "public, max-age=86400, s-maxage=86400",
+    },
+  });
 }

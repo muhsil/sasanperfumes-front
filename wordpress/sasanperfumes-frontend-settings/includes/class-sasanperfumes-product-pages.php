@@ -1,6 +1,6 @@
 <?php
 /**
- * ShapeHive Product Pages - Product-Type Dynamic Page System
+ * Sasan Perfumes Product Pages - Product-Type Dynamic Page System
  * 
  * Registers a Custom Post Type "sasanperfumes_product_page" with structured meta fields
  * for creating dynamic, bilingual (EN/AR) product-oriented pages directly
@@ -13,7 +13,7 @@
 if (!defined('ABSPATH')) exit;
 
 /**
- * Initialize ShapeHive Product Pages
+ * Initialize Sasan Perfumes Product Pages
  */
 function sasanperfumes_product_pages_init() {
     add_action('init', 'sasanperfumes_register_product_page_cpt');
@@ -90,7 +90,7 @@ function sasanperfumes_product_page_column_content($column, $post_id) {
                 $term = get_term_by('slug', $cat_slug, 'product_cat');
                 echo $term && !is_wp_error($term) ? esc_html($term->name) : esc_html($cat_slug);
             } else {
-                echo '—';
+                echo 'â€”';
             }
             break;
         case 'sasanperfumes_status':
@@ -112,9 +112,9 @@ function sasanperfumes_product_pages_admin_scripts($hook) {
     wp_enqueue_script('sasanperfumes-admin', plugins_url('../admin.js', __FILE__), array('jquery'), sasanperfumes_SETTINGS_VERSION, true);
 }
 
-// ──────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // META BOXES
-// ──────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * Register meta boxes
@@ -148,7 +148,7 @@ function sasanperfumes_pp_image_field($name, $value = '') {
     }
 }
 
-// ─── Hero Section ─────────────────────────────
+// â”€â”€â”€ Hero Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function sasanperfumes_pp_render_hero_metabox($post) {
     wp_nonce_field('sasanperfumes_pp_save_meta', 'sasanperfumes_pp_nonce');
@@ -168,13 +168,13 @@ function sasanperfumes_pp_render_hero_metabox($post) {
         <tr><th>Description (EN)</th><td><textarea name="sasanperfumes_pp_hero_description" class="large-text" rows="3"><?php echo esc_textarea($m('hero_description')); ?></textarea></td></tr>
         <tr><th>Description (AR)</th><td><textarea name="sasanperfumes_pp_hero_description_ar" class="large-text" rows="3" dir="rtl"><?php echo esc_textarea($m('hero_description_ar')); ?></textarea></td></tr>
         <tr><th>CTA Text (EN)</th><td><input type="text" name="sasanperfumes_pp_hero_cta_text" value="<?php echo esc_attr($m('hero_cta_text')); ?>" class="regular-text" placeholder="Shop Now"></td></tr>
-        <tr><th>CTA Text (AR)</th><td><input type="text" name="sasanperfumes_pp_hero_cta_text_ar" value="<?php echo esc_attr($m('hero_cta_text_ar')); ?>" class="regular-text" dir="rtl" placeholder="تسوق الآن"></td></tr>
+        <tr><th>CTA Text (AR)</th><td><input type="text" name="sasanperfumes_pp_hero_cta_text_ar" value="<?php echo esc_attr($m('hero_cta_text_ar')); ?>" class="regular-text" dir="rtl" placeholder="ØªØ³ÙˆÙ‚ Ø§Ù„Ø¢Ù†"></td></tr>
         <tr><th>CTA Link</th><td><input type="text" name="sasanperfumes_pp_hero_cta_link" value="<?php echo esc_attr($m('hero_cta_link')); ?>" class="large-text" placeholder="/shop or https://..."></td></tr>
     </table>
     <?php
 }
 
-// ─── Products Section ─────────────────────────
+// â”€â”€â”€ Products Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function sasanperfumes_pp_render_products_metabox($post) {
     $m = function($key, $default = '') use ($post) {
@@ -213,7 +213,7 @@ function sasanperfumes_pp_render_products_metabox($post) {
             <th>Category</th>
             <td>
                 <select name="sasanperfumes_pp_product_category">
-                    <option value="">— Select Category —</option>
+                    <option value="">â€” Select Category â€”</option>
                     <?php foreach ($categories as $cat): ?>
                         <option value="<?php echo esc_attr($cat->slug); ?>" <?php selected($m('product_category'), $cat->slug); ?>><?php echo esc_html($cat->name); ?> (<?php echo $cat->count; ?>)</option>
                     <?php endforeach; ?>
@@ -239,7 +239,7 @@ function sasanperfumes_pp_render_products_metabox($post) {
     <?php
 }
 
-// ─── Banners Section ──────────────────────────
+// â”€â”€â”€ Banners Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function sasanperfumes_pp_render_banners_metabox($post) {
     $m = function($key, $default = '') use ($post) {
@@ -276,7 +276,7 @@ function sasanperfumes_pp_render_banners_metabox($post) {
     <?php
 }
 
-// ─── Features Section ─────────────────────────
+// â”€â”€â”€ Features Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function sasanperfumes_pp_render_features_metabox($post) {
     $m = function($key, $default = '') use ($post) {
@@ -330,7 +330,7 @@ function sasanperfumes_pp_render_features_metabox($post) {
     <?php
 }
 
-// ─── FAQ Section ──────────────────────────────
+// â”€â”€â”€ FAQ Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function sasanperfumes_pp_render_faq_metabox($post) {
     $m = function($key, $default = '') use ($post) {
@@ -345,7 +345,7 @@ function sasanperfumes_pp_render_faq_metabox($post) {
     <table class="form-table">
         <tr><th>Enable FAQ</th><td><label><input type="checkbox" name="sasanperfumes_pp_faq_enabled" value="1" <?php checked($m('faq_enabled', '1'), '1'); ?>> Show FAQ section</label></td></tr>
         <tr><th>Section Title (EN)</th><td><input type="text" name="sasanperfumes_pp_faq_title" value="<?php echo esc_attr($m('faq_title', 'Frequently Asked Questions')); ?>" class="large-text"></td></tr>
-        <tr><th>Section Title (AR)</th><td><input type="text" name="sasanperfumes_pp_faq_title_ar" value="<?php echo esc_attr($m('faq_title_ar', 'الأسئلة الشائعة')); ?>" class="large-text" dir="rtl"></td></tr>
+        <tr><th>Section Title (AR)</th><td><input type="text" name="sasanperfumes_pp_faq_title_ar" value="<?php echo esc_attr($m('faq_title_ar', 'Ø§Ù„Ø£Ø³Ø¦Ù„Ø© Ø§Ù„Ø´Ø§Ø¦Ø¹Ø©')); ?>" class="large-text" dir="rtl"></td></tr>
     </table>
     <h4>FAQ Items <button type="button" class="button" id="sasanperfumes-pp-add-faq">+ Add FAQ</button></h4>
     <div id="sasanperfumes-pp-faqs">
@@ -364,7 +364,7 @@ function sasanperfumes_pp_render_faq_metabox($post) {
     <?php
 }
 
-// ─── SEO Section ──────────────────────────────
+// â”€â”€â”€ SEO Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function sasanperfumes_pp_render_seo_metabox($post) {
     $m = function($key, $default = '') use ($post) {
@@ -384,7 +384,7 @@ function sasanperfumes_pp_render_seo_metabox($post) {
     <?php
 }
 
-// ─── Layout Section ───────────────────────────
+// â”€â”€â”€ Layout Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function sasanperfumes_pp_render_layout_metabox($post) {
     $m = function($key, $default = '') use ($post) {
@@ -414,9 +414,9 @@ function sasanperfumes_pp_render_layout_metabox($post) {
     <?php
 }
 
-// ──────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // SAVE META
-// ──────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function sasanperfumes_product_page_save_meta($post_id, $post) {
     if (!isset($_POST['sasanperfumes_pp_nonce']) || !wp_verify_nonce($_POST['sasanperfumes_pp_nonce'], 'sasanperfumes_pp_save_meta')) return;
@@ -529,9 +529,9 @@ function sasanperfumes_product_page_save_meta($post_id, $post) {
     update_post_meta($post_id, '_sasanperfumes_pp_faqs', $faqs);
 }
 
-// ──────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // REST API
-// ──────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function sasanperfumes_product_pages_register_rest_routes() {
     sasanperfumes_register_rest_route( '/product-pages', array(
@@ -647,7 +647,7 @@ function sasanperfumes_build_product_page_response($post) {
         'faq' => array(
             'enabled'      => $m('faq_enabled', '1') === '1',
             'title'        => $m('faq_title', 'Frequently Asked Questions'),
-            'titleAr'      => $m('faq_title_ar', 'الأسئلة الشائعة'),
+            'titleAr'      => $m('faq_title_ar', 'Ø§Ù„Ø£Ø³Ø¦Ù„Ø© Ø§Ù„Ø´Ø§Ø¦Ø¹Ø©'),
             'items'        => $faqs,
         ),
         'seo' => array(
@@ -710,9 +710,8 @@ function sasanperfumes_rest_get_product_page($request) {
 function sasanperfumes_product_page_row_actions($actions, $post) {
     if ($post->post_type !== 'sasanperfumes_product_page') return $actions;
     $slug = $post->post_name;
-    $base = untrailingslashit(sasanperfumes_get_frontend_url());
-    $actions['view_en'] = '<a href="' . esc_url($base . '/en/products/' . $slug) . '" target="_blank">View EN</a>';
-    $actions['view_ar'] = '<a href="' . esc_url($base . '/ar/products/' . $slug) . '" target="_blank">View AR</a>';
+    $actions['view_en'] = '<a href="' . esc_url(sasanperfumes_build_frontend_localized_url('en', 'products/' . $slug)) . '" target="_blank">View EN</a>';
+    $actions['view_ar'] = '<a href="' . esc_url(sasanperfumes_build_frontend_localized_url('ar', 'products/' . $slug)) . '" target="_blank">View AR</a>';
     return $actions;
 }
 

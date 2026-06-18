@@ -189,11 +189,11 @@
     },
     "ourStory": {
       "title": "Our Story",
-      "description1": "ShapeHive is a UAE fragrance store offering perfumes, hair mist, all over sprays, and gift-ready scent collections selected for everyday elegance.",
-      "description2": "Our focus is a simple, polished fragrance experience: discover a scent, choose a thoughtful gift, or request private-label perfume support through ShapeHive."
+      "description1": "Sasan Perfumes is a UAE fragrance store offering perfumes, hair mist, all over sprays, and gift-ready scent collections selected for everyday elegance.",
+      "description2": "Our focus is a simple, polished fragrance experience: discover a scent, choose a thoughtful gift, or request private-label perfume support through Sasan Perfumes."
     },
     "whyChooseUs": {
-      "title": "Why Choose ShapeHive",
+      "title": "Why Choose Sasan Perfumes",
       "subtitle": "Discover what makes our fragrances stand out",
       "items": [
         {
@@ -210,7 +210,7 @@
         },
         {
           "title": "Curated Gift Collections",
-          "description": "From bespoke perfume gift sets to build-your-own bundles, find the perfect aromatic gift for every occasion and celebration."
+          "description": "From bespoke perfume gift sets to build-your-own bundles, find the perfect fragrance gift for every occasion and celebration."
         }
       ]
     },
@@ -219,8 +219,8 @@
       "subtitle": "Everything you need to know about our fragrances",
       "items": [
         {
-          "question": "What types of perfumes does ShapeHive offer?",
-          "answer": "ShapeHive offers perfumes, hair mist, all over sprays, and curated gift sets for fragrance lovers in the UAE and beyond."
+          "question": "What types of perfumes does Sasan Perfumes offer?",
+          "answer": "Sasan Perfumes offers perfumes, hair mist, all over sprays, and curated gift sets for fragrance lovers in the UAE and beyond."
         },
         {
           "question": "Do you offer free shipping in the UAE?",
@@ -232,7 +232,7 @@
         },
         {
           "question": "Can I build a custom perfume gift set?",
-          "answer": "Yes. Browse ready-made gift sets online, or contact ShapeHive for gifting and private-label perfume requirements."
+          "answer": "Yes. Browse ready-made gift sets online, or contact Sasan Perfumes for gifting and private-label perfume requirements."
         },
         {
           "question": "How long do your perfumes last?",
@@ -344,7 +344,7 @@
       "agreement": "By using our website, you agree to these terms and conditions",
       "seo": {
         "title": "Terms & Conditions",
-        "description": "Read the terms and conditions for using ShapeHive website"
+        "description": "Read the terms and conditions for using Sasan Perfumes website"
       },
       "sections": []
     },
@@ -355,7 +355,7 @@
       "contactCta": "If you have any questions or concerns, don't hesitate to contact us",
       "seo": {
         "title": "Privacy Policy",
-        "description": "Learn how ShapeHive protects your privacy and personal data"
+        "description": "Learn how Sasan Perfumes protects your privacy and personal data"
       },
       "sections": []
     },
@@ -366,7 +366,7 @@
       "needHelpText": "Our customer service team is ready to help you with any return inquiries",
       "seo": {
         "title": "Return Policy",
-        "description": "Learn about ShapeHive' return and exchange policy"
+          "description": "Learn about the return and exchange policy at Sasan Perfumes"
       },
       "features": [],
       "processTitle": "Return Process",
@@ -427,7 +427,7 @@
       "contentUnavailable": "Content is not available at the moment",
       "seo": {
         "title": "Shipping Information",
-        "description": "Learn about ShapeHive' shipping and delivery policy. We deliver perfumes and fragrances across UAE, Saudi Arabia, Bahrain, Kuwait, Oman and internationally."
+        "description": "Learn about the shipping and delivery policy at Sasan Perfumes. We deliver perfumes and fragrances across UAE, Saudi Arabia, Bahrain, Kuwait, Oman and internationally."
       },
       "shippingRates": {
         "title": "Shipping Rates by Destination",
@@ -454,7 +454,7 @@
       "expertPicks": "Expert Picks",
       "ctaTitle": "Ready to Find Your Perfect Scent?",
       "ctaDescription": "Browse our full collection of premium, handcrafted fragrances made in the UAE. Free delivery on orders over 500 AED.",
-      "ctaShopButton": "Shop ShapeHive Fragrances",
+      "ctaShopButton": "Shop Sasan Perfumes Fragrances",
       "ctaBrowseButton": "Browse Perfumes",
       "contactUs": "Contact Us"
     },
@@ -478,12 +478,12 @@
       "waitingSubtitle": ""
     },
     "about": {
-      "title": "ShapeHive",
+      "title": "Sasan Perfumes",
       "heroSubtitle": "",
       "heroDescription": "",
       "contentUnavailable": "Content is not available at the moment",
       "seo": {
-        "title": "About Us - ShapeHive",
+        "title": "About Us - Sasan Perfumes",
         "description": ""
       },
       "cta": {

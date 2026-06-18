@@ -1,6 +1,6 @@
 <?php
 /**
- * Customer new account email - ShapeHive Custom Style
+ * Customer new account email - Sasan Perfumes Custom Style
  *
  * This template can be overridden by copying it to yourtheme/woocommerce/emails/customer-new-account.php.
  *
@@ -11,10 +11,13 @@
 defined( 'ABSPATH' ) || exit;
 
 // Frontend app URL for headless setup
-$frontend_url = 'https://shapehive.com';
-// Correct URL structure: /en/account/
-$account_url = $frontend_url . '/en/account/';
-$login_url = $frontend_url . '/en/login/';
+$frontend_url = function_exists('sasanperfumes_get_frontend_url') ? sasanperfumes_get_frontend_url() : get_site_url();
+$account_url = sasanperfumes_build_frontend_localized_url('en', 'account/');
+$login_url = sasanperfumes_build_frontend_localized_url('en', 'login/');
+$reset_url = sasanperfumes_build_frontend_localized_url(
+	'en',
+	'reset-password/?key=' . rawurlencode( $reset_key ) . '&login=' . rawurlencode( $user_login )
+);
 
 /*
  * @hooked WC_Emails::email_header() Output the email header
@@ -43,7 +46,7 @@ do_action( 'woocommerce_email_header', $email_heading, $email ); ?>
 	<?php esc_html_e( 'To set your password, visit the following address:', 'woocommerce' ); ?>
 </p>
 <p style="margin: 20px 0;">
-	<a href="<?php echo esc_url( $frontend_url . '/en/reset-password/?key=' . rawurlencode( $reset_key ) . '&login=' . rawurlencode( $user_login ) ); ?>" class="button" style="display: inline-block; padding: 14px 28px; background-color: #1a1a1a; color: #ffffff !important; text-decoration: none; font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;"><?php esc_html_e( 'Set your password', 'woocommerce' ); ?></a>
+	<a href="<?php echo esc_url( $reset_url ); ?>" class="button" style="display: inline-block; padding: 14px 28px; background-color: #1a1a1a; color: #ffffff !important; text-decoration: none; font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;"><?php esc_html_e( 'Set your password', 'woocommerce' ); ?></a>
 </p>
 <?php endif; ?>
 

@@ -1,11 +1,11 @@
 <?php
 /**
- * ShapeHive Category SEO Content
+ * Sasan Perfumes Category SEO Content
  * 
  * Adds custom SEO content fields (title + description, EN/AR) to WooCommerce
  * product category terms, replacing the hardcoded category-seo-content.ts file.
  * 
- * Admin: Products → Categories → Edit → "Category SEO Content" fields
+ * Admin: Products â†’ Categories â†’ Edit â†’ "Category SEO Content" fields
  * REST API: GET /sasanperfumes/v1/category-seo/{slug}
  * 
  * @package sasanperfumes_Frontend_Settings

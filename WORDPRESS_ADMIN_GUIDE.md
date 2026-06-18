@@ -38,12 +38,12 @@ When backend changes are needed:
 
 ### WordPress Multisite Mapping (shapehive network)
 
-The plugin supports one network backend (`cms.shapehive.com`) with separate frontend domains:
+The plugin uses one CMS backend (`cms.shapehive.com`) with a shared dataset and separate market frontends:
 
-- `shapehive.com`
-- `qa.shapehive.com`
-- `om.shapehive.com`
-- `sa.shapehive.com`
+- Path-based markets on the same domain: `/qa`, `/om`, `/sa`
+- Base intl host: `shapehive.com`
+- Route rule used by the frontend links: `/{market(optional)}/{locale}/{slug}` (locale is `en` or `ar`)
+- Keep URL order as market-first (`/qa/en`, `/om/ar`, `/sa/en`). Any `/en/qa` style request is normalized to market-first by the frontend middleware, but keep canonical content links as market-first.
 
 Network mapping is handled by the WordPress multisite helper in:
 
@@ -65,20 +65,29 @@ You can also configure it manually from Network Admin:
 ```json
 {
   "cms.shapehive.com": "https://shapehive.com",
-  "qa.shapehive.com": "https://qa.shapehive.com",
-  "om.shapehive.com": "https://om.shapehive.com",
-  "sa.shapehive.com": "https://sa.shapehive.com"
+  "shapehive.com/qa": "https://shapehive.com/qa",
+  "shapehive.com/om": "https://shapehive.com/om",
+  "shapehive.com/sa": "https://shapehive.com/sa"
 }
 ```
 
 5. Save.
 
-After setup, test from each domain:
+After setup, test from each entry point:
 
 - https://shapehive.com/en
-- https://qa.shapehive.com/en
-- https://om.shapehive.com/en
-- https://sa.shapehive.com/en
+- https://shapehive.com/ar
+- https://shapehive.com/qa/en
+- https://shapehive.com/qa/ar
+- https://shapehive.com/om/en
+- https://shapehive.com/om/ar
+- https://shapehive.com/sa/en
+- https://shapehive.com/sa/ar
+
+Primary CMS admin entry points:
+
+- WordPress Admin: `https://cms.shapehive.com/wp-admin`
+- Network frontend mapping settings: `https://cms.shapehive.com/wp-admin/network/admin.php?page=sasanperfumes-frontend-network`
 
 ### Arabic Content Sync (Products + Pages + CMS)
 

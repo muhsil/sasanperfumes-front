@@ -1,254 +1,36 @@
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import dynamic from "next/dynamic";
-import NextTopLoader from "nextjs-toploader";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
-import { MobileBottomBar } from "@/components/layout/MobileBottomBar";
-import { CurrencyProvider } from "@/contexts/CurrencyContext";
-import { CartProvider } from "@/contexts/CartContext";
-import { WishlistProvider } from "@/contexts/WishlistContext";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { NotificationProvider } from "@/contexts/NotificationContext";
-import { FreeGiftProvider } from "@/contexts/FreeGiftContext";
-import { ComparisonProvider } from "@/contexts/ComparisonContext";
-import { getDictionary } from "@/i18n";
-import { siteConfig, localeConfig, type Locale } from "@/config/site";
-import { INDEX_NOFOLLOW_ROBOTS, generateOrganizationJsonLd, generateWebSiteJsonLd, generateLocalBusinessJsonLd } from "@/lib/utils/seo";
-import { JsonLd } from "@/components/seo/JsonLd";
-import { getSiteSettings, getHeaderSettings, getPrimaryMenu, getMobileHeaderMenu, getMobileBottomBarMenu, getMobileBarSettings, getCategoriesDrawerMenu, getTopbarSettings, getSeoSettings, getFooterSettings, getWhatsAppSettings, getFeatureToggles, getStaticPageContent, mapRepeater, pickLocale } from "@/lib/api/wordpress";
-import { getRequestMarket } from "@/lib/market/server";
-import { TrackingScripts } from "@/components/tracking";
-import { Suspense } from "react";
+import { NextResponse } from "next/server";
+import { siteConfig } from "@/config/site";
 
-const CustomerTracker = dynamic(() => import("@/components/tracking/CustomerTracker").then(mod => mod.CustomerTracker));
+export async function GET() {
+  const content = `# ${siteConfig.name}
 
-// New feature components — loaded dynamically to keep initial JS bundle small
-const PromotionalPopup     = dynamic(() => import("@/components/common/PromotionalPopup").then(m => m.PromotionalPopup));
-const AbandonedCartPopup   = dynamic(() => import("@/components/common/AbandonedCartPopup").then(m => m.AbandonedCartPopup));
-const LiveChatWidget       = dynamic(() => import("@/components/common/LiveChatWidget").then(m => m.LiveChatWidget));
-const CompareDrawer        = dynamic(() => import("@/components/shop/CompareDrawer").then(m => m.CompareDrawer));
+> UAE perfume store for everyday fragrances, hair mist, all over sprays, and gift sets
 
-const MiniCartDrawer = dynamic(() => import("@/components/cart/MiniCartDrawer").then(mod => mod.MiniCartDrawer));
-const AccountDrawer = dynamic(() => import("@/components/account/AccountDrawer").then(mod => mod.AccountDrawer));
-const WhatsAppFloatingButton = dynamic(() => import("@/components/common/WhatsAppFloatingButton").then(mod => mod.WhatsAppFloatingButton));
-const LocationCurrencyBanner = dynamic(() => import("@/components/common/LocationCurrencyBanner").then(mod => mod.LocationCurrencyBanner));
-const CookieConsentBanner = dynamic(() => import("@/components/common/CookieConsentBanner").then(mod => mod.CookieConsentBanner));
-const NetworkStatusBanner = dynamic(() => import("@/components/common/NetworkStatusBanner").then(mod => mod.NetworkStatusBanner));
-const MobileEnhancements = dynamic(() => import("@/components/common/MobileEnhancements").then(mod => mod.MobileEnhancements));
+## About
+Sasan Perfumes is a UAE fragrance store offering perfumes, hair mist, all over sprays, and gift-ready scent collections online.
 
-interface LocaleLayoutProps {
-  children: React.ReactNode;
-  params: Promise<{ locale: string }>;
-}
+## Links
+- Website: ${siteConfig.url}
+- Shop: ${siteConfig.url}/en/shop
+- About Us: ${siteConfig.url}/en/about-us
+- Contact: ${siteConfig.url}/en/contact-us
+- Full LLM Context: ${siteConfig.url}/llms-full.txt
 
-export async function generateStaticParams() {
-  return siteConfig.locales.map((locale) => ({ locale }));
-}
+## Product Categories
+- Perfumes: ${siteConfig.url}/en/category/perfumes
+- All Over Spray: ${siteConfig.url}/en/category/all-over-spray
+- Hair Mist: ${siteConfig.url}/en/category/sasan-hair-mist
+- Gift Sets: ${siteConfig.url}/en/category/gift-set
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
-  const { locale } = await params;
-  const validLocale = locale as Locale;
-  
-  const siteSettings = await getSiteSettings(validLocale);
-  const metadataSiteName = siteSettings.site_name || siteConfig.name;
-  const metadataDescription = siteSettings.tagline || siteConfig.description;
-  
-  const faviconUrl = siteSettings.favicon?.url;
-  const proxiedFaviconUrl = faviconUrl
-    ? faviconUrl.replace(/^https?:\/\/[^/]+\/wp-content\/uploads\//, '/cms-media/')
-    : undefined;
-  const faviconWithCacheBust = proxiedFaviconUrl 
-    ? `${proxiedFaviconUrl}${proxiedFaviconUrl.includes('?') ? '&' : '?'}v=${siteSettings.favicon?.id || Date.now()}`
-    : undefined;
+## Languages
+- English: ${siteConfig.url}/en
+- Arabic: ${siteConfig.url}/ar
+`;
 
-  return {
-    title: {
-      default: metadataSiteName,
-      template: `%s | ${metadataSiteName}`,
+  return new NextResponse(content, {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Cache-Control": "public, max-age=86400, s-maxage=86400",
     },
-    description: metadataDescription,
-    metadataBase: new URL(siteConfig.url),
-    robots: INDEX_NOFOLLOW_ROBOTS,
-    icons: faviconWithCacheBust ? {
-      icon: faviconWithCacheBust,
-      shortcut: faviconWithCacheBust,
-      apple: faviconWithCacheBust,
-    } : undefined,
-  };
-}
-
-export default async function LocaleLayout({
-  children,
-  params,
-}: LocaleLayoutProps) {
-  const { locale } = await params;
-
-  // Validate locale
-  if (!siteConfig.locales.includes(locale as Locale)) {
-    notFound();
-  }
-
-  const validLocale = locale as Locale;
-  const dictionary = await getDictionary(validLocale);
-  const { dir } = localeConfig[validLocale];
-  const market = await getRequestMarket();
-
-  // Fetch site settings, header settings, topbar settings, menu, and SEO settings in parallel
-  const [siteSettings, headerSettings, topbarSettings, menuItems, mobileMenuItems, mobileBottomBarMenu, mobileBarSettings, categoriesDrawerMenu, seoSettings, footerSettings, whatsAppSettings, featureToggles, contactPageContent] = await Promise.all([
-    getSiteSettings(validLocale),
-    getHeaderSettings(),
-    getTopbarSettings(validLocale),
-    getPrimaryMenu(validLocale),
-    getMobileHeaderMenu(validLocale),
-    getMobileBottomBarMenu(validLocale),
-    getMobileBarSettings(validLocale),
-    getCategoriesDrawerMenu(validLocale),
-    getSeoSettings(validLocale),
-    getFooterSettings(),
-    getWhatsAppSettings(),
-    getFeatureToggles(),
-    getStaticPageContent("contact"),
-  ]);
-  const footerTopSocialLinks = mapRepeater(contactPageContent?.contact_social, validLocale, (item) => ({
-    platform: item.platform || "",
-    url: item.url || "",
-  }));
-  const showWhatsApp = featureToggles.sasanperfumes_whatsapp_enabled !== false && (whatsAppSettings?.enabled ?? true);
-  const showPromotionalPopup = featureToggles.sasanperfumes_popup_enabled === true;
-  const showAbandonedCartPopup = featureToggles.sasanperfumes_ab_popup_enabled === true;
-  const showLiveChat = featureToggles.sasanperfumes_chat_enabled === true;
-
-  return (
-    <AuthProvider>
-      <CurrencyProvider market={market}>
-        <NotificationProvider>
-          <ComparisonProvider>
-                                        <CartProvider locale={validLocale}>
-                                          <FreeGiftProvider locale={validLocale}>
-                      <WishlistProvider locale={validLocale}>
-              <JsonLd data={generateOrganizationJsonLd()} />
-              <JsonLd data={generateWebSiteJsonLd()} />
-              {generateLocalBusinessJsonLd().map((schema, i) => (
-                <JsonLd key={`local-business-${i}`} data={schema} />
-              ))}
-              <TrackingScripts
-                gaId={seoSettings.analytics.gaId}
-                googleAdsId={process.env.NEXT_PUBLIC_GOOGLE_ADS_ID}
-                fbPixelId={seoSettings.analytics.fbPixelId}
-                tiktokPixelId={seoSettings.analytics.tiktokPixelId}
-                snapPixelId={seoSettings.analytics.snapPixelId}
-                omnisendBrandId={process.env.NEXT_PUBLIC_OMNISEND_BRAND_ID}
-                gtmId={seoSettings.analytics.gtmId}
-              />
-              <Suspense fallback={null}>
-                <CustomerTracker />
-              </Suspense>
-              <NextTopLoader
-                color="var(--color-primary)"
-                initialPosition={0.08}
-                crawlSpeed={200}
-                height={3}
-                crawl={true}
-                showSpinner={false}
-                easing="ease"
-                speed={200}
-                shadow="0 0 10px var(--color-primary),0 0 5px var(--color-primary)"
-              />
-              <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[9999] focus:rounded-lg focus:bg-brand-primary focus:px-6 focus:py-3 focus:text-white focus:shadow-lg focus:outline-none">
-                {validLocale === "ar" ? "انتقل إلى المحتوى الرئيسي" : "Skip to main content"}
-              </a>
-              <div dir={dir} lang={validLocale} className="site-shell flex min-h-screen max-w-full flex-col text-brand-primary">
-                <nav className="print:hidden" aria-label={validLocale === "ar" ? "التنقل الرئيسي" : "Main navigation"}>
-                  <Header
-                    locale={validLocale}
-                    dictionary={dictionary}
-                    siteSettings={siteSettings}
-                    headerSettings={headerSettings}
-                    menuItems={menuItems?.items}
-                    mobileMenuItems={mobileMenuItems?.items}
-                    mobileBottomBarMenuItems={mobileBottomBarMenu?.items}
-                    categoriesDrawerMenuItems={categoriesDrawerMenu?.items}
-                    topbarSettings={topbarSettings}
-                  />
-                </nav>
-                <main id="main-content" className="section-reveal flex-1" role="main">
-                  <MobileEnhancements>{children}</MobileEnhancements>
-                </main>
-                <Footer locale={validLocale} dictionary={dictionary} siteSettings={siteSettings} footerSettings={footerSettings} featureToggles={featureToggles} footerTopSocialLinks={footerTopSocialLinks} />
-                <MobileBottomBar
-                  locale={validLocale}
-                  settings={mobileBarSettings}
-                  dictionary={dictionary}
-                  menuItems={menuItems?.items}
-                  mobileMenuItems={mobileMenuItems?.items}
-                  mobileBottomBarMenuItems={mobileBottomBarMenu?.items}
-                  categoriesDrawerMenuItems={categoriesDrawerMenu?.items}
-                  whatsAppPhoneNumber={whatsAppSettings?.number || siteConfig.contact.whatsapp}
-                  whatsAppMessage={pickLocale(whatsAppSettings?.message, validLocale, "")}
-                  whatsAppEnabled={showWhatsApp}
-                />
-              </div>
-              <MiniCartDrawer
-                locale={validLocale}
-                dictionary={{
-                  cart: dictionary.common.cart,
-                  emptyCart: dictionary.cart.emptyCart,
-                  continueShopping: dictionary.cart.continueShopping,
-                  subtotal: dictionary.cart.subtotal,
-                  viewCart: dictionary.miniCart.viewCart,
-                  checkout: dictionary.miniCart.checkout,
-                  remove: dictionary.common.remove,
-                }}
-              />
-              <AccountDrawer
-                locale={validLocale}
-                dictionary={{
-                  myAccount: dictionary.account.myAccount,
-                  orders: dictionary.account.orders,
-                  addresses: dictionary.account.addresses,
-                  wishlist: dictionary.account.wishlist,
-                  settings: dictionary.account.settings,
-                  logout: dictionary.account.logout,
-                  welcome: dictionary.account.welcome,
-                  login: dictionary.account.login,
-                  register: dictionary.account.register,
-                  notLoggedIn: dictionary.account.notLoggedIn,
-                  profile: dictionary.account.profile,
-                  more: dictionary.common.more,
-                }}
-              />
-              <NetworkStatusBanner locale={validLocale} />
-              <LocationCurrencyBanner locale={validLocale} />
-              <CookieConsentBanner locale={validLocale} />
-              {showWhatsApp && (
-                <div className="print:hidden">
-                  <WhatsAppFloatingButton
-                    phoneNumber={whatsAppSettings?.number || siteConfig.contact.whatsapp}
-                    message={pickLocale(whatsAppSettings?.message, validLocale, "")}
-                    locale={validLocale}
-                    enabled
-                    showDesktop={whatsAppSettings?.showDesktop ?? true}
-                    showMobile={false}
-                    position={whatsAppSettings?.position || "bottom-left"}
-                  />
-                </div>
-              )}
-              {/* New global feature components */}
-              {showPromotionalPopup && <PromotionalPopup locale={validLocale} />}
-              {showAbandonedCartPopup && <AbandonedCartPopup locale={validLocale} />}
-              {showLiveChat && <LiveChatWidget />}
-              <CompareDrawer locale={validLocale} />
-                                                        </WishlistProvider>
-                                            </FreeGiftProvider>
-                    </CartProvider>
-          </ComparisonProvider>
-        </NotificationProvider>
-      </CurrencyProvider>
-    </AuthProvider>
-  );
+  });
 }

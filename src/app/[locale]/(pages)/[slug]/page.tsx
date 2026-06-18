@@ -1,114 +1,36 @@
-import { notFound, permanentRedirect } from "next/navigation";
-import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
-import { getPageBySlug, getPages, stripHtmlTags, isFunctionalPageSlug } from "@/lib/api/wordpress";
-import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
-import type { Locale } from "@/config/site";
-import type { Metadata } from "next";
+import { NextResponse } from "next/server";
+import { siteConfig } from "@/config/site";
 
-// WordPress CMS slugs that have dedicated Next.js pages at different routes.
-// Redirect to the proper frontend routes to avoid duplicate content with broken metadata.
-const SLUG_REDIRECTS: Record<string, string> = {
-  "privacy-policy": "/privacy",
-  "shipping-policy": "/shipping",
-  "return-policy": "/returns",
-  "delivery-policy": "/privacy",
-  "refund_returns": "/returns",
-  "payment-policy": "/returns",
-};
+export async function GET() {
+  const content = `# ${siteConfig.name}
 
-interface DynamicPageProps {
-  params: Promise<{ locale: string; slug: string }>;
-}
+> UAE perfume store for everyday fragrances, hair mist, all over sprays, and gift sets
 
-export async function generateStaticParams() {
-  const pages = await getPages();
-  return pages.map((page) => ({
-    slug: page.slug,
-  }));
-}
+## About
+Sasan Perfumes is a UAE fragrance store offering perfumes, hair mist, all over sprays, and gift-ready scent collections online.
 
-export async function generateMetadata({
-  params,
-}: DynamicPageProps): Promise<Metadata> {
-  const { locale, slug } = await params;
+## Links
+- Website: ${siteConfig.url}
+- Shop: ${siteConfig.url}/en/shop
+- About Us: ${siteConfig.url}/en/about-us
+- Contact: ${siteConfig.url}/en/contact-us
+- Full LLM Context: ${siteConfig.url}/llms-full.txt
 
-  if (isFunctionalPageSlug(slug) || SLUG_REDIRECTS[slug]) {
-    return {};
-  }
+## Product Categories
+- Perfumes: ${siteConfig.url}/en/category/perfumes
+- All Over Spray: ${siteConfig.url}/en/category/all-over-spray
+- Hair Mist: ${siteConfig.url}/en/category/sasan-hair-mist
+- Gift Sets: ${siteConfig.url}/en/category/gift-set
 
-  const page = await getPageBySlug(slug, locale as Locale);
+## Languages
+- English: ${siteConfig.url}/en
+- Arabic: ${siteConfig.url}/ar
+`;
 
-  if (!page) {
-    return {};
-  }
-
-  const title = stripHtmlTags(page.title.rendered);
-  const description = page.excerpt.rendered
-    ? stripHtmlTags(page.excerpt.rendered)
-    : page.yoast_head_json?.description || "";
-
-  return generateSeoMetadata({
-    title,
-    description: description.slice(0, 160),
-    locale: locale as Locale,
-    pathname: `/${slug}`,
+  return new NextResponse(content, {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Cache-Control": "public, max-age=86400, s-maxage=86400",
+    },
   });
-}
-
-export default async function DynamicPage({ params }: DynamicPageProps) {
-  const { locale, slug } = await params;
-
-  // Redirect WordPress CMS slugs to their proper frontend routes
-  const redirectPath = SLUG_REDIRECTS[slug];
-  if (redirectPath) {
-    permanentRedirect(`/${locale}${redirectPath}`);
-  }
-
-  if (isFunctionalPageSlug(slug)) {
-    notFound();
-  }
-
-  const page = await getPageBySlug(slug, locale as Locale);
-
-  if (!page) {
-    notFound();
-  }
-
-  const isRTL = locale === "ar";
-  const pageTitle = stripHtmlTags(page.title.rendered);
-
-  const breadcrumbItems = [{ name: pageTitle, href: `/${locale}/${slug}` }];
-
-  return (
-    <div className="container mx-auto px-5 md:px-7 lg:px-12 py-3">
-      <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} contained={false} />
-
-      <div className="mb-4 text-center">
-        <h1 className="mb-4 text-4xl font-bold text-gray-900">{pageTitle}</h1>
-        {page.excerpt.rendered && (
-          <p className="mx-auto max-w-2xl text-lg text-gray-600">
-            {stripHtmlTags(page.excerpt.rendered)}
-          </p>
-        )}
-        <p className="mt-2 text-sm text-gray-500">
-          {isRTL ? "آخر تحديث: " : "Last Updated: "}
-          {new Date(page.modified).toLocaleDateString(
-            isRTL ? "ar-SA" : "en-US",
-            {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            }
-          )}
-        </p>
-      </div>
-
-      <div className="mx-auto max-w-4xl">
-        <div
-          className="prose prose-stone max-w-none prose-headings:text-brand-primary prose-p:text-gray-700 prose-strong:text-brand-primary prose-li:text-gray-700 prose-a:text-brand-primary prose-a:underline hover:prose-a:text-brand-primary"
-          dangerouslySetInnerHTML={{ __html: page.content.rendered }}
-        />
-      </div>
-    </div>
-  );
 }

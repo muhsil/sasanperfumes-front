@@ -8,6 +8,8 @@ A modern, bilingual (English/Arabic) headless e-commerce frontend built with Nex
 - **Bilingual Support** - English and Arabic (RTL) with seamless language switching
 - **Multi-Currency** - Support for AED, BHD, KWD, OMR, QAR, SAR, USD with persistent selection
 - **WordPress/WooCommerce Backend** - Headless CMS via REST API, Store API, and CoCart
+- **Market-aware Frontend Routing** - Shared CMS with separate frontends at `/qa`, `/om`, and `/sa` (plus base `https://shapehive.com`)
+- **Multisite market separation** - One WordPress host (`cms.shapehive.com`) with market-specific content, pages, products, and SEO returned by market context.
 - **Tailwind CSS** - Utility-first styling with RTL support
 - **TypeScript** - Full type safety throughout the codebase
 - **SEO Optimized** - Metadata, hreflang, structured data (Product, Offer, BreadcrumbList, Organization)
@@ -80,7 +82,7 @@ npm install
 cp .env.example .env.local
 ```
 
-4. Update `.env.local` with your WordPress backend details:
+4. Update `.env.local` with your WordPress backend and market frontend details:
 ```
 NEXT_PUBLIC_SITE_URL=https://shapehive.com
 NEXT_PUBLIC_WC_API_URL=https://cms.shapehive.com
@@ -89,13 +91,18 @@ WC_CONSUMER_KEY=ck_xxxxx
 WC_CONSUMER_SECRET=cs_xxxxx
 ```
 
-For QA:
+Market frontends:
 ```
-NEXT_PUBLIC_SITE_URL=https://qa.shapehive.com
-NEXT_PUBLIC_WC_API_URL=https://cms.shapehive.com
-NEXT_PUBLIC_CANONICAL_HOST=https://qa.shapehive.com
-NEXT_PUBLIC_WORDPRESS_GRAPHQL_URL=https://cms.shapehive.com/graphql
+https://shapehive.com/        -> intl market (default currency/country logic)
+https://shapehive.com/qa      -> Qatar market
+https://shapehive.com/om      -> Oman market
+https://shapehive.com/sa      -> Saudi market
 ```
+
+All market routes use one backend:
+`https://cms.shapehive.com`
+
+The backend uses market context to resolve separate site data per market (market pages, products, SEO, and settings are served from the active frontend segment).
 
 5. Run the development server:
 ```bash
@@ -106,7 +113,7 @@ Open [http://localhost:3000](http://localhost:3000) to view the site.
 
 ## WordPress Backend Setup
 
-### Required Plugins
+### Required Plugins (single shared backend for all markets)
 
 - WooCommerce
 - CoCart (headless cart API)
@@ -142,6 +149,20 @@ Ensure the following WordPress REST API endpoints are accessible:
 | Qatar | QAR | QR |
 | Saudi Arabia | SAR | SAR |
 | United States | USD | $ |
+
+Note: Currencies and SEO/content are loaded per market context from the shared backend.
+
+## Frontend Market URLs
+
+Use one canonical backend and separate frontend market routes:
+- `https://shapehive.com/`
+- `https://shapehive.com/qa`
+- `https://shapehive.com/om`
+- `https://shapehive.com/sa`
+
+Market-specific hostnames are not used for frontend routing now; use path-based market routes (`/qa`, `/om`, `/sa`).
+
+For a full host/canonicals matrix, keep `NEXT_PUBLIC_CANONICAL_HOSTS` and `NEXT_PUBLIC_ALLOWED_HOSTS` in sync in `.env.local`.
 
 ## Deployment
 

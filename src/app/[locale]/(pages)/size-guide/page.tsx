@@ -1,34 +1,36 @@
-import { notFound } from "next/navigation";
-import { redirect } from "next/navigation";
-import { disableRuntimeCache, siteConfig } from "@/config/site";
-import { backendHeaders } from "@/lib/utils/backendFetch";
+import { NextResponse } from "next/server";
+import { siteConfig } from "@/config/site";
 
-interface SizeGuidePageProps {
-  params: Promise<{ locale: string }>;
-}
+export async function GET() {
+  const content = `# ${siteConfig.name}
 
-async function isSizeGuideEnabled(): Promise<boolean> {
-  try {
-    const res = await fetch(
-      `${siteConfig.apiUrl}/wp-json/sasanperfumes/v1/advanced/scent-size-guide`,
-      disableRuntimeCache
-        ? { cache: "no-store", headers: backendHeaders() }
-        : { next: { revalidate: 300 }, headers: backendHeaders() }
-    );
-    if (!res.ok) return false;
-    const data = await res.json();
-    return data?.sizeGuide?.enabled === true;
-  } catch {
-    return false;
-  }
-}
+> UAE perfume store for everyday fragrances, hair mist, all over sprays, and gift sets
 
-export default async function SizeGuidePage({ params }: SizeGuidePageProps) {
-  const { locale } = await params;
-  const enabled = await isSizeGuideEnabled();
-  if (!enabled) notFound();
+## About
+Sasan Perfumes is a UAE fragrance store offering perfumes, hair mist, all over sprays, and gift-ready scent collections online.
 
-  // When re-enabled in the future, CMS content will render here.
-  // For now redirect to shop since no CMS content template exists yet.
-  redirect(`/${locale}/shop`);
+## Links
+- Website: ${siteConfig.url}
+- Shop: ${siteConfig.url}/en/shop
+- About Us: ${siteConfig.url}/en/about-us
+- Contact: ${siteConfig.url}/en/contact-us
+- Full LLM Context: ${siteConfig.url}/llms-full.txt
+
+## Product Categories
+- Perfumes: ${siteConfig.url}/en/category/perfumes
+- All Over Spray: ${siteConfig.url}/en/category/all-over-spray
+- Hair Mist: ${siteConfig.url}/en/category/sasan-hair-mist
+- Gift Sets: ${siteConfig.url}/en/category/gift-set
+
+## Languages
+- English: ${siteConfig.url}/en
+- Arabic: ${siteConfig.url}/ar
+`;
+
+  return new NextResponse(content, {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Cache-Control": "public, max-age=86400, s-maxage=86400",
+    },
+  });
 }

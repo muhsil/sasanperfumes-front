@@ -1,7 +1,7 @@
 <?php
 /**
- * ShapeHive Static Pages — Dynamic content for About, Contact, FAQ, Privacy, Terms, Shipping, Returns
- * Admin: sasanperfumes → Pages (submenu)
+ * Sasan Perfumes Static Pages â€” Dynamic content for About, Contact, FAQ, Privacy, Terms, Shipping, Returns
+ * Admin: sasanperfumes â†’ Pages (submenu)
  * REST API: GET /sasanperfumes/v1/pages/{slug}
  * @since 6.2.0
  */
@@ -367,7 +367,7 @@ function sasanperfumes_sp_render_admin() {
         echo '</table>';
     }
 
-    // Section fields (bilingual) — about page specific
+    // Section fields (bilingual) â€” about page specific
     if (!empty($cfg['section_fields'])) {
         echo '<hr><h2>Page Sections</h2><table class="form-table">';
         sasanperfumes_sp_bilingual($current_tab, $cfg['section_fields']);
@@ -650,78 +650,78 @@ function sasanperfumes_sp_populate_about_sample_content() {
 
     // Hero
     update_option('sasanperfumes_page_about_hero_subtitle_en', 'Discover the art behind our luxury fragrances');
-    update_option('sasanperfumes_page_about_hero_subtitle_ar', 'اكتشف فن صناعة عطورنا الفاخرة');
+    update_option('sasanperfumes_page_about_hero_subtitle_ar', 'Ø§ÙƒØªØ´Ù ÙÙ† ØµÙ†Ø§Ø¹Ø© Ø¹Ø·ÙˆØ±Ù†Ø§ Ø§Ù„ÙØ§Ø®Ø±Ø©');
     update_option('sasanperfumes_page_about_hero_description_en', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Crafted with passion, every fragrance tells a story of elegance and identity.');
-    update_option('sasanperfumes_page_about_hero_description_ar', 'هذا نص تجريبي يستخدم للتحقق من عرض محتوى صفحة من نحن بشكل صحيح باللغة العربية.');
+    update_option('sasanperfumes_page_about_hero_description_ar', 'Ù‡Ø°Ø§ Ù†Øµ ØªØ¬Ø±ÙŠØ¨ÙŠ ÙŠØ³ØªØ®Ø¯Ù… Ù„Ù„ØªØ­Ù‚Ù‚ Ù…Ù† Ø¹Ø±Ø¶ Ù…Ø­ØªÙˆÙ‰ ØµÙØ­Ø© Ù…Ù† Ù†Ø­Ù† Ø¨Ø´ÙƒÙ„ ØµØ­ÙŠØ­ Ø¨Ø§Ù„Ù„ØºØ© Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©.');
 
     // Stats
     update_option('sasanperfumes_page_about_stats_since_en', 'Since 2020');
-    update_option('sasanperfumes_page_about_stats_since_ar', 'منذ 2020');
+    update_option('sasanperfumes_page_about_stats_since_ar', 'Ù…Ù†Ø° 2020');
     update_option('sasanperfumes_page_about_stats_location_en', 'UAE');
-    update_option('sasanperfumes_page_about_stats_location_ar', 'الإمارات');
+    update_option('sasanperfumes_page_about_stats_location_ar', 'Ø§Ù„Ø¥Ù…Ø§Ø±Ø§Øª');
     update_option('sasanperfumes_page_about_stats_handcrafted_en', 'Handcrafted');
-    update_option('sasanperfumes_page_about_stats_handcrafted_ar', 'صناعة يدوية');
+    update_option('sasanperfumes_page_about_stats_handcrafted_ar', 'ØµÙ†Ø§Ø¹Ø© ÙŠØ¯ÙˆÙŠØ©');
     update_option('sasanperfumes_page_about_stats_sustainable_en', 'Sustainable');
-    update_option('sasanperfumes_page_about_stats_sustainable_ar', 'مستدام');
+    update_option('sasanperfumes_page_about_stats_sustainable_ar', 'Ù…Ø³ØªØ¯Ø§Ù…');
 
     // Main Content
     update_option('sasanperfumes_page_about_main_title_en', 'Our Story');
-    update_option('sasanperfumes_page_about_main_title_ar', 'قصتنا');
+    update_option('sasanperfumes_page_about_main_title_ar', 'Ù‚ØµØªÙ†Ø§');
     update_option('sasanperfumes_page_about_main_p1_en', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean nec dignissim urna, at fringilla elit.');
-    update_option('sasanperfumes_page_about_main_p1_ar', 'هذا نص تجريبي يستخدم للتحقق من عرض محتوى صفحة من نحن بشكل صحيح باللغة العربية.');
+    update_option('sasanperfumes_page_about_main_p1_ar', 'Ù‡Ø°Ø§ Ù†Øµ ØªØ¬Ø±ÙŠØ¨ÙŠ ÙŠØ³ØªØ®Ø¯Ù… Ù„Ù„ØªØ­Ù‚Ù‚ Ù…Ù† Ø¹Ø±Ø¶ Ù…Ø­ØªÙˆÙ‰ ØµÙØ­Ø© Ù…Ù† Ù†Ø­Ù† Ø¨Ø´ÙƒÙ„ ØµØ­ÙŠØ­ Ø¨Ø§Ù„Ù„ØºØ© Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©.');
     update_option('sasanperfumes_page_about_main_p2_en', 'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.');
-    update_option('sasanperfumes_page_about_main_p2_ar', 'نص تجريبي آخر لتوضيح محتوى القصة الرئيسية للعلامة التجارية بشكل مناسب.');
+    update_option('sasanperfumes_page_about_main_p2_ar', 'Ù†Øµ ØªØ¬Ø±ÙŠØ¨ÙŠ Ø¢Ø®Ø± Ù„ØªÙˆØ¶ÙŠØ­ Ù…Ø­ØªÙˆÙ‰ Ø§Ù„Ù‚ØµØ© Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ© Ù„Ù„Ø¹Ù„Ø§Ù…Ø© Ø§Ù„ØªØ¬Ø§Ø±ÙŠØ© Ø¨Ø´ÙƒÙ„ Ù…Ù†Ø§Ø³Ø¨.');
     update_option('sasanperfumes_page_about_main_p3_en', 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.');
-    update_option('sasanperfumes_page_about_main_p3_ar', 'نص تجريبي ثالث لإكمال قسم القصة الرئيسية بمعلومات إضافية عن العلامة.');
+    update_option('sasanperfumes_page_about_main_p3_ar', 'Ù†Øµ ØªØ¬Ø±ÙŠØ¨ÙŠ Ø«Ø§Ù„Ø« Ù„Ø¥ÙƒÙ…Ø§Ù„ Ù‚Ø³Ù… Ø§Ù„Ù‚ØµØ© Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ© Ø¨Ù…Ø¹Ù„ÙˆÙ…Ø§Øª Ø¥Ø¶Ø§ÙÙŠØ© Ø¹Ù† Ø§Ù„Ø¹Ù„Ø§Ù…Ø©.');
 
     // Mission
     update_option('sasanperfumes_page_about_mission_title_en', 'Our Mission');
-    update_option('sasanperfumes_page_about_mission_title_ar', 'رسالتنا');
+    update_option('sasanperfumes_page_about_mission_title_ar', 'Ø±Ø³Ø§Ù„ØªÙ†Ø§');
     update_option('sasanperfumes_page_about_mission_content_en', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Our mission is to create memorable fragrances that connect emotions, culture, and craftsmanship.');
-    update_option('sasanperfumes_page_about_mission_content_ar', 'هذا نص تجريبي يوضح رسالة العلامة التجارية وطريقة عرض المحتوى العربي بشكل صحيح.');
+    update_option('sasanperfumes_page_about_mission_content_ar', 'Ù‡Ø°Ø§ Ù†Øµ ØªØ¬Ø±ÙŠØ¨ÙŠ ÙŠÙˆØ¶Ø­ Ø±Ø³Ø§Ù„Ø© Ø§Ù„Ø¹Ù„Ø§Ù…Ø© Ø§Ù„ØªØ¬Ø§Ø±ÙŠØ© ÙˆØ·Ø±ÙŠÙ‚Ø© Ø¹Ø±Ø¶ Ø§Ù„Ù…Ø­ØªÙˆÙ‰ Ø§Ù„Ø¹Ø±Ø¨ÙŠ Ø¨Ø´ÙƒÙ„ ØµØ­ÙŠØ­.');
 
     // Vision
     update_option('sasanperfumes_page_about_vision_title_en', 'Our Vision');
-    update_option('sasanperfumes_page_about_vision_title_ar', 'رؤيتنا');
+    update_option('sasanperfumes_page_about_vision_title_ar', 'Ø±Ø¤ÙŠØªÙ†Ø§');
     update_option('sasanperfumes_page_about_vision_content_en', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Our vision is to become a trusted luxury fragrance house known for quality, creativity, and timeless scent experiences.');
-    update_option('sasanperfumes_page_about_vision_content_ar', 'هذا نص تجريبي يوضح رؤية العلامة التجارية وطريقة عرض المحتوى العربي بشكل صحيح.');
+    update_option('sasanperfumes_page_about_vision_content_ar', 'Ù‡Ø°Ø§ Ù†Øµ ØªØ¬Ø±ÙŠØ¨ÙŠ ÙŠÙˆØ¶Ø­ Ø±Ø¤ÙŠØ© Ø§Ù„Ø¹Ù„Ø§Ù…Ø© Ø§Ù„ØªØ¬Ø§Ø±ÙŠØ© ÙˆØ·Ø±ÙŠÙ‚Ø© Ø¹Ø±Ø¶ Ø§Ù„Ù…Ø­ØªÙˆÙ‰ Ø§Ù„Ø¹Ø±Ø¨ÙŠ Ø¨Ø´ÙƒÙ„ ØµØ­ÙŠØ­.');
 
     // Core Values
     update_option('sasanperfumes_page_about_core_values_title_en', 'Core Values');
-    update_option('sasanperfumes_page_about_core_values_title_ar', 'قيمنا الأساسية');
+    update_option('sasanperfumes_page_about_core_values_title_ar', 'Ù‚ÙŠÙ…Ù†Ø§ Ø§Ù„Ø£Ø³Ø§Ø³ÙŠØ©');
     update_option('sasanperfumes_page_about_core_values_subtitle_en', 'The principles that guide every fragrance we create.');
-    update_option('sasanperfumes_page_about_core_values_subtitle_ar', 'المبادئ التي توجه كل عطر نصنعه.');
+    update_option('sasanperfumes_page_about_core_values_subtitle_ar', 'Ø§Ù„Ù…Ø¨Ø§Ø¯Ø¦ Ø§Ù„ØªÙŠ ØªÙˆØ¬Ù‡ ÙƒÙ„ Ø¹Ø·Ø± Ù†ØµÙ†Ø¹Ù‡.');
 
     // Core Values Items
     $core_values = [
         [
             'title_en' => 'Craftsmanship',
-            'title_ar' => 'الحرفية',
+            'title_ar' => 'Ø§Ù„Ø­Ø±ÙÙŠØ©',
             'description_en' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-            'description_ar' => 'نص تجريبي للتحقق من عرض القيم الأساسية.',
+            'description_ar' => 'Ù†Øµ ØªØ¬Ø±ÙŠØ¨ÙŠ Ù„Ù„ØªØ­Ù‚Ù‚ Ù…Ù† Ø¹Ø±Ø¶ Ø§Ù„Ù‚ÙŠÙ… Ø§Ù„Ø£Ø³Ø§Ø³ÙŠØ©.',
         ],
         [
             'title_en' => 'Quality',
-            'title_ar' => 'الجودة',
+            'title_ar' => 'Ø§Ù„Ø¬ÙˆØ¯Ø©',
             'description_en' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-            'description_ar' => 'نص تجريبي للتحقق من عرض القيم الأساسية.',
+            'description_ar' => 'Ù†Øµ ØªØ¬Ø±ÙŠØ¨ÙŠ Ù„Ù„ØªØ­Ù‚Ù‚ Ù…Ù† Ø¹Ø±Ø¶ Ø§Ù„Ù‚ÙŠÙ… Ø§Ù„Ø£Ø³Ø§Ø³ÙŠØ©.',
         ],
         [
             'title_en' => 'Sustainability',
-            'title_ar' => 'الاستدامة',
+            'title_ar' => 'Ø§Ù„Ø§Ø³ØªØ¯Ø§Ù…Ø©',
             'description_en' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-            'description_ar' => 'نص تجريبي للتحقق من عرض القيم الأساسية.',
+            'description_ar' => 'Ù†Øµ ØªØ¬Ø±ÙŠØ¨ÙŠ Ù„Ù„ØªØ­Ù‚Ù‚ Ù…Ù† Ø¹Ø±Ø¶ Ø§Ù„Ù‚ÙŠÙ… Ø§Ù„Ø£Ø³Ø§Ø³ÙŠØ©.',
         ],
     ];
     update_option('sasanperfumes_page_about_core_values', $core_values);
 
     // CTA
     update_option('sasanperfumes_page_about_cta_title_en', 'Ready to Experience Excellence?');
-    update_option('sasanperfumes_page_about_cta_title_ar', 'هل أنت مستعد لتجربة التميز؟');
+    update_option('sasanperfumes_page_about_cta_title_ar', 'Ù‡Ù„ Ø£Ù†Øª Ù…Ø³ØªØ¹Ø¯ Ù„ØªØ¬Ø±Ø¨Ø© Ø§Ù„ØªÙ…ÙŠØ²ØŸ');
     update_option('sasanperfumes_page_about_cta_subtitle_en', 'Discover our collection of premium fragrances crafted with passion and excellence.');
-    update_option('sasanperfumes_page_about_cta_subtitle_ar', 'اكتشف مجموعتنا من العطور الفاخرة المصنوعة بشغف وتميز.');
+    update_option('sasanperfumes_page_about_cta_subtitle_ar', 'Ø§ÙƒØªØ´Ù Ù…Ø¬Ù…ÙˆØ¹ØªÙ†Ø§ Ù…Ù† Ø§Ù„Ø¹Ø·ÙˆØ± Ø§Ù„ÙØ§Ø®Ø±Ø© Ø§Ù„Ù…ØµÙ†ÙˆØ¹Ø© Ø¨Ø´ØºÙ ÙˆØªÙ…ÙŠØ².');
     update_option('sasanperfumes_page_about_cta_button_en', 'Shop Now');
-    update_option('sasanperfumes_page_about_cta_button_ar', 'تسوق الآن');
+    update_option('sasanperfumes_page_about_cta_button_ar', 'ØªØ³ÙˆÙ‚ Ø§Ù„Ø¢Ù†');
     update_option('sasanperfumes_page_about_cta_link_en', '/shop');
     update_option('sasanperfumes_page_about_cta_link_ar', '/ar/shop');
 }

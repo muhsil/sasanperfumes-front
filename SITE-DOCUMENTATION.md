@@ -1,6 +1,6 @@
 # Sasan Perfumes Site Documentation
 
-Sasan Perfumes is a headless ecommerce storefront. The frontend is a Next.js app. The backend is WordPress + WooCommerce with a custom plugin named `sasanperfumes-frontend-settings`.
+Sasan Perfumes is a headless ecommerce storefront. The frontend is a Next.js app. A single WordPress + WooCommerce backend (`cms.shapehive.com`) serves all market frontends.
 
 ## Project Summary
 
@@ -9,7 +9,7 @@ Sasan Perfumes is a headless ecommerce storefront. The frontend is a Next.js app
 | Project | Sasan Perfumes |
 | Frontend | Next.js 16, React 19, TypeScript |
 | Backend | WordPress, WooCommerce, CoCart, WPGraphQL, custom plugin |
-| Production storefront | `https://shapehive.com` |
+| Production storefront(s) | `https://shapehive.com`, `https://shapehive.com/qa`, `https://shapehive.com/om`, `https://shapehive.com/sa` |
 | CMS/API | `https://cms.shapehive.com` |
 | WordPress REST base | `https://cms.shapehive.com/wp-json` |
 | Custom REST namespace | `sasanperfumes/v1` |
@@ -24,6 +24,7 @@ The API namespace intentionally remains `sasanperfumes/v1` for compatibility.
 Browser
   -> Next.js frontend
   -> Next.js /api/* proxy routes
+  -> Market router (host/prefix aware)
   -> WordPress REST API / WooCommerce Store API / CoCart / WPGraphQL
   -> WordPress MySQL database
 ```
@@ -34,8 +35,9 @@ Primary data flow:
 2. Client actions use same-origin Next.js `/api/*` routes.
 3. Products/categories use WooCommerce Store API and WPGraphQL.
 4. Cart uses CoCart.
-5. Orders, customers, coupons, and shipping use WooCommerce REST APIs where credentials are needed.
-6. Payments use MyFatoorah, Tabby, and Tamara server-side API routes.
+5. Market context is inferred from the request host/prefix and passed to backend selectors so each market gets isolated pages, products, and SEO.
+6. Orders, customers, coupons, and shipping use WooCommerce REST APIs where credentials are needed.
+7. Payments use MyFatoorah, Tabby, and Tamara server-side API routes.
 
 ## Tech Stack
 
@@ -154,12 +156,24 @@ Required local environment file:
 .env.local
 ```
 
-Common values:
+Common values for shared CMS multi-market setup:
 
 ```env
 NEXT_PUBLIC_WC_API_URL=https://cms.shapehive.com
 NEXT_PUBLIC_WORDPRESS_GRAPHQL_URL=https://cms.shapehive.com/graphql
 NEXT_PUBLIC_SITE_URL=https://shapehive.com
+NEXT_PUBLIC_CANONICAL_HOST=https://shapehive.com
+NEXT_PUBLIC_CANONICAL_HOSTS=shapehive.com
+NEXT_PUBLIC_ALLOWED_HOSTS=localhost,127.0.0.1,::1,shapehive.com,cms.shapehive.com,localhost:3000,localhost:3001
+```
+
+Market entry URLs:
+
+```text
+https://shapehive.com/
+https://shapehive.com/qa
+https://shapehive.com/om
+https://shapehive.com/sa
 ```
 
 Private server-side credentials:
@@ -214,6 +228,13 @@ npx next build --webpack
 
 ## Routing
 
+Market routing:
+
+- Market prefixes are optional; supported prefixes: `qa`, `om`, `sa`.
+- URL pattern is `/{market}/{locale}/...` (for market routes) or `/{locale}/...` for default intl.
+- Market is resolved by the first path segment (`/qa`, `/om`, `/sa`) under `shapehive.com`.
+- Example: `https://shapehive.com/qa/en/product/mimosa-glow`.
+
 Locale routing:
 
 | Route | Purpose |
@@ -246,6 +267,12 @@ Locale routing:
 | `/en/store-locator` | Store locator |
 
 Arabic uses the same paths under `/ar`.
+
+Market examples:
+
+- Qatar: `/qa/en`, `/qa/ar`
+- Oman: `/om/en/shop`
+- Saudi Arabia: `/sa/en/product/{slug}`
 
 ## Internationalization
 
@@ -666,6 +693,9 @@ Recommended page checks:
 | Private Labeling | `/en/private-labeling` |
 | Contact | `/en/contact` |
 | Arabic homepage | `/ar` |
+| Qatar homepage | `/qa/en` |
+| Oman product | `/om/en/product/mimosa-glow` |
+| Saudi shop | `/sa/en/shop` |
 
 ## Operational Notes
 

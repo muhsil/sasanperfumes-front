@@ -1,6 +1,6 @@
 <?php
 /**
- * ShapeHive Brands Slider
+ * Sasan Perfumes Brands Slider
  *
  * Admin page and REST API endpoint for the homepage brands/partners logo slider.
  * Each brand has a name, image URL, and optional link.
@@ -71,7 +71,7 @@ function sasanperfumes_brands_slider_render_page() {
 
     $enabled         = get_theme_mod('sasanperfumes_brands_slider_enabled', false);
     $heading_en      = get_theme_mod('sasanperfumes_brands_slider_heading_en', 'Our Brands');
-    $heading_ar      = get_theme_mod('sasanperfumes_brands_slider_heading_ar', 'علاماتنا التجارية');
+    $heading_ar      = get_theme_mod('sasanperfumes_brands_slider_heading_ar', 'Ø¹Ù„Ø§Ù…Ø§ØªÙ†Ø§ Ø§Ù„ØªØ¬Ø§Ø±ÙŠØ©');
     $subtitle_en     = get_theme_mod('sasanperfumes_brands_slider_subtitle_en', '');
     $subtitle_ar     = get_theme_mod('sasanperfumes_brands_slider_subtitle_ar', '');
     $desktop_count   = get_theme_mod('sasanperfumes_brands_slider_desktop_count', 6);
@@ -108,7 +108,7 @@ function sasanperfumes_brands_slider_render_page() {
                 </tr>
                 <tr>
                     <th>Subtitle (AR)</th>
-                    <td><input type="text" name="sasanperfumes_brands_slider_subtitle_ar" value="<?php echo esc_attr($subtitle_ar); ?>" class="large-text" dir="rtl" placeholder="e.g. اكتشف علاماتنا العطرية المصممة لكل ذوق ومناسبة."></td>
+                    <td><input type="text" name="sasanperfumes_brands_slider_subtitle_ar" value="<?php echo esc_attr($subtitle_ar); ?>" class="large-text" dir="rtl" placeholder="e.g. Ø§ÙƒØªØ´Ù Ø¹Ù„Ø§Ù…Ø§ØªÙ†Ø§ Ø§Ù„Ø¹Ø·Ø±ÙŠØ© Ø§Ù„Ù…ØµÙ…Ù…Ø© Ù„ÙƒÙ„ Ø°ÙˆÙ‚ ÙˆÙ…Ù†Ø§Ø³Ø¨Ø©."></td>
                 </tr>
             </table>
 
@@ -258,7 +258,7 @@ function sasanperfumes_brands_slider_get() {
         'enabled'    => (bool) $enabled,
         'heading'    => array(
             'en' => get_theme_mod('sasanperfumes_brands_slider_heading_en', 'Our Brands'),
-            'ar' => get_theme_mod('sasanperfumes_brands_slider_heading_ar', 'علاماتنا التجارية'),
+            'ar' => get_theme_mod('sasanperfumes_brands_slider_heading_ar', 'Ø¹Ù„Ø§Ù…Ø§ØªÙ†Ø§ Ø§Ù„ØªØ¬Ø§Ø±ÙŠØ©'),
         ),
         'subtitle'   => array(
             'en' => get_theme_mod('sasanperfumes_brands_slider_subtitle_en', ''),

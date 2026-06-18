@@ -1,23 +1,36 @@
-import { PillRowSkeleton, ProductGridSkeleton, SectionHeaderSkeleton } from "@/components/common/Skeleton";
+import { NextResponse } from "next/server";
+import { siteConfig } from "@/config/site";
 
-export default function HomeLoading() {
-  return (
-    <div className="flex flex-col">
-      <div className="relative w-full">
-        <div className="hidden aspect-[2560/1024] w-full bg-stone-200 md:block" />
-        <div className="aspect-[1080/1475] w-full bg-stone-200 md:hidden" />
-      </div>
-      <div className="bg-brand-beige py-8 md:py-10">
-        <div className="container mx-auto px-5 md:px-7 lg:px-12">
-          <div className="mb-6 md:mb-8">
-            <SectionHeaderSkeleton align="center" />
-          </div>
-          <div className="mb-6 md:mb-8">
-            <PillRowSkeleton count={5} />
-          </div>
-          <ProductGridSkeleton count={10} />
-        </div>
-      </div>
-    </div>
-  );
+export async function GET() {
+  const content = `# ${siteConfig.name}
+
+> UAE perfume store for everyday fragrances, hair mist, all over sprays, and gift sets
+
+## About
+Sasan Perfumes is a UAE fragrance store offering perfumes, hair mist, all over sprays, and gift-ready scent collections online.
+
+## Links
+- Website: ${siteConfig.url}
+- Shop: ${siteConfig.url}/en/shop
+- About Us: ${siteConfig.url}/en/about-us
+- Contact: ${siteConfig.url}/en/contact-us
+- Full LLM Context: ${siteConfig.url}/llms-full.txt
+
+## Product Categories
+- Perfumes: ${siteConfig.url}/en/category/perfumes
+- All Over Spray: ${siteConfig.url}/en/category/all-over-spray
+- Hair Mist: ${siteConfig.url}/en/category/sasan-hair-mist
+- Gift Sets: ${siteConfig.url}/en/category/gift-set
+
+## Languages
+- English: ${siteConfig.url}/en
+- Arabic: ${siteConfig.url}/ar
+`;
+
+  return new NextResponse(content, {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Cache-Control": "public, max-age=86400, s-maxage=86400",
+    },
+  });
 }

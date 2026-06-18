@@ -1,6 +1,6 @@
 <?php
 /**
- * ShapeHive Advanced Settings
+ * Sasan Perfumes Advanced Settings
  *
  * Handles:
  * 1. Live chat widget configuration (Tidio / Tawk.to / Crisp / Custom)
@@ -58,31 +58,31 @@ function sasanperfumes_adv_get_live_chat() {
 
 function sasanperfumes_adv_get_scent_guide() {
     $default_sections = [
-        ['title_en' => 'Fresh & Citrus',   'title_ar' => 'نضارة وحمضيات',
+        ['title_en' => 'Fresh & Citrus',   'title_ar' => 'Ù†Ø¶Ø§Ø±Ø© ÙˆØ­Ù…Ø¶ÙŠØ§Øª',
          'content_en' => 'Light, invigorating scents featuring bergamot, lemon, and grapefruit. Perfect for daytime wear and warm climates.',
-         'content_ar' => 'روائح خفيفة ومنعشة تتميز بالبرغموت والليمون والجريب فروت. مثالية للارتداء النهاري والمناخ الدافئ.'],
-        ['title_en' => 'Oriental & Oud',   'title_ar' => 'شرقي وعود',
-         'content_en' => 'Rich, warm fragrances built around precious oud wood, amber, and musk — a signature of Arabian luxury that lasts all day.',
-         'content_ar' => 'عطور غنية ودافئة مبنية على خشب العود الثمين والعنبر والمسك — توقيع الفخامة العربية الذي يدوم طوال اليوم.'],
-        ['title_en' => 'Floral & Rose',    'title_ar' => 'زهري وورد',
+         'content_ar' => 'Ø±ÙˆØ§Ø¦Ø­ Ø®ÙÙŠÙØ© ÙˆÙ…Ù†Ø¹Ø´Ø© ØªØªÙ…ÙŠØ² Ø¨Ø§Ù„Ø¨Ø±ØºÙ…ÙˆØª ÙˆØ§Ù„Ù„ÙŠÙ…ÙˆÙ† ÙˆØ§Ù„Ø¬Ø±ÙŠØ¨ ÙØ±ÙˆØª. Ù…Ø«Ø§Ù„ÙŠØ© Ù„Ù„Ø§Ø±ØªØ¯Ø§Ø¡ Ø§Ù„Ù†Ù‡Ø§Ø±ÙŠ ÙˆØ§Ù„Ù…Ù†Ø§Ø® Ø§Ù„Ø¯Ø§ÙØ¦.'],
+        ['title_en' => 'Oriental & Oud',   'title_ar' => 'Ø´Ø±Ù‚ÙŠ ÙˆØ¹ÙˆØ¯',
+         'content_en' => 'Rich, warm fragrances built around precious oud wood, amber, and musk â€” a signature of Arabian luxury that lasts all day.',
+         'content_ar' => 'Ø¹Ø·ÙˆØ± ØºÙ†ÙŠØ© ÙˆØ¯Ø§ÙØ¦Ø© Ù…Ø¨Ù†ÙŠØ© Ø¹Ù„Ù‰ Ø®Ø´Ø¨ Ø§Ù„Ø¹ÙˆØ¯ Ø§Ù„Ø«Ù…ÙŠÙ† ÙˆØ§Ù„Ø¹Ù†Ø¨Ø± ÙˆØ§Ù„Ù…Ø³Ùƒ â€” ØªÙˆÙ‚ÙŠØ¹ Ø§Ù„ÙØ®Ø§Ù…Ø© Ø§Ù„Ø¹Ø±Ø¨ÙŠØ© Ø§Ù„Ø°ÙŠ ÙŠØ¯ÙˆÙ… Ø·ÙˆØ§Ù„ Ø§Ù„ÙŠÙˆÙ….'],
+        ['title_en' => 'Floral & Rose',    'title_ar' => 'Ø²Ù‡Ø±ÙŠ ÙˆÙˆØ±Ø¯',
          'content_en' => 'Romantic scents centered around rose, jasmine, and peony. Timeless classics for special occasions.',
-         'content_ar' => 'روائح رومانسية تتمحور حول الورد والياسمين. كلاسيكيات خالدة تناسب المناسبات الخاصة.'],
-        ['title_en' => 'Woody & Amber',    'title_ar' => 'خشبي وعنبري',
+         'content_ar' => 'Ø±ÙˆØ§Ø¦Ø­ Ø±ÙˆÙ…Ø§Ù†Ø³ÙŠØ© ØªØªÙ…Ø­ÙˆØ± Ø­ÙˆÙ„ Ø§Ù„ÙˆØ±Ø¯ ÙˆØ§Ù„ÙŠØ§Ø³Ù…ÙŠÙ†. ÙƒÙ„Ø§Ø³ÙŠÙƒÙŠØ§Øª Ø®Ø§Ù„Ø¯Ø© ØªÙ†Ø§Ø³Ø¨ Ø§Ù„Ù…Ù†Ø§Ø³Ø¨Ø§Øª Ø§Ù„Ø®Ø§ØµØ©.'],
+        ['title_en' => 'Woody & Amber',    'title_ar' => 'Ø®Ø´Ø¨ÙŠ ÙˆØ¹Ù†Ø¨Ø±ÙŠ',
          'content_en' => 'Warm, earthy fragrances with sandalwood, cedarwood, and amber. Sophisticated scents that leave a lasting impression.',
-         'content_ar' => 'عطور دافئة وترابية بخشب الصندل وخشب الأرز والعنبر. روائح راقية تترك انطباعاً دائماً.'],
+         'content_ar' => 'Ø¹Ø·ÙˆØ± Ø¯Ø§ÙØ¦Ø© ÙˆØªØ±Ø§Ø¨ÙŠØ© Ø¨Ø®Ø´Ø¨ Ø§Ù„ØµÙ†Ø¯Ù„ ÙˆØ®Ø´Ø¨ Ø§Ù„Ø£Ø±Ø² ÙˆØ§Ù„Ø¹Ù†Ø¨Ø±. Ø±ÙˆØ§Ø¦Ø­ Ø±Ø§Ù‚ÙŠØ© ØªØªØ±Ùƒ Ø§Ù†Ø·Ø¨Ø§Ø¹Ø§Ù‹ Ø¯Ø§Ø¦Ù…Ø§Ù‹.'],
     ];
     $default_size_chart = [
-        ['size' => 'Travel',  'ml' => '10 ml',  'description_en' => 'Fits carry-on bags. Ideal for trips.',            'description_ar' => 'مناسب للحقائب. مثالي للرحلات.'],
-        ['size' => 'Small',   'ml' => '30 ml',  'description_en' => 'Great for sampling. ~300–400 sprays.',             'description_ar' => 'رائع للتجربة. ~300–400 رشّة.'],
-        ['size' => 'Medium',  'ml' => '50 ml',  'description_en' => 'Ideal for daily use. Lasts 2–3 months.',           'description_ar' => 'للاستخدام اليومي. يدوم 2–3 أشهر.'],
-        ['size' => 'Large',   'ml' => '100 ml', 'description_en' => 'Best value for your signature scent. 1000+ sprays.', 'description_ar' => 'أفضل قيمة لعطرك المميز. +1000 رشّة.'],
-        ['size' => 'Luxury',  'ml' => '200 ml', 'description_en' => 'For collectors. Exceptional longevity.',            'description_ar' => 'للهواة. طول أمد استثنائي.'],
+        ['size' => 'Travel',  'ml' => '10 ml',  'description_en' => 'Fits carry-on bags. Ideal for trips.',            'description_ar' => 'Ù…Ù†Ø§Ø³Ø¨ Ù„Ù„Ø­Ù‚Ø§Ø¦Ø¨. Ù…Ø«Ø§Ù„ÙŠ Ù„Ù„Ø±Ø­Ù„Ø§Øª.'],
+        ['size' => 'Small',   'ml' => '30 ml',  'description_en' => 'Great for sampling. ~300â€“400 sprays.',             'description_ar' => 'Ø±Ø§Ø¦Ø¹ Ù„Ù„ØªØ¬Ø±Ø¨Ø©. ~300â€“400 Ø±Ø´Ù‘Ø©.'],
+        ['size' => 'Medium',  'ml' => '50 ml',  'description_en' => 'Ideal for daily use. Lasts 2â€“3 months.',           'description_ar' => 'Ù„Ù„Ø§Ø³ØªØ®Ø¯Ø§Ù… Ø§Ù„ÙŠÙˆÙ…ÙŠ. ÙŠØ¯ÙˆÙ… 2â€“3 Ø£Ø´Ù‡Ø±.'],
+        ['size' => 'Large',   'ml' => '100 ml', 'description_en' => 'Best value for your signature scent. 1000+ sprays.', 'description_ar' => 'Ø£ÙØ¶Ù„ Ù‚ÙŠÙ…Ø© Ù„Ø¹Ø·Ø±Ùƒ Ø§Ù„Ù…Ù…ÙŠØ². +1000 Ø±Ø´Ù‘Ø©.'],
+        ['size' => 'Luxury',  'ml' => '200 ml', 'description_en' => 'For collectors. Exceptional longevity.',            'description_ar' => 'Ù„Ù„Ù‡ÙˆØ§Ø©. Ø·ÙˆÙ„ Ø£Ù…Ø¯ Ø§Ø³ØªØ«Ù†Ø§Ø¦ÙŠ.'],
     ];
 
     $sections   = get_option('sasanperfumes_scent_guide_sections', $default_sections);
     $size_chart = get_option('sasanperfumes_size_chart', $default_size_chart);
 
-    // Separate enable flags — fall back to legacy combined flag if new options not yet set
+    // Separate enable flags â€” fall back to legacy combined flag if new options not yet set
     $legacy_enabled = (bool) get_option('sasanperfumes_scent_guide_enabled', true);
     $raw_scent = get_option('sasanperfumes_scent_guide_section_enabled');
     $raw_size  = get_option('sasanperfumes_size_guide_enabled');
@@ -93,14 +93,14 @@ function sasanperfumes_adv_get_scent_guide() {
         'scentGuide' => [
             'enabled'  => $scent_enabled,
             'title'    => get_option('sasanperfumes_scent_guide_title_en', 'Scent Guide'),
-            'titleAr'  => get_option('sasanperfumes_scent_guide_title_ar', 'دليل العطور'),
+            'titleAr'  => get_option('sasanperfumes_scent_guide_title_ar', 'Ø¯Ù„ÙŠÙ„ Ø§Ù„Ø¹Ø·ÙˆØ±'),
             'imageUrl' => get_option('sasanperfumes_scent_guide_image', ''),
             'sections' => is_array($sections) ? $sections : $default_sections,
         ],
         'sizeGuide' => [
             'enabled'   => $size_enabled,
             'title'     => get_option('sasanperfumes_size_guide_title_en', 'Size Guide'),
-            'titleAr'   => get_option('sasanperfumes_size_guide_title_ar', 'دليل المقاسات'),
+            'titleAr'   => get_option('sasanperfumes_size_guide_title_ar', 'Ø¯Ù„ÙŠÙ„ Ø§Ù„Ù…Ù‚Ø§Ø³Ø§Øª'),
             'sizeChart' => is_array($size_chart) ? $size_chart : $default_size_chart,
         ],
     ]);
@@ -111,9 +111,9 @@ function sasanperfumes_adv_get_gift_wrap() {
         'enabled'      => (bool) get_option('sasanperfumes_gift_wrap_enabled', false),
         'price'        => (float) get_option('sasanperfumes_gift_wrap_price', 15),
         'label_en'     => get_option('sasanperfumes_gift_wrap_label_en', 'Add gift wrapping'),
-        'label_ar'     => get_option('sasanperfumes_gift_wrap_label_ar', 'أضف تغليف الهدية'),
+        'label_ar'     => get_option('sasanperfumes_gift_wrap_label_ar', 'Ø£Ø¶Ù ØªØºÙ„ÙŠÙ Ø§Ù„Ù‡Ø¯ÙŠØ©'),
         'desc_en'      => get_option('sasanperfumes_gift_wrap_desc_en', 'Beautiful gift box with ribbon'),
-        'desc_ar'      => get_option('sasanperfumes_gift_wrap_desc_ar', 'صندوق هدية أنيق مع شريط'),
+        'desc_ar'      => get_option('sasanperfumes_gift_wrap_desc_ar', 'ØµÙ†Ø¯ÙˆÙ‚ Ù‡Ø¯ÙŠØ© Ø£Ù†ÙŠÙ‚ Ù…Ø¹ Ø´Ø±ÙŠØ·'),
         'image_url'    => get_option('sasanperfumes_gift_wrap_image', ''),
         'product_id'   => (int) get_option('sasanperfumes_gift_wrap_product_id', 0),
     ]);
@@ -129,7 +129,7 @@ function sasanperfumes_adv_get_video_hero() {
         'subtitle_en'  => get_option('sasanperfumes_video_hero_subtitle_en', ''),
         'subtitle_ar'  => get_option('sasanperfumes_video_hero_subtitle_ar', ''),
         'btn_text_en'  => get_option('sasanperfumes_video_hero_btn_en', 'Explore Now'),
-        'btn_text_ar'  => get_option('sasanperfumes_video_hero_btn_ar', 'استكشف الآن'),
+        'btn_text_ar'  => get_option('sasanperfumes_video_hero_btn_ar', 'Ø§Ø³ØªÙƒØ´Ù Ø§Ù„Ø¢Ù†'),
         'btn_url'      => get_option('sasanperfumes_video_hero_btn_url', '/shop'),
         'autoplay'     => (bool) get_option('sasanperfumes_video_hero_autoplay', true),
         'muted'        => (bool) get_option('sasanperfumes_video_hero_muted', true),
@@ -141,12 +141,12 @@ function sasanperfumes_adv_get_abandoned_popup() {
         'enabled'        => (bool) get_option('sasanperfumes_ab_popup_enabled', false),
         'idle_minutes'   => (int)  get_option('sasanperfumes_ab_popup_idle', 5),
         'title_en'       => get_option('sasanperfumes_ab_popup_title_en', 'Still thinking?'),
-        'title_ar'       => get_option('sasanperfumes_ab_popup_title_ar', 'لا تزال تفكر؟'),
+        'title_ar'       => get_option('sasanperfumes_ab_popup_title_ar', 'Ù„Ø§ ØªØ²Ø§Ù„ ØªÙÙƒØ±ØŸ'),
         'body_en'        => get_option('sasanperfumes_ab_popup_body_en', 'Complete your order and enjoy free shipping!'),
-        'body_ar'        => get_option('sasanperfumes_ab_popup_body_ar', 'أكمل طلبك واستمتع بالشحن المجاني!'),
+        'body_ar'        => get_option('sasanperfumes_ab_popup_body_ar', 'Ø£ÙƒÙ…Ù„ Ø·Ù„Ø¨Ùƒ ÙˆØ§Ø³ØªÙ…ØªØ¹ Ø¨Ø§Ù„Ø´Ø­Ù† Ø§Ù„Ù…Ø¬Ø§Ù†ÙŠ!'),
         'coupon_code'    => get_option('sasanperfumes_ab_popup_coupon', ''),
         'btn_text_en'    => get_option('sasanperfumes_ab_popup_btn_en', 'Complete Order'),
-        'btn_text_ar'    => get_option('sasanperfumes_ab_popup_btn_ar', 'أكمل الطلب'),
+        'btn_text_ar'    => get_option('sasanperfumes_ab_popup_btn_ar', 'Ø£ÙƒÙ…Ù„ Ø§Ù„Ø·Ù„Ø¨'),
     ]);
 }
 
@@ -170,7 +170,7 @@ function sasanperfumes_adv_save_gift_wrap() {
     update_option('sasanperfumes_gift_wrap_enabled',    !empty($_POST['enabled']) ? 1 : 0);
     update_option('sasanperfumes_gift_wrap_price',      (float) ($_POST['price'] ?? 15));
     update_option('sasanperfumes_gift_wrap_label_en',   sanitize_text_field($_POST['label_en'] ?? 'Add gift wrapping'));
-    update_option('sasanperfumes_gift_wrap_label_ar',   sanitize_text_field($_POST['label_ar'] ?? 'أضف تغليف الهدية'));
+    update_option('sasanperfumes_gift_wrap_label_ar',   sanitize_text_field($_POST['label_ar'] ?? 'Ø£Ø¶Ù ØªØºÙ„ÙŠÙ Ø§Ù„Ù‡Ø¯ÙŠØ©'));
     update_option('sasanperfumes_gift_wrap_desc_en',    sanitize_textarea_field($_POST['desc_en'] ?? ''));
     update_option('sasanperfumes_gift_wrap_desc_ar',    sanitize_textarea_field($_POST['desc_ar'] ?? ''));
     update_option('sasanperfumes_gift_wrap_image',      esc_url_raw($_POST['image_url'] ?? ''));
@@ -189,7 +189,7 @@ function sasanperfumes_adv_save_abandoned_popup() {
     update_option('sasanperfumes_ab_popup_body_ar', sanitize_textarea_field($_POST['body_ar'] ?? ''));
     update_option('sasanperfumes_ab_popup_coupon',  sanitize_text_field($_POST['coupon_code'] ?? ''));
     update_option('sasanperfumes_ab_popup_btn_en',  sanitize_text_field($_POST['btn_text_en'] ?? 'Complete Order'));
-    update_option('sasanperfumes_ab_popup_btn_ar',  sanitize_text_field($_POST['btn_text_ar'] ?? 'أكمل الطلب'));
+    update_option('sasanperfumes_ab_popup_btn_ar',  sanitize_text_field($_POST['btn_text_ar'] ?? 'Ø£ÙƒÙ…Ù„ Ø§Ù„Ø·Ù„Ø¨'));
     wp_redirect(admin_url('admin.php?page=sasanperfumes-advanced&tab=abandoned_popup&saved=1')); exit;
 }
 
@@ -266,9 +266,9 @@ function sasanperfumes_adv_render_gift_wrap_tab() {
             <tr><th>Enable Gift Wrapping</th><td><input type="checkbox" name="enabled" value="1" <?=checked($g('sasanperfumes_gift_wrap_enabled',0),1,false)?>></td></tr>
             <tr><th>Price (AED)</th><td><input type="number" step="0.5" name="price" value="<?=esc_attr($g('sasanperfumes_gift_wrap_price',15))?>"></td></tr>
             <tr><th>Label (EN)</th><td><input type="text" name="label_en" value="<?=esc_attr($g('sasanperfumes_gift_wrap_label_en','Add gift wrapping'))?>" class="large-text"></td></tr>
-            <tr><th>Label (AR)</th><td><input type="text" name="label_ar" value="<?=esc_attr($g('sasanperfumes_gift_wrap_label_ar','أضف تغليف الهدية'))?>" class="large-text" dir="rtl"></td></tr>
+            <tr><th>Label (AR)</th><td><input type="text" name="label_ar" value="<?=esc_attr($g('sasanperfumes_gift_wrap_label_ar','Ø£Ø¶Ù ØªØºÙ„ÙŠÙ Ø§Ù„Ù‡Ø¯ÙŠØ©'))?>" class="large-text" dir="rtl"></td></tr>
             <tr><th>Description (EN)</th><td><input type="text" name="desc_en" value="<?=esc_attr($g('sasanperfumes_gift_wrap_desc_en','Beautiful gift box with ribbon'))?>" class="large-text"></td></tr>
-            <tr><th>Description (AR)</th><td><input type="text" name="desc_ar" value="<?=esc_attr($g('sasanperfumes_gift_wrap_desc_ar','صندوق هدية أنيق مع شريط'))?>" class="large-text" dir="rtl"></td></tr>
+            <tr><th>Description (AR)</th><td><input type="text" name="desc_ar" value="<?=esc_attr($g('sasanperfumes_gift_wrap_desc_ar','ØµÙ†Ø¯ÙˆÙ‚ Ù‡Ø¯ÙŠØ© Ø£Ù†ÙŠÙ‚ Ù…Ø¹ Ø´Ø±ÙŠØ·'))?>" class="large-text" dir="rtl"></td></tr>
             <tr><th>Product Image</th><td><?php sasanperfumes_image_field('image_url', $g('sasanperfumes_gift_wrap_image')); ?></td></tr>
         </table>
         <?php submit_button('Save Gift Wrap Settings'); ?>
@@ -286,12 +286,12 @@ function sasanperfumes_adv_render_abandoned_popup_tab() {
             <tr><th>Enable Popup</th><td><input type="checkbox" name="enabled" value="1" <?=checked($g('sasanperfumes_ab_popup_enabled',0),1,false)?>></td></tr>
             <tr><th>Show after idle (minutes)</th><td><input type="number" name="idle_minutes" value="<?=esc_attr($g('sasanperfumes_ab_popup_idle',5))?>" min="1" max="60"></td></tr>
             <tr><th>Title (EN)</th><td><input type="text" name="title_en" value="<?=esc_attr($g('sasanperfumes_ab_popup_title_en','Still thinking?'))?>" class="large-text"></td></tr>
-            <tr><th>Title (AR)</th><td><input type="text" name="title_ar" value="<?=esc_attr($g('sasanperfumes_ab_popup_title_ar','لا تزال تفكر؟'))?>" class="large-text" dir="rtl"></td></tr>
+            <tr><th>Title (AR)</th><td><input type="text" name="title_ar" value="<?=esc_attr($g('sasanperfumes_ab_popup_title_ar','Ù„Ø§ ØªØ²Ø§Ù„ ØªÙÙƒØ±ØŸ'))?>" class="large-text" dir="rtl"></td></tr>
             <tr><th>Body (EN)</th><td><textarea name="body_en" rows="3" class="large-text"><?=esc_textarea($g('sasanperfumes_ab_popup_body_en','Complete your order and enjoy free shipping!'))?></textarea></td></tr>
-            <tr><th>Body (AR)</th><td><textarea name="body_ar" rows="3" class="large-text" dir="rtl"><?=esc_textarea($g('sasanperfumes_ab_popup_body_ar','أكمل طلبك واستمتع بالشحن المجاني!'))?></textarea></td></tr>
+            <tr><th>Body (AR)</th><td><textarea name="body_ar" rows="3" class="large-text" dir="rtl"><?=esc_textarea($g('sasanperfumes_ab_popup_body_ar','Ø£ÙƒÙ…Ù„ Ø·Ù„Ø¨Ùƒ ÙˆØ§Ø³ØªÙ…ØªØ¹ Ø¨Ø§Ù„Ø´Ø­Ù† Ø§Ù„Ù…Ø¬Ø§Ù†ÙŠ!'))?></textarea></td></tr>
             <tr><th>Coupon Code</th><td><input type="text" name="coupon_code" value="<?=esc_attr($g('sasanperfumes_ab_popup_coupon'))?>" class="regular-text"></td></tr>
             <tr><th>Button Text (EN)</th><td><input type="text" name="btn_text_en" value="<?=esc_attr($g('sasanperfumes_ab_popup_btn_en','Complete Order'))?>" class="regular-text"></td></tr>
-            <tr><th>Button Text (AR)</th><td><input type="text" name="btn_text_ar" value="<?=esc_attr($g('sasanperfumes_ab_popup_btn_ar','أكمل الطلب'))?>" class="regular-text" dir="rtl"></td></tr>
+            <tr><th>Button Text (AR)</th><td><input type="text" name="btn_text_ar" value="<?=esc_attr($g('sasanperfumes_ab_popup_btn_ar','Ø£ÙƒÙ…Ù„ Ø§Ù„Ø·Ù„Ø¨'))?>" class="regular-text" dir="rtl"></td></tr>
         </table>
         <?php submit_button('Save Abandoned Cart Popup'); ?>
     </form>

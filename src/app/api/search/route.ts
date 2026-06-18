@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProducts } from "@/lib/api/woocommerce";
 import { getMarketByHost, normalizeMarketHost } from "@/config/market";
+import { getFrontendHostFromRequestHeaders } from "@/lib/market/server";
 import { buildSearchSuggestion, createSearchIndexEntry, mergeRankedSearchEntries, normalizeSearchText, rankSearchEntries } from "@/lib/search";
 import type { Locale } from "@/config/site";
 import type { WCProduct, WCProductsResponse } from "@/types/woocommerce";
@@ -108,11 +109,7 @@ function shouldUseFuzzyFallback(query: string, exactTopScore: number, exactCount
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  const frontendHost = normalizeMarketHost(
-    request.headers.get("x-frontend-host") ||
-    request.headers.get("x-forwarded-host") ||
-    request.headers.get("host")
-  );
+  const frontendHost = normalizeMarketHost(getFrontendHostFromRequestHeaders(request.headers));
   const market = getMarketByHost(frontendHost);
   const locale = (searchParams.get("locale") as Locale) || "en";
   const query = searchParams.get("q") || "";

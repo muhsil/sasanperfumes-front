@@ -30,7 +30,7 @@ function sasanperfumes_settings_init() {
     // Admin styles
     add_action('admin_head', 'sasanperfumes_settings_admin_styles');
     
-    // Sync: when blogname/blogdescription change (Settings > General), update ShapeHive SEO
+    // Sync: when blogname/blogdescription change (Settings > General), update Sasan Perfumes SEO
     add_action('update_option_blogname', 'sasanperfumes_sync_blogname_to_seo', 10, 2);
     add_action('update_option_blogdescription', 'sasanperfumes_sync_blogdescription_to_seo', 10, 2);
 }
@@ -191,7 +191,7 @@ function sasanperfumes_render_hero_tab() {
                 <tr><th>Subtitle (EN)</th><td><input type="text" name="sasanperfumes_hero_slides[<?php echo $i; ?>][subtitle_en]" value="<?php echo esc_attr($s['subtitle_en']??''); ?>" class="large-text"></td></tr>
                 <tr><th>Subtitle (AR)</th><td><input type="text" name="sasanperfumes_hero_slides[<?php echo $i; ?>][subtitle_ar]" value="<?php echo esc_attr($s['subtitle_ar']??''); ?>" class="large-text" dir="rtl"></td></tr>
                 <tr><th>CTA Label (EN)</th><td><input type="text" name="sasanperfumes_hero_slides[<?php echo $i; ?>][cta_label_en]" value="<?php echo esc_attr($s['cta_label_en']??''); ?>" class="regular-text" placeholder="Shop Now"></td></tr>
-                <tr><th>CTA Label (AR)</th><td><input type="text" name="sasanperfumes_hero_slides[<?php echo $i; ?>][cta_label_ar]" value="<?php echo esc_attr($s['cta_label_ar']??''); ?>" class="regular-text" dir="rtl" placeholder="تسوق الآن"></td></tr>
+                <tr><th>CTA Label (AR)</th><td><input type="text" name="sasanperfumes_hero_slides[<?php echo $i; ?>][cta_label_ar]" value="<?php echo esc_attr($s['cta_label_ar']??''); ?>" class="regular-text" dir="rtl" placeholder="ØªØ³ÙˆÙ‚ Ø§Ù„Ø¢Ù†"></td></tr>
                 <tr><th>Link URL</th><td><input type="text" name="sasanperfumes_hero_slides[<?php echo $i; ?>][link]" value="<?php echo esc_attr($s['link']??''); ?>" class="large-text" placeholder="/shop or https://example.com"></td></tr>
             </table>
         </div>
@@ -901,7 +901,7 @@ function sasanperfumes_get_brand_slider_settings() {
     return array(
         'enabled'       => (bool) get_theme_mod('sasanperfumes_brand_slider_enabled', true),
         'title_en'      => get_theme_mod('sasanperfumes_brand_slider_title_en', 'More from this brand'),
-        'title_ar'      => get_theme_mod('sasanperfumes_brand_slider_title_ar', 'المزيد من هذه العلامة التجارية'),
+        'title_ar'      => get_theme_mod('sasanperfumes_brand_slider_title_ar', 'Ø§Ù„Ù…Ø²ÙŠØ¯ Ù…Ù† Ù‡Ø°Ù‡ Ø§Ù„Ø¹Ù„Ø§Ù…Ø© Ø§Ù„ØªØ¬Ø§Ø±ÙŠØ©'),
         'count'         => (int) get_theme_mod('sasanperfumes_brand_slider_count', 12),
         'cols_desktop'  => (int) get_theme_mod('sasanperfumes_brand_slider_cols_desktop', 4),
         'cols_tablet'   => (int) get_theme_mod('sasanperfumes_brand_slider_cols_tablet', 3),
@@ -938,11 +938,11 @@ function sasanperfumes_get_mobile_bar_settings() {
     $items = get_theme_mod('sasanperfumes_mobile_bar_items', array());
     if (!is_array($items) || empty($items)) {
         $items = array(
-            array('icon' => 'home', 'label' => 'Home', 'labelAr' => 'الرئيسية', 'url' => '/'),
-            array('icon' => 'grid', 'label' => 'Menu', 'labelAr' => 'القائمة', 'url' => '/shop'),
-            array('icon' => 'search', 'label' => 'Search', 'labelAr' => 'بحث', 'url' => '/search'),
-            array('icon' => 'heart', 'label' => 'Wishlist', 'labelAr' => 'المفضلة', 'url' => '/wishlist'),
-            array('icon' => 'user', 'label' => 'Account', 'labelAr' => 'حسابي', 'url' => '/account'),
+            array('icon' => 'home', 'label' => 'Home', 'labelAr' => 'Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©', 'url' => '/'),
+            array('icon' => 'grid', 'label' => 'Menu', 'labelAr' => 'Ø§Ù„Ù‚Ø§Ø¦Ù…Ø©', 'url' => '/shop'),
+            array('icon' => 'search', 'label' => 'Search', 'labelAr' => 'Ø¨Ø­Ø«', 'url' => '/search'),
+            array('icon' => 'heart', 'label' => 'Wishlist', 'labelAr' => 'Ø§Ù„Ù…ÙØ¶Ù„Ø©', 'url' => '/wishlist'),
+            array('icon' => 'user', 'label' => 'Account', 'labelAr' => 'Ø­Ø³Ø§Ø¨ÙŠ', 'url' => '/account'),
         );
     }
 
@@ -956,7 +956,7 @@ function sasanperfumes_get_mobile_bar_settings() {
  * Get currencies.
  *
  * Current live installs store currency data in the legacy CADVIL/ASL currency
- * plugin option. This endpoint gives the frontend a ShapeHive namespace
+ * plugin option. This endpoint gives the frontend a Sasan Perfumes namespace
  * while preserving that stored data.
  */
 function sasanperfumes_get_currencies() {
@@ -1196,9 +1196,6 @@ function sasanperfumes_settings_cors_handling() {
         $origin = get_http_origin();
         $allowed = array(
             'https://shapehive.com',
-            'https://qa.shapehive.com',
-            'https://om.shapehive.com',
-            'https://sa.shapehive.com',
             'https://cms.shapehive.com',
             'http://localhost:3000',
             'http://localhost:3001',

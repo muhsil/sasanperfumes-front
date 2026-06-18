@@ -9,9 +9,6 @@ const DEFAULT_CANONICAL_HOST = "shapehive.com";
 const SHAPEHIVE_HOST_SUFFIX = ".shapehive.com";
 const KNOWN_CANONICAL_HOSTS = [
   "shapehive.com",
-  "qa.shapehive.com",
-  "om.shapehive.com",
-  "sa.shapehive.com",
 ];
 
 function parseHost(value: string | undefined): string {
@@ -43,9 +40,6 @@ function getAllowedHosts(): string[] {
     ...canonicalHosts,
     "cms.shapehive.com",
     "shapehive.com",
-    "qa.shapehive.com",
-    "om.shapehive.com",
-    "sa.shapehive.com",
     cmsHostname,
     ...mediaHostNames,
   ]);

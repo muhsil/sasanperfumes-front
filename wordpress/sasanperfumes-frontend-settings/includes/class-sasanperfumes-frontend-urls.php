@@ -1,6 +1,6 @@
 <?php
 /**
- * ShapeHive Frontend URL Rewriting
+ * Sasan Perfumes Frontend URL Rewriting
  * 
  * Rewrites WordPress admin URLs (Visit Site, View Product, permalinks, etc.)
  * to point to the headless Next.js frontend instead of the WordPress backend.
@@ -14,9 +14,14 @@ if (!defined('ABSPATH')) exit;
 class sasanperfumes_Frontend_Urls {
 
     private $frontend_url = '';
+    private $frontend_root_url = '';
 
     public function __construct() {
         $this->frontend_url = sasanperfumes_get_frontend_url();
+        $this->frontend_root_url = sasanperfumes_get_frontend_url_root($this->frontend_url);
+        if ($this->frontend_root_url === '') {
+            $this->frontend_root_url = untrailingslashit($this->frontend_url);
+        }
 
         if (empty($this->frontend_url)) {
             return;
@@ -90,6 +95,86 @@ class sasanperfumes_Frontend_Urls {
         <?php
     }
 
+    private function build_frontend_url(string $locale, string $path = ''): string {
+        return sasanperfumes_build_frontend_localized_url($locale, $path, $this->frontend_url);
+    }
+
+    private function build_frontend_path(string $locale, string $path = ''): string {
+        $market = sasanperfumes_frontend_market_for_url($this->frontend_url);
+        $segments = [];
+
+        if ($market !== '') {
+            $segments[] = $market;
+        }
+
+        $segments[] = in_array($locale, array('en', 'ar'), true) ? $locale : 'en';
+
+        $clean_path = trim((string) $path);
+        if ($clean_path !== '') {
+            $segments[] = ltrim($clean_path, '/');
+        }
+
+        return '/' . implode('/', array_filter($segments, 'strlen'));
+    }
+
+    private function normalize_frontend_request_path(string $path): string {
+        $known_markets = array('qa', 'om', 'sa');
+        $known_locales = array('en', 'ar');
+
+        $path = trim((string) $path);
+        if ($path === '' || $path === '/') {
+            return $this->build_frontend_path('en', '');
+        }
+
+        $segments = array_values(array_filter(explode('/', trim($path, '/')), 'strlen'));
+        if (empty($segments)) {
+            return $this->build_frontend_path('en', '');
+        }
+
+        $market = '';
+        $locale = '';
+        $remaining = $segments;
+
+        if (in_array($segments[0], $known_markets, true)) {
+            $market = array_shift($remaining);
+            if (!empty($remaining[0]) && in_array($remaining[0], $known_locales, true)) {
+                $locale = array_shift($remaining);
+            } else {
+                $locale = 'en';
+            }
+        } elseif (in_array($segments[0], $known_locales, true)) {
+            $locale = array_shift($remaining);
+            if (!empty($remaining[0]) && in_array($remaining[0], $known_markets, true)) {
+                $market = array_shift($remaining);
+            }
+        } else {
+            $locale = 'en';
+            $market = sasanperfumes_frontend_market_for_url($this->frontend_url);
+        }
+
+        if (!in_array($locale, $known_locales, true)) {
+            $locale = 'en';
+        }
+
+        if ($market === '') {
+            $market = sasanperfumes_frontend_market_for_url($this->frontend_url);
+        }
+
+        $parts = array();
+        if ($market !== '') {
+            $parts[] = $market;
+        }
+        $parts[] = $locale;
+
+        foreach ($remaining as $segment) {
+            if ($segment !== '') {
+                $parts[] = $segment;
+            }
+        }
+
+        return '/' . implode('/', $parts);
+    }
+
     private function get_frontend_path_for_post($post) {
         if (!$post) return '';
 
@@ -97,27 +182,27 @@ class sasanperfumes_Frontend_Urls {
         $slug = $post->post_name;
 
         if ($post_type === 'product') {
-            return '/en/product/' . $slug;
+            return 'product/' . $slug;
         }
 
         if ($post_type === 'post') {
-            return '/en/blog/' . $slug;
+            return 'blog/' . $slug;
         }
 
         if ($post_type === 'page') {
             if ($slug === 'shop') {
-                return '/en/shop';
+                return 'shop';
             }
             if ($slug === 'cart') {
-                return '/en/cart';
+                return 'cart';
             }
             if ($slug === 'checkout') {
-                return '/en/checkout';
+                return 'checkout';
             }
             if ($slug === 'my-account') {
-                return '/en/my-account';
+                return 'my-account';
             }
-            return '/en/' . $slug;
+            return $slug;
         }
 
         return '';
@@ -129,15 +214,15 @@ class sasanperfumes_Frontend_Urls {
         $slug = $term->slug;
 
         if ($taxonomy === 'product_cat') {
-            return '/en/category/' . $slug;
+            return 'category/' . $slug;
         }
 
         if ($taxonomy === 'product_tag') {
-            return '/en/shop?tag=' . $slug;
+            return 'shop?tag=' . $slug;
         }
 
         if ($taxonomy === 'category') {
-            return '/en/blog/category/' . $slug;
+            return 'blog/category/' . $slug;
         }
 
         return '';
@@ -166,15 +251,9 @@ class sasanperfumes_Frontend_Urls {
             return;
         }
 
-        $target_path = '/en';
-        if ($path !== '/' && $path !== '') {
-            $target_path = $path;
-            if (strpos($target_path, '/en') !== 0 && strpos($target_path, '/ar') !== 0) {
-                $target_path = '/en' . (strpos($target_path, '/') === 0 ? $target_path : '/' . $target_path);
-            }
-        }
+        $target_path = $this->normalize_frontend_request_path($path);
 
-        wp_safe_redirect(trailingslashit($this->frontend_url) . ltrim($target_path, '/'), 301);
+        wp_safe_redirect(trailingslashit($this->frontend_root_url) . ltrim($target_path, '/'), 301);
         exit;
     }
 
@@ -197,26 +276,26 @@ class sasanperfumes_Frontend_Urls {
             return;
         }
 
-        $target_path = '/en';
+        $target_path = $this->build_frontend_path('en', '');
 
         if (is_singular()) {
             $path = $this->get_frontend_path_for_post(get_queried_object());
             if ($path) {
-                $target_path = $path;
+                $target_path = $this->build_frontend_path('en', $path);
             }
         } elseif (is_tax() || is_category() || is_tag()) {
             $term = get_queried_object();
             if ($term && isset($term->taxonomy)) {
                 $path = $this->get_frontend_path_for_term($term, $term->taxonomy);
                 if ($path) {
-                    $target_path = $path;
+                    $target_path = $this->build_frontend_path('en', $path);
                 }
             }
         } elseif (function_exists('is_shop') && is_shop()) {
-            $target_path = '/en/shop';
+            $target_path = $this->build_frontend_path('en', 'shop');
         }
 
-        wp_safe_redirect(trailingslashit($this->frontend_url) . ltrim($target_path, '/'), 301);
+        wp_safe_redirect(trailingslashit($this->frontend_root_url) . ltrim($target_path, '/'), 301);
         exit;
     }
 
@@ -226,7 +305,7 @@ class sasanperfumes_Frontend_Urls {
         $post = get_post($post_id);
         $path = $this->get_frontend_path_for_post($post);
         if ($path) {
-            return trailingslashit($this->frontend_url) . ltrim($path, '/');
+            return $this->build_frontend_url('en', $path);
         }
         return $link;
     }
@@ -236,7 +315,7 @@ class sasanperfumes_Frontend_Urls {
 
         $path = $this->get_frontend_path_for_post($post);
         if ($path) {
-            return trailingslashit($this->frontend_url) . ltrim($path, '/');
+            return $this->build_frontend_url('en', $path);
         }
         return $link;
     }
@@ -246,7 +325,7 @@ class sasanperfumes_Frontend_Urls {
 
         $path = $this->get_frontend_path_for_post($post);
         if ($path) {
-            return trailingslashit($this->frontend_url) . ltrim($path, '/');
+            return $this->build_frontend_url('en', $path);
         }
         return $link;
     }
@@ -256,7 +335,7 @@ class sasanperfumes_Frontend_Urls {
 
         $path = $this->get_frontend_path_for_term($term, $taxonomy);
         if ($path) {
-            return trailingslashit($this->frontend_url) . ltrim($path, '/');
+            return $this->build_frontend_url('en', $path);
         }
         return $link;
     }
@@ -267,10 +346,9 @@ class sasanperfumes_Frontend_Urls {
 
         if ($path) {
             $slug = $post_obj->post_name;
-            $frontend_base = trailingslashit($this->frontend_url);
             $path_without_slug = str_replace($slug, '', $path);
-            $display_url = $frontend_base . ltrim($path_without_slug, '/');
-            $full_url = $frontend_base . ltrim($path, '/');
+            $display_url = $this->build_frontend_url('en', $path_without_slug);
+            $full_url = $this->build_frontend_url('en', $path);
 
             $html = '<span id="sample-permalink">';
             $html .= '<a href="' . esc_url($full_url) . '">' . esc_html($display_url) . '</a>';
@@ -285,19 +363,19 @@ class sasanperfumes_Frontend_Urls {
     public function rewrite_admin_bar_urls($wp_admin_bar) {
         $site_node = $wp_admin_bar->get_node('site-name');
         if ($site_node) {
-            $site_node->href = $this->frontend_url;
+            $site_node->href = $this->build_frontend_url('en', '');
             $wp_admin_bar->add_node((array) $site_node);
         }
 
         $view_site = $wp_admin_bar->get_node('view-site');
         if ($view_site) {
-            $view_site->href = $this->frontend_url;
+            $view_site->href = $this->build_frontend_url('en', '');
             $wp_admin_bar->add_node((array) $view_site);
         }
 
         $view_store = $wp_admin_bar->get_node('visit-store');
         if ($view_store) {
-            $view_store->href = trailingslashit($this->frontend_url) . 'en/shop';
+            $view_store->href = $this->build_frontend_url('en', 'shop');
             $wp_admin_bar->add_node((array) $view_store);
         }
 
@@ -307,7 +385,7 @@ class sasanperfumes_Frontend_Urls {
             if ($view_node) {
                 $path = $this->get_frontend_path_for_post($post);
                 if ($path) {
-                    $view_node->href = trailingslashit($this->frontend_url) . ltrim($path, '/');
+                    $view_node->href = $this->build_frontend_url('en', $path);
                     $wp_admin_bar->add_node((array) $view_node);
                 }
             }
@@ -319,7 +397,7 @@ class sasanperfumes_Frontend_Urls {
 
         $slug = $product->get_slug();
         if ($slug) {
-            return trailingslashit($this->frontend_url) . 'en/product/' . $slug;
+            return $this->build_frontend_url('en', 'product/' . $slug);
         }
         return $permalink;
     }
@@ -332,7 +410,7 @@ class sasanperfumes_Frontend_Urls {
     public function rewrite_wc_product_permalink_global($permalink, $product) {
         $slug = $product->get_slug();
         if ($slug) {
-            return trailingslashit($this->frontend_url) . 'en/product/' . $slug;
+            return $this->build_frontend_url('en', 'product/' . $slug);
         }
         return $permalink;
     }
@@ -348,7 +426,7 @@ class sasanperfumes_Frontend_Urls {
 
         $slug = $post->post_name;
         if ($slug) {
-            return trailingslashit($this->frontend_url) . 'en/product/' . $slug;
+            return $this->build_frontend_url('en', 'product/' . $slug);
         }
         return $link;
     }
@@ -368,7 +446,7 @@ class sasanperfumes_Frontend_Urls {
         }
 
         if ($slug) {
-            return trailingslashit($this->frontend_url) . 'en/product/' . $slug;
+            return $this->build_frontend_url('en', 'product/' . $slug);
         }
         return $value;
     }

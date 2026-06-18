@@ -1,10 +1,10 @@
 <?php
 /**
- * ShapeHive Private Labeling Module
+ * Sasan Perfumes Private Labeling Module
  *
  * Landing page settings + enquiry form submissions CPT.
- * Admin: sasanperfumes → Private Labeling (page content)
- *        sasanperfumes → PL Submissions (form entries)
+ * Admin: sasanperfumes â†’ Private Labeling (page content)
+ *        sasanperfumes â†’ PL Submissions (form entries)
  * REST:  GET  /sasanperfumes/v1/private-labeling      (page content)
  *        POST /sasanperfumes/v1/private-labeling/submit (form submission)
  *
@@ -14,10 +14,10 @@
 
 if (!defined('ABSPATH')) exit;
 
-// ── Helpers ────────────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function sasanperfumes_pl_opt($k, $d = '') { return get_option("sasanperfumes_pl_{$k}", $d); }
 
-// ── Admin menu ─────────────────────────────────────────────────────
+// â”€â”€ Admin menu â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 add_action('admin_menu', function () {
     add_submenu_page(
         'sasanperfumes-settings',
@@ -29,11 +29,11 @@ add_action('admin_menu', function () {
     );
 }, 30);
 
-// ── Admin render ───────────────────────────────────────────────────
+// â”€â”€ Admin render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function sasanperfumes_pl_render() {
     if (!current_user_can('manage_options')) return;
 
-    // ── Save ──
+    // â”€â”€ Save â”€â”€
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && check_admin_referer('sasanperfumes_pl_save')) {
         $text = function ($k) { return sanitize_text_field($_POST[$k] ?? ''); };
         $ta   = function ($k) { return sanitize_textarea_field($_POST[$k] ?? ''); };
@@ -175,7 +175,7 @@ function sasanperfumes_pl_render() {
         echo '<div class="notice notice-success"><p>Settings saved.</p></div>';
     }
 
-    // ── Render form ──
+    // â”€â”€ Render form â”€â”€
     ?>
     <div class="wrap">
         <h1>Private Labeling Page</h1>
@@ -291,7 +291,7 @@ function sasanperfumes_pl_render() {
     <?php
 }
 
-// ── Repeater UI helper ─────────────────────────────────────────────
+// â”€â”€ Repeater UI helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function sasanperfumes_pl_repeater_ui($id, $label, $items) {
     if (!is_array($items)) $items = [];
     $safe_id = esc_attr($id);
@@ -319,7 +319,7 @@ function sasanperfumes_pl_repeater_item_html($id, $i, $item) {
     echo '</div>';
 }
 
-// ── JS for adding repeater items ───────────────────────────────────
+// â”€â”€ JS for adding repeater items â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 add_action('admin_footer', function () {
     $screen = get_current_screen();
     if (!$screen || strpos($screen->id, 'sasanperfumes-private-labeling') === false) return;
@@ -349,9 +349,9 @@ add_action('admin_footer', function () {
     <?php
 });
 
-// ══════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // SUBMISSIONS CPT
-// ══════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 add_action('init', function () {
     register_post_type('sasanperfumes_pl_inquiry', [
@@ -480,16 +480,16 @@ add_action('manage_sasanperfumes_pl_inquiry_posts_custom_column', function ($col
             echo esc_html(get_post_meta($id, '_pl_service', true));
             break;
         case 'pl_status':
-            $map = ['sasanperfumes_new'=>'🆕 New','sasanperfumes_contacted'=>'📞 Contacted','sasanperfumes_in_progress'=>'⏳ In Progress','sasanperfumes_closed'=>'✅ Closed'];
+            $map = ['sasanperfumes_new'=>'ðŸ†• New','sasanperfumes_contacted'=>'ðŸ“ž Contacted','sasanperfumes_in_progress'=>'â³ In Progress','sasanperfumes_closed'=>'âœ… Closed'];
             $status = get_post_status($id);
             echo $map[$status] ?? ucfirst(str_replace('sasanperfumes_', '', $status));
             break;
     }
 }, 10, 2);
 
-// ══════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // REST API
-// ══════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 add_action('rest_api_init', function () {
     // Page content endpoint
@@ -624,7 +624,7 @@ function sasanperfumes_pl_api_submit(WP_REST_Request $request) {
     // Create submission post
     $post_id = wp_insert_post([
         'post_type'   => 'sasanperfumes_pl_inquiry',
-        'post_title'  => $name . ' — ' . $email,
+        'post_title'  => $name . ' â€” ' . $email,
         'post_status' => 'sasanperfumes_new',
     ]);
 

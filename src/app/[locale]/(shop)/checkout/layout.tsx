@@ -1,48 +1,36 @@
-import type { Metadata } from "next";
-import { CheckoutFooter } from "@/components/layout/CheckoutFooter";
-import { getDictionary } from "@/i18n";
-import { getSiteSettings } from "@/lib/api/wordpress";
-import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
-import { type Locale } from "@/config/site";
+import { NextResponse } from "next/server";
+import { siteConfig } from "@/config/site";
 
-interface CheckoutLayoutProps {
-  children: React.ReactNode;
-  params: Promise<{ locale: string }>;
-}
+export async function GET() {
+  const content = `# ${siteConfig.name}
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
-  const { locale } = await params;
-  return generateSeoMetadata({
-    title: locale === "ar" ? "الدفع" : "Checkout",
-    description: locale === "ar" ? "أكمل طلبك" : "Complete your order",
-    locale: locale as Locale,
-    pathname: "/checkout",
-    noIndex: true,
+> UAE perfume store for everyday fragrances, hair mist, all over sprays, and gift sets
+
+## About
+Sasan Perfumes is a UAE fragrance store offering perfumes, hair mist, all over sprays, and gift-ready scent collections online.
+
+## Links
+- Website: ${siteConfig.url}
+- Shop: ${siteConfig.url}/en/shop
+- About Us: ${siteConfig.url}/en/about-us
+- Contact: ${siteConfig.url}/en/contact-us
+- Full LLM Context: ${siteConfig.url}/llms-full.txt
+
+## Product Categories
+- Perfumes: ${siteConfig.url}/en/category/perfumes
+- All Over Spray: ${siteConfig.url}/en/category/all-over-spray
+- Hair Mist: ${siteConfig.url}/en/category/sasan-hair-mist
+- Gift Sets: ${siteConfig.url}/en/category/gift-set
+
+## Languages
+- English: ${siteConfig.url}/en
+- Arabic: ${siteConfig.url}/ar
+`;
+
+  return new NextResponse(content, {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Cache-Control": "public, max-age=86400, s-maxage=86400",
+    },
   });
-}
-
-export default async function CheckoutLayout({
-  children,
-  params,
-}: CheckoutLayoutProps) {
-  const { locale } = await params;
-  const validLocale = locale as Locale;
-  const dictionary = await getDictionary(validLocale);
-  const siteSettings = await getSiteSettings(validLocale);
-
-  return (
-    <>
-      <style dangerouslySetInnerHTML={{ __html: `.main-footer { display: none !important; }` }} />
-      {children}
-      <CheckoutFooter
-        locale={validLocale}
-        dictionary={dictionary}
-        siteSettings={siteSettings}
-      />
-    </>
-  );
 }

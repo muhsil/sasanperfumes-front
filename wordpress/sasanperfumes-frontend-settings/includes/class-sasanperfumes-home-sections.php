@@ -1,6 +1,6 @@
 <?php
 /**
- * ShapeHive Home Sections — Why Choose Us, Our Story, FAQ, SEO Content
+ * Sasan Perfumes Home Sections â€” Why Choose Us, Our Story, FAQ, SEO Content
  * Tabs render inside sasanperfumes > Home Page (class-sasanperfumes-settings.php)
  * REST API: GET /sasanperfumes/v1/home-sections
  * @since 6.1.0
@@ -52,7 +52,7 @@ function sasanperfumes_render_why_choose_us_tab() {
     echo '<h2>Why Choose Us</h2><table class="form-table">';
     sasanperfumes_hs_enable_row('wcus');
     sasanperfumes_hs_bilingual_rows('wcus', array(
-        'eyebrow' => array('label'=>'Eyebrow','default_en'=>'Our Promise','default_ar'=>'تميزنا','class'=>'regular-text'),
+        'eyebrow' => array('label'=>'Eyebrow','default_en'=>'Our Promise','default_ar'=>'ØªÙ…ÙŠØ²Ù†Ø§','class'=>'regular-text'),
         'title' => array('label'=>'Title'), 'subtitle' => array('label'=>'Subtitle'),
     ));
     echo '</table>';
@@ -72,11 +72,11 @@ function sasanperfumes_render_why_choose_us_tab() {
 
 function sasanperfumes_render_our_story_tab() {
     $image = sasanperfumes_hs_opt('story_image', '');
-    $stats = sasanperfumes_hs_opt('story_stats', array()) ?: array(array('value'=>'100%','label_en'=>'Natural Ingredients','label_ar'=>'مكونات طبيعية'));
+    $stats = sasanperfumes_hs_opt('story_stats', array()) ?: array(array('value'=>'100%','label_en'=>'Natural Ingredients','label_ar'=>'Ù…ÙƒÙˆÙ†Ø§Øª Ø·Ø¨ÙŠØ¹ÙŠØ©'));
     echo '<h2>Our Story</h2><table class="form-table">';
     sasanperfumes_hs_enable_row('story');
     sasanperfumes_hs_bilingual_rows('story', array(
-        'eyebrow' => array('label'=>'Eyebrow','default_en'=>'Discover Our Journey','default_ar'=>'اكتشف قصتنا','class'=>'regular-text'),
+        'eyebrow' => array('label'=>'Eyebrow','default_en'=>'Discover Our Journey','default_ar'=>'Ø§ÙƒØªØ´Ù Ù‚ØµØªÙ†Ø§','class'=>'regular-text'),
         'title' => array('label'=>'Title'),
         'desc1' => array('label'=>'Description 1','type'=>'textarea'),
         'desc2' => array('label'=>'Description 2','type'=>'textarea'),
@@ -101,7 +101,7 @@ function sasanperfumes_render_faq_tab() {
     echo '<h2>FAQ</h2><table class="form-table">';
     sasanperfumes_hs_enable_row('faq');
     sasanperfumes_hs_bilingual_rows('faq', array(
-        'eyebrow' => array('label'=>'Eyebrow','default_en'=>'Help','default_ar'=>'مساعدة','class'=>'regular-text'),
+        'eyebrow' => array('label'=>'Eyebrow','default_en'=>'Help','default_ar'=>'Ù…Ø³Ø§Ø¹Ø¯Ø©','class'=>'regular-text'),
         'title' => array('label'=>'Title'), 'subtitle' => array('label'=>'Subtitle'),
     ));
     echo '</table>';
@@ -125,7 +125,7 @@ function sasanperfumes_render_seo_content_tab() {
     sasanperfumes_hs_enable_row('seo');
     echo '<tr><th>Background Image</th><td>'; sasanperfumes_image_field('sasanperfumes_home_seo_bg_image', $bg); echo '<p class="description">Upload background image for the SEO section.</p></td></tr>';
     sasanperfumes_hs_bilingual_rows('seo', array(
-        'title' => array('label'=>'Title','default_en'=>'Shop Premium Perfumes Online in the UAE','default_ar'=>'تسوق العطور الفاخرة اون لاين في الإمارات'),
+        'title' => array('label'=>'Title','default_en'=>'Shop Premium Perfumes Online in the UAE','default_ar'=>'ØªØ³ÙˆÙ‚ Ø§Ù„Ø¹Ø·ÙˆØ± Ø§Ù„ÙØ§Ø®Ø±Ø© Ø§ÙˆÙ† Ù„Ø§ÙŠÙ† ÙÙŠ Ø§Ù„Ø¥Ù…Ø§Ø±Ø§Øª'),
         'para1' => array('label'=>'Paragraph 1','type'=>'textarea','rows'=>5),
         'para2' => array('label'=>'Paragraph 2','type'=>'textarea','rows'=>5),
     ));
@@ -198,13 +198,13 @@ function sasanperfumes_get_home_sections() {
     return new WP_REST_Response(array(
         'whyChooseUs' => array(
             'enabled' => (bool) sasanperfumes_hs_opt('wcus_enabled', true),
-            'eyebrow' => $bi('wcus','eyebrow','Our Promise','تميزنا'),
+            'eyebrow' => $bi('wcus','eyebrow','Our Promise','ØªÙ…ÙŠØ²Ù†Ø§'),
             'title' => $bi('wcus','title'), 'subtitle' => $bi('wcus','subtitle'),
             'items' => $map_items('wcus_items', array('title'=>array('title_en','title_ar'),'description'=>array('desc_en','desc_ar'))),
         ),
         'ourStory' => array(
             'enabled' => (bool) sasanperfumes_hs_opt('story_enabled', true),
-            'eyebrow' => $bi('story','eyebrow','Discover Our Journey','اكتشف قصتنا'),
+            'eyebrow' => $bi('story','eyebrow','Discover Our Journey','Ø§ÙƒØªØ´Ù Ù‚ØµØªÙ†Ø§'),
             'title' => $bi('story','title'),
             'description1' => $bi('story','desc1'), 'description2' => $bi('story','desc2'),
             'image' => sasanperfumes_hs_opt('story_image', ''),
@@ -212,13 +212,13 @@ function sasanperfumes_get_home_sections() {
         ),
         'faq' => array(
             'enabled' => (bool) sasanperfumes_hs_opt('faq_enabled', true),
-            'eyebrow' => $bi('faq','eyebrow','Help','مساعدة'),
+            'eyebrow' => $bi('faq','eyebrow','Help','Ù…Ø³Ø§Ø¹Ø¯Ø©'),
             'title' => $bi('faq','title'), 'subtitle' => $bi('faq','subtitle'),
             'items' => $map_items('faq_items', array('question'=>array('q_en','q_ar'),'answer'=>array('a_en','a_ar'))),
         ),
         'seoContent' => array(
             'enabled' => (bool) sasanperfumes_hs_opt('seo_enabled', true),
-            'title' => $bi('seo','title','Shop Premium Perfumes Online in the UAE','تسوق العطور الفاخرة اون لاين في الإمارات'),
+            'title' => $bi('seo','title','Shop Premium Perfumes Online in the UAE','ØªØ³ÙˆÙ‚ Ø§Ù„Ø¹Ø·ÙˆØ± Ø§Ù„ÙØ§Ø®Ø±Ø© Ø§ÙˆÙ† Ù„Ø§ÙŠÙ† ÙÙŠ Ø§Ù„Ø¥Ù…Ø§Ø±Ø§Øª'),
             'paragraphs' => array($bi('seo','para1'), $bi('seo','para2')),
             'backgroundImage' => sasanperfumes_hs_opt('seo_bg_image', ''),
         ),

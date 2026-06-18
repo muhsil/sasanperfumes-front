@@ -98,7 +98,7 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
     ? t(footerSettings.description)
     : locale === "ar"
       ? "اكتشف العطور الفاخرة ومنتجات العناية العطرية المصنوعة بعناية في شيب هايف."
-      : (siteSettings?.tagline || "Premium fragrances and aromatic products crafted with care.");
+      : (siteSettings?.tagline || "Premium fragrances and scent products crafted with care.");
 
   const social = footerSettings?.social;
   const facebookUrl = social?.facebook || siteConfig.links.facebook;

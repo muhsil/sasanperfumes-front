@@ -1,6 +1,6 @@
 <?php
 /**
- * Email Styles - ShapeHive Custom Style
+ * Email Styles - Sasan Perfumes Custom Style
  *
  * This template can be overridden by copying it to yourtheme/woocommerce/emails/email-styles.php.
  *
@@ -33,7 +33,7 @@ $base_lighter_40 = wc_hex_lighter( $base, 40 );
 $text_lighter_20 = wc_hex_lighter( $text, 20 );
 $text_lighter_40 = wc_hex_lighter( $text, 40 );
 
-// Custom ShapeHive colors
+// Custom Sasan Perfumes colors
 $sasanperfumes_primary = '#1a1a1a';
 $sasanperfumes_accent = '#c0392b';
 $sasanperfumes_gray = '#888888';

@@ -87,8 +87,18 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: '/:market(qa|om|sa)/:slug([\\w-]+)-perfume',
+        destination: '/:market/en/product/:slug-perfume',
+        permanent: true,
+      },
+      {
         source: '/:slug([\\w-]+)-perfume',
         destination: '/en/product/:slug-perfume',
+        permanent: true,
+      },
+      {
+        source: '/:market(qa|om|sa)/product/:slug',
+        destination: '/:market/en/product/:slug',
         permanent: true,
       },
       {
@@ -97,8 +107,18 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       {
+        source: '/:market(qa|om|sa)/product-category/:slug',
+        destination: '/:market/en/category/:slug',
+        permanent: true,
+      },
+      {
         source: '/product-category/:slug',
         destination: '/en/category/:slug',
+        permanent: true,
+      },
+      {
+        source: '/:market(qa|om|sa)/shop',
+        destination: '/:market/en/shop',
         permanent: true,
       },
       {

@@ -1,6 +1,6 @@
 <?php
 /**
- * ShapeHive Security Hardening Module
+ * Sasan Perfumes Security Hardening Module
  * 
  * Hardens the WordPress backend against common attacks:
  * - Blocks XML-RPC (brute force / DDoS vector)

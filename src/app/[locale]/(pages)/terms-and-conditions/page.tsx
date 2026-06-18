@@ -1,117 +1,36 @@
-import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
-import { notFound } from "next/navigation";
-import { PageHeader } from "@/components/common/PageHeader";
-import { GroupedFAQAccordion, type FAQGroup } from "@/components/common/GroupedFAQAccordion";
-import { PolicyContent } from "@/components/common/PolicyContent";
-import { getDictionary } from "@/i18n";
-import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
-import { getPageSeo, getStaticPageContent, pickLocale, mapRepeater, mapFAQGroups, getFeatureToggles } from "@/lib/api/wordpress";
-import type { Locale } from "@/config/site";
-import type { Metadata } from "next";
+import { NextResponse } from "next/server";
+import { siteConfig } from "@/config/site";
 
-interface TermsPageProps {
-  params: Promise<{ locale: string }>;
-}
+export async function GET() {
+  const content = `# ${siteConfig.name}
 
-// Default keywords (fallback when WordPress page doesn't exist)
-const defaultKeywords = {
-  en: ["terms and conditions", "terms of use", "user agreement", "store policies", "ShapeHive", "purchase terms", "online store policy", "shopping terms"],
-  ar: ["الشروط والأحكام", "شروط الاستخدام", "اتفاقية المستخدم", "سياسات المتجر", "شيب هايف", "شروط الشراء", "سياسة المتجر الإلكتروني", "أحكام التسوق"],
-};
+> UAE perfume store for everyday fragrances, hair mist, all over sprays, and gift sets
 
-export async function generateMetadata({
-  params,
-}: TermsPageProps): Promise<Metadata> {
-  const { locale } = await params;
-  const lang = locale as Locale;
-  const isAr = lang === "ar";
-  const dictionary = await getDictionary(lang);
-  const toggles = await getFeatureToggles();
-  if (!toggles.sasanperfumes_terms_enabled) return {};
-  const pageContent = dictionary.pages.terms;
+## About
+Sasan Perfumes is a UAE fragrance store offering perfumes, hair mist, all over sprays, and gift-ready scent collections online.
 
-  const wpSeo = await getPageSeo("terms-and-conditions", lang);
+## Links
+- Website: ${siteConfig.url}
+- Shop: ${siteConfig.url}/en/shop
+- About Us: ${siteConfig.url}/en/about-us
+- Contact: ${siteConfig.url}/en/contact-us
+- Full LLM Context: ${siteConfig.url}/llms-full.txt
 
-  return generateSeoMetadata({
-    title: wpSeo?.title || pageContent.seo.title,
-    description: wpSeo?.description || pageContent.seo.description,
-    image: wpSeo?.ogImage || undefined,
-    locale: lang,
-    pathname: "/terms-and-conditions",
-    keywords: isAr ? defaultKeywords.ar : defaultKeywords.en,
+## Product Categories
+- Perfumes: ${siteConfig.url}/en/category/perfumes
+- All Over Spray: ${siteConfig.url}/en/category/all-over-spray
+- Hair Mist: ${siteConfig.url}/en/category/sasan-hair-mist
+- Gift Sets: ${siteConfig.url}/en/category/gift-set
+
+## Languages
+- English: ${siteConfig.url}/en
+- Arabic: ${siteConfig.url}/ar
+`;
+
+  return new NextResponse(content, {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Cache-Control": "public, max-age=86400, s-maxage=86400",
+    },
   });
-}
-
-export default async function TermsPage({ params }: TermsPageProps) {
-  const { locale } = await params;
-  const toggles = await getFeatureToggles();
-  if (!toggles.sasanperfumes_terms_enabled) notFound();
-  const dictionary = await getDictionary(locale as Locale);
-  const wp = await getStaticPageContent("terms");
-
-  const title = pickLocale(wp?.title, locale, "");
-  const subtitle = pickLocale(wp?.subtitle, locale, "");
-
-  // FAQ-style grouped content from terms_faq_groups or fallback to old terms_sections
-  const wpFaqGroups = mapFAQGroups(wp?.terms_faq_groups, locale);
-
-  // Featured links section
-  const featuredLinksTitle = pickLocale(wp?.featured_links_title, locale, "featured links");
-  const featuredLinksDesc = pickLocale(wp?.featured_links_description, locale, "Redirect efficiently your customers to a list of collections or products.");
-  const wpFeaturedLinks = mapRepeater(wp?.featured_links, locale, (link) => ({
-    label: locale === 'ar' ? (link.label?.ar || link.label_ar || '') : (link.label?.en || link.label_en || ''),
-    url: link.url || '',
-  }));
-
-  const breadcrumbItems = [
-    { name: dictionary.footer.termsConditions, href: `/${locale}/terms-and-conditions` },
-  ];
-
-  return (
-    <div>
-      <PageHeader title={title} subtitle={subtitle} />
-      <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} />
-
-      <div className="px-5 md:px-7 lg:px-12 pt-8 md:pt-10 pb-16">
-        <div className="max-w-3xl mx-auto space-y-16">
-          <PolicyContent
-            data={wp}
-            locale={locale}
-            sectionKeys={["terms_sections"]}
-          />
-
-          {wpFaqGroups.length > 0 && (
-            <GroupedFAQAccordion groups={wpFaqGroups as FAQGroup[]} />
-          )}
-
-          {wpFeaturedLinks.length > 0 && (
-            <div className="bg-[#f5f1ed] rounded-lg p-8 md:p-12">
-              <h2 className="mb-4 text-2xl font-light text-brand-primary">{featuredLinksTitle}</h2>
-              <p className="mb-6 text-sm text-brand-primary/70">{featuredLinksDesc}</p>
-              <div className="space-y-3">
-                {wpFeaturedLinks.map((link, idx) => (
-                  <a
-                    key={idx}
-                    href={link.url}
-                    className="inline-flex items-center gap-2 border-b border-brand-primary pb-1 text-xs font-normal tracking-[0.1em] text-brand-primary uppercase hover:opacity-70 transition-opacity"
-                  >
-                    {link.label}
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="border-t border-[#e7ded7] pt-8">
-            <a
-              href={`/${locale}/contact`}
-              className="inline-flex items-center gap-2 border-b border-brand-primary pb-1 text-xs font-normal tracking-[0.1em] text-brand-primary uppercase"
-            >
-              {dictionary.common.contact}
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 }
