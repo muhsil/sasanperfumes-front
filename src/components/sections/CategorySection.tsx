@@ -55,10 +55,10 @@ export function CategorySectionSkeleton({ count = 6, variant = "light" }: { coun
 
   return (
     <section className={isDark ? "bg-brand-primary py-8 md:py-9 lg:py-10" : "bg-transparent pb-0 pt-10 md:pt-12 lg:pt-14"}>
-      <div className="mb-8 px-5 md:px-7 lg:px-12 md:mb-10">
+      <div className="mb-8 section-shell md:mb-10">
         <SectionHeaderSkeleton />
       </div>
-      <div className="grid grid-cols-2 gap-4 px-5 md:px-7 lg:px-12 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-4 section-shell sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {Array.from({ length: count }).map((_, i) => (
           <CategoryCardSkeleton key={i} />
         ))}
@@ -135,7 +135,7 @@ export function CategorySection({
 
   return (
     <section className={`${sectionClassName} lazy-section ${className} ${getVisibilityClass()}`}>
-      <div className="mb-5 flex items-end justify-between gap-4 px-5 md:px-7 lg:px-12 md:mb-6">
+      <div className="mb-5 section-shell flex items-end justify-between gap-4 md:mb-6">
         <div className={`${isRTL ? "text-right" : "text-left"}`}>
             <h2 className={`font-title text-[28px] md:text-[34px] ${titleClassName}`}>
             {settings.section_title}
@@ -169,7 +169,7 @@ export function CategorySection({
       </div>
 
       {/* Swiper Slider */}
-      <div className="relative category-section-slider px-5 md:px-7 lg:px-12">
+      <div className="relative category-section-slider section-shell">
           <Swiper
             modules={[Navigation, Pagination]}
             spaceBetween={16}

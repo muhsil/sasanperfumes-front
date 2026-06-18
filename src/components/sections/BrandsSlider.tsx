@@ -47,9 +47,9 @@ export function BrandsSlider({ locale, initialData = null }: BrandsSliderProps) 
           </h2>
         )}
         {subtitle && (
-          <p className="mx-auto mb-5 max-w-2xl px-5 text-center text-sm leading-relaxed text-brand-muted md:mb-6 md:text-base">
-            {subtitle}
-          </p>
+        <p className="mx-auto mb-5 max-w-2xl px-5 text-center text-sm leading-relaxed text-brand-muted md:mb-6 md:text-base">
+          {subtitle}
+        </p>
         )}
         {!subtitle && heading && <div className="mb-5 md:mb-6" />}
 
@@ -79,7 +79,7 @@ export function BrandsSlider({ locale, initialData = null }: BrandsSliderProps) 
                 spaceBetween: 16,
               },
             }}
-            className="brands-slider px-5 md:px-7 lg:px-12"
+            className="brands-slider section-shell"
           >
             {data.brands.map((brand, i) => {
               const card = (

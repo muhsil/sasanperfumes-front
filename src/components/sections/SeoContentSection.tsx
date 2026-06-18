@@ -20,7 +20,7 @@ export function SeoContentSection({ title, paragraphs, backgroundImage, isRTL = 
       className="lazy-section section-band relative overflow-hidden py-10 md:py-12 lg:py-14"
       dir={isRTL ? "rtl" : "ltr"}
     >
-      <div className="relative px-5 md:px-7 lg:px-12">
+      <div className="relative section-shell">
         <div className="relative rounded-[28px] border border-brand-border/40 bg-white/85 p-4 shadow-[0_22px_56px_rgba(14,10,3,0.05)] md:p-8">
           <div className="pointer-events-none absolute -left-16 top-12 h-60 w-60 rounded-full bg-[radial-gradient(circle_at_top,rgba(194,160,111,0.11),transparent_60%)]" />
 

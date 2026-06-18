@@ -24,7 +24,7 @@ interface HomepageServicesGridProps {
 export function HomepageServicesGridSkeleton() {
   return (
     <section className="bg-white pt-8 md:pt-10 lg:pt-12 pb-0">
-      <div className="mb-8 px-5 md:px-7 lg:px-12 md:mb-10">
+      <div className="mb-8 section-shell md:mb-10">
         <Skeleton className="h-8 w-48 md:h-9 lg:h-10" />
       </div>
       <div className="grid grid-cols-1 gap-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -37,7 +37,7 @@ export function HomepageServicesGridSkeleton() {
           </div>
         ))}
       </div>
-      <div className="mt-8 px-5 md:px-7 lg:px-12 pb-10">
+      <div className="mt-8 section-shell pb-10">
         <Skeleton className="h-4 w-32" />
       </div>
     </section>
@@ -51,7 +51,7 @@ export function HomepageServicesGrid({
 }: HomepageServicesGridProps) {
   return (
     <section className="bg-white pt-8 md:pt-10 lg:pt-12 pb-0">
-      <div className="mb-8 px-5 md:px-7 lg:px-12 md:mb-10">
+      <div className="mb-8 section-shell md:mb-10">
         <h2 className="font-normal text-2xl text-brand-primary md:text-3xl lg:text-4xl">
           {isRTL ? "خدماتنا" : "Our Services"}
         </h2>
@@ -141,7 +141,7 @@ export function HomepageServicesGrid({
         })}
       </div>
 
-      <div className="mt-8 px-5 md:px-7 lg:px-12 pb-10">
+      <div className="mt-8 section-shell pb-10">
         <Link
           href={`/${locale}/services`}
           className="inline-flex items-center gap-2 border-b border-brand-primary pb-1 text-xs font-normal tracking-[0.1em] text-brand-primary uppercase transition-colors hover:text-brand-primary/70"

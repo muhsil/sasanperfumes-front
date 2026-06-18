@@ -30,7 +30,7 @@ export function OurStorySection({
 
   return (
     <section className="lazy-section section-band py-8 md:py-10 lg:py-12">
-      <div className="px-5 md:px-7 lg:px-12">
+      <div className="section-shell">
           <div className={`grid gap-6 lg:items-center ${image ? "lg:grid-cols-12" : ""}`}>
             {hasText && (
               <div className={`${image ? "lg:col-span-5" : "mx-auto max-w-4xl"}`}>

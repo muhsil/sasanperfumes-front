@@ -33,7 +33,7 @@ function CollectionCardSkeleton() {
 export function CollectionsSectionSkeleton({ count = 3 }: { count?: number }) {
   return (
     <section className="bg-brand-primary py-8 md:py-10 lg:py-12">
-      <div className="grid grid-cols-1 gap-4 px-5 md:grid-cols-2 md:px-7 lg:grid-cols-3 lg:px-12">
+      <div className="grid grid-cols-1 gap-4 section-shell">
         {Array.from({ length: count }).map((_, i) => (
           <CollectionCardSkeleton key={i} />
         ))}
@@ -64,7 +64,7 @@ export function CollectionsSection({
 
   const cols = settings.responsive_columns ?? { desktop: 3, tablet: 2, mobile: 1 };
   const gridClass = [
-    "grid gap-4 px-5 md:px-7 lg:px-12",
+    "grid gap-4 section-shell",
     MOBILE_COLS[cols.mobile] ?? "grid-cols-1",
     TABLET_COLS[cols.tablet] ?? "md:grid-cols-2",
     DESKTOP_COLS[cols.desktop] ?? "lg:grid-cols-3",
@@ -74,7 +74,7 @@ export function CollectionsSection({
     <section className={`bg-brand-primary py-8 text-brand-ivory md:py-10 lg:py-12 ${className} ${getVisibilityClass()}`}>
       <div>
         {(settings.section_title || settings.section_subtitle) && (
-          <div className="mb-5 px-5 md:mb-6 md:px-7 lg:px-12">
+          <div className="mb-5 md:mb-6 section-shell">
             {settings.section_title && (
               <h2 className="font-title text-3xl text-brand-ivory md:text-4xl">
                 {decodeHtmlEntities(settings.section_title)}

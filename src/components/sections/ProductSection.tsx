@@ -44,7 +44,7 @@ interface ProductSectionProps {
 export function ProductSectionSkeleton({ count = 5, fullView = false }: { count?: number; fullView?: boolean }) {
   return (
     <section className={fullView ? "bg-transparent py-7 md:py-9 lg:py-10" : "bg-transparent pb-0 pt-8 md:pt-9 lg:pt-10"}>
-      <div className="px-5 md:px-7 lg:px-12">
+      <div className="section-shell">
         <div className="mb-4 md:mb-5">
           <SectionHeaderSkeleton />
         </div>
@@ -113,9 +113,9 @@ export function ProductSection({
     ? `bg-transparent py-7 md:py-9 lg:py-10 ${className} ${getVisibilityClass()}`
     : `bg-transparent pb-0 pt-8 md:pt-9 lg:pt-10 ${className} ${getVisibilityClass()}`;
 
-  return (
+    return (
     <section className={`${sectionClass} lazy-section`}>
-      <div className="px-5 md:px-7 lg:px-12">
+      <div className="section-shell">
         <div className="mb-4 flex flex-col gap-3 md:mb-5 md:flex-row md:items-end md:justify-between">
           <div className={isRTL ? "text-right" : "text-left"}>
             <h2 className="font-title text-xl text-brand-primary md:text-2xl">
@@ -140,14 +140,14 @@ export function ProductSection({
 
       {isGrid ? (
         /* Grid layout */
-        <div className={`grid gap-4 px-5 pb-1 md:px-7 lg:px-12 ${MOBILE_COLS[cols.mobile] ?? "grid-cols-2"} ${TABLET_COLS[cols.tablet] ?? "sm:grid-cols-3"} ${DESKTOP_COLS[cols.desktop] ?? "lg:grid-cols-5"}`}>
+        <div className={`grid gap-4 section-shell pb-1 ${MOBILE_COLS[cols.mobile] ?? "grid-cols-2"} ${TABLET_COLS[cols.tablet] ?? "sm:grid-cols-3"} ${DESKTOP_COLS[cols.desktop] ?? "lg:grid-cols-5"}`}>
           {displayProducts.map((product) => (
             <WCProductCard key={product.id} product={product} locale={locale} bundleProductSlugs={bundleProductSlugs} englishSlug={englishProductSlugs[product.id]} />
           ))}
         </div>
       ) : (
         /* Slider layout */
-        <div className="relative product-section-slider px-5 md:px-7 lg:px-12">
+        <div className="relative product-section-slider section-shell">
           <Swiper
             modules={[Autoplay, Navigation]}
             spaceBetween={16}

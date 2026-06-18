@@ -50,7 +50,7 @@ export function BannersSectionSkeleton({ count = 2 }: { count?: number }) {
   return (
     <section className="bg-transparent py-8 md:py-10 lg:py-12">
       <div>
-        <div className={`grid gap-4 px-5 md:px-7 lg:px-12 ${getGridClass()}`}>
+        <div className={`grid gap-4 section-shell ${getGridClass()}`}>
           {Array.from({ length: count }).map((_, i) => (
             <BannerSkeleton key={i} />
           ))}
@@ -103,7 +103,7 @@ export function BannersSection({
   return (
     <section className={`lazy-section bg-transparent py-8 md:py-10 lg:py-12 ${className} ${getVisibilityClass()}`}>
       <div>
-        <div className={`grid gap-4 px-5 md:px-7 lg:px-12 ${getGridClass()}`}>
+        <div className={`grid gap-4 section-shell ${getGridClass()}`}>
           {banners.map((banner, index) => {
             const BannerContent = (
               <div className="group relative min-h-[48svh] overflow-hidden rounded-lg border border-brand-border/70 bg-stone-200 shadow-[0_20px_48px_rgba(20,15,10,0.1)] sm:min-h-[50svh] lg:min-h-[56svh]">

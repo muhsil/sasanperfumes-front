@@ -27,7 +27,7 @@ interface FeaturedProductsSliderProps {
 export function FeaturedProductsSliderSkeleton() {
   return (
     <section className="bg-white pt-8 md:pt-10 lg:pt-12 pb-0">
-      <div className="px-5 md:px-7 lg:px-12">
+      <div className="section-shell">
         <div className="mb-6 md:mb-8">
           <SectionHeaderSkeleton />
         </div>
@@ -87,9 +87,9 @@ export function FeaturedProductsSlider({
     return ""; // Show on both
   };
 
-  return (
+    return (
     <section className={`bg-white pt-8 md:pt-10 lg:pt-12 pb-0 ${className} ${getVisibilityClass()}`}>
-      <div className="px-5 md:px-7 lg:px-12">
+      <div className="section-shell">
         <div className="mb-6 flex flex-col gap-4 md:mb-8 md:flex-row md:items-end md:justify-between">
           <div className={isRTL ? "text-right" : "text-left"}>
             <h2 className="text-xl md:text-2xl font-normal text-brand-primary">

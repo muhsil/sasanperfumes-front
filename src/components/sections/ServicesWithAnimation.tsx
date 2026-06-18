@@ -24,15 +24,15 @@ export function ServicesWithAnimation({
 }: ServicesWithAnimationProps) {
   return (
     <section className="bg-white pt-8 md:pt-10 lg:pt-12 pb-0">
-      <div className="mb-8 px-5 md:px-7 lg:px-12 md:mb-12">
+      <div className="mb-8 section-shell md:mb-12">
         <h2 className="font-normal text-2xl text-brand-primary md:text-3xl">
           {isRTL ? "خدماتنا" : "Our Services"}
         </h2>
       </div>
-      <div className="px-5 md:px-7 lg:px-12">
+      <div className="section-shell">
         <ServicesSlider services={services} locale={locale} isRTL={isRTL} />
       </div>
-      <div className="mt-8 px-5 md:px-7 lg:px-12 pb-8">
+      <div className="mt-8 section-shell pb-8">
         <a
           href={`/${locale}/services`}
           className="inline-flex items-center gap-2 border-b border-brand-primary pb-1 text-xs font-bold tracking-[0.1em] text-brand-primary uppercase transition-colors hover:text-brand-primary/70"
