@@ -36,6 +36,75 @@ When backend changes are needed:
 4. You upload the changed plugin files to the WordPress server.
 5. Verify the live REST endpoint after upload.
 
+### WordPress Multisite Mapping (shapehive network)
+
+The plugin supports one network backend (`cms.shapehive.com`) with separate frontend domains:
+
+- `shapehive.com`
+- `qa.shapehive.com`
+- `om.shapehive.com`
+- `sa.shapehive.com`
+
+Network mapping is handled by the WordPress multisite helper in:
+
+`wordpress/sasanperfumes-frontend-settings/includes/class-sasanperfumes-multisite.php`
+
+To bootstrap all domain mappings in one pass, run on live CMS after plugin deployment:
+
+```bash
+wp eval-file scripts/setup-multisite-network.php
+```
+
+You can also configure it manually from Network Admin:
+
+1. Log in as super admin at `https://cms.shapehive.com/wp-admin/network/admin.php?page=sasanperfumes-frontend-network`
+2. Click **Frontend Network Settings**.
+3. Set default frontend URL to `https://shapehive.com`.
+4. Keep JSON map as:
+
+```json
+{
+  "cms.shapehive.com": "https://shapehive.com",
+  "qa.shapehive.com": "https://qa.shapehive.com",
+  "om.shapehive.com": "https://om.shapehive.com",
+  "sa.shapehive.com": "https://sa.shapehive.com"
+}
+```
+
+5. Save.
+
+After setup, test from each domain:
+
+- https://shapehive.com/en
+- https://qa.shapehive.com/en
+- https://om.shapehive.com/en
+- https://sa.shapehive.com/en
+
+### Arabic Content Sync (Products + Pages + CMS)
+
+Use `wp eval-file` on the live CMS host after the plugin files are uploaded:
+
+```bash
+wp eval-file scripts/fix-arabic-products.php
+```
+
+`scripts/fix-arabic-products.php` is a backward-compatible entrypoint that runs:
+
+- Product EN->AR translations in WPML (creates Arabic product rows when missing).
+- EN->AR post meta sync for bilingual fields.
+- EN->AR term meta sync for taxonomy SEO fields and product metadata.
+- EN->AR option + theme-mod settings sync.
+
+Useful flags:
+
+```bash
+wp eval-file scripts/fix-arabic-products.php --dry-run
+wp eval-file scripts/fix-arabic-products.php --skip-create-products
+wp eval-file scripts/fix-arabic-products.php --skip-options
+wp eval-file scripts/fix-arabic-content.php --post-types=product,page,sasanperfumes_service
+wp eval-file scripts/fix-arabic-content.php --taxonomies=product_cat,product_brand
+```
+
 Do not edit `fnf_wp_contents/` as the source of truth. It is a reference mirror only.
 
 ## Plugin Installation

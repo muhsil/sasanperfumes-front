@@ -51,7 +51,10 @@ function sasanperfumes_format_frontend_url_map_text(array $map): string {
 function sasanperfumes_get_frontend_url_map(): array {
     if (!is_multisite()) return [];
 
-    $from_site = get_site_option('sasanperfumes_frontend_url_map', []);
+    $from_site = get_site_option('sasanperfumes_frontend_url_map', null);
+    if ($from_site === null) {
+        return sasanperfumes_get_frontend_url_map_example();
+    }
     if (!$from_site) return [];
 
     return sasanperfumes_parse_frontend_url_map($from_site);
