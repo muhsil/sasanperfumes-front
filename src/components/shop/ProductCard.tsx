@@ -120,45 +120,6 @@ export function ProductCard({ product, locale, className, wcProduct }: ProductCa
       addToCompare(comparisonProduct as Parameters<typeof addToCompare>[0]);
     }
   };
-  const actionControlClassName =
-    "flex h-11 w-full items-center justify-center gap-2 rounded-full bg-black px-4 text-center !text-[11px] font-bold uppercase tracking-[0.14em] text-white shadow-[0_12px_24px_rgba(0,0,0,0.18)] transition-all duration-300 hover:bg-brand-primary disabled:opacity-50";
-
-  const renderActionControl = (className?: string) => {
-    if (hasVariations) {
-      return (
-        <Link
-          href={productHref}
-          className={cn(actionControlClassName, className)}
-        >
-          {labels.chooseOptions}
-        </Link>
-      );
-    }
-
-    return (
-      <button
-        type="button"
-        onClick={handleAddToCart}
-        disabled={isOutOfStock || isLoading}
-        className={cn(actionControlClassName, className)}
-      >
-        {isAddedToCart ? (
-          <>
-            <Check className="h-3.5 w-3.5" />
-            <span className="!text-[11px]">{isAr ? "\u062a\u0645!" : "Added!"}</span>
-          </>
-        ) : isOutOfStock ? (
-          <span className="!text-[11px]">{labels.outOfStock}</span>
-        ) : (
-          <>
-            <Plus className={cn("h-3.5 w-3.5", isLoading && "animate-pulse")} />
-            <span className="!text-[11px]">{labels.addToCart}</span>
-          </>
-        )}
-      </button>
-    );
-  };
-
   return (
     <article className={cn("group flex h-full flex-col", className)}>
       <div className="flex h-full flex-col overflow-hidden border-r border-b border-[#e7ded7] bg-transparent shadow-[0_4px_20px_rgba(74,22,51,0.06)]">

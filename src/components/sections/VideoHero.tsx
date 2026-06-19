@@ -107,7 +107,7 @@ export function VideoHero({ locale }: { locale: Locale }) {
           <button
             onClick={() => {
               if (videoRef.current) {
-                playing ? videoRef.current.pause() : videoRef.current.play();
+                if (playing) { videoRef.current.pause(); } else { videoRef.current.play(); }
               }
             }}
             className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white"

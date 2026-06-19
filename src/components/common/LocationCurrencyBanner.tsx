@@ -219,7 +219,7 @@ export function LocationCurrencyBanner({ locale = "en" }: LocationCurrencyBanner
           <X className="h-4 w-4" />
         </button>
 
-        <div className="flex items-start gap-3 pr-6">
+        <div className="flex items-start gap-3 pe-6">
           <div className="flex-shrink-0 rounded-full border border-brand-border/70 bg-brand-ivory p-2 text-brand-primary shadow-[0_8px_18px_rgba(20,15,10,0.08)]">
             <MapPin className="h-5 w-5" />
           </div>
