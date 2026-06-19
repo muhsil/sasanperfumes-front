@@ -271,9 +271,7 @@ a {
   }
 }
 
-[class*="tracking-"] {
-  letter-spacing: 0 !important;
-}
+
 
 .section-reveal {
   animation: reveal-up 0.65s cubic-bezier(0.2, 0.65, 0.2, 1) both;

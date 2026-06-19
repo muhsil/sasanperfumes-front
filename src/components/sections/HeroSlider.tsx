@@ -37,13 +37,15 @@ type HeroImageProps =
 
 function HeroImage(props: HeroImageProps) {
   const { src, alt, priority, loading, fetchPriority, sizes, className } = props;
+  const [prevSrc, setPrevSrc] = useState(src);
   const [currentSrc, setCurrentSrc] = useState(src);
   const [isBroken, setIsBroken] = useState(false);
 
-  useEffect(() => {
+  if (src !== prevSrc) {
+    setPrevSrc(src);
     setCurrentSrc(src);
     setIsBroken(false);
-  }, [src]);
+  }
 
   if (isBroken) return null;
 
