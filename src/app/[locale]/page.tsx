@@ -305,7 +305,7 @@ export default async function HomePage({ params }: HomePageProps) {
 
       <HeroSlider settings={homeSettings.hero_slider} />
 
-      <div className="relative bg-transparent">
+      <div className="page-flush relative bg-transparent">
         <Suspense fallback={<ProductSectionSkeleton fullView />}>
           <NewProductsSection
             locale={validLocale}

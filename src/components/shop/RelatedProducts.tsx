@@ -40,8 +40,8 @@ export function RelatedProducts({
   }
 
   return (
-    <section className={cn("lazy-section border-t border-brand-border/70", className)}>
-      <div className="mb-8 flex items-center justify-between px-5 md:px-7 lg:px-12">
+    <section className={cn("lazy-section border-t border-brand-border/70 pt-8", className)}>
+      <div className="mb-6 flex items-center justify-between px-5 md:px-7 lg:px-12">
         <div>
           <h2 className="font-title text-3xl text-brand-primary">
             {title || (isRTL ? "منتجات ذات صلة" : "Related Products")}

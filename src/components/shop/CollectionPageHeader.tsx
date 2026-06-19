@@ -39,7 +39,7 @@ export function CollectionPageHeader({
       dir={isRTL ? "rtl" : "ltr"}
     >
       {visibleCategories.length > 0 && (
-        <div className="mb-0 border-b border-brand-border/70 bg-brand-beige/45 px-3 py-4 md:px-7 md:py-6 lg:px-12">
+        <div className="mb-0 border-b border-brand-border/70 bg-brand-beige/45 px-4 py-4 md:px-7 md:py-6 lg:px-12">
           <div className="md:hidden">
             <CategoriesCarousel categories={visibleCategories} locale={locale as Locale} />
           </div>

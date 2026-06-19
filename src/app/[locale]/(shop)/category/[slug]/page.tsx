@@ -231,7 +231,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     : "";
 
   return (
-    <div className="bg-[#f8f3ef] text-brand-primary">
+    <div className="page-flush bg-transparent text-brand-primary">
       <JsonLd data={collectionJsonLd} />
       <JsonLd data={itemListJsonLd} />
       <JsonLd data={breadcrumbJsonLd} />
