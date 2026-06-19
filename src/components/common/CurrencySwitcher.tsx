@@ -87,13 +87,15 @@ export function CurrencySwitcher({ className, locale = "en" }: CurrencySwitcherP
     };
   }, [isOpen]);
 
+  // Hide completely on non-international markets (single currency)
+  if (isLockedCurrency) return null;
+
   const handleSelect = (code: Currency) => {
     setCurrency(code);
     setIsOpen(false);
   };
 
   const handleButtonClick = () => {
-    if (isLockedCurrency) return;
     setIsOpen(true);
   };
 
