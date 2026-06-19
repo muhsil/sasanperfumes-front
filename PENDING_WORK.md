@@ -20,13 +20,19 @@
   - Frontend: `https://shapehive.com`
 
 ## Pending work (post-live)
-1. Run/update WordPress network setup on live  
-   - Run the latest `scripts/setup-multisite-network.php` on `cms.shapehive.com`.
-   - Confirm Network Admin -> Sites shows:
+1. Finish live WordPress/Hostinger backend-site access  
+   - Live Network Admin sites were recreated on 2026-06-19:
      - `cms.shapehive.com`
+     - market sites for QA, OM, SA
+   - Hostinger/web-server routing still needs to be confirmed for the market dashboards.
+   - If using subdomains, configure DNS/SSL for:
      - `qa.cms.shapehive.com`
      - `om.cms.shapehive.com`
      - `sa.cms.shapehive.com`
+   - If using backend paths, configure Hostinger/WordPress routing so these work:
+     - `https://cms.shapehive.com/qa/wp-admin/`
+     - `https://cms.shapehive.com/om/wp-admin/`
+     - `https://cms.shapehive.com/sa/wp-admin/`
 
 2. Confirm WordPress network settings are saved on live  
    - Open `https://cms.shapehive.com/wp-admin/network/admin.php?page=sasanperfumes-frontend-network`
@@ -77,6 +83,7 @@
      - login/profile
      - language switcher
    - Check browser console for CORS or mixed-content errors.
+   - Confirm `https://shapehive.com/api/home-settings?lang=en` no longer returns `{"code":"invalid_response"}` after the frontend deployment lands.
 
 ## Deployment note
 - WordPress Admin changes are external to Git. Keep this list updated until each item is confirmed on live admin and frontend.

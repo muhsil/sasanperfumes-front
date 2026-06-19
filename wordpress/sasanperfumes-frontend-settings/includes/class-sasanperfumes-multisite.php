@@ -496,6 +496,7 @@ function sasanperfumes_find_blog_id_for_frontend_host(string $frontend_host): in
     $expected_slug = $frontend_market !== ''
         ? $frontend_market
         : ($default_site_slugs[$frontend_host] ?? ($default_site_slugs[$frontend_host_base] ?? ''));
+    $network_map = sasanperfumes_get_frontend_url_map();
 
     foreach ((array) $sites as $site_id) {
         $site_frontend_url = trim((string) get_blog_option((int) $site_id, 'sasanperfumes_frontend_url', ''));
@@ -518,10 +519,31 @@ function sasanperfumes_find_blog_id_for_frontend_host(string $frontend_host): in
             break;
         }
 
+        $details = get_blog_details((int) $site_id);
+        $site_domain = '';
+        $site_path = '';
+        if ($details) {
+            $site_domain = strtolower(trim((string) ($details->domain ?? '')));
+            $site_path = strtolower(trim((string) ($details->path ?? ''), '/'));
+        }
+
+        $mapped_frontend_url = '';
+        if ($site_domain !== '' && isset($network_map[$site_domain])) {
+            $mapped_frontend_url = (string) $network_map[$site_domain];
+        } elseif ($site_domain !== '' && $site_path !== '' && isset($network_map[$site_domain . '/' . $site_path])) {
+            $mapped_frontend_url = (string) $network_map[$site_domain . '/' . $site_path];
+        }
+
+        if (
+            $mapped_frontend_url !== '' &&
+            sasanperfumes_normalize_frontend_host_with_market($mapped_frontend_url) === $frontend_host
+        ) {
+            $target = (int) $site_id;
+            break;
+        }
+
         if ($expected_slug !== '') {
-            $details = get_blog_details((int) $site_id);
             if ($details) {
-                $site_path = trim((string) ($details->path ?? ''), '/');
                 if ($site_path === $expected_slug) {
                     $target = (int) $site_id;
                     break;
