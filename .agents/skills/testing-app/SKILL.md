@@ -1,6 +1,6 @@
 ---
 name: testing-app
-description: General app testing patterns for ShapeHive — SEO metadata, HTML entity handling, product page verification, cart price normalization. Use when verifying product detail pages, SEO changes, hero slider content, or cart/checkout pricing.
+description: General app testing patterns for ShapeHive — SEO metadata, HTML entity handling, product page verification, cart price normalization, spacing/margin verification. Use when verifying product detail pages, SEO changes, hero slider content, cart/checkout pricing, or layout spacing fixes.
 ---
 
 # Testing the Application
@@ -30,7 +30,7 @@ The WordPress `/SasanPerfumes/v1/pages/{slug}` API returns repeater fields with 
 
 **Pattern**: Repeater fields are prefixed with `{page_slug}_` in the API response. When adding new CMS pages, always check the API response first:
 ```bash
-curl -s https://cms.sasanperfumes.ae/wp-json/SasanPerfumes/v1/pages/{slug} | python3 -c "import sys,json; print(list(json.load(sys.stdin).keys()))"
+curl -s https://cms.shapehive.com/wp-json/SasanPerfumes/v1/pages/{slug} | python3 -c "import sys,json; print(list(json.load(sys.stdin).keys()))"
 ```
 
 ## Test Product URLs
@@ -51,6 +51,42 @@ Useful products covering different scenarios:
 **Note:** `dark-musk-perfume` slug may not exist. Use `mimosa-glow` as default.
 
 Other known working slugs: `orange-blossom`, `pure-jasmine`, `scarlet-rose`, `silky-violet`, `timeless-sakura`, `tuberose-bloom`, `velvet-topaz`
+
+## Verifying Spacing/Margin Consistency
+
+When testing CSS class changes (margin/padding normalization), use code-level verification as the primary test method since Tailwind utilities have deterministic pixel values:
+
+### Expected Page Container Padding Pattern
+All page-level containers should use:
+- Mobile: `px-4` (16px) or `px-5` (20px)
+- Tablet (>=768px): `md:px-7` (28px / 1.75rem)
+- Desktop (>=1024px): `lg:px-12` (48px / 3rem)
+
+### Verification Commands
+```bash
+# Check all files use consistent padding pattern
+grep -rn 'px-4.*md:px-7.*lg:px-12\|px-5.*md:px-7.*lg:px-12' src/
+
+# Check for OLD inconsistent values at page level (should return 0 matches in page files)
+grep -rn '\bmd:px-5\b\|\bmd:px-6\b\|\blg:px-8\b\|\blg:px-10\b' src/app/
+
+# Verify page-flush class on all page wrappers
+grep -rn 'page-flush' src/app/
+```
+
+### page-flush Class
+The `page-flush` class prevents double margins. The global CSS rule at `globals.css:156` applies `margin-inline` and `width: calc(100% - var(--page-container-margin)*2)` to direct `<main>` children. Pages with `page-flush` class are excluded from this rule and manage their own padding.
+
+**Required on**: homepage, shop, category, cart, new-products, featured-products, product detail page wrappers.
+
+### Component-Internal Padding (NOT page-level)
+`px-1`, `px-2`, `px-3` inside badges, buttons, pills, form inputs, and overlay elements are CORRECT and should NOT be normalized to `px-4`. Only page-level containers need the standard pattern.
+
+### Product Detail Section Spacing
+- NO `space-y-8` on main container (creates uneven gaps)
+- Reviews section: `mt-10 border-t border-brand-border/50 pt-8`
+- Upsell products: `mt-10 pt-2`
+- Related products wrapper: `mt-10 pb-6 md:pb-8`
 
 ## Verifying SEO Metadata
 
@@ -137,24 +173,24 @@ curl -s http://localhost:3001/en/size-guide | grep -o 'drifted away'
 
 ```bash
 # Feature toggles
-curl -s https://cms.sasanperfumes.ae/wp-json/SasanPerfumes/v1/feature-toggles | python3 -m json.tool
+curl -s https://cms.shapehive.com/wp-json/SasanPerfumes/v1/feature-toggles | python3 -m json.tool
 
 # Homepage blog section check (both toggles must be true)
-curl -s https://cms.sasanperfumes.ae/wp-json/SasanPerfumes/v1/feature-toggles | \
+curl -s https://cms.shapehive.com/wp-json/SasanPerfumes/v1/feature-toggles | \
   python3 -c "import sys,json; d=json.load(sys.stdin); print('blog:', d.get('sasanperfumes_blog_enabled'), 'home_blog:', d.get('sasanperfumes_home_blog_enabled'))"
 
 # Private labeling content
-curl -s https://cms.sasanperfumes.ae/wp-json/SasanPerfumes/v1/private-labeling | python3 -c "import sys,json; d=json.load(sys.stdin); print(list(d.keys())[:10])"
+curl -s https://cms.shapehive.com/wp-json/SasanPerfumes/v1/private-labeling | python3 -c "import sys,json; d=json.load(sys.stdin); print(list(d.keys())[:10])"
 
 # Brands API (used by mega menu)
 curl -s http://localhost:3001/api/brands | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d), 'brands')"
 
 # Arabic products verification
-curl -s 'https://cms.sasanperfumes.ae/wp-json/wc/store/v1/products?per_page=30&lang=ar' | \
+curl -s 'https://cms.shapehive.com/wp-json/wc/store/v1/products?per_page=30&lang=ar' | \
   python3 -c "import sys,json; d=json.load(sys.stdin); print(f'{len(d)} Arabic products'); [print(f'  - {p[\"name\"]}') for p in d[:5]]"
 
 # Our Story stats check
-curl -s https://cms.sasanperfumes.ae/wp-json/SasanPerfumes/v1/home-sections | \
+curl -s https://cms.shapehive.com/wp-json/SasanPerfumes/v1/home-sections | \
   python3 -c "import sys,json; d=json.load(sys.stdin); stats=d.get('ourStory',{}).get('stats',[]); [print(f'{s[\"value\"]} - {s[\"label\"][\"en\"]}') for s in stats]"
 ```
 
@@ -201,13 +237,29 @@ document.querySelectorAll('[data-animate]').forEach(el => {
 });
 ```
 
+## When CMS is Down (Fallback Testing)
+
+If `cms.shapehive.com` is unreachable (timeout), pages cannot render server-side. In this case:
+- **Code-level verification IS valid** for pure CSS class changes (Tailwind utilities have deterministic pixel values)
+- `npx tsc --noEmit` verifies TypeScript compilation
+- `npx eslint src/` verifies lint passes
+- `next build --webpack` will compile but may hang during "Collecting page data" phase
+- Visual testing must wait until CMS comes back online
+- The local dev server will hang on page loads waiting for API responses
+
+**Hostinger Resource Limits**: The CMS may go down due to Hostinger Cloud Professional plan resource limits. Signs:
+- All curl requests to `cms.shapehive.com` timeout
+- `shapehive.com` returns 000 (connection timeout)
+- Local dev server pages hang indefinitely
+
 ## Devin Secrets Needed
 
 - `HOSTINGER_SSH_PASSWORD`: For SSH access to staging server (WP-CLI, deployment)
-- `WP_ADMIN_PASSWORD`: WordPress admin credentials for CMS backend (username: admin)
+- `WP_ADMIN_PASSWORD`: WordPress admin credentials for CMS backend (username: shapehive_admin_9284)
 
 ## Known Issues
 
 - **Hostinger Rate Limiting**: The server rate-limits at ~10 requests per 5 minutes by default. Fix applied: `.htaccess` has `WordPressProtect throttle, 500`. If you get HTTP 429 errors, wait or use API endpoints directly.
 - **GSAP Animations**: Elements with `data-animate` attribute start with `opacity: 0` — inject CSS to override when taking screenshots.
 - **Build Cache**: `npm run build` uses `build-preserve-chunks.js` which can serve stale content. Always verify with dev server or use `npx next build --webpack`.
+- **CMS URL**: The backend API URL is `https://cms.shapehive.com` (previously was `cms.sasanperfumes.ae`). Check `.env.local` for the correct URL.
