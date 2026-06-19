@@ -143,6 +143,20 @@ function applyRequestRoutingHeaders(
   return requestHeaders;
 }
 
+function rewriteMarketPathToLocaleRoute(
+  request: NextRequest,
+  locale: string,
+  market: string,
+  segments: string[]
+) {
+  const rest = segments.slice(2);
+  const rewriteUrl = request.nextUrl.clone();
+  rewriteUrl.pathname = `/${locale}${rest.length ? `/${rest.join("/")}` : ""}`;
+  const requestHeaders = applyRequestRoutingHeaders(request, locale, market);
+  const response = NextResponse.rewrite(rewriteUrl, { request: { headers: requestHeaders } });
+  return addSecurityHeaders(response);
+}
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const { market: routeMarket, locale: routeLocale } = getMarketAndLocale(pathname);
@@ -192,8 +206,13 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(request.nextUrl, { status: 301 });
   }
 
-  // Check if pathname already has a locale (intl or market-first).
-  if (LOCALE_SEGMENTS.has(first || "") || (market && routeLocale)) {
+  // Keep public market URLs (/qa/en/...) while rendering the existing locale route (/en/...).
+  if (market && routeLocale) {
+    return rewriteMarketPathToLocaleRoute(request, routeLocale, market, segments);
+  }
+
+  // Check if pathname already has a locale (intl).
+  if (LOCALE_SEGMENTS.has(first || "")) {
     const detectedLocale = routeLocale || (first || "en");
     const requestHeaders = applyRequestRoutingHeaders(request, detectedLocale, market);
     const response = NextResponse.next({ request: { headers: requestHeaders } });
