@@ -23,9 +23,12 @@ if (!is_multisite()) {
 $network_default = 'https://shapehive.com';
 $host_map = [
     'cms.shapehive.com' => 'https://shapehive.com',
-    'qa.shapehive.com' => 'https://qa.shapehive.com',
-    'om.shapehive.com' => 'https://om.shapehive.com',
-    'sa.shapehive.com' => 'https://sa.shapehive.com',
+    'shapehive.com/qa' => 'https://shapehive.com/qa',
+    'shapehive.com/om' => 'https://shapehive.com/om',
+    'shapehive.com/sa' => 'https://shapehive.com/sa',
+    'cms.shapehive.com/qa' => 'https://shapehive.com/qa',
+    'cms.shapehive.com/om' => 'https://shapehive.com/om',
+    'cms.shapehive.com/sa' => 'https://shapehive.com/sa',
 ];
 
 update_site_option('sasanperfumes_frontend_url', untrailingslashit($network_default));
@@ -56,8 +59,8 @@ foreach ((array) $sites as $site_id) {
 
     if ($host && isset($host_map[$host])) {
         $frontend_url = $host_map[$host];
-    } elseif ($path && isset($host_map[$path . '.shapehive.com'])) {
-        $frontend_url = $host_map[$path . '.shapehive.com'];
+    } elseif ($path && isset($host_map[$host . '/' . $path])) {
+        $frontend_url = $host_map[$host . '/' . $path];
     }
 
     if ($frontend_url) {

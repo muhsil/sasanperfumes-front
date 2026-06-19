@@ -12,19 +12,19 @@ export interface MarketConfig {
 export const marketConfigs: MarketConfig[] = [
   {
     code: "qa",
-    hostnames: ["qa.shapehive.com"],
+    hostnames: ["shapehive.com/qa", "localhost/qa", "127.0.0.1/qa"],
     defaultCurrency: "QAR",
     allowedCurrencies: ["QAR"],
   },
   {
     code: "om",
-    hostnames: ["om.shapehive.com"],
+    hostnames: ["shapehive.com/om", "localhost/om", "127.0.0.1/om"],
     defaultCurrency: "OMR",
     allowedCurrencies: ["OMR"],
   },
   {
     code: "sa",
-    hostnames: ["sa.shapehive.com"],
+    hostnames: ["shapehive.com/sa", "localhost/sa", "127.0.0.1/sa"],
     defaultCurrency: "SAR",
     allowedCurrencies: ["SAR"],
   },
@@ -45,11 +45,22 @@ export function normalizeMarketHost(value?: string | null): string {
   if (!first) return "";
 
   const withoutProtocol = first.replace(/^https?:\/\//i, "");
-  return withoutProtocol
-    .split("/")[0]
+  const segments = withoutProtocol.split("/").filter(Boolean);
+  if (segments.length === 0) return "";
+
+  const host = segments[0]
     .replace(/:\d+$/, "")
     .replace(/^www\./, "")
     .toLowerCase();
+
+  if (segments.length > 1) {
+    const firstPath = segments[1].toLowerCase();
+    if (["qa", "om", "sa"].includes(firstPath)) {
+      return `${host}/${firstPath}`;
+    }
+  }
+
+  return host;
 }
 
 export function getMarketByHost(host?: string | null): MarketConfig {

@@ -41,8 +41,6 @@ export const mediaHostNames = Array.from(
   new Set([
     cmsHostname,
     "cms.shapehive.com",
-    "om.shapehive.com",
-    "sa.shapehive.com",
   ])
 );
 

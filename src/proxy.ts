@@ -4,6 +4,8 @@ import { siteConfig } from "@/config/site";
 
 const locales = siteConfig.locales;
 const defaultLocale = siteConfig.defaultLocale;
+const MARKET_PREFIX_SEGMENTS = new Set<string>(["qa", "om", "sa"]);
+const LOCALE_SEGMENTS = new Set<string>(["en", "ar"]);
 
 const BLOCKED_PATHS = [
   "/wp-admin",
@@ -77,6 +79,12 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
   return response;
 }
 
+function normalizeHostHeader(value: string | null): string {
+  if (!value) return "";
+  const host = value.split(",")[0].trim();
+  return host.replace(/:\d+$/, "").trim();
+}
+
 function getLocale(request: NextRequest): string {
   const acceptLanguage = request.headers.get("accept-language");
   if (acceptLanguage) {
@@ -89,55 +97,129 @@ function getLocale(request: NextRequest): string {
   return defaultLocale;
 }
 
+function getMarketAndLocale(pathname: string): { market?: string; locale?: string } {
+  const segments = pathname.split("/").filter(Boolean);
+  const first = segments[0]?.toLowerCase();
+  const second = segments[1]?.toLowerCase();
+
+  if (MARKET_PREFIX_SEGMENTS.has(first || "")) {
+    const locale = LOCALE_SEGMENTS.has(second || "") ? second : undefined;
+    return { market: first, locale };
+  }
+
+  if (LOCALE_SEGMENTS.has(first || "")) {
+    return { locale: first };
+  }
+
+  return {};
+}
+
+function getPathFromHeader(request: NextRequest): string {
+  const referer = request.headers.get("referer") || request.headers.get("referrer");
+  if (!referer) return "";
+
+  try {
+    return new URL(referer).pathname || "";
+  } catch {
+    return "";
+  }
+}
+
+function applyRequestRoutingHeaders(
+  request: NextRequest,
+  locale: string,
+  market?: string
+) {
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-locale", locale);
+  if (market) {
+    requestHeaders.set("x-market", market);
+  }
+
+  const rawHost = request.headers.get("x-forwarded-host") || request.headers.get("host") || request.nextUrl.host;
+  const normalizedHost = normalizeHostHeader(rawHost);
+  requestHeaders.set("x-frontend-host", market ? `${normalizedHost}/${market}` : normalizedHost);
+
+  return requestHeaders;
+}
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const { market: routeMarket, locale: routeLocale } = getMarketAndLocale(pathname);
+  const segments = pathname.split("/").filter(Boolean);
+  const first = segments[0]?.toLowerCase();
+  const second = segments[1]?.toLowerCase();
+  const refererPath = getPathFromHeader(request);
+  const { market: refererMarket, locale: refererLocale } = getMarketAndLocale(refererPath);
+  const market = routeMarket || refererMarket;
 
   if (isBlockedRequest(request)) {
     return new NextResponse("Not Found", { status: 404 });
   }
 
-  // Check if pathname already has a locale
-  const pathnameHasLocale = locales.some(
-    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
-  );
-
-  if (pathnameHasLocale) {
-    // Fix duplicated locale prefix: /en/en/... → /en/... or /ar/ar/... → /ar/...
-    const dupMatch = pathname.match(/^\/(en|ar)\/(en|ar)\//);
-    if (dupMatch) {
-      const correctLocale = dupMatch[1];
-      const rest = pathname.slice(`/${correctLocale}/${dupMatch[2]}`.length);
-      request.nextUrl.pathname = `/${correctLocale}${rest}`;
-      return NextResponse.redirect(request.nextUrl, { status: 301 });
-    }
-
-    // Set x-locale on request headers so the root layout can read the locale
-    // and set the correct HTML lang attribute (fixes Arabic pages having lang="en")
-    const detectedLocale = pathname.startsWith("/ar") ? "ar" : "en";
-    const requestHeaders = new Headers(request.headers);
-    requestHeaders.set("x-locale", detectedLocale);
-    const response = NextResponse.next({ request: { headers: requestHeaders } });
-    return addSecurityHeaders(response);
-  }
-
-  // Skip locale redirect for static files and API routes
+  // Skip locale redirect for static files
   if (
     pathname.startsWith("/_next") ||
-    pathname.startsWith("/api") ||
     pathname.startsWith("/static") ||
     pathname.includes(".") // files with extensions
   ) {
     return addSecurityHeaders(NextResponse.next());
   }
 
-  // Redirect to locale-prefixed path
+  if (pathname.startsWith("/api")) {
+    const requestHeaders = applyRequestRoutingHeaders(
+      request,
+      routeLocale || refererLocale || getLocale(request),
+      market
+    );
+    const response = NextResponse.next({ request: { headers: requestHeaders } });
+    return addSecurityHeaders(response);
+  }
+
+  // Fix duplicated locale prefix: /en/en/... -> /en/... or /ar/ar/... -> /ar/...
+  if (LOCALE_SEGMENTS.has(first || "") && LOCALE_SEGMENTS.has(second || "") && first === second) {
+    const correctLocale = first || defaultLocale;
+    const rest = segments.length > 2 ? `/${segments.slice(2).join("/")}` : "";
+    request.nextUrl.pathname = `/${correctLocale}${rest}`;
+    return NextResponse.redirect(request.nextUrl, { status: 301 });
+  }
+
+  // Fix repeated locale after market prefix: /qa/en/en/... -> /qa/en/...
+  if (routeLocale && segments[2] === routeLocale && segments.length > 2) {
+    const rest = segments.slice(3);
+    const corrected = `/${market}/${routeLocale}${rest.length ? `/${rest.join("/")}` : ""}`;
+    request.nextUrl.pathname = corrected;
+    return NextResponse.redirect(request.nextUrl, { status: 301 });
+  }
+
+  // Check if pathname already has a locale (intl or market-first).
+  if (LOCALE_SEGMENTS.has(first || "") || (market && routeLocale)) {
+    const detectedLocale = routeLocale || (first || "en");
+    const requestHeaders = applyRequestRoutingHeaders(request, detectedLocale, market);
+    const response = NextResponse.next({ request: { headers: requestHeaders } });
+    return addSecurityHeaders(response);
+  }
+
+  // Redirect to market-first locale path when market exists without locale
+  if (market && !routeLocale) {
+    const locale = getLocale(request);
+    const redirectPath = `/${market}/${locale}${segments.length > 1 ? `/${segments.slice(1).join("/")}` : ""}`;
+    const requestHeaders = applyRequestRoutingHeaders(request, locale, market);
+    request.nextUrl.pathname = redirectPath;
+    const response = NextResponse.redirect(request.nextUrl, 308);
+    Object.entries(Object.fromEntries(requestHeaders.entries())).forEach(([name, value]) => {
+      response.headers.set(name, value);
+    });
+    return addSecurityHeaders(response);
+  }
+
+  // Redirect to locale-prefixed path for intl routes.
   const locale = getLocale(request);
   request.nextUrl.pathname = `/${locale}${pathname}`;
-  return NextResponse.redirect(request.nextUrl);
+  const requestHeaders = applyRequestRoutingHeaders(request, locale);
+  const response = NextResponse.redirect(request.nextUrl, 308);
+  Object.entries(Object.fromEntries(requestHeaders.entries())).forEach(([name, value]) => {
+    response.headers.set(name, value);
+  });
+  return addSecurityHeaders(response);
 }
-
-export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|fonts|images|plugins).*)",
-  ],
-};

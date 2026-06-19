@@ -11,9 +11,6 @@ const MARKET_PREFIX_SEGMENTS = new Set<string>(["qa", "om", "sa"]);
 const LOCALE_SEGMENTS = new Set<string>(["en", "ar"]);
 const KNOWN_CANONICAL_HOSTS = [
   "shapehive.com",
-  "qa.shapehive.com",
-  "om.shapehive.com",
-  "sa.shapehive.com",
 ];
 
 function parseHost(value: string | undefined): string {
@@ -45,9 +42,6 @@ function getAllowedHosts(): string[] {
     ...canonicalHosts,
     "cms.shapehive.com",
     "shapehive.com",
-    "qa.shapehive.com",
-    "om.shapehive.com",
-    "sa.shapehive.com",
     cmsHostname,
     ...mediaHostNames,
   ]);
@@ -98,27 +92,65 @@ function isCanonicalHost(request: NextRequest) {
   return isKnownCanonical;
 }
 
+function getLocaleFromHeaders(request: NextRequest): string {
+  const acceptLanguage = request.headers.get("accept-language");
+  if (!acceptLanguage) return "en";
+  const preferredLocale = acceptLanguage
+    .split(",")
+    .map((lang) => lang.split(";")[0].trim().substring(0, 2))
+    .find((lang) => LOCALE_SEGMENTS.has(lang));
+  return preferredLocale || "en";
+}
+
 function enforceMarketLocalePathOrder(request: NextRequest) {
   const pathname = request.nextUrl.pathname || "/";
   const segments = pathname.split("/").filter(Boolean);
-  if (segments.length < 2) return;
-
-  const firstSegment = segments[0]?.toLowerCase();
-  const secondSegment = segments[1]?.toLowerCase();
-  if (!firstSegment || !secondSegment) return;
-
-  if (!LOCALE_SEGMENTS.has(firstSegment) || !MARKET_PREFIX_SEGMENTS.has(secondSegment)) {
+  if (segments.length < 2) {
+    if (segments.length === 1 && MARKET_PREFIX_SEGMENTS.has(segments[0].toLowerCase())) {
+      const locale = getLocaleFromHeaders(request);
+      if (locale) {
+        const redirectUrl = request.nextUrl.clone();
+        redirectUrl.pathname = `/${segments[0].toLowerCase()}/${locale}`;
+        return NextResponse.redirect(redirectUrl, 308);
+      }
+    }
     return;
   }
 
-  const redirectPath =
-    `/${secondSegment}/${firstSegment}` + (segments.length > 2 ? `/${segments.slice(2).join("/")}` : "");
+  const firstSegment = segments[0]?.toLowerCase();
+  const secondSegment = segments[1]?.toLowerCase();
+  if (!firstSegment) return;
 
-  if (redirectPath === pathname) return;
+  // Redirect old market-last URLs to market-first. Example: /en/qa -> /qa/en.
+  if (LOCALE_SEGMENTS.has(firstSegment) && MARKET_PREFIX_SEGMENTS.has(secondSegment || "")) {
+    const redirectPath =
+      `/${secondSegment}/${firstSegment}` + (segments.length > 2 ? `/${segments.slice(2).join("/")}` : "");
 
-  const redirectUrl = request.nextUrl.clone();
-  redirectUrl.pathname = redirectPath;
-  return NextResponse.redirect(redirectUrl, 308);
+    if (redirectPath === pathname) return;
+
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = redirectPath;
+    return NextResponse.redirect(redirectUrl, 308);
+  }
+
+  // Force market-first for paths like /qa/product and /qa (if no locale provided).
+  if (MARKET_PREFIX_SEGMENTS.has(firstSegment)) {
+    const locale = LOCALE_SEGMENTS.has(secondSegment || "") ? secondSegment : getLocaleFromHeaders(request);
+    if (!locale) return;
+
+    const hasLocale = LOCALE_SEGMENTS.has(secondSegment || "");
+    if (hasLocale && secondSegment === locale) {
+      return;
+    }
+
+    const rest = segments.slice(hasLocale ? 2 : 1);
+    const redirectPath = `/${firstSegment}/${locale}${rest.length ? `/${rest.join("/")}` : ""}`;
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = redirectPath;
+    return NextResponse.redirect(redirectUrl, 308);
+  }
+
+  return;
 }
 
 function enforceCanonicalHost(request: NextRequest) {

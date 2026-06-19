@@ -1196,9 +1196,6 @@ function sasanperfumes_settings_cors_handling() {
         $origin = get_http_origin();
         $allowed = array(
             'https://shapehive.com',
-            'https://qa.shapehive.com',
-            'https://om.shapehive.com',
-            'https://sa.shapehive.com',
             'https://cms.shapehive.com',
             'http://localhost:3000',
             'http://localhost:3001',
