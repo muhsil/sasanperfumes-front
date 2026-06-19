@@ -71,7 +71,7 @@ export default async function ShippingPage({ params }: ShippingPageProps) {
       <PageHeader title={title} />
       <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} />
 
-      <div className="px-5 md:px-7 lg:px-12 pt-8 md:pt-10 pb-16">
+      <div className="px-4 pt-8 md:pt-10 pb-16">
         <div className="max-w-3xl mx-auto space-y-16">
           <PolicyContent
             data={wp}

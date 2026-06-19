@@ -8,7 +8,7 @@ export default function HomeLoading() {
         <div className="aspect-[1080/1475] w-full bg-stone-200 md:hidden" />
       </div>
       <div className="bg-brand-beige py-8 md:py-10">
-        <div className="container mx-auto px-5 md:px-7 lg:px-12">
+        <div className="container mx-auto px-4">
           <div className="mb-6 md:mb-8">
             <SectionHeaderSkeleton align="center" />
           </div>

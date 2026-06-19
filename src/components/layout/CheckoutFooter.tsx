@@ -24,7 +24,7 @@ export function CheckoutFooter({ locale, dictionary, siteSettings }: CheckoutFoo
 
   return (
     <footer className="border-t border-gray-100 bg-white pb-20 md:pb-0">
-      <div className="container mx-auto px-5 md:px-7 lg:px-12 py-6 md:py-8">
+      <div className="container mx-auto px-4 py-6 md:py-8">
         <div className="flex flex-col items-center space-y-5">
           <Link href={`/${locale}`} className="inline-block">
             {siteSettings?.logo?.url ? (

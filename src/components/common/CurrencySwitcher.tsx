@@ -150,7 +150,7 @@ export function CurrencySwitcher({ className, locale = "en" }: CurrencySwitcherP
             aria-modal="true"
             aria-labelledby="currency-modal-title"
           >
-            <div className="border-b border-brand-border/70 bg-brand-beige/45 px-4 py-4 md:px-5">
+            <div className="border-b border-brand-border/70 bg-brand-beige/45 px-4 py-4 md:px-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="rounded-full border border-brand-border/70 bg-brand-ivory p-2 text-brand-primary shadow-[0_8px_18px_rgba(20,15,10,0.08)]">

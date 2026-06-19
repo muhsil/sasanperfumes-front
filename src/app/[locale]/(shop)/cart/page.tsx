@@ -197,7 +197,7 @@ export default function CartPage() {
 
   return (
     <div className="page-flush min-h-screen bg-transparent pb-44 md:pb-8">
-      <div className="container mx-auto px-4 py-2 md:px-7 md:py-3 lg:px-12">
+      <div className="container mx-auto px-4 py-2 md:py-3">
         <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} contained={false} />
 
         {/* Login Status Indicator */}
@@ -297,7 +297,7 @@ export default function CartPage() {
                   </h3>
                   <div className="space-y-2">
                     {activeGifts.map((gift, index) => (
-                      <div key={index} className="flex items-center gap-2 rounded-lg border border-brand-border/60 bg-brand-ivory/75 px-3 py-2">
+                      <div key={index} className="flex items-center gap-2 rounded-lg border border-brand-border/60 bg-brand-ivory/75 px-4 py-2">
                         <div className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-beige">
                           <Gift className="h-3 w-3 text-brand-gold" />
                         </div>
@@ -609,7 +609,7 @@ export default function CartPage() {
                     {selectedCoupons.map((coupon) => (
                       <div
                         key={coupon.code}
-                        className="flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2"
+                        className="flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2"
                       >
                         <div className="flex items-center gap-2">
                           <Tag className="h-4 w-4 text-green-600" />
@@ -750,7 +750,7 @@ export default function CartPage() {
       {/* Mobile Sticky Order Summary */}
       {!isEmpty && (
         <div
-          className="fixed left-3 right-3 z-40 rounded-full border border-brand-border/70 bg-brand-ivory/96 px-3 py-2 shadow-[0_16px_40px_rgba(20,15,10,0.16)] backdrop-blur-xl lg:hidden"
+          className="fixed left-3 right-3 z-40 rounded-full border border-brand-border/70 bg-brand-ivory/96 px-4 py-2 shadow-[0_16px_40px_rgba(20,15,10,0.16)] backdrop-blur-xl lg:hidden"
           style={{ bottom: "calc(max(0.75rem, env(safe-area-inset-bottom)) + 4.75rem)" }}
         >
           <div className="flex items-center justify-between gap-3">

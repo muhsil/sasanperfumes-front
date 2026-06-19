@@ -116,7 +116,7 @@ export default function AccountPage({ params }: AccountPageProps) {
 
   return (
     <div className="account-shell min-h-screen bg-transparent py-5 md:py-8" dir={isRTL ? "rtl" : "ltr"}>
-      <div className="container mx-auto px-5 md:px-7 lg:px-12">
+      <div className="container mx-auto px-4">
         <h1 className="mb-5 border-b border-brand-border/70 pb-4 text-2xl font-semibold leading-tight text-brand-primary md:mb-7 md:text-3xl">
           {texts.myAccount}
         </h1>

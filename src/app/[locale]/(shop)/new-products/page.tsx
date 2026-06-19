@@ -80,7 +80,7 @@ export default async function NewProductsPage({ params }: NewProductsPageProps) 
   const filteredTotal = productsResult.total - (productsResult.products.length - filteredProducts.length);
 
   return (
-    <div className="page-flush container mx-auto px-4 py-2 md:px-7 md:py-3 lg:px-12">
+    <div className="page-flush container mx-auto px-4 py-2 md:py-3">
       <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} contained={false} />
 
       <div className="mb-4 md:mb-6">

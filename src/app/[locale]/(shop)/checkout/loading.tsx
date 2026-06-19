@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/common/Skeleton";
 export default function CheckoutLoading() {
   return (
     <div className="min-h-screen overflow-x-clip pb-44 md:pb-8" style={{ backgroundColor: "var(--color-beige)" }}>
-      <div className="container mx-auto px-3 py-4 md:px-7 md:py-8 lg:px-12">
+      <div className="container mx-auto px-4 py-4 md:py-8">
         <div className="grid gap-8 lg:grid-cols-3 lg:items-start">
           {/* Checkout form skeleton */}
           <div className="lg:col-span-2 space-y-6">

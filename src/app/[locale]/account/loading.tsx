@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/common/Skeleton";
 export default function AccountLoading() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto px-5 md:px-7 lg:px-12">
+      <div className="container mx-auto px-4">
         <Skeleton className="mb-8 h-8 w-48 md:h-10" />
 
         <div className="grid gap-8 lg:grid-cols-3">

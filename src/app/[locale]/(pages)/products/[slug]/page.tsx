@@ -173,7 +173,7 @@ function HeroSection({ page, isRTL }: { page: ProductPage; isRTL: boolean }) {
   const ctaText = isRTL ? (page.hero.ctaTextAr || page.hero.ctaText) : page.hero.ctaText;
 
   return (
-    <section className="bg-[#f8f3ef] px-5 pb-6 pt-8 text-brand-primary md:px-7 md:pb-8 md:pt-10 lg:px-12">
+    <section className="bg-[#f8f3ef] px-4 pb-6 pt-8 text-brand-primary md:pb-8 md:pt-10">
       {subtitle && (
         <p className="mb-2 text-xs font-normal uppercase tracking-[0.1em] text-brand-primary/40">{subtitle}</p>
       )}
@@ -200,7 +200,7 @@ function BannersBlock({ page, isRTL }: { page: ProductPage; isRTL: boolean }) {
 
   return (
     <section className={`py-6 ${page.banners.hideOnMobile ? "hidden md:block" : ""} ${page.banners.hideOnDesktop ? "md:hidden" : ""}`}>
-      <div className="container mx-auto px-5 md:px-7 lg:px-12">
+      <div className="container mx-auto px-4">
         <div className={`grid gap-4 ${page.banners.items.length === 1 ? "grid-cols-1" : page.banners.items.length === 2 ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"}`}>
           {page.banners.items.map((banner, idx) => {
             const bannerTitle = isRTL ? (banner.titleAr || banner.title) : banner.title;
@@ -257,7 +257,7 @@ function FeaturesBlock({ page, isRTL }: { page: ProductPage; isRTL: boolean }) {
 
   return (
     <section className={`bg-white py-8 md:py-10 ${page.features.hideOnMobile ? "hidden md:block" : ""} ${page.features.hideOnDesktop ? "md:hidden" : ""}`}>
-      <div className="px-5 md:px-7 lg:px-12">
+      <div className="px-4">
         {sectionTitle && (
           <h2 className="mb-8 font-normal text-2xl text-brand-primary md:text-3xl">{sectionTitle}</h2>
         )}
@@ -290,7 +290,7 @@ function FAQBlock({ page, isRTL }: { page: ProductPage; isRTL: boolean }) {
 
   return (
     <section className="bg-brand-beige py-8 sm:py-12 md:py-16">
-      <div className="container mx-auto px-5 md:px-7 lg:px-12">
+      <div className="container mx-auto px-4">
         <div className="mx-auto max-w-4xl">
           {sectionTitle && (
             <h2 className="mb-8 font-normal text-2xl text-brand-primary md:text-3xl">{sectionTitle}</h2>
@@ -389,7 +389,7 @@ export default async function DynamicProductPage({ params }: ProductPageProps) {
 
       {/* Breadcrumbs after hero, before content */}
       {sectionOrder[0] === "hero" && page.hero.enabled && (
-        <div className="w-full px-5 md:px-7 lg:px-12 py-4">
+        <div className="w-full px-4 py-4">
           <Breadcrumbs items={breadcrumbItems} locale={validLocale} contained={false} />
         </div>
       )}

@@ -153,7 +153,7 @@ export function FAQPageContent({ locale, initialData, dictionary, contactLabel }
   const notFoundText = pickLocale(data?.not_found_text, locale, dictionary.notFoundText);
 
   return (
-    <div className="px-5 md:px-7 lg:px-12 pt-8 md:pt-10 pb-16">
+    <div className="px-4 pt-8 md:pt-10 pb-16">
       <div className="max-w-3xl mx-auto space-y-16">
         {faqGroups.length > 0 && (
           <GroupedFAQAccordion groups={faqGroups} />

@@ -47,7 +47,7 @@ export function BrandsSlider({ locale, initialData = null }: BrandsSliderProps) 
           </h2>
         )}
         {subtitle && (
-        <p className="mx-auto mb-5 max-w-2xl px-5 text-center text-sm leading-relaxed text-brand-muted md:mb-6 md:text-base">
+        <p className="mx-auto mb-5 max-w-2xl px-4 text-center text-sm leading-relaxed text-brand-muted md:mb-6 md:text-base">
           {subtitle}
         </p>
         )}

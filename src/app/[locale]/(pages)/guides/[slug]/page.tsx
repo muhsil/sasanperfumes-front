@@ -220,7 +220,7 @@ export default async function GuidePage({ params }: GuidePageProps) {
       <JsonLd data={articleJsonLd} />
 
       {/* Hero Section */}
-      <section className="bg-[#f8f3ef] px-5 pb-6 pt-8 text-brand-primary md:px-7 md:pb-8 md:pt-10 lg:px-12">
+      <section className="bg-[#f8f3ef] px-4 pb-6 pt-8 text-brand-primary md:pb-8 md:pt-10">
         <p className="mb-2 text-xs font-normal uppercase tracking-[0.1em] text-brand-primary/40">
           {guide.eyebrow[validLocale]}
         </p>
@@ -257,7 +257,7 @@ export default async function GuidePage({ params }: GuidePageProps) {
 
       {/* Product List Section */}
       <section className="bg-white py-8 md:py-10">
-        <div className="px-5 md:px-7 lg:px-12">
+        <div className="px-4">
           <div className="max-w-5xl">
             <p className="mb-1 text-xs font-normal uppercase tracking-[0.1em] text-brand-primary/40">{dict.ourPicks}</p>
             <h2 className="mb-8 font-normal text-2xl text-brand-primary md:text-3xl">{dict.topPicks}</h2>
@@ -283,7 +283,7 @@ export default async function GuidePage({ params }: GuidePageProps) {
       {/* Content Blocks Section */}
       {guide.contentBlocks.length > 0 && (
         <section className="bg-[#f8f3ef] py-8 md:py-10">
-          <div className="px-5 md:px-7 lg:px-12">
+          <div className="px-4">
             <div className="max-w-4xl">
               <h2 className="mb-8 font-normal text-2xl text-brand-primary md:text-3xl">{dict.buyingGuide}</h2>
               <div className="space-y-4">
@@ -302,7 +302,7 @@ export default async function GuidePage({ params }: GuidePageProps) {
       {/* FAQ Section */}
       {guide.faqs.length > 0 && (
         <section className="bg-white py-8 md:py-10">
-          <div className="px-5 md:px-7 lg:px-12">
+          <div className="px-4">
             <div className="max-w-4xl">
               <h2 className="mb-2 font-normal text-2xl text-brand-primary md:text-3xl">{dict.faqTitle}</h2>
               <p className="mb-6 text-sm text-brand-primary/60">{dict.faqSubtitle}</p>
@@ -327,7 +327,7 @@ export default async function GuidePage({ params }: GuidePageProps) {
       {/* Related Guides */}
       {relatedGuides.length > 0 && (
         <section className="bg-[#f8f3ef] py-8 md:py-10">
-          <div className="px-5 md:px-7 lg:px-12">
+          <div className="px-4">
             <div className="max-w-4xl">
               <h2 className="mb-6 font-normal text-2xl text-brand-primary md:text-3xl">{dict.relatedGuides}</h2>
               <div className="grid gap-px md:grid-cols-2">
@@ -353,7 +353,7 @@ export default async function GuidePage({ params }: GuidePageProps) {
 
       {/* CTA Section */}
       <section className="bg-white py-8 md:py-10">
-        <div className="px-5 md:px-7 lg:px-12">
+        <div className="px-4">
           <h2 className="font-normal text-2xl text-brand-primary md:text-3xl">{dict.ctaTitle}</h2>
           <p className="mt-2 max-w-xl text-sm text-brand-primary/60">{dict.ctaDescription}</p>
           <div className="mt-4 flex flex-wrap items-center gap-4">

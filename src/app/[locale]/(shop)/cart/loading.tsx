@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/common/Skeleton";
 export default function CartLoading() {
   return (
     <div className="min-h-screen pb-44 md:pb-8" style={{ backgroundColor: "var(--color-beige)" }}>
-      <div className="container mx-auto px-3 py-2 md:px-7 md:py-3 lg:px-12">
+      <div className="container mx-auto px-4 py-2 md:py-3">
         {/* Breadcrumb skeleton */}
         <Skeleton className="mb-4 h-4 w-32" />
 

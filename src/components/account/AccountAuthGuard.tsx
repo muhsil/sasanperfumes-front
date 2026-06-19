@@ -15,7 +15,7 @@ interface AccountAuthGuardProps {
 
 function AuthLoadingSkeleton() {
   return (
-    <div className="container mx-auto px-5 py-8 md:px-7 lg:px-12">
+    <div className="container mx-auto px-4 py-8">
       <div className="animate-pulse">
         <div className="mb-6 h-7 w-44 rounded bg-brand-beige" />
         <div className="space-y-4">
@@ -40,7 +40,7 @@ function NotAuthenticatedState({
   loginText: string;
 }) {
   return (
-    <div className="container mx-auto px-5 py-10 md:px-7 md:py-14 lg:px-12">
+    <div className="container mx-auto px-4 py-10 md:py-14">
       <div className="mx-auto max-w-md rounded-lg border border-brand-border/70 bg-brand-ivory p-6 text-center shadow-[0_18px_44px_rgba(20,15,10,0.08)]">
         <div className="mb-5 flex justify-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-md border border-brand-border/70 bg-white">

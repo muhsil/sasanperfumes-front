@@ -120,7 +120,7 @@ export default async function ContactPage({ params }: ContactPageProps) {
 
       {/* Contact Form & Info Section */}
       <section className="bg-transparent py-16 md:py-24">
-        <div className="px-5 md:px-7 lg:px-12 max-w-6xl mx-auto">
+        <div className="px-4 max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-3 gap-16">
             {/* Form Column */}
             <div className="lg:col-span-2">
@@ -154,7 +154,7 @@ export default async function ContactPage({ params }: ContactPageProps) {
       {/* Benefits Section */}
       {trustIndicators.length > 0 && (
       <section className="section-band py-16 md:py-20">
-        <div className="px-5 md:px-7 lg:px-12 max-w-6xl mx-auto">
+        <div className="px-4 max-w-6xl mx-auto">
           <div className="grid gap-8 md:grid-cols-3">
             {trustIndicators.map((item, index) => (
               <div key={index} className="luxury-panel p-5">
@@ -178,7 +178,7 @@ export default async function ContactPage({ params }: ContactPageProps) {
       {/* CTA Section */}
       {content.ctaTitle && (
       <section className="bg-brand-primary py-16 text-brand-ivory md:py-24">
-        <div className="px-5 md:px-7 lg:px-12 max-w-4xl mx-auto text-center">
+        <div className="px-4 max-w-4xl mx-auto text-center">
           <h2 className="mb-4 font-title text-3xl text-brand-ivory md:text-4xl">{content.ctaTitle}</h2>
           {content.ctaSubtitle && <p className="mb-8 text-sm text-brand-ivory/70">{content.ctaSubtitle}</p>}
           <Link

@@ -1359,7 +1359,7 @@ export default function CheckoutClient() {
 
   return (
                 <div className="min-h-screen bg-transparent pb-44 md:pb-8">
-                  <div className="container mx-auto px-3 py-3 md:px-7 md:py-8 lg:px-12">
+                  <div className="container mx-auto px-4 py-3 md:py-8">
 
         {/* Modern User Status Card */}
         <div className="luxury-panel mb-3 flex items-center justify-between p-3 md:mb-6 md:p-4">
@@ -1379,7 +1379,7 @@ export default function CheckoutClient() {
             </div>
           </div>
           {isAuthenticated && (
-            <div className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1">
+            <div className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-4 py-1">
               <div className="h-2 w-2 rounded-full bg-emerald-500"></div>
               <span className="text-xs font-medium text-emerald-700">{isRTL ? "متصل" : "Connected"}</span>
             </div>
@@ -2242,7 +2242,7 @@ export default function CheckoutClient() {
                                   {selectedCoupons.map((coupon) => (
                                     <div
                                       key={coupon.code}
-                                      className="flex items-center justify-between gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2"
+                                      className="flex items-center justify-between gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-2"
                                     >
                                       <div className="flex items-center gap-2 min-w-0 flex-1">
                                         <Tag className="h-4 w-4 text-green-600 flex-shrink-0" />
@@ -2403,7 +2403,7 @@ export default function CheckoutClient() {
       {/* Mobile Sticky Order Summary */}
       {!isEmptyCart && !isKeyboardVisible && (
       <div
-        className="fixed left-3 right-3 z-40 rounded-full border border-brand-border/70 bg-brand-ivory/96 px-3 py-2 shadow-[0_16px_40px_rgba(20,15,10,0.16)] backdrop-blur-xl lg:hidden"
+        className="fixed left-3 right-3 z-40 rounded-full border border-brand-border/70 bg-brand-ivory/96 px-4 py-2 shadow-[0_16px_40px_rgba(20,15,10,0.16)] backdrop-blur-xl lg:hidden"
         style={{ bottom: "calc(max(0.75rem, env(safe-area-inset-bottom)) + 4.75rem)" }}
       >
         <div className="flex items-center justify-between gap-3">

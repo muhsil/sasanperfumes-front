@@ -83,7 +83,7 @@ export function NewsletterForm({ locale, dictionary }: NewsletterFormProps) {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="rounded-full bg-[#b98a49] px-5 py-2.5 text-sm font-semibold text-[#1a1613] transition-colors hover:bg-[#c79956] disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-full bg-[#b98a49] px-4 py-2.5 text-sm font-semibold text-[#1a1613] transition-colors hover:bg-[#c79956] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isSubmitting
             ? isRTL

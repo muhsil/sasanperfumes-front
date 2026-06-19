@@ -96,7 +96,7 @@ async function CategorySeoSection({ slug, locale }: { slug: string; locale: Loca
   if (!title && !description) return null;
 
   return (
-    <div className="bg-gradient-to-r from-[#e0d9cf] to-[#ebe6df] px-5 py-12 md:px-7 md:py-16 lg:px-12">
+    <div className="bg-gradient-to-r from-[#e0d9cf] to-[#ebe6df] px-4 py-12 md:py-16">
       <div className="mx-auto w-full">
         {title && (
           <h2 className="mb-6 text-3xl font-normal leading-tight tracking-normal text-brand-primary md:text-4xl">

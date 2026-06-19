@@ -188,7 +188,7 @@ export default function InvoicePage({ params }: InvoicePageProps) {
 
     return (
       <div className="min-h-screen bg-gray-50" dir={isRTL ? "rtl" : "ltr"}>
-      <div className="container mx-auto px-5 md:px-7 lg:px-12 py-8 print:py-0 print:px-0">
+      <div className="container mx-auto px-4 py-8 print:py-0 print:px-0">
         <div className="mb-6 flex items-center justify-between print:hidden">
           <Link
             href={`/${locale}/account/orders/${orderId}`}

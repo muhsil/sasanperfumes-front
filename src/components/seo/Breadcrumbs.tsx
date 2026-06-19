@@ -37,7 +37,7 @@ export function Breadcrumbs({ items, locale, className, contained = true }: Brea
       <nav
         aria-label="Breadcrumb"
         className={cn(
-          contained && !isVisuallyHidden && "section-band border-t-0 px-5 pb-6 pt-5 text-brand-primary md:px-7 md:pb-7 md:pt-6 lg:px-12",
+          contained && !isVisuallyHidden && "section-band border-t-0 px-4 pb-6 pt-5 text-brand-primary md:pb-7 md:pt-6",
           !contained && !isVisuallyHidden && "py-3 md:py-4",
           className
         )}

@@ -148,7 +148,7 @@ export default async function NotePage({ params }: NotePageProps) {
   return (
     <>
       <JsonLd data={breadcrumbJsonLd} />
-      <div className="container mx-auto px-5 md:px-7 lg:px-12 py-3">
+      <div className="container mx-auto px-4 py-3">
         <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} contained={false} />
 
         <div className="mb-3">

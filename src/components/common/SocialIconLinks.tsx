@@ -104,7 +104,7 @@ export function SocialIconLinks({ links, className = "", variant = "light" }: So
 
   return (
     <section className={`w-full ${sectionClasses} ${className}`}>
-      <div className="flex flex-wrap items-center justify-center gap-4 px-5 md:px-7 lg:px-12">
+      <div className="flex flex-wrap items-center justify-center gap-4 px-4">
         {visibleLinks.map((link, index) => {
           const platformKey = normalizePlatform(link.platform);
           const label = platformLabels[platformKey] || link.platform;

@@ -160,24 +160,9 @@ a {
 }
 
 .section-shell {
-  padding-inline: 1.25rem;
+  padding-inline: 1rem;
   margin-inline: auto;
-  width: calc(100% - (1.25rem * 2));
   max-width: 80rem;
-}
-
-@media (width >= 48rem) {
-  .section-shell {
-    padding-inline: 1.75rem;
-    width: calc(100% - (1.75rem * 2));
-  }
-}
-
-@media (width >= 64rem) {
-  .section-shell {
-    padding-inline: 3rem;
-    width: calc(100% - (3rem * 2));
-  }
 }
 
 @media (width >= 48rem) {

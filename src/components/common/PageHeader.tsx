@@ -24,7 +24,7 @@ export function PageHeader({
   return (
     <section
       className={cn(
-        "section-band px-4 pb-6 pt-7 text-brand-primary md:px-7 md:pb-10 md:pt-12 lg:px-12",
+        "section-band px-4 pb-6 pt-7 text-brand-primary md:pb-10 md:pt-12",
         className,
       )}
     >

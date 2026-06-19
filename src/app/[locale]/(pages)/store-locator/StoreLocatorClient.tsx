@@ -130,7 +130,7 @@ export default function StoreLocatorClient({ dict, locale, stores: storeList, co
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
-      <section className="bg-[#f8f3ef] px-5 pb-6 pt-8 text-brand-primary md:px-7 md:pb-8 md:pt-10 lg:px-12">
+      <section className="bg-[#f8f3ef] px-4 pb-6 pt-8 text-brand-primary md:pb-8 md:pt-10">
         <p className="mb-2 text-lg font-normal tracking-normal text-brand-primary/60">{content.heroSubtitle}</p>
         <h1 className="text-[36px] font-normal leading-none tracking-normal md:text-[48px]">{content.heroTitle}</h1>
         {content.heroDescription && (
@@ -147,7 +147,7 @@ export default function StoreLocatorClient({ dict, locale, stores: storeList, co
 
       {/* Opening Hours Banner */}
       <section className="border-b border-[#e7ded7] bg-white">
-        <div className="px-5 md:px-7 lg:px-12 py-4">
+        <div className="px-4 py-4">
           <div className="flex flex-col gap-4 md:flex-row md:gap-8">
             <div className="flex items-center gap-3">
               <Clock className="h-4 w-4 text-brand-primary/40" />
@@ -167,7 +167,7 @@ export default function StoreLocatorClient({ dict, locale, stores: storeList, co
 
       {/* Stores by Country */}
       <section className="bg-white py-8 md:py-10">
-        <div className="px-5 md:px-7 lg:px-12">
+        <div className="px-4">
           {countries.map((country, countryIndex) => (
             <div key={country.id} className={countryIndex > 0 ? "mt-12" : ""}>
               {/* Country Header */}
@@ -238,7 +238,7 @@ export default function StoreLocatorClient({ dict, locale, stores: storeList, co
 
       {/* Waiting / Quick Links Section */}
       <section className="bg-[#f8f3ef] py-8 md:py-10">
-        <div className="px-5 md:px-7 lg:px-12">
+        <div className="px-4">
           <h2 className="font-normal text-2xl text-brand-primary md:text-3xl">{dict.waitingTitle}</h2>
           <p className="mt-2 text-sm text-brand-primary/60">{dict.waitingSubtitle}</p>
           <div className="mt-4 flex flex-wrap gap-3">
@@ -260,7 +260,7 @@ export default function StoreLocatorClient({ dict, locale, stores: storeList, co
 
       {/* CTA Section */}
       <section className="bg-white py-8 md:py-10">
-        <div className="px-5 md:px-7 lg:px-12">
+        <div className="px-4">
           <h2 className="font-normal text-2xl text-brand-primary md:text-3xl">{content.ctaTitle}</h2>
           <p className="mt-2 max-w-2xl text-sm text-brand-primary/60">{content.ctaSubtitle}</p>
           <Link
