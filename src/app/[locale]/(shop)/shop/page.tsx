@@ -116,7 +116,6 @@ export default async function ShopPage({ params }: ShopPageProps) {
           locale={locale as Locale}
           toolbarTitle={dictionary.common.shop}
           initialTotal={filteredTotal}
-          initialTotalPages={productsResult.totalPages}
           giftProductIds={giftProductInfo.ids}
           giftProductSlugs={giftProductInfo.slugs}
           bundleProductSlugs={bundleProductSlugs}

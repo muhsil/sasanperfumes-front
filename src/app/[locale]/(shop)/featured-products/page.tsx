@@ -99,7 +99,6 @@ export default async function FeaturedProductsPage({ params }: FeaturedProductsP
           products={filteredProducts}
           locale={locale as Locale}
           initialTotal={filteredTotal}
-          initialTotalPages={productsResult.totalPages}
           giftProductIds={giftProductIds}
           bundleProductSlugs={bundleProductSlugs}
         />

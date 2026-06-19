@@ -6,10 +6,7 @@ import {
   SORT_ORDER_OPTIONS, 
   DISCOUNT_TYPE_OPTIONS 
 } from "@/types/bundle";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import type { WCCategory, WCProduct } from "@/types/woocommerce";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import type { Locale } from "@/config/site";
+
 import type { BundleItemProps, SortOption, SortOrder, DiscountType } from "./types";
 import { translations } from "./translations";
 import { TagInput } from "./TagInput";

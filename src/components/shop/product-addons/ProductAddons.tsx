@@ -2,8 +2,6 @@
 
 import { useState, useCallback, useMemo } from "react";
 import type {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  WCPAForm,
   WCPAFormValues,
 } from "@/types/wcpa";
 import {

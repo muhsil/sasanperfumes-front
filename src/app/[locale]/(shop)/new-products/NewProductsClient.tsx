@@ -12,7 +12,6 @@ interface NewProductsClientProps {
   products: WCProduct[];
   locale: Locale;
   initialTotal?: number;
-  initialTotalPages?: number;
   giftProductIds?: number[];
   bundleProductSlugs?: string[];
 }
@@ -21,8 +20,6 @@ export function NewProductsClient({
   products: initialProducts,
   locale,
   initialTotal = 0,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  initialTotalPages = 1,
   giftProductIds = [],
   bundleProductSlugs = [],
 }: NewProductsClientProps) {

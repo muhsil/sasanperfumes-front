@@ -253,11 +253,6 @@ export async function getProducts(params?: {
   }
 }
 
-// Helper to check if a slug contains non-ASCII characters (e.g., Arabic)
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function isNonAsciiSlug(slug: string): boolean {
-  return /[^\x00-\x7F]/.test(slug);
-}
 
 // Memoized version for request deduplication (used when same product is fetched multiple times in one request)
 // WPML uses different product IDs for each language translation, so we must fetch by slug WITH locale

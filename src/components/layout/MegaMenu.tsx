@@ -36,15 +36,6 @@ export interface StaticMenuCategory {
   }>;
 }
 
-/**
- * No-op function for backward compatibility
- * Categories are now static, no preloading needed
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function preloadCategoriesCache(_locale: Locale): Promise<void> {
-  // Categories are now static - no preloading needed
-  return;
-}
 
 interface MegaMenuProps {
   isOpen: boolean;

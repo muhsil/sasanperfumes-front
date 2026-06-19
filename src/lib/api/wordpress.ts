@@ -93,14 +93,7 @@ function appendQueryParam(url: string, key: string, value: string): string {
   return `${url}${separator}${key}=${encodeURIComponent(value)}`;
 }
 
-const legacyBrandNames = [
-  ["Aromatic", "Scents", "Lab"].join(" "),
-  ["Aromatics", "Scents", "Lab"].join(" "),
-  ["aromatic", "scents", "lab"].join(" "),
-  ["Emirates", "Pride"].join(" "),
-  ["Fragrance", "Network"].join(" "),
-  "أروماتيك سينتس لاب",
-];
+
 const legacyMediaHosts = [["cms", ["fragrance", "network"].join(""), "ae"].join(".")];
 
 function rebrandText(value: string): string {

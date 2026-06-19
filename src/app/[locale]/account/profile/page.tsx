@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
-import Link from "next/link";
 import { User, Mail, Save } from "lucide-react";
 import { PhoneInput } from "@/components/common/PhoneInput";
 import { useAuth } from "@/contexts/AuthContext";
@@ -53,7 +52,7 @@ const translations = {
 export default function ProfilePage({ params }: ProfilePageProps) {
   const { user, isAuthenticated } = useAuth();
   const [customer, setCustomer] = useState<Customer | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
