@@ -4,7 +4,6 @@ const API_BASE = siteConfig.apiUrl;
 const BACKEND_USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36";
 const LEGACY_MEDIA_HOSTS = [["cms", ["fragrance", "network"].join(""), "ae"].join(".")];
-const LEGACY_BRAND_NAMES = [["Fragrance", "Network"].join(" ")];
 
 function headersToRecord(headers?: HeadersInit): Record<string, string> {
   if (!headers) return {};

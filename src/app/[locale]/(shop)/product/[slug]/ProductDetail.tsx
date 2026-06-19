@@ -603,10 +603,8 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
   const galleryThumbsRef = useRef<HTMLDivElement | null>(null);
   const prevVariationRef = useRef<number | null>(null);
   const [addonValues, setAddonValues] = useState<WCPAFormValues>({});
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [addonPrice, setAddonPrice] = useState(0);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [addonErrors, setAddonErrors] = useState<Record<string, string>>({});
+  const [, setAddonPrice] = useState(0);
+  const [, setAddonErrors] = useState<Record<string, string>>({});
   const [selectedVariations, setSelectedVariations] = useState<Record<string, string>>({});
   const [variationError, setVariationError] = useState<string | null>(null);
   const [variationStockBadgeEnabled, setVariationStockBadgeEnabled] = useState(true);
@@ -1499,9 +1497,8 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
             </div>
           </div>
 
-
           {/* Trust, reward and urgency block */}
-          <div className="rounded-2xl border border-brand-border/70 bg-transparent p-4">
+          <div className="mt-4 rounded-2xl border border-brand-border/70 bg-transparent p-4">
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2 text-sm font-medium text-brand-primary">
                 {isOutOfStock ? (
@@ -1522,11 +1519,9 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                 </>
               )}
 
-          {/* Guide links — size guide modal only (scent guide is in Description accordion) */}
           </div>
           </div>
 
-          {/* Guide links â€” size guide modal only (scent guide is in Description accordion) */}
 
           <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
             <ClothingSizeGuideModal productId={product.id} locale={locale} />
@@ -1766,7 +1761,6 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
 
           {detailsMounted && (
             <div className="mt-8 border-t border-brand-border/70 pt-6">
-              <div className="mt-0 border-t border-brand-border/70 pt-0">
                 <AccordionSection title={isRTL ? "الوصف" : "Description"}>
                   {descriptionHtml ? (
                     <div
@@ -1820,7 +1814,6 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                     )}
                   </div>
                 </AccordionSection>
-              </div>
             </div>
           )}
           </div>
@@ -1879,7 +1872,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
       {/* Sticky Add to Cart Bar */}
       <div
         className={cn(
-          "fixed inset-x-3 bottom-20 z-40 rounded-[20px] border border-brand-border/70 bg-transparent px-3 py-3 shadow-[0_16px_44px_rgba(20,15,10,0.18)] backdrop-blur-xl transition-all duration-300 md:hidden",
+          "fixed inset-x-3 bottom-20 z-40 rounded-[20px] border border-brand-border/70 bg-white/80 px-3 py-3 shadow-[0_16px_44px_rgba(20,15,10,0.18)] backdrop-blur-xl transition-all duration-300 md:hidden",
           !canPurchaseProduct && "hidden",
           showStickyAddToCart ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"
         )}
@@ -1951,9 +1944,6 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               )}
             </ProductAddToCartButton>
           </div>
-
-
-
       </div>
       </div>
       </div>

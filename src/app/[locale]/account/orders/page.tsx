@@ -2,9 +2,8 @@
 
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
-import { Package, Eye, FileText } from "lucide-react";
+import { Package } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/common/Button";
 import { OrderPrice } from "@/components/common/OrderPrice";
 import { AccountAuthGuard } from "@/components/account/AccountAuthGuard";
 import { AccountPageHeader } from "@/components/account/AccountPageHeader";

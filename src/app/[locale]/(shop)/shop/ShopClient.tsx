@@ -8,40 +8,11 @@ import type { Locale } from "@/config/site";
 const PER_PAGE = 30;
 const LOAD_AHEAD_MARGIN = "1200px 0px";
 
-// Interface kept for type safety even when cache is disabled
-interface CachedProducts {
-  products: WCProduct[];
-  total: number;
-  totalPages: number;
-  timestamp: number;
-  locale: string;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function getCachedProducts(_locale: string): CachedProducts | null {
-  // DEV MODE: Cache disabled for faster development
-  return null;
-}
-
-function setCachedProducts(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _products: WCProduct[],
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _total: number,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _totalPages: number,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _locale: string
-): void {
-  // DEV MODE: Cache disabled for faster development - do nothing
-}
-
 interface ShopClientProps {
   products: WCProduct[];
   locale: Locale;
   toolbarTitle?: string;
   initialTotal?: number;
-  initialTotalPages?: number;
   giftProductIds?: number[];
   giftProductSlugs?: string[];
   bundleProductSlugs?: string[];
@@ -52,8 +23,6 @@ export function ShopClient({
   locale,
   toolbarTitle,
   initialTotal = 0,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  initialTotalPages = 1,
   giftProductIds = [],
   giftProductSlugs = [],
   bundleProductSlugs = [],
@@ -117,7 +86,7 @@ export function ShopClient({
         setTotal(newTotal);
         setHasMore(uniqueProducts.length < newTotal);
         
-        setCachedProducts(uniqueProducts, newTotal, data.totalPages, locale);
+
       }
     } catch (error) {
       console.error("Error loading more products:", error);

@@ -99,7 +99,6 @@ export default async function NewProductsPage({ params }: NewProductsPageProps) 
           products={filteredProducts}
           locale={locale as Locale}
           initialTotal={filteredTotal}
-          initialTotalPages={productsResult.totalPages}
           giftProductIds={giftProductIds}
           bundleProductSlugs={bundleProductSlugs}
         />

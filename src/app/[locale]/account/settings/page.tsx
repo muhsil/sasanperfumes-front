@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
-import Link from "next/link";
 import { User, Mail, Save, Lock, Bell, Eye, EyeOff } from "lucide-react";
 import { PhoneInput } from "@/components/common/PhoneInput";
 import { useAuth } from "@/contexts/AuthContext";
