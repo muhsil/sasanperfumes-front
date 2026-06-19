@@ -71,7 +71,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
   return (
     <main>
       {/* Hero */}
-      <section className="bg-[#f8f3ef] px-5 pb-6 pt-8 text-brand-primary md:px-7 md:pb-8 md:pt-10 lg:px-12">
+      <section className="bg-[#f8f3ef] px-4 pb-6 pt-8 text-brand-primary md:pb-8 md:pt-10">
         <p className="mb-2 text-xs font-normal uppercase tracking-[0.1em] text-brand-primary/40">
           {isRTL ? "خدمة" : "Service"}
         </p>
@@ -83,7 +83,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
 
       {/* Featured Image */}
       {service.image && (
-        <section className="px-5 md:px-7 lg:px-12 mb-8">
+        <section className="px-4 mb-8">
           <div className="relative max-w-4xl aspect-[16/9] overflow-hidden">
             <Image
               src={service.image}
@@ -100,7 +100,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
 
       {/* Content */}
       {content && (
-        <section className="px-5 md:px-7 lg:px-12 py-8 md:py-10">
+        <section className="px-4 py-8 md:py-10">
           <article
             className="prose prose-lg mx-auto max-w-4xl prose-headings:text-brand-primary prose-p:text-brand-primary/70 prose-a:text-brand-gold"
             dangerouslySetInnerHTML={{ __html: content }}
@@ -111,7 +111,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
       {/* Features */}
       {features.length > 0 && (
         <section className="bg-white py-8 md:py-10">
-          <div className="px-5 md:px-7 lg:px-12">
+          <div className="px-4">
             <h2 className="mb-8 font-normal text-2xl text-brand-primary md:text-3xl">
               {isRTL ? "المميزات" : "Key Features"}
             </h2>
@@ -145,7 +145,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
 
       {/* CTA */}
       <section className="bg-[#f8f3ef] py-8 md:py-10">
-        <div className="px-5 md:px-7 lg:px-12">
+        <div className="px-4">
           <h2 className="font-normal text-2xl text-brand-primary md:text-3xl">
             {isRTL ? "هل تحتاج هذه الخدمة؟" : "Interested in this service?"}
           </h2>
@@ -164,7 +164,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
       </section>
 
       {/* Back to Services */}
-      <section className="px-5 md:px-7 lg:px-12 py-8">
+      <section className="px-4 py-8">
         <Link
           href={`/${locale}/services`}
           className="inline-flex items-center gap-2 border-b border-brand-primary pb-1 text-xs font-normal tracking-[0.1em] text-brand-primary uppercase"

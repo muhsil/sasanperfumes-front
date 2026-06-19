@@ -109,7 +109,7 @@ export function Drawer({
           {(title || showCloseButton) && (
             <div
               className={cn(
-                "flex items-center justify-between border-b border-brand-border/70 bg-brand-beige/55 px-5 py-4",
+                "flex items-center justify-between border-b border-brand-border/70 bg-brand-beige/55 px-4 py-4",
                 headerClassName
               )}
             >

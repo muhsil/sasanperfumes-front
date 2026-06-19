@@ -74,7 +74,7 @@ export function RecentlyViewed({
 
   return (
     <section className="lazy-section mb-16 mt-16 border-t border-brand-border/70 pb-6 pt-12 md:mb-20">
-      <div className="mb-8 flex items-center justify-between px-5 md:px-7 lg:px-12">
+      <div className="mb-8 flex items-center justify-between px-4">
         <div>
           <h2 className="font-title text-3xl text-brand-primary">
             {isRTL ? "شوهدت مؤخراً" : "Recently Viewed"}
@@ -101,7 +101,7 @@ export function RecentlyViewed({
         </div>
       </div>
 
-      <div className="relative overflow-hidden px-5 md:px-7 lg:px-12">
+      <div className="relative overflow-hidden px-4">
         <Swiper
           modules={[Navigation, FreeMode]}
           spaceBetween={16}

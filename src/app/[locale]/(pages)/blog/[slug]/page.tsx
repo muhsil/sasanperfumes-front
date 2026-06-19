@@ -68,7 +68,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
   return (
     <main>
       {/* Hero */}
-      <section className="bg-[#f8f3ef] px-5 pb-6 pt-8 text-brand-primary md:px-7 md:pb-8 md:pt-10 lg:px-12">
+      <section className="bg-[#f8f3ef] px-4 pb-6 pt-8 text-brand-primary md:pb-8 md:pt-10">
         <div className="mb-4 flex items-center gap-3 text-xs text-brand-primary/40">
           <time dateTime={post.date}>{formatDate(post.date, locale)}</time>
           {post.author && (
@@ -96,7 +96,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
 
       {/* Featured Image */}
       {post.featuredImage && (
-        <section className="px-5 md:px-7 lg:px-12 mb-8">
+        <section className="px-4 mb-8">
           <div className="relative max-w-4xl aspect-[16/9] overflow-hidden">
             <Image
               src={post.featuredImage}
@@ -112,7 +112,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
       )}
 
       {/* Content */}
-      <section className="px-5 md:px-7 lg:px-12 pb-12 md:pb-16">
+      <section className="px-4 pb-12 md:pb-16">
         <article
           className="prose prose-lg mx-auto max-w-4xl prose-headings:text-brand-primary prose-p:text-brand-primary/70 prose-a:text-brand-gold prose-img:rounded-lg"
           dangerouslySetInnerHTML={{ __html: post.content }}
@@ -122,7 +122,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
       {/* Related Posts */}
       {relatedPosts.length > 0 && (
         <section className="bg-white py-8 md:py-10">
-          <div className="px-5 md:px-7 lg:px-12">
+          <div className="px-4">
             <h2 className="mb-8 font-normal text-2xl text-brand-primary md:text-3xl">
               {isRTL ? "مقالات ذات صلة" : "Related Articles"}
             </h2>
@@ -159,7 +159,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
       )}
 
       {/* Back to Blog */}
-      <section className="px-5 md:px-7 lg:px-12 py-8">
+      <section className="px-4 py-8">
         <Link
           href={`/${locale}/blog`}
           className="inline-flex items-center gap-2 border border-brand-primary px-8 py-3 text-sm font-medium text-brand-primary transition-colors hover:bg-brand-primary hover:text-white"

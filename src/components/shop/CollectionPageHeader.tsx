@@ -39,7 +39,7 @@ export function CollectionPageHeader({
       dir={isRTL ? "rtl" : "ltr"}
     >
       {visibleCategories.length > 0 && (
-        <div className="mb-0 border-b border-brand-border/70 bg-brand-beige/45 px-4 py-4 md:px-7 md:py-6 lg:px-12">
+        <div className="mb-0 border-b border-brand-border/70 bg-brand-beige/45 px-4 py-4 md:py-6">
           <div className="md:hidden">
             <CategoriesCarousel categories={visibleCategories} locale={locale as Locale} />
           </div>
@@ -75,7 +75,7 @@ export function CollectionPageHeader({
         </div>
       )}
 
-      <div className="flex flex-col gap-4 px-4 py-6 md:flex-row md:items-start md:gap-8 md:px-7 md:py-8 lg:gap-12 lg:px-12">
+      <div className="flex flex-col gap-4 px-4 py-6 md:flex-row md:items-start md:gap-8 md:py-8 lg:gap-12">
         {image && (
           <div className="shrink-0">
             <Image

@@ -333,7 +333,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
       <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} />
 
       {!hasCMSContent && hasLegacyWordPressContent && (
-        <section className="bg-white px-5 py-16 md:px-7 md:py-20 lg:px-12 lg:py-28">
+        <section className="bg-white px-4 py-16 md:py-20 lg:py-28">
           <div className="mx-auto max-w-4xl">
             <h1 className="mb-8 text-3xl font-light leading-tight text-brand-primary md:text-5xl">
               {pageHeading}
@@ -350,7 +350,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
         <section className="bg-[#f8f3ef]">
           <div className={`grid ${hasHeroContent && hasHeroMedia ? "about-hero-square lg:grid-cols-2 lg:items-stretch" : ""}`}>
             {hasHeroContent && (
-              <div className={`flex flex-col justify-center gap-10 px-5 py-10 md:px-7 md:py-14 lg:order-2 lg:min-h-0 lg:justify-between lg:px-12 lg:py-16 ${isRTL ? "lg:order-1" : ""}`}>
+              <div className={`flex flex-col justify-center gap-10 px-4 py-10 md:py-14 lg:order-2 lg:min-h-0 lg:justify-between lg:py-16 ${isRTL ? "lg:order-1" : ""}`}>
                 <div className="max-w-3xl">
                   {heroSubtitle && (
                     <p className="mb-5 text-xs font-semibold uppercase tracking-[0.18em] text-brand-primary/55">
@@ -388,7 +388,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
                 className={`min-h-[320px] sm:min-h-[420px] md:min-h-[520px] lg:order-1 lg:h-full lg:min-h-0 ${isRTL ? "lg:order-2" : ""}`}
               >
                 {heroStats.length > 0 && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-brand-primary/30 px-5 py-8 text-white">
+                  <div className="absolute inset-0 flex items-center justify-center bg-brand-primary/30 px-4 py-8 text-white">
                     <div className="flex w-full max-w-3xl flex-col items-center justify-center gap-3 text-center sm:gap-4 md:gap-5">
                     {heroStats.map((stat, idx) => (
                       <div
@@ -417,7 +417,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
         <section id="brand-story" className="bg-white">
           <div className={`grid ${hasStoryContent && aboutImages.story ? "about-story-square lg:grid-cols-2 lg:items-stretch" : ""}`}>
             {hasStoryContent && (
-              <div className={`flex min-h-[420px] flex-col justify-center px-5 py-16 md:px-7 md:py-20 lg:min-h-0 lg:px-12 xl:px-16 ${isRTL ? "lg:order-2" : ""}`}>
+              <div className={`flex min-h-[420px] flex-col justify-center px-4 py-16 md:py-20 lg:min-h-0 xl:px-16 ${isRTL ? "lg:order-2" : ""}`}>
                 {mainTitle && (
                   <h2 className="max-w-xl text-3xl font-normal leading-tight text-brand-primary md:text-5xl">
                     {mainTitle}
@@ -452,7 +452,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
         <section id="sourcing" className="bg-[#f8f3ef]">
           <div className={`grid ${hasUniqueContent && aboutImages.detail ? "lg:grid-cols-2" : ""}`}>
             {hasUniqueContent && (
-              <div className={`flex min-h-[420px] flex-col justify-center bg-brand-primary px-5 py-16 text-white md:px-7 md:py-20 lg:px-12 xl:px-16 ${isRTL ? "lg:order-2" : ""}`}>
+              <div className={`flex min-h-[420px] flex-col justify-center bg-brand-primary px-4 py-16 text-white md:py-20 xl:px-16 ${isRTL ? "lg:order-2" : ""}`}>
                 <Sparkles className="mb-8 h-8 w-8 text-brand-gold" />
                 {uniqueTitle && (
                   <h2 className="max-w-xl text-3xl font-normal leading-tight md:text-5xl">
@@ -483,7 +483,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
       )}
 
       {hasJourneyContent && (
-        <section className="bg-[#f8f3ef] px-5 py-16 md:px-7 md:py-20 lg:px-12 lg:py-28">
+        <section className="bg-[#f8f3ef] px-4 py-16 md:py-20 lg:py-28">
           <div className="mx-auto max-w-7xl">
             {(journeyTitle || journeyContent) && (
               <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
@@ -551,7 +551,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
         <section className="bg-white">
           <div className={`grid ${hasMissionContent && aboutImages.mission ? "about-mission-square lg:grid-cols-2 lg:items-stretch" : ""}`}>
             {hasMissionContent && (
-              <div className={`flex min-h-[420px] flex-col justify-center px-5 py-16 md:px-7 md:py-20 lg:order-2 lg:min-h-0 lg:px-12 xl:px-16 ${isRTL ? "lg:order-1" : ""}`}>
+              <div className={`flex min-h-[420px] flex-col justify-center px-4 py-16 md:py-20 lg:order-2 lg:min-h-0 xl:px-16 ${isRTL ? "lg:order-1" : ""}`}>
                 <div className="space-y-8">
                   {(missionTitle || missionContent) && (
                     <div>
@@ -596,7 +596,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
       )}
 
       {hasIngredientsContent && (
-        <section className="bg-[#f8f3ef] px-5 py-16 md:px-7 md:py-20 lg:px-12 lg:py-28">
+        <section className="bg-[#f8f3ef] px-4 py-16 md:py-20 lg:py-28">
           <div className="mx-auto max-w-7xl">
             {(ingredientsTitle || ingredientsSubtitle || ingredientsDesc) && (
               <div className="grid gap-8 lg:grid-cols-2 lg:items-end">
@@ -654,7 +654,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
       )}
 
       {brandFaqItems.length > 0 && (
-        <section className="bg-white px-5 py-16 md:px-7 md:py-20 lg:px-12 lg:py-28">
+        <section className="bg-white px-4 py-16 md:py-20 lg:py-28">
           <div className="mx-auto max-w-7xl">
             <h2 className="mb-8 max-w-xl text-3xl font-normal leading-tight text-brand-primary md:text-5xl">
               {isRTL ? "الأسئلة الشائعة" : "Frequently Asked Questions"}
@@ -679,7 +679,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
       )}
 
       {hasCtaContent && (
-        <section className="bg-white px-5 pb-16 md:px-7 md:pb-20 lg:px-12 lg:pb-28">
+        <section className="bg-white px-4 pb-16 md:pb-20 lg:pb-28">
           <div className="mx-auto max-w-7xl bg-brand-primary px-6 py-12 text-white md:px-10 md:py-14 lg:px-14">
             {ctaTitle && (
               <h2 className="mb-4 max-w-4xl text-3xl font-normal leading-tight text-white md:text-5xl">{ctaTitle}</h2>

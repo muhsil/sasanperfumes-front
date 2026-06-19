@@ -61,7 +61,7 @@ export default async function WhatWeDoPage({ params }: WhatWeDoPageProps) {
       {/* Main Content */}
       {content && (
         <section className="bg-white pt-8 md:pt-10 lg:pt-12 pb-0">
-          <div className="px-5 md:px-7 lg:px-12">
+          <div className="px-4">
             <div className="max-w-3xl text-sm leading-relaxed text-brand-primary/70" dangerouslySetInnerHTML={{ __html: content }} />
           </div>
         </section>
@@ -70,7 +70,7 @@ export default async function WhatWeDoPage({ params }: WhatWeDoPageProps) {
       {/* Features */}
       {features.length > 0 && (
         <section className="bg-white pt-8 md:pt-10 lg:pt-12 pb-0">
-          <div className="px-5 md:px-7 lg:px-12">
+          <div className="px-4">
             <div className="mb-8">
               <h2 className="font-normal text-2xl text-brand-primary md:text-3xl">
                 {isRTL ? "ما يميزنا" : "What Sets Us Apart"}
@@ -108,7 +108,7 @@ export default async function WhatWeDoPage({ params }: WhatWeDoPageProps) {
 
       {/* CMS content fallback message when empty */}
       {!content && features.length === 0 && (
-        <section className="bg-white pt-8 md:pt-10 lg:pt-12 pb-8 px-5 md:px-7 lg:px-12 text-center">
+        <section className="bg-white pt-8 md:pt-10 lg:pt-12 pb-8 px-4 text-center">
           <p className="text-lg text-brand-primary/50">
             {isRTL ? "المحتوى قادم قريباً" : "Content coming soon"}
           </p>

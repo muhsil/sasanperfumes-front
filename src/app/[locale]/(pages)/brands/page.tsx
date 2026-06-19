@@ -62,7 +62,7 @@ export default async function BrandsPage({ params }: BrandsPageProps) {
       <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} />
 
       {/* Brand Grid */}
-      <section className="bg-brand-beige px-5 pb-12 pt-4 md:px-7 md:pb-16 md:pt-6 lg:px-12 lg:pb-20 lg:pt-8">
+      <section className="bg-brand-beige px-4 pb-12 pt-4 md:pb-16 md:pt-6 lg:pb-20 lg:pt-8">
         <div>
           {brands.length > 0 ? (
             <div className="grid gap-x-4 gap-y-10 sm:grid-cols-2 md:gap-x-6 lg:grid-cols-4 xl:grid-cols-5">

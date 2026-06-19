@@ -20,7 +20,7 @@ function ProductGalleryLoading() {
 function RelatedProductsLoading() {
   return (
     <section className="mt-16 border-t border-brand-primary/15 pt-12">
-      <div className="mb-8 flex items-center justify-between px-5 md:px-7 lg:px-12">
+      <div className="mb-8 flex items-center justify-between px-4">
         <div>
           <Skeleton className="h-8 w-56" />
           <Skeleton className="mt-2 h-4 w-36" />
@@ -40,7 +40,7 @@ function RelatedProductsLoading() {
 export default function ProductLoading() {
   return (
     <div className="bg-[#f8f3ef] text-brand-primary">
-      <div className="w-full px-5 pb-3 pt-4 md:px-7 md:pb-4 md:pt-6 lg:px-12">
+      <div className="w-full px-4 pb-3 pt-4 md:pb-4 md:pt-6">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Skeleton className="h-4 w-10" />
@@ -59,7 +59,7 @@ export default function ProductLoading() {
             <ProductGalleryLoading />
           </div>
 
-          <aside className="min-w-0 bg-[#f8f3ef] px-5 pb-10 pt-2 text-brand-primary md:px-7 md:pb-12 md:pt-8 lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:self-start lg:overflow-y-auto lg:px-10 lg:pt-10 xl:px-12">
+          <aside className="min-w-0 bg-[#f8f3ef] px-4 pb-10 pt-2 text-brand-primary md:pb-12 md:pt-8 lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:self-start lg:overflow-y-auto lg:px-10 lg:pt-10 xl:px-12">
             <div className="mx-auto flex w-full max-w-[560px] flex-col items-stretch space-y-0 lg:ml-0 lg:mr-auto">
               <div className="mb-5 flex w-full flex-wrap items-center gap-x-3 gap-y-2 self-start">
                 <Skeleton className="h-5 w-24 rounded-none" />

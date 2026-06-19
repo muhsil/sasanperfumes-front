@@ -123,7 +123,7 @@ export default async function ServicesPage({ params }: ServicesPageProps) {
       {/* CTA */}
       {ctaTitle && (
         <section className="border-t border-[#e7ded7] bg-white pt-8 md:pt-10 lg:pt-12 pb-8">
-          <div className="px-5 md:px-7 lg:px-12">
+          <div className="px-4">
             <h2 className="font-normal text-2xl text-brand-primary md:text-3xl">{ctaTitle}</h2>
             <Link
               href={ctaLink.startsWith("/") ? `/${locale}${ctaLink}` : ctaLink}

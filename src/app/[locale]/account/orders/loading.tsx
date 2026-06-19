@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/common/Skeleton";
 
 export default function OrdersLoading() {
   return (
-    <div className="container mx-auto px-5 md:px-7 lg:px-12 py-8">
+    <div className="container mx-auto px-4 py-8">
       <Skeleton className="mb-2 h-8 w-32" />
       <Skeleton className="mb-8 h-4 w-48" />
 

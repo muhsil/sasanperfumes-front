@@ -124,7 +124,7 @@ export function CollectionsSection({
                       {decodeHtmlEntities(collection.description)}
                     </p>
                   )}
-                  <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-brand-ivory px-5 py-2.5 text-xs font-semibold uppercase text-brand-primary shadow-lg shadow-black/20 transition-all duration-500 ease-out group-hover:-translate-y-1 group-hover:bg-white group-hover:text-brand-primary group-hover:shadow-xl group-hover:shadow-black/30 hover:border hover:border-white hover:bg-brand-primary hover:text-white md:text-sm">
+                  <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-brand-ivory px-4 py-2.5 text-xs font-semibold uppercase text-brand-primary shadow-lg shadow-black/20 transition-all duration-500 ease-out group-hover:-translate-y-1 group-hover:bg-white group-hover:text-brand-primary group-hover:shadow-xl group-hover:shadow-black/30 hover:border hover:border-white hover:bg-brand-primary hover:text-white md:text-sm">
                     <span>Explore</span>
                     <svg className="h-4 w-4 transition-transform duration-500 ease-out group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />

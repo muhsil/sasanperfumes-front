@@ -134,7 +134,7 @@ export function SearchResultsClient({
 
   return (
     <div className="min-h-screen bg-[#f8f3ef] text-brand-primary" dir={isRTL ? "rtl" : "ltr"}>
-      <section className="px-5 pb-10 pt-12 md:px-7 md:pb-12 md:pt-16 lg:px-12">
+      <section className="px-4 pb-10 pt-12 md:pb-12 md:pt-16">
         <h1 className="max-w-[900px] text-[24px] font-normal leading-tight tracking-normal md:text-[32px] lg:text-[38px]">
           {query ? (
             <>
@@ -194,7 +194,7 @@ export function SearchResultsClient({
       </section>
 
       {query && products.length > 0 && (
-        <div className="px-5 pb-4 md:px-7 lg:px-12">
+        <div className="px-4 pb-4">
           <Link
             href={`/${locale}/shop`}
             className="inline-flex items-center gap-2 text-[13px] font-normal tracking-normal text-brand-primary/70 transition-opacity hover:opacity-70"
@@ -206,13 +206,13 @@ export function SearchResultsClient({
       )}
 
       {loading && (
-        <div className="px-5 py-8 md:px-7 lg:px-12">
+        <div className="px-4 py-8">
           <ProductGridSkeleton count={12} columns={6} />
         </div>
       )}
 
       {!loading && !query && (
-        <div className="flex flex-col items-center justify-center px-5 py-16 text-center">
+        <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
           <Search className="mb-5 h-10 w-10 text-brand-primary/35" />
           <h2 className="mb-2 text-2xl font-normal tracking-normal text-brand-primary">{t.startSearching}</h2>
           <p className="mb-8 max-w-md text-sm leading-6 tracking-normal text-brand-primary/60">{t.startSearchingDesc}</p>
@@ -226,7 +226,7 @@ export function SearchResultsClient({
       )}
 
       {!loading && query && products.length === 0 && (
-        <div className="flex flex-col items-center justify-center px-5 py-16 text-center">
+        <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
           <Search className="mb-5 h-10 w-10 text-brand-primary/35" />
           <h2 className="mb-2 text-2xl font-normal tracking-normal text-brand-primary">{t.noResults}</h2>
           <p className="mb-2 max-w-md text-sm leading-6 tracking-normal text-brand-primary/60">{t.noResultsDesc}</p>
@@ -234,7 +234,7 @@ export function SearchResultsClient({
           {didYouMean && (
             <Link
               href={`/${locale}/product/${didYouMean.slug}`}
-              className="mb-4 inline-flex items-center justify-center rounded-full bg-brand-primary px-5 py-3 text-[13px] font-semibold text-white transition-colors hover:bg-brand-primary-dark"
+              className="mb-4 inline-flex items-center justify-center rounded-full bg-brand-primary px-4 py-3 text-[13px] font-semibold text-white transition-colors hover:bg-brand-primary-dark"
             >
               {isRTL ? "اذهب إلى المنتج المقترح" : `Try "${didYouMean.label}"`}
             </Link>

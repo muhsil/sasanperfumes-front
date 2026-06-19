@@ -109,7 +109,7 @@ export default function LoyaltyPage() {
 
   if (isLoading || loadingData) {
     return (
-      <div className="container mx-auto max-w-3xl px-5 md:px-7 lg:px-12 py-12 text-center">
+      <div className="container mx-auto max-w-3xl px-4 py-12 text-center">
         <p className="text-gray-500">{t.loading}</p>
       </div>
     );
@@ -117,7 +117,7 @@ export default function LoyaltyPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="container mx-auto max-w-3xl px-5 md:px-7 lg:px-12 py-16 text-center">
+      <div className="container mx-auto max-w-3xl px-4 py-16 text-center">
         <Star className="mx-auto mb-4 h-12 w-12 text-gray-300" />
         <h1 className="mb-2 text-2xl font-bold text-gray-900">{t.title}</h1>
         <p className="mb-6 text-gray-500">{t.signIn}</p>
@@ -137,7 +137,7 @@ export default function LoyaltyPage() {
   const label = isRTL ? (settings?.label_ar || t.title) : (settings?.label_en || t.title);
 
   return (
-    <div className="container mx-auto max-w-3xl px-5 md:px-7 lg:px-12 py-6" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="container mx-auto max-w-3xl px-4 py-6" dir={isRTL ? "rtl" : "ltr"}>
       <Link
         href={`/${locale}/account`}
         className="mb-6 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900"

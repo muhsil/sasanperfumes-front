@@ -167,7 +167,7 @@ export function ContactForm({ locale }: ContactFormProps) {
           name="subject"
           value={formData.subject}
           onChange={handleChange}
-          className="flex h-12 w-full rounded-full border border-brand-border/80 bg-brand-beige/70 px-5 py-3 text-sm text-brand-primary placeholder:text-brand-muted focus:border-brand-primary/55 focus:outline-none focus:ring-2 focus:ring-brand-gold/15"
+          className="flex h-12 w-full rounded-full border border-brand-border/80 bg-brand-beige/70 px-4 py-3 text-sm text-brand-primary placeholder:text-brand-muted focus:border-brand-primary/55 focus:outline-none focus:ring-2 focus:ring-brand-gold/15"
         >
           <option value="">
             {isRTL ? "اختر الموضوع" : "Select a subject"}

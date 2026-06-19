@@ -141,7 +141,7 @@ export function ProductViewToggle({
     <>
       <div
         className={cn(
-          "section-band relative flex items-center justify-between gap-3 px-3 py-2 text-brand-primary md:gap-4 md:px-7 md:py-3 lg:px-12",
+          "section-band relative flex items-center justify-between gap-3 px-4 py-2 text-brand-primary md:gap-4 md:py-3",
           className
         )}
         dir={isRTL ? "rtl" : "ltr"}

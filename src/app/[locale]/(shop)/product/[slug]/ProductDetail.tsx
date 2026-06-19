@@ -1379,7 +1379,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
   return (
     <div className="page-flush bg-transparent pb-24 text-brand-primary md:pb-0">
       <div className="mx-auto w-full max-w-[80rem]">
-        <div className="w-full px-5 pb-3 pt-4 md:px-7 md:pb-4 md:pt-6 lg:px-12">
+        <div className="w-full px-4 pb-3 pt-4 md:pb-4 md:pt-6">
           <div className="flex items-center justify-between gap-3">
             <Breadcrumbs items={breadcrumbItems} locale={locale} contained={false} />
             <SocialShareModal
@@ -1391,7 +1391,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           </div>
         </div>
 
-        <div className="w-full px-5 md:px-7 lg:px-12">
+        <div className="w-full px-4">
           <div className="grid w-full items-start gap-x-8 gap-y-7 pb-8 lg:grid-cols-[minmax(0,1.08fr)_minmax(380px,0.92fr)] lg:gap-x-10 xl:grid-cols-[minmax(0,1.12fr)_minmax(420px,0.88fr)]">
         {/* Product Gallery */}
         <div className="min-w-0">
@@ -1933,7 +1933,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               disabled={!canPurchaseProduct || isSelectedVariationOutOfStock || isAddingToCart || !canAddToCart}
               isAdded={isAddedToCart}
               isLoading={isAddingToCart}
-              className="h-10 min-w-0 rounded-full px-4 text-xs font-bold uppercase tracking-[0.1em] sm:h-10 sm:min-w-[180px] sm:px-5"
+              className="h-10 min-w-0 rounded-full px-4 text-xs font-bold uppercase tracking-[0.1em] sm:h-10 sm:min-w-[180px] sm:px-4"
             >
               {isAddedToCart ? (
                 <><Check className="h-4 w-4" />{isRTL ? "تمت الإضافة!" : "added"}</>

@@ -91,7 +91,7 @@ export function CookieConsentBanner({ locale = "en" }: CookieConsentBannerProps)
       )}
       dir={isRTL ? "rtl" : "ltr"}
     >
-      <div className="relative px-4 py-3 md:px-5 md:py-4">
+      <div className="relative px-4 py-3 md:px-4 md:py-4">
         {/* Close button */}
         <button
           onClick={handleDismiss}

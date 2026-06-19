@@ -41,7 +41,7 @@ export function RelatedProducts({
 
   return (
     <section className={cn("lazy-section border-t border-brand-border/70 pt-8", className)}>
-      <div className="mb-6 flex items-center justify-between px-5 md:px-7 lg:px-12">
+      <div className="mb-6 flex items-center justify-between px-4">
         <div>
           <h2 className="font-title text-3xl text-brand-primary">
             {title || (isRTL ? "منتجات ذات صلة" : "Related Products")}
@@ -68,7 +68,7 @@ export function RelatedProducts({
         </div>
       </div>
 
-      <div className="relative overflow-hidden px-5 md:px-7 lg:px-12">
+      <div className="relative overflow-hidden px-4">
         <Swiper
           modules={[Navigation, FreeMode]}
           spaceBetween={16}

@@ -156,7 +156,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
               color: topbarSettings?.textColor || "#f8f4ec",
             }}
           >
-            <div className="mx-auto flex h-8 max-w-[80rem] items-center justify-center gap-2 px-5 md:px-7 lg:px-12">
+            <div className="mx-auto flex h-8 max-w-[80rem] items-center justify-center gap-2 px-4">
               {topbarSettings?.link ? (
                 <a
                   href={topbarSettings.link}
@@ -187,7 +187,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
         <div className="w-full">
           <div
             className={cn(
-              "mx-auto flex h-[4rem] max-w-[80rem] items-center justify-between rounded-full border border-brand-border/70 px-5 py-1.5 transition-all duration-300 md:h-[5rem] md:px-5 xl:grid xl:grid-cols-[minmax(230px,1fr)_minmax(0,2fr)_minmax(230px,1fr)] xl:gap-5 xl:px-6",
+              "mx-auto flex h-[4rem] max-w-[80rem] items-center justify-between rounded-full border border-brand-border/70 px-4 py-1.5 transition-all duration-300 md:h-[5rem] md:px-4 xl:grid xl:grid-cols-[minmax(230px,1fr)_minmax(0,2fr)_minmax(230px,1fr)] xl:gap-5 xl:px-6",
               isScrolled
                 ? "bg-brand-ivory shadow-[0_12px_30px_rgba(20,15,10,0.12)]"
                 : isTransparentHomeHeader
@@ -362,7 +362,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
 
         {/* Row 2: Desktop Navigation (centered) + MegaMenu */}
         <nav className="hidden">
-          <div className="mx-auto flex w-full max-w-[80rem] items-center justify-center gap-9 rounded-full border border-brand-border/65 bg-brand-ivory/86 px-5 py-3 shadow-[0_10px_28px_rgba(20,15,10,0.08)] md:px-7 lg:px-12">
+          <div className="mx-auto flex w-full max-w-[80rem] items-center justify-center gap-9 rounded-full border border-brand-border/65 bg-brand-ivory/86 px-4 py-3 shadow-[0_10px_28px_rgba(20,15,10,0.08)]">
             {navigation.map((item) => {
               if (item.hasMegaMenu) {
                 return (
@@ -432,7 +432,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
               onClick={() => setIsMobileMenuOpen(false)}
             />
             {/* Drawer sidebar */}
-            <div className={cn("fixed left-1/2 z-40 w-[min(22rem,calc(100vw-2rem))] -translate-x-1/2 overflow-y-auto rounded-2xl border border-brand-border/55 bg-brand-ivory/97 px-5 py-6 text-center shadow-[0_28px_60px_rgba(20,15,10,0.28)] xl:hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", mobileDrawerOffsetClass)}>
+            <div className={cn("fixed left-1/2 z-40 w-[min(22rem,calc(100vw-2rem))] -translate-x-1/2 overflow-y-auto rounded-2xl border border-brand-border/55 bg-brand-ivory/97 px-4 py-6 text-center shadow-[0_28px_60px_rgba(20,15,10,0.28)] xl:hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", mobileDrawerOffsetClass)}>
               <div>
                 {/* Mobile nav links */}
                 <div className="space-y-1.5">

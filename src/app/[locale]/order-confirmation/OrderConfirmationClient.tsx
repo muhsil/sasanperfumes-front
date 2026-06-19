@@ -444,7 +444,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
 
   if (loading) {
     return (
-      <div className="container mx-auto flex min-h-[60vh] items-center justify-center px-5 md:px-7 lg:px-12 py-8">
+      <div className="container mx-auto flex min-h-[60vh] items-center justify-center px-4 py-8">
         <div className="text-center">
           <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-gray-900"></div>
           <p className="text-gray-600">{isRTL ? "جاري التحميل..." : "Loading..."}</p>
@@ -455,7 +455,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
 
   if (error || !order) {
     return (
-      <div className="container mx-auto px-5 md:px-7 lg:px-12 py-8">
+      <div className="container mx-auto px-4 py-8">
         <div className="mx-auto max-w-2xl text-center">
           <div className="mb-6 text-6xl">!</div>
           <h1 className="mb-4 text-2xl font-bold text-gray-900">
@@ -476,7 +476,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
   const isPaymentPending = paymentStatus === "pending";
 
   return (
-    <div className="container mx-auto px-5 md:px-7 lg:px-12 py-8">
+    <div className="container mx-auto px-4 py-8">
       <div className="mx-auto max-w-3xl">
         {verifyingPayment && (
           <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 text-center">

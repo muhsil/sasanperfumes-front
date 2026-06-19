@@ -176,7 +176,7 @@ export function ReviewForm({ productId, locale = "en", onSuccess }: ReviewFormPr
       )}
 
       {/* Star Rating */}
-      <div className="rounded-2xl border border-gray-100 bg-gray-50 px-5 py-4">
+      <div className="rounded-2xl border border-gray-100 bg-gray-50 px-4 py-4">
         <label className="mb-3 block text-sm font-semibold text-gray-700">
           {isAr ? "تقييمك الكلي" : "Overall Rating"} <span className="text-red-500">*</span>
         </label>

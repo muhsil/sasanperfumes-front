@@ -89,7 +89,7 @@ export default async function BrandDetailPage({ params }: BrandPageProps) {
 
   return (
     <main className="bg-[#f8f3ef] text-brand-primary" dir={isRTL ? "rtl" : "ltr"}>
-      <section className="bg-[#f8f3ef] px-5 pb-6 pt-8 md:px-7 md:pb-8 md:pt-10 lg:px-12">
+      <section className="bg-[#f8f3ef] px-4 pb-6 pt-8 md:pb-8 md:pt-10">
         <div className="grid items-center gap-5 md:grid-cols-[112px_minmax(0,1fr)] md:gap-8 lg:grid-cols-[136px_minmax(0,1fr)]">
           <div className={`relative mx-auto aspect-square w-28 overflow-hidden rounded-full bg-white shadow-[0_0_0_1px_rgba(231,222,215,0.8)] md:w-28 lg:w-32 ${isRTL ? "md:order-2 md:mx-0" : "md:order-1 md:mx-0"}`}>
             {brandImage ? (
@@ -128,7 +128,7 @@ export default async function BrandDetailPage({ params }: BrandPageProps) {
       <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} />
 
       <section className="bg-[#f8f3ef] pb-0 pt-3 md:pt-4 lg:pt-5">
-        <div className="mb-5 px-5 md:mb-6 md:px-7 lg:px-12">
+        <div className="mb-5 px-4 md:mb-6">
           <h2 className="text-2xl font-normal text-brand-primary md:text-3xl">
             {isRTL ? `Ù…Ù†ØªØ¬Ø§Øª ${brandName}` : `${brandName} Products`}
           </h2>
@@ -161,7 +161,7 @@ export default async function BrandDetailPage({ params }: BrandPageProps) {
           <div className="absolute inset-0 bg-brand-primary/55" />
           <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-gold/40 to-transparent" />
 
-          <div className="relative w-full px-5 py-8 md:px-7 md:py-10 lg:px-12 lg:py-12">
+          <div className="relative w-full px-4 py-8 md:py-10 lg:py-12">
             <div className="flex min-h-90 flex-col lg:min-h-110">
               <div className={cn("flex flex-col justify-start pb-6 pt-2 lg:pb-8 lg:pt-3", isRTL ? "items-end" : "items-start")}>
                 <div className="mb-4 h-2 w-2 rounded-full bg-brand-gold" />
@@ -194,7 +194,7 @@ export default async function BrandDetailPage({ params }: BrandPageProps) {
       )}
 
       {brand.notes.length > 0 && (
-        <section className="bg-[#232323] px-5 pb-8 pt-8 text-white md:px-7 md:pb-10 md:pt-10 lg:px-12">
+        <section className="bg-[#232323] px-4 pb-8 pt-8 text-white md:pb-10 md:pt-10">
           <div>
             <div className="mb-8 flex flex-col gap-3 md:mb-10">
               <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-white/50">
@@ -212,7 +212,7 @@ export default async function BrandDetailPage({ params }: BrandPageProps) {
                 return (
                   <div
                     key={idx}
-                    className="relative border-b border-white/10 px-5 py-8 transition-colors duration-300 hover:bg-[#2b2b2b]"
+                    className="relative border-b border-white/10 px-4 py-8 transition-colors duration-300 hover:bg-[#2b2b2b]"
                   >
                     {noteImage && (
                       <div className="mb-4 h-16 w-16 overflow-hidden rounded-full bg-white/10 transition-colors duration-300">

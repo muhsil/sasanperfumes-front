@@ -68,7 +68,7 @@ export function BrandsMegaMenu({ isOpen, onClose, locale }: BrandsMegaMenuProps)
       className="absolute left-0 right-0 top-full z-50 border-t border-gray-100 bg-white shadow-2xl"
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="container mx-auto px-5 md:px-7 lg:px-12 py-6">
+      <div className="container mx-auto px-4 py-6">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-sm font-bold uppercase tracking-widest text-brand-primary">
             {isRTL ? "العلامات التجارية" : "Our Brands"}

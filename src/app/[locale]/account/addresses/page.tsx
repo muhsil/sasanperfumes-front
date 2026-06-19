@@ -671,7 +671,7 @@ export default function AddressesPage({ params }: AddressesPageProps) {
       notLoggedInText={t.notLoggedIn}
       loginText={t.login}
     >
-      <div className="container mx-auto px-5 md:px-7 lg:px-12 py-8" dir={isRTL ? "rtl" : "ltr"}>
+      <div className="container mx-auto px-4 py-8" dir={isRTL ? "rtl" : "ltr"}>
         <AccountPageHeader
           locale={locale}
           title={t.addresses}

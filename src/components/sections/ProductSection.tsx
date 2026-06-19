@@ -130,7 +130,7 @@ export function ProductSection({
           {settings.show_view_all && (
             <Link
               href={viewAllLink}
-              className="hidden rounded-full border border-brand-border/70 bg-brand-ivory px-5 py-2 text-[11px] font-semibold uppercase text-brand-primary transition-colors hover:border-brand-primary/45 hover:bg-brand-beige md:inline-flex"
+              className="hidden rounded-full border border-brand-border/70 bg-brand-ivory px-4 py-2 text-[11px] font-semibold uppercase text-brand-primary transition-colors hover:border-brand-primary/45 hover:bg-brand-beige md:inline-flex"
             >
               {viewAllText}
             </Link>

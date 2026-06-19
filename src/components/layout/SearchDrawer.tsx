@@ -209,7 +209,7 @@ export function SearchDrawer({
                 value={query}
                 onChange={handleInputChange}
                 placeholder={dictionary.common.searchPlaceholder || "Search products..."}
-                className="w-full rounded-full border border-brand-border/80 bg-brand-beige/70 px-5 py-3 pl-12 text-base text-brand-primary outline-none transition-all placeholder:text-brand-muted focus:border-brand-primary/55 focus:ring-2 focus:ring-brand-gold/15"
+                className="w-full rounded-full border border-brand-border/80 bg-brand-beige/70 px-4 py-3 pl-12 text-base text-brand-primary outline-none transition-all placeholder:text-brand-muted focus:border-brand-primary/55 focus:ring-2 focus:ring-brand-gold/15"
                 autoFocus
               />
               <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-brand-muted" />

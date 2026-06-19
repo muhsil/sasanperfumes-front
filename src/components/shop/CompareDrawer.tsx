@@ -18,7 +18,7 @@ export function CompareDrawer({ locale }: { locale: Locale }) {
       className="fixed bottom-0 inset-x-0 z-50 border-t border-gray-200 bg-white shadow-2xl"
       dir={isAr ? "rtl" : "ltr"}
     >
-      <div className="mx-auto flex max-w-7xl items-center gap-4 px-5 md:px-7 lg:px-12 py-3">
+      <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
         <div className="flex flex-1 items-center gap-3 overflow-x-auto">
           {items.map((p) => (
             <div key={p.id} className="relative flex shrink-0 items-center gap-2 rounded-xl border border-gray-100 bg-gray-50 p-2">

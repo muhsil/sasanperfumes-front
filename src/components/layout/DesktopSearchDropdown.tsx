@@ -444,7 +444,7 @@ export function DesktopSearchDropdown({
                   <button
                     type="button"
                     onClick={handleViewAllResults}
-                    className="group flex w-full items-center justify-center gap-2.5 rounded-xl bg-brand-primary px-5 py-3.5 text-sm font-semibold text-white transition-all hover:bg-brand-primary-dark hover:shadow-lg"
+                    className="group flex w-full items-center justify-center gap-2.5 rounded-xl bg-brand-primary px-4 py-3.5 text-sm font-semibold text-white transition-all hover:bg-brand-primary-dark hover:shadow-lg"
                   >
                     <span>{dictionary.common.viewAllResults || "View all results"}</span>
                     <ArrowIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />

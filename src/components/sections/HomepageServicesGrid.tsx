@@ -31,7 +31,7 @@ export function HomepageServicesGridSkeleton() {
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="flex flex-col">
             <Skeleton className="aspect-[4/3] w-full" />
-            <div className="border-b border-[#e7ded7] bg-white px-5 py-4">
+            <div className="border-b border-[#e7ded7] bg-white px-4 py-4">
               <Skeleton className="h-4 w-3/4" />
             </div>
           </div>
@@ -131,7 +131,7 @@ export function HomepageServicesGrid({
               </div>
 
               {/* Title bar - always visible below image */}
-              <div className="border-b border-[#e7ded7] bg-white px-5 py-4 transition-colors duration-300 group-hover:bg-brand-beige/40">
+              <div className="border-b border-[#e7ded7] bg-white px-4 py-4 transition-colors duration-300 group-hover:bg-brand-beige/40">
                 <h3 className="text-sm font-normal text-brand-primary transition-colors duration-300 group-hover:text-brand-primary">
                   {title}
                 </h3>

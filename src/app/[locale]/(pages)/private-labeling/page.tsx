@@ -246,7 +246,7 @@ export default async function PrivateLabelingPage({ params }: PageProps) {
         <section className="bg-[#f8f3ef]">
           <div className={`grid ${hasHeroContent && hasHeroMedia ? "lg:min-h-[calc(100vh-96px)] lg:grid-cols-2 lg:items-stretch" : ""}`}>
             {hasHeroContent && (
-              <div className={`flex flex-col justify-center gap-10 px-5 py-10 md:px-7 md:py-14 lg:order-2 lg:justify-between lg:px-12 lg:py-16 ${isRTL ? "lg:order-1" : ""}`}>
+              <div className={`flex flex-col justify-center gap-10 px-4 py-10 md:py-14 lg:order-2 lg:justify-between lg:py-16 ${isRTL ? "lg:order-1" : ""}`}>
                 <div className="max-w-3xl">
                   {hero.subtitle && (
                     <p className="mb-5 text-xs font-semibold uppercase tracking-[0.18em] text-brand-primary/55">
@@ -284,7 +284,7 @@ export default async function PrivateLabelingPage({ params }: PageProps) {
                 className={`min-h-[320px] sm:min-h-[420px] md:min-h-[520px] lg:order-1 lg:min-h-full ${isRTL ? "lg:order-2" : ""}`}
               >
                 {heroStats.length > 0 && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-brand-primary/30 px-5 py-8 text-white">
+                  <div className="absolute inset-0 flex items-center justify-center bg-brand-primary/30 px-4 py-8 text-white">
                     <div className="flex w-full max-w-3xl flex-col items-center justify-center gap-3 text-center sm:gap-4 md:gap-5">
                       {heroStats.map((stat, idx) => (
                         <div
@@ -307,7 +307,7 @@ export default async function PrivateLabelingPage({ params }: PageProps) {
         <section className="bg-white">
           <div className={`grid ${hasIntroContent && intro.image ? "lg:grid-cols-2" : ""}`}>
             {hasIntroContent && (
-              <div className={`flex aspect-square flex-col justify-center px-5 py-10 md:px-7 md:py-14 lg:px-12 xl:px-16 ${isRTL ? "lg:order-2" : ""}`}>
+              <div className={`flex aspect-square flex-col justify-center px-4 py-10 md:py-14 xl:px-16 ${isRTL ? "lg:order-2" : ""}`}>
                 {intro.heading && (
                   <h2 className="max-w-xl text-3xl font-normal leading-tight text-brand-primary md:text-5xl">
                     {intro.heading}
@@ -342,7 +342,7 @@ export default async function PrivateLabelingPage({ params }: PageProps) {
               />
             )}
             {hasWhatIsContent && (
-              <div className={`flex min-h-[420px] flex-col justify-center bg-white px-5 py-16 text-brand-primary md:px-7 md:py-20 lg:min-h-0 lg:px-12 xl:px-16 ${isRTL ? "lg:order-1" : ""}`}>
+              <div className={`flex min-h-[420px] flex-col justify-center bg-white px-4 py-16 text-brand-primary md:py-20 lg:min-h-0 xl:px-16 ${isRTL ? "lg:order-1" : ""}`}>
                 {whatIs.title && (
                   <h2 className="max-w-xl text-3xl font-normal leading-tight md:text-5xl">
                     {whatIs.title}
@@ -360,7 +360,7 @@ export default async function PrivateLabelingPage({ params }: PageProps) {
       )}
 
       {process.length > 0 && (
-        <section className="bg-[#f8f3ef] px-5 py-16 md:px-7 md:py-20 lg:px-12 lg:py-28">
+        <section className="bg-[#f8f3ef] px-4 py-16 md:py-20 lg:py-28">
           <div className="mx-auto max-w-7xl">
             {sectionTitles.process && (
               <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
@@ -382,7 +382,7 @@ export default async function PrivateLabelingPage({ params }: PageProps) {
       )}
 
       {whyChoose.length > 0 && (
-        <section className="bg-white px-5 py-16 md:px-7 md:py-20 lg:px-12 lg:py-28">
+        <section className="bg-white px-4 py-16 md:py-20 lg:py-28">
           <div className="mx-auto max-w-7xl">
             <SectionHeading title={sectionTitles.whyChoose} />
             <NumberedGrid items={whyChoose} columns="md:grid-cols-3" />
@@ -391,7 +391,7 @@ export default async function PrivateLabelingPage({ params }: PageProps) {
       )}
 
       {products.length > 0 && (
-        <section className="bg-white px-5 py-16 md:px-7 md:py-20 lg:px-12 lg:py-28">
+        <section className="bg-white px-4 py-16 md:py-20 lg:py-28">
           <div className="mx-auto max-w-7xl">
             <SectionHeading title={sectionTitles.products} />
             <div className="grid w-full gap-px overflow-hidden border border-brand-primary/10 bg-brand-primary/10 md:grid-cols-3">
@@ -425,7 +425,7 @@ export default async function PrivateLabelingPage({ params }: PageProps) {
       )}
 
       {benefits.length > 0 && (
-        <section className="bg-[#f8f3ef] px-5 py-16 md:px-7 md:py-20 lg:px-12 lg:py-28">
+        <section className="bg-[#f8f3ef] px-4 py-16 md:py-20 lg:py-28">
           <div className="mx-auto max-w-7xl">
             <SectionHeading title={sectionTitles.benefits} />
             <NumberedGrid items={benefits} columns="md:grid-cols-2 lg:grid-cols-4" />
@@ -434,7 +434,7 @@ export default async function PrivateLabelingPage({ params }: PageProps) {
       )}
 
       {hasCtaContent && (
-        <section className="bg-white px-5 py-16 md:px-7 md:py-20 lg:px-12 lg:py-28">
+        <section className="bg-white px-4 py-16 md:py-20 lg:py-28">
           <div className="mx-auto max-w-7xl bg-brand-primary px-6 py-12 text-white md:px-10 md:py-14 lg:px-14">
             {cta.title && (
               <h2 className="mb-4 max-w-4xl text-3xl font-normal leading-tight text-white md:text-5xl">
@@ -463,7 +463,7 @@ export default async function PrivateLabelingPage({ params }: PageProps) {
         <div className="w-full">
           <div className={`grid overflow-hidden border border-brand-primary/10 bg-brand-primary/10 ${hasFormIntroContent ? "lg:grid-cols-2 lg:items-stretch" : ""}`}>
             {hasFormIntroContent && (
-              <div className="flex aspect-square min-h-[320px] flex-col justify-center bg-[#f4f4f4] px-6 py-12 text-brand-primary md:px-10 md:py-14 lg:px-12">
+              <div className="flex aspect-square min-h-[320px] flex-col justify-center bg-[#f4f4f4] px-6 py-12 text-brand-primary md:px-10 md:py-14">
                 {formContent.title && (
                   <h2 className="max-w-md text-3xl font-normal leading-tight text-brand-primary md:text-5xl">
                     {formContent.title}
