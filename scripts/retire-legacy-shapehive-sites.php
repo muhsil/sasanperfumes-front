@@ -1,6 +1,9 @@
 <?php
 /**
- * Retire deprecated ShapeHive legacy market subdomain sites from the multisite network.
+ * Retire deprecated public ShapeHive market storefront subdomains from the multisite network.
+ *
+ * Backend-only CMS market sites such as qa.cms.shapehive.com, om.cms.shapehive.com,
+ * and sa.cms.shapehive.com are still required for separate content management.
  *
  * Usage examples (WP-CLI):
  *   wp eval-file scripts/retire-legacy-shapehive-sites.php -- --archive
@@ -18,9 +21,9 @@ if (!is_multisite()) {
 }
 
 $legacy_hosts = array(
-    'qa.cms.shapehive.com',
-    'om.cms.shapehive.com',
-    'sa.cms.shapehive.com',
+    'qa.shapehive.com',
+    'om.shapehive.com',
+    'sa.shapehive.com',
 );
 
 $argv = isset($argv) ? array_slice((array) $argv, 1) : array();

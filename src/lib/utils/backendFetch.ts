@@ -73,6 +73,14 @@ function sanitizeBackendText(value: string): string {
   );
 }
 
+export function stripBackendJsonPrefix(value: string): string {
+  return value.replace(/^[\uFEFF\u200B\u200C\u200D\s]+/, "");
+}
+
+export function parseBackendJson<T>(text: string): T {
+  return JSON.parse(stripBackendJsonPrefix(text)) as T;
+}
+
 export function sanitizeBackendContent<T>(value: T): T {
   if (typeof value === "string") {
     return sanitizeBackendText(value) as T;
@@ -93,11 +101,12 @@ export function sanitizeBackendContent<T>(value: T): T {
 
 export async function safeJsonResponse(response: Response): Promise<Record<string, unknown>> {
   const text = await response.text();
+  const jsonText = stripBackendJsonPrefix(text);
   try {
-    return sanitizeBackendContent(JSON.parse(text) as Record<string, unknown>);
+    return sanitizeBackendContent(parseBackendJson<Record<string, unknown>>(jsonText));
   } catch {
-    const isHtml = text.trim().startsWith("<!") || text.trim().startsWith("<html");
-    const snippet = text.slice(0, 200).replace(/[\r\n]+/g, " ").trim();
+    const isHtml = jsonText.trim().startsWith("<!") || jsonText.trim().startsWith("<html");
+    const snippet = jsonText.slice(0, 200).replace(/[\r\n]+/g, " ").trim();
     console.warn(
       `[backendFetch] Non-JSON response (${response.status}): ${snippet}`
     );

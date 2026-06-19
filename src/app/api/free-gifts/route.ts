@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-import { API_BASE, backendHeaders, noCacheUrl } from "@/lib/utils/backendFetch";
+import { API_BASE, backendHeaders, noCacheUrl, parseBackendJson } from "@/lib/utils/backendFetch";
 import { normalizeMarketHost } from "@/config/market";
 
 const FREE_GIFTS_CACHE_TTL = 5 * 60 * 1000;
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
     const text = await response.text();
     let data: Record<string, unknown>;
     try {
-      data = JSON.parse(text) as Record<string, unknown>;
+      data = parseBackendJson<Record<string, unknown>>(text);
     } catch {
       return NextResponse.json(
         {

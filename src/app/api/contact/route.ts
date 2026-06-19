@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { siteConfig } from "@/config/site";
+import { parseBackendJson } from "@/lib/utils/backendFetch";
 
 const API_BASE = `${siteConfig.apiUrl}/wp-json/sasanperfumes/v1`;
 
@@ -15,7 +16,7 @@ interface ContactFormData {
 
 function parseJsonResponse(text: string) {
   try {
-    return text ? JSON.parse(text) : {};
+    return text ? parseBackendJson<Record<string, unknown>>(text) : {};
   } catch {
     return null;
   }

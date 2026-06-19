@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { siteConfig } from "@/config/site";
+import { parseBackendJson } from "@/lib/utils/backendFetch";
 
 const BASE = siteConfig.apiUrl;
 
@@ -17,7 +18,7 @@ async function testEndpoint(label: string, url: string, method: string, headers?
       method,
       headers_sent: headers ? Object.keys(headers) : "none",
       status: response.status,
-      is_json: (() => { try { JSON.parse(text); return true; } catch { return false; } })(),
+      is_json: (() => { try { parseBackendJson(text); return true; } catch { return false; } })(),
       snippet: text.slice(0, 300),
     };
   } catch (error) {

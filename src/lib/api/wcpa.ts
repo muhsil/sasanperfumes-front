@@ -6,7 +6,7 @@
  */
 
 import { disableRuntimeCache, siteConfig, type Locale } from "@/config/site";
-import { backendHeaders } from "@/lib/utils/backendFetch";
+import { backendHeaders, parseBackendJson } from "@/lib/utils/backendFetch";
 import type { WCPAProductAddons, WCPAForm, WCPAFormValues, WCPAField } from "@/types/wcpa";
 
 const API_BASE = `${siteConfig.apiUrl}/wp-json`;
@@ -45,11 +45,12 @@ export async function getProductAddons(
       return null;
     }
 
-    const product = await response.json();
+    const product = parseBackendJson<Record<string, unknown>>(await response.text());
     
     // Check if WCPA data exists in extensions
-    if (product.extensions?.wcpa) {
-      return product.extensions.wcpa as WCPAProductAddons;
+    const extensions = product.extensions as { wcpa?: WCPAProductAddons } | undefined;
+    if (extensions?.wcpa) {
+      return extensions.wcpa;
     }
 
     return null;
@@ -88,7 +89,7 @@ export async function getProductAddonsBySlug(
       return null;
     }
 
-    const products = await response.json();
+    const products = parseBackendJson<Array<Record<string, unknown>>>(await response.text());
     
     if (products.length === 0) {
       return null;
@@ -97,8 +98,9 @@ export async function getProductAddonsBySlug(
     const product = products[0];
     
     // Check if WCPA data exists in extensions
-    if (product.extensions?.wcpa) {
-      return product.extensions.wcpa as WCPAProductAddons;
+    const extensions = product.extensions as { wcpa?: WCPAProductAddons } | undefined;
+    if (extensions?.wcpa) {
+      return extensions.wcpa;
     }
 
     return null;

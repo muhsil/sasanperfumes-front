@@ -32,6 +32,15 @@ function rebrandApiContent<T>(value: T): T {
   return value;
 }
 
+function stripJsonPrefix(value: string): string {
+  return value.replace(/^[\uFEFF\u200B\u200C\u200D\s]+/, "");
+}
+
+async function parseJsonResponse<T>(response: Response): Promise<T> {
+  const text = await response.text();
+  return JSON.parse(stripJsonPrefix(text)) as T;
+}
+
 // Default currency for Store API requests - ensures prices are returned in the base currency
 const DEFAULT_API_CURRENCY = API_BASE_CURRENCY;
 
@@ -130,7 +139,7 @@ async function fetchAPI<T>(
     throw new Error(`API Error: ${response.status} ${response.statusText}`);
   }
 
-  return rebrandApiContent(await response.json());
+  return rebrandApiContent(await parseJsonResponse<T>(response));
 }
 
 async function fetchAPIWithPagination<T>(
@@ -171,7 +180,7 @@ async function fetchAPIWithPagination<T>(
     throw new Error(`API Error: ${response.status} ${response.statusText}`);
   }
 
-  const data = rebrandApiContent(await response.json());
+  const data = rebrandApiContent(await parseJsonResponse<T>(response));
   const total = parseInt(response.headers.get("X-WP-Total") || "0", 10);
   const totalPages = parseInt(response.headers.get("X-WP-TotalPages") || "1", 10);
 
@@ -954,7 +963,7 @@ export async function getBundleConfig(
       return null;
     }
 
-    const data = JSON.parse(text);
+    const data = JSON.parse(stripJsonPrefix(text));
 
     if (data.eligible_categories && !Array.isArray(data.eligible_categories)) {
       data.eligible_categories = Object.values(data.eligible_categories);

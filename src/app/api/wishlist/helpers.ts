@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
-import { API_BASE, backendHeaders, backendPostHeaders, noCacheUrl } from "@/lib/utils/backendFetch";
+import { API_BASE, backendHeaders, backendPostHeaders, noCacheUrl, parseBackendJson } from "@/lib/utils/backendFetch";
 import { type Locale } from "@/config/site";
 
 const WISHLIST_BASE = `${API_BASE}/wp-json/wc/v3/wishlist`;
@@ -250,7 +250,7 @@ export async function addProductToWishlist(
   const responseText = await response.text();
   let data: Record<string, unknown>;
   try {
-    data = JSON.parse(responseText);
+    data = parseBackendJson<Record<string, unknown>>(responseText);
   } catch {
     data = { message: responseText };
   }
@@ -270,7 +270,7 @@ export async function removeProductFromWishlist(
   const responseText = await response.text();
   let data: Record<string, unknown>;
   try {
-    data = JSON.parse(responseText);
+    data = parseBackendJson<Record<string, unknown>>(responseText);
   } catch {
     data = { message: responseText };
   }

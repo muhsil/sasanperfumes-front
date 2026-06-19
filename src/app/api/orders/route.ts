@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { verifyAuth, unauthorizedResponse, forbiddenResponse } from "@/lib/security";
-import { API_BASE as BASE_URL, backendHeaders, backendPostHeaders, noCacheUrl } from "@/lib/utils/backendFetch";
+import { API_BASE as BASE_URL, backendHeaders, backendPostHeaders, noCacheUrl, parseBackendJson } from "@/lib/utils/backendFetch";
 
 const API_BASE = `${BASE_URL}/wp-json/wc/v3`;
 
@@ -236,10 +236,10 @@ export async function GET(request: NextRequest) {
       headers: backendHeaders(),
     });
 
-    let data;
+    let data: { code?: string; message?: string } | unknown[];
     const responseText = await response.text();
     try {
-      data = JSON.parse(responseText);
+      data = parseBackendJson<{ code?: string; message?: string } | unknown[]>(responseText);
     } catch {
       return NextResponse.json(
         {
@@ -254,12 +254,13 @@ export async function GET(request: NextRequest) {
     }
 
     if (!response.ok) {
+      const errorData = Array.isArray(data) ? {} : data;
       return NextResponse.json(
         {
           success: false,
           error: {
-            code: data.code || "orders_error",
-            message: data.message || "Failed to get orders.",
+            code: errorData.code || "orders_error",
+            message: errorData.message || "Failed to get orders.",
           },
         },
         { status: response.status }

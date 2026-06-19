@@ -1,7 +1,7 @@
 import { disableRuntimeCache, siteConfig, type Locale } from "@/config/site";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { translateToArabic } from "@/config/menu";
-import { backendHeaders } from "@/lib/utils/backendFetch";
+import { backendHeaders, parseBackendJson } from "@/lib/utils/backendFetch";
 import type {
   HomePageACF,
   SiteSettings,
@@ -676,7 +676,7 @@ async function fetchWPAPI<T>(
       }
 
       try {
-        return JSON.parse(text.replace(/^\uFEFF+/, "")) as T;
+        return parseBackendJson<T>(text);
       } catch {
         console.warn(`WordPress API returned invalid JSON (${url})`);
         return null;
