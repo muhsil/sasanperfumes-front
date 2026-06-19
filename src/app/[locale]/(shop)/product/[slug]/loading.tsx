@@ -39,7 +39,8 @@ function RelatedProductsLoading() {
 
 export default function ProductLoading() {
   return (
-    <div className="bg-[#f8f3ef] text-brand-primary">
+    <div className="page-flush bg-transparent text-brand-primary">
+      <div className="mx-auto w-full max-w-[80rem]">
       <div className="w-full px-4 pb-3 pt-4 md:pb-4 md:pt-6">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -53,13 +54,13 @@ export default function ProductLoading() {
         </div>
       </div>
 
-      <div className="w-full px-0">
-        <div className="grid w-full gap-y-7 gap-x-6 lg:grid-cols-[minmax(0,1.12fr)_minmax(360px,0.88fr)] xl:grid-cols-[minmax(0,1.08fr)_minmax(430px,0.92fr)]">
+      <div className="w-full px-4">
+        <div className="grid w-full gap-x-8 gap-y-7 lg:grid-cols-[minmax(0,1.08fr)_minmax(380px,0.92fr)] lg:gap-x-10 xl:grid-cols-[minmax(0,1.12fr)_minmax(420px,0.88fr)]">
           <div className="min-w-0 bg-[#f8f3ef]">
             <ProductGalleryLoading />
           </div>
 
-          <aside className="min-w-0 bg-[#f8f3ef] px-4 pb-10 pt-2 text-brand-primary md:pb-12 md:pt-8 lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:self-start lg:overflow-y-auto lg:px-10 lg:pt-10 xl:px-12">
+          <aside className="min-w-0 pb-8 pt-0 text-brand-primary md:pb-10">
             <div className="mx-auto flex w-full max-w-[560px] flex-col items-stretch space-y-0 lg:ml-0 lg:mr-auto">
               <div className="mb-5 flex w-full flex-wrap items-center gap-x-3 gap-y-2 self-start">
                 <Skeleton className="h-5 w-24 rounded-none" />
@@ -137,6 +138,7 @@ export default function ProductLoading() {
       </div>
 
       <RelatedProductsLoading />
+      </div>
     </div>
   );
 }

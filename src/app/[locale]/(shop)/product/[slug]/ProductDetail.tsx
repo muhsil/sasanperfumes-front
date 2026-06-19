@@ -1399,8 +1399,8 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
         </div>
 
         {/* Product Info */}
-        <aside className="min-w-0 pb-8 pt-0 text-brand-primary md:pb-10 md:pt-0 lg:pt-0">
-          <div className="rounded-3xl border border-brand-border/65 bg-transparent p-5 md:p-7">
+        <aside className="min-w-0 pb-8 pt-0 text-brand-primary md:pb-10 lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:self-start lg:overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="p-0">
             <div className="mx-auto flex w-full flex-col items-stretch space-y-0">
           {/* Category + Brand row */}
           <div className="mb-4 flex w-full flex-wrap items-center gap-x-2 gap-y-2 self-start">
