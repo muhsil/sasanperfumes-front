@@ -1377,9 +1377,9 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
   };
 
   return (
-    <div className="bg-transparent text-brand-primary">
-      <div className="mx-auto w-full max-w-[80rem] space-y-8">
-        <div className="w-full px-4 pb-3 pt-4 md:px-6 md:pb-4 md:pt-6 lg:px-10">
+    <div className="page-flush bg-transparent pb-24 text-brand-primary md:pb-0">
+      <div className="mx-auto w-full max-w-[80rem]">
+        <div className="w-full px-5 pb-3 pt-4 md:px-7 md:pb-4 md:pt-6 lg:px-12">
           <div className="flex items-center justify-between gap-3">
             <Breadcrumbs items={breadcrumbItems} locale={locale} contained={false} />
             <SocialShareModal
@@ -1391,7 +1391,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           </div>
         </div>
 
-        <div className="w-full px-4 pb-2 md:px-6 lg:px-10">
+        <div className="w-full px-5 md:px-7 lg:px-12">
           <div className="grid w-full items-start gap-x-8 gap-y-7 pb-8 lg:grid-cols-[minmax(0,1.08fr)_minmax(380px,0.92fr)] lg:gap-x-10 xl:grid-cols-[minmax(0,1.12fr)_minmax(420px,0.88fr)]">
         {/* Product Gallery */}
         <div className="min-w-0">
@@ -1822,7 +1822,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
       </div>
 
        {showReviews && (
-        <div id="reviews">
+        <div id="reviews" className="mt-10 border-t border-brand-border/50 pt-8">
           <ProductReviews productId={product.id} locale={locale} />
         </div>
       )}
@@ -1833,14 +1833,14 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           products={upsellProducts}
           currentProductId={product.id}
           locale={locale}
-          className="pb-2 pt-1"
+          className="mt-10 pt-2"
           title={isRTL ? "منتجات موصى بها" : "Recommended Products"}
           subtitle={isRTL ? "منتجات مختارة لك" : "Hand-picked for you"}
         />
       )}
 
       {/* Related Products (category-based) */}
-      <div className="mt-6 pb-20">
+      <div className="mt-10 pb-6 md:pb-8">
         <RelatedProducts
           products={relatedProducts}
           currentProductId={product.id}

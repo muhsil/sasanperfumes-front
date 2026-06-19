@@ -9,7 +9,7 @@ function LoadingFallback({ locale }: { locale: string }) {
   const isRTL = locale === "ar";
   return (
     <div className="min-h-screen overflow-x-clip pb-44 md:pb-8" style={{ backgroundColor: 'var(--color-beige)' }}>
-      <div className="container mx-auto px-3 py-4 md:px-7 md:py-8 lg:px-12">
+      <div className="container mx-auto px-4 py-4 md:px-7 md:py-8 lg:px-12">
         <div className="flex items-center justify-center py-16">
           <div className="text-center">
             <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-gray-900"></div>

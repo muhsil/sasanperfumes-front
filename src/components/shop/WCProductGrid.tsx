@@ -44,7 +44,7 @@ export function WCProductGrid({
   };
 
   return (
-    <div className={cn("grid gap-x-2 gap-y-3 px-2 sm:gap-x-3 sm:gap-y-4 md:px-5 lg:px-8", gridCols[columns], className)}>
+    <div className={cn("grid gap-x-2 gap-y-3 px-4 sm:gap-x-3 sm:gap-y-4 md:px-7 lg:px-12", gridCols[columns], className)}>
       {products.map((product) => (
         <WCProductCard
           key={product.id}

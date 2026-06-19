@@ -196,8 +196,8 @@ export default function CartPage() {
   };
 
   return (
-    <div className="min-h-screen bg-transparent pb-44 md:pb-8">
-      <div className="container mx-auto px-3 py-2 md:px-7 md:py-3 lg:px-12">
+    <div className="page-flush min-h-screen bg-transparent pb-44 md:pb-8">
+      <div className="container mx-auto px-4 py-2 md:px-7 md:py-3 lg:px-12">
         <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} contained={false} />
 
         {/* Login Status Indicator */}
