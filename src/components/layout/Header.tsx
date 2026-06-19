@@ -130,21 +130,25 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
   const topbarVisible = Boolean(topbarText && !topbarDismissed && !isScrolled);
   const mobileDrawerOffsetClass = topbarVisible
     ? hideTopbarOnMobile
-      ? "top-[76px] h-[calc(100vh-76px)] md:top-[128px] md:h-[calc(100vh-128px)]"
-      : "top-[108px] h-[calc(100vh-108px)] md:top-[128px] md:h-[calc(100vh-128px)]"
-    : "top-[76px] h-[calc(100vh-76px)] md:top-[96px] md:h-[calc(100vh-96px)]";
+      ? "top-16 h-[calc(100vh-4rem)] md:top-[6.5rem] md:h-[calc(100vh-6.5rem)]"
+      : "top-24 h-[calc(100vh-6rem)] md:top-[6.5rem] md:h-[calc(100vh-6.5rem)]"
+    : "top-16 h-[calc(100vh-4rem)] md:top-20 md:h-[calc(100vh-5rem)]";
 
   return (
     <>
       <header
         className={cn(
           isTransparentHomeHeader
-            ? "absolute inset-x-0 top-2 z-50"
+            ? "absolute inset-x-0 top-0 z-50"
             : headerSettings?.sticky !== false
               ? "sticky top-0 z-50"
               : "relative z-50",
-          "w-full bg-transparent transition-all duration-300",
-          isScrolled && "shadow-[0_18px_48px_rgba(20,15,10,0.18)]"
+          "w-full transition-all duration-300",
+          isScrolled
+            ? "bg-white shadow-[0_2px_16px_rgba(0,0,0,0.08)]"
+            : isTransparentHomeHeader
+              ? "bg-transparent"
+              : "bg-white"
         )}
       >
         {/* Top promotional bar */}
@@ -183,109 +187,116 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
           </div>
         )}
 
-        {/* Row 1: Search/Currency/Language — Logo — Account/Cart */}
-        <div className="w-full">
-          <div
-            className={cn(
-              "mx-auto flex h-[4rem] max-w-[80rem] items-center justify-between rounded-full border border-brand-border/70 px-4 py-1.5 transition-all duration-300 md:h-[5rem] md:px-4 xl:grid xl:grid-cols-[minmax(230px,1fr)_minmax(0,2fr)_minmax(230px,1fr)] xl:gap-5 xl:px-6",
-              isScrolled
-                ? "bg-brand-ivory shadow-[0_12px_30px_rgba(20,15,10,0.12)]"
-                : isTransparentHomeHeader
-                  ? "border-white/35 bg-white/18 shadow-[0_18px_45px_rgba(20,15,10,0.12)] backdrop-blur-md"
-                  : "bg-brand-ivory/96 shadow-[0_16px_40px_rgba(20,15,10,0.12)] backdrop-blur-xl"
-            )}
-          >
-            {/* Left: Search + Currency + Language (desktop) / Mobile menu button */}
-            <div className="flex items-center gap-1.5 md:gap-3.5 xl:justify-self-start">
+        {/* Main header bar: Logo + Nav (left) — Icons (right) */}
+        <div className="container mx-auto px-4">
+          <div className="relative flex h-16 items-center justify-between xl:h-20">
+            {/* Left: Hamburger (mobile) + Logo + Nav (desktop) */}
+            <div className="flex items-center gap-4 xl:gap-6">
               {/* Mobile menu button */}
               <button
                 type="button"
                 className={cn(
-                  "inline-flex h-9 w-9 items-center justify-center rounded-full border border-brand-border/45 text-brand-primary transition-colors hover:border-brand-primary/40 md:h-10 md:w-10 xl:hidden",
-                  isTransparentHomeHeader ? "bg-transparent hover:bg-brand-ivory/90" : "bg-brand-ivory/90 hover:bg-brand-beige"
+                  "inline-flex h-9 w-9 items-center justify-center rounded-md transition-colors xl:hidden",
+                  isTransparentHomeHeader
+                    ? "text-white hover:bg-white/10"
+                    : "text-brand-primary hover:bg-gray-100"
                 )}
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               >
                 <span className="sr-only">{dictionary.navigation.menu}</span>
-                {isMobileMenuOpen ? <X className="h-[18px] w-[18px] md:h-5 md:w-5" /> : <Menu className="h-[18px] w-[18px] md:h-5 md:w-5" />}
+                {isMobileMenuOpen ? <X className="h-5 w-5 md:h-6 md:w-6" /> : <Menu className="h-5 w-5 md:h-6 md:w-6" />}
               </button>
 
               {/* Logo */}
-              <Link href={`/${locale}`} className="absolute left-1/2 -translate-x-1/2 xl:static xl:left-auto xl:shrink-0 xl:translate-x-0">
+              <Link href={`/${locale}`} className="absolute left-1/2 -translate-x-1/2 xl:static xl:left-auto xl:translate-x-0">
               {siteSettings?.logo?.url && !logoError ? (
                 <Image
                   src={siteSettings.logo.url}
                   alt={siteSettings.logo.alt || siteSettings.site_name || "Logo"}
-                  width={220}
-                  height={142}
-                  className="h-12 w-auto md:h-16 xl:h-[70px]"
+                  width={260}
+                  height={168}
+                  className="h-14 w-auto md:h-[72px] xl:h-[80px]"
                   style={{ width: "auto" }}
                   priority
                   unoptimized={shouldUseUnoptimizedImage(siteSettings.logo.url)}
                   onError={() => setLogoError(true)}
                 />
               ) : siteSettings?.site_name ? (
-                <span className="font-title text-3xl tracking-[0.12em] text-brand-primary md:text-4xl">
+                <span className={cn(
+                  "font-title text-3xl tracking-[0.12em] md:text-4xl",
+                  isTransparentHomeHeader ? "text-white" : "text-brand-primary"
+                )}>
                   {siteSettings.site_name}
                 </span>
               ) : (
                 <span className="sr-only">Home</span>
               )}
               </Link>
+
+              {/* Desktop navigation — left-aligned after logo */}
+              <nav className="hidden items-center gap-4 xl:flex">
+                {navigation.map((item) => {
+                  if (item.hasBrandsMegaMenu) {
+                    return (
+                      <div
+                        key={item.name}
+                        className="relative shrink-0"
+                        onMouseEnter={handleBrandsMouseEnter}
+                        onMouseLeave={handleBrandsMouseLeave}
+                      >
+                        <Link
+                          href={item.href}
+                          onClick={handleBrandsMegaMenuClose}
+                          className={cn(
+                            "group relative flex items-center gap-1 whitespace-nowrap text-sm font-bold transition-colors",
+                            isTransparentHomeHeader
+                              ? "text-white hover:text-white/80"
+                              : "text-brand-primary hover:text-brand-primary/70",
+                            isBrandsMegaMenuOpen && (isTransparentHomeHeader ? "text-white/80" : "text-brand-primary/70")
+                          )}
+                        >
+                          {item.name}
+                          <svg
+                            className={cn("h-3 w-3 transition-transform duration-200", isBrandsMegaMenuOpen && "rotate-180")}
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                          <span className="absolute inset-x-0 -bottom-1 h-px origin-left scale-x-0 bg-brand-gold transition-transform duration-300 group-hover:scale-x-100" />
+                        </Link>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={cn(
+                        "group relative shrink-0 whitespace-nowrap text-sm font-bold transition-colors",
+                        isTransparentHomeHeader
+                          ? "text-white hover:text-white/80"
+                          : "text-brand-primary hover:text-brand-primary/70"
+                      )}
+                    >
+                      {item.name}
+                      <span className="absolute inset-x-0 -bottom-1 h-px origin-left scale-x-0 bg-brand-gold transition-transform duration-300 group-hover:scale-x-100" />
+                    </Link>
+                  );
+                })}
+              </nav>
             </div>
 
-            <nav className="hidden min-w-0 items-center justify-center gap-6 overflow-x-auto px-4 xl:flex [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {navigation.map((item) => {
-                if (item.hasBrandsMegaMenu) {
-                  return (
-                    <div
-                      key={item.name}
-                      className="relative shrink-0"
-                      onMouseEnter={handleBrandsMouseEnter}
-                      onMouseLeave={handleBrandsMouseLeave}
-                    >
-                      <Link
-                        href={item.href}
-                        onClick={handleBrandsMegaMenuClose}
-                        className={cn(
-                          "group relative flex items-center gap-1 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-primary transition-colors hover:text-brand-primary",
-                          isBrandsMegaMenuOpen && "text-brand-primary"
-                        )}
-                      >
-                        {item.name}
-                        <svg
-                          className={cn("h-3 w-3 transition-transform duration-200", isBrandsMegaMenuOpen && "rotate-180")}
-                          fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                        <span className="absolute inset-x-0 -bottom-1 h-px origin-left scale-x-0 bg-brand-gold transition-transform duration-300 group-hover:scale-x-100" />
-                      </Link>
-                    </div>
-                  );
-                }
-
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className="group relative shrink-0 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-primary transition-colors hover:text-brand-primary"
-                  >
-                    {item.name}
-                    <span className="absolute inset-x-0 -bottom-1 h-px origin-left scale-x-0 bg-brand-gold transition-transform duration-300 group-hover:scale-x-100" />
-                  </Link>
-                );
-              })}
-            </nav>
-
-            {/* Right: Search + Cart (mobile) / Account + Wishlist + Cart (desktop) */}
-            <div className="flex items-center gap-1.5 md:gap-2.5 xl:justify-self-end">
+            {/* Right: Icons */}
+            <div className="flex items-center gap-1.5 md:gap-2.5">
               {/* Mobile search */}
               <button
                 type="button"
                 className={cn(
-                  "inline-flex h-9 w-9 items-center justify-center rounded-full border border-brand-border/45 text-brand-primary transition-colors hover:border-brand-primary/40 md:h-10 md:w-10 xl:hidden",
-                  isTransparentHomeHeader ? "bg-transparent hover:bg-brand-ivory/90" : "bg-brand-ivory/90 hover:bg-brand-beige"
+                  "inline-flex h-9 w-9 items-center justify-center rounded-md transition-colors md:h-10 md:w-10 xl:hidden",
+                  isTransparentHomeHeader
+                    ? "text-white hover:bg-white/10"
+                    : "text-brand-primary hover:bg-gray-100"
                 )}
                 onClick={() => setIsSearchDrawerOpen(true)}
                 aria-label={dictionary.common.searchPlaceholder || "Search"}
@@ -310,8 +321,10 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                 type="button"
                 onClick={() => setIsAccountDrawerOpen(true)}
                 className={cn(
-                  "relative hidden h-10 w-10 items-center justify-center rounded-full border border-brand-border/45 text-brand-primary transition-all hover:border-brand-primary/40 md:flex",
-                  isTransparentHomeHeader ? "bg-transparent hover:bg-brand-ivory/90" : "bg-brand-ivory/90 hover:bg-brand-beige"
+                  "relative hidden h-10 w-10 items-center justify-center rounded-full transition-all md:flex",
+                  isTransparentHomeHeader
+                    ? "text-white hover:bg-white/10"
+                    : "text-brand-primary hover:bg-gray-100"
                 )}
                 aria-label={dictionary.account.myAccount}
               >
@@ -322,8 +335,10 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
               <Link
                 href={`/${locale}/wishlist`}
                 className={cn(
-                  "relative hidden h-10 w-10 items-center justify-center rounded-full border border-brand-border/45 text-brand-primary transition-all hover:border-brand-primary/40 md:flex",
-                  isTransparentHomeHeader ? "bg-transparent hover:bg-brand-ivory/90" : "bg-brand-ivory/90 hover:bg-brand-beige"
+                  "relative hidden h-10 w-10 items-center justify-center rounded-full transition-all md:flex",
+                  isTransparentHomeHeader
+                    ? "text-white hover:bg-white/10"
+                    : "text-brand-primary hover:bg-gray-100"
                 )}
                 aria-label={dictionary.account.wishlist}
               >
@@ -339,8 +354,10 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
               <button
                 type="button"
                 className={cn(
-                  "relative flex h-9 w-9 items-center justify-center rounded-full border border-brand-border/45 text-brand-primary transition-all hover:border-brand-primary/40 md:h-10 md:w-10",
-                  isTransparentHomeHeader ? "bg-transparent hover:bg-brand-ivory/90" : "bg-brand-ivory/90 hover:bg-brand-beige"
+                  "relative flex h-9 w-9 items-center justify-center rounded-full transition-all md:h-10 md:w-10",
+                  isTransparentHomeHeader
+                    ? "text-white hover:bg-white/10"
+                    : "text-brand-primary hover:bg-gray-100"
                 )}
                 onClick={() => setIsCartOpen(true)}
                 aria-label={dictionary.common.cart}
@@ -359,69 +376,6 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
         <div onMouseEnter={handleBrandsMegaMenuMouseEnter} onMouseLeave={handleBrandsMouseLeave}>
           <BrandsMegaMenu isOpen={isBrandsMegaMenuOpen} onClose={handleBrandsMegaMenuClose} locale={locale} />
         </div>
-
-        {/* Row 2: Desktop Navigation (centered) + MegaMenu */}
-        <nav className="hidden">
-          <div className="mx-auto flex w-full max-w-[80rem] items-center justify-center gap-9 rounded-full border border-brand-border/65 bg-brand-ivory/86 px-4 py-3 shadow-[0_10px_28px_rgba(20,15,10,0.08)]">
-            {navigation.map((item) => {
-              if (item.hasMegaMenu) {
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className="group relative text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-primary/70 transition-colors hover:text-brand-primary"
-                  >
-                    {item.name}
-                    <span className="absolute inset-x-0 -bottom-1 h-px origin-left scale-x-0 bg-brand-gold transition-transform duration-300 group-hover:scale-x-100" />
-                  </Link>
-                );
-              }
-              if (item.hasBrandsMegaMenu) {
-                return (
-                  <div
-                    key={item.name}
-                    className="relative"
-                    onMouseEnter={handleBrandsMouseEnter}
-                    onMouseLeave={handleBrandsMouseLeave}
-                  >
-                    <Link
-                      href={item.href}
-                      onClick={handleBrandsMegaMenuClose}
-                      className={cn(
-                        "group relative flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-primary/70 transition-colors hover:text-brand-primary",
-                        isBrandsMegaMenuOpen && "text-brand-primary"
-                      )}
-                    >
-                      {item.name}
-                      <svg
-                        className={cn("h-3 w-3 transition-transform duration-200", isBrandsMegaMenuOpen && "rotate-180")}
-                        fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                      <span className="absolute inset-x-0 -bottom-1 h-px origin-left scale-x-0 bg-brand-gold transition-transform duration-300 group-hover:scale-x-100" />
-                    </Link>
-                  </div>
-                );
-              }
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className="group relative text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-primary/70 transition-colors hover:text-brand-primary"
-                >
-                  {item.name}
-                  <span className="absolute inset-x-0 -bottom-1 h-px origin-left scale-x-0 bg-brand-gold transition-transform duration-300 group-hover:scale-x-100" />
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* Brands Mega Menu — brand logos on hover */}
-          <div onMouseEnter={handleBrandsMegaMenuMouseEnter} onMouseLeave={handleBrandsMouseLeave}>
-            <BrandsMegaMenu isOpen={isBrandsMegaMenuOpen} onClose={handleBrandsMegaMenuClose} locale={locale} />
-          </div>
-        </nav>
 
         {/* Mobile menu drawer overlay and sidebar */}
         {isMobileMenuOpen && (
