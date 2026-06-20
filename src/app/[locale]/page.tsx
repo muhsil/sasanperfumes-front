@@ -16,10 +16,8 @@ import {
   BannersSection,
   SeoContentSection,
   OurStorySection,
-  FeaturedProductsSlider,
 } from "@/components/sections";
 import { ProductSectionSkeleton } from "@/components/sections/ProductSection";
-import { FeaturedProductsSliderSkeleton } from "@/components/sections/FeaturedProductsSlider";
 import { siteConfig, type Currency, type Locale } from "@/config/site";
 import type { Metadata } from "next";
 
@@ -211,6 +209,12 @@ async function BestsellerProductsSection({ locale, isRTL, dictionary, homeSettin
       homeSettings.bestseller_products.section_title || dictionary.sections.bestsellers.title,
     section_subtitle:
       homeSettings.bestseller_products.section_subtitle || dictionary.sections.bestsellers.subtitle,
+    products_count: HOME_PRODUCT_COUNT,
+    responsive_columns: {
+      desktop: HOME_PRODUCT_COUNT,
+      tablet: homeSettings.bestseller_products.responsive_columns?.tablet ?? 3,
+      mobile: homeSettings.bestseller_products.responsive_columns?.mobile ?? 2,
+    },
   };
 
   return (
@@ -265,15 +269,22 @@ async function FeaturedProductsSection({ locale, isRTL, dictionary, homeSettings
       homeSettings.featured_products.section_title || dictionary.sections.featuredProducts.title,
     section_subtitle:
       homeSettings.featured_products.section_subtitle || dictionary.sections.featuredProducts.subtitle,
+    products_count: HOME_PRODUCT_COUNT,
+    responsive_columns: {
+      desktop: HOME_PRODUCT_COUNT,
+      tablet: homeSettings.featured_products.responsive_columns?.tablet ?? 3,
+      mobile: homeSettings.featured_products.responsive_columns?.mobile ?? 2,
+    },
   };
 
   return (
-    <FeaturedProductsSlider
+    <ProductSection
       settings={settings}
       products={featuredProducts}
       locale={locale}
       isRTL={isRTL}
       viewAllText={dictionary.common.viewAll}
+      fullView
       bundleProductSlugs={bundleProductSlugs}
       englishProductSlugs={featuredEnglishSlugs}
     />
@@ -330,7 +341,7 @@ export default async function HomePage({ params }: HomePageProps) {
 
         <BannersSection settings={homeSettings.banners} />
 
-        <Suspense fallback={<FeaturedProductsSliderSkeleton />}>
+        <Suspense fallback={<ProductSectionSkeleton fullView />}>
           <FeaturedProductsSection
             locale={validLocale}
             isRTL={isRTL}

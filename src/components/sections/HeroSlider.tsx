@@ -178,7 +178,7 @@ function SlideContent({ slide, index, locale }: { slide: HeroSliderSettings["sli
   ) : null;
 
   const mediaContent = (
-    <div className="home-view-section--media relative min-h-[calc(100svh-72px)] w-full overflow-hidden bg-[#1a1714] md:min-h-[calc(100svh-88px)]">
+    <div className="home-view-section--media relative aspect-[16/6] w-full overflow-hidden bg-[#1a1714] md:aspect-[2560/873]">
       {isVideo ? (
         <>
           {renderVideo(true)}

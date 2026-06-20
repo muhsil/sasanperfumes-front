@@ -17,6 +17,7 @@ import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 const productsFetchPromise: Record<string, Promise<WCProduct[]> | null> = {};
 const menuDataFetchPromise: Record<string, Promise<MegaMenuData | null> | null> = {};
+const categoriesFetchPromise: Record<string, Promise<MegaMenuColumn[]> | null> = {};
 
 /**
  * Static menu category type with children
@@ -66,6 +67,10 @@ export function MegaMenu({
   const [menuData, setMenuData] = useState<MegaMenuData | null>(null);
   const [menuLoading, setMenuLoading] = useState(false);
   const hasMenuFetchedRef = useRef(false);
+
+  // WooCommerce categories fallback state
+  const [wcCategories, setWcCategories] = useState<MegaMenuColumn[]>([]);
+  const hasWcCategoriesFetchedRef = useRef(false);
   
   // Featured products state
   const [featuredProducts, setFeaturedProducts] = useState<WCProduct[]>([]);
@@ -132,6 +137,43 @@ export function MegaMenu({
     }
   }, [locale]);
 
+  // Fetch WooCommerce categories as fallback when WP menu and static categories are empty
+  const fetchWcCategories = useCallback(async () => {
+    if (categoriesFetchPromise[locale]) {
+      try {
+        const cats = await categoriesFetchPromise[locale];
+        if (cats) setWcCategories(cats);
+      } catch (error) {
+        console.error("Error fetching WC categories:", error);
+      }
+      return;
+    }
+
+    try {
+      categoriesFetchPromise[locale] = (async () => {
+        const resp = await fetch(`/api/categories?locale=${locale}`);
+        if (!resp.ok) return [];
+        const cats = await resp.json();
+        return (cats as Array<{ id: number; name: string; slug: string; parent: number; count: number; image?: { src: string } }>)
+          .filter((c) => c.parent === 0 && c.count > 0)
+          .map((c) => ({
+            id: c.id,
+            name: c.name,
+            slug: c.slug,
+            url: `${marketPrefix}/${locale}/category/${c.slug}`,
+            image: c.image ? { src: c.image.src } : null,
+            children: [],
+          }));
+      })();
+      const cats = await categoriesFetchPromise[locale];
+      if (cats) setWcCategories(cats);
+    } catch (error) {
+      console.error("Error fetching WC categories:", error);
+    } finally {
+      categoriesFetchPromise[locale] = null;
+    }
+  }, [locale, marketPrefix]);
+
   // Fetch menu data when menu opens
   useEffect(() => {
     if (isOpen && !hasMenuFetchedRef.current) {
@@ -155,30 +197,48 @@ export function MegaMenu({
     }
   }, [isOpen, menuData, menuLoading, fetchFeaturedProducts]);
 
+  // Fetch WC categories if WP menu returned no columns and static categories are empty
+  useEffect(() => {
+    if (isOpen && !menuLoading && !hasWcCategoriesFetchedRef.current) {
+      const hasMenuColumns = menuData?.columns && menuData.columns.length > 0;
+      const hasStaticCats = staticCategories.length > 0;
+      if (!hasMenuColumns && !hasStaticCats) {
+        hasWcCategoriesFetchedRef.current = true;
+        fetchWcCategories();
+      }
+    }
+  }, [isOpen, menuLoading, menuData, staticCategories.length, fetchWcCategories]);
+
   // Reset fetch flags when locale changes
   useEffect(() => {
     hasMenuFetchedRef.current = false;
     hasProductsFetchedRef.current = false;
+    hasWcCategoriesFetchedRef.current = false;
     setMenuData(null);
     setFeaturedProducts([]);
+    setWcCategories([]);
   }, [locale]);
 
-  // Use dynamic columns if available, otherwise fall back to static categories
+  // Use dynamic columns if available, then static categories, then WC categories
+  const staticCols: MegaMenuColumn[] = staticCategories.map((cat) => ({
+    id: cat.id,
+    name: cat.name,
+    slug: cat.slug,
+    url: `${marketPrefix}/${locale}/shop?category=${cat.slug}`,
+    image: cat.image,
+    children: cat.children.map((child) => ({
+      id: child.id,
+      name: child.name,
+      slug: child.slug,
+      url: `${marketPrefix}/${locale}/shop?category=${child.slug}`,
+    })),
+  }));
+
   const displayColumns: MegaMenuColumn[] = menuData?.columns && menuData.columns.length > 0
     ? menuData.columns
-    : staticCategories.map((cat) => ({
-        id: cat.id,
-        name: cat.name,
-        slug: cat.slug,
-        url: `${marketPrefix}/${locale}/shop?category=${cat.slug}`,
-        image: cat.image,
-        children: cat.children.map((child) => ({
-          id: child.id,
-          name: child.name,
-          slug: child.slug,
-          url: `${marketPrefix}/${locale}/shop?category=${child.slug}`,
-        })),
-      }));
+    : staticCols.length > 0
+      ? staticCols
+      : wcCategories;
 
   if (!isOpen) return null;
 

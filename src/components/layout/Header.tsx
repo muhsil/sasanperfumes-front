@@ -92,7 +92,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
   const { wishlistItemsCount } = useWishlist();
   const marketPrefix = useMarketPrefix();
   const isHomePage = pathname === `${marketPrefix}/${locale}` || pathname === `${marketPrefix}/${locale}/` || pathname === "/";
-  const isTransparentHomeHeader = isHomePage && !isScrolled && headerSettings?.sticky !== false;
+  void isHomePage;
 
   const handleBrandsMouseEnter = useCallback(() => {
     if (brandsMegaMenuTimeoutRef.current) clearTimeout(brandsMegaMenuTimeoutRef.current);
@@ -161,17 +161,11 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
     <>
       <header
         className={cn(
-          isTransparentHomeHeader
-            ? "absolute inset-x-0 top-0 z-50"
-            : headerSettings?.sticky !== false
-              ? "sticky top-0 z-50"
-              : "relative z-50",
-          "w-full transition-all duration-300",
-          isScrolled
-            ? "bg-white shadow-[0_2px_16px_rgba(0,0,0,0.08)]"
-            : isTransparentHomeHeader
-              ? "bg-transparent"
-              : "bg-white"
+          headerSettings?.sticky !== false
+            ? "sticky top-0 z-50"
+            : "relative z-50",
+          "w-full bg-white transition-all duration-300",
+          isScrolled && "shadow-[0_2px_16px_rgba(0,0,0,0.08)]"
         )}
       >
         {/* Top promotional bar */}
@@ -220,9 +214,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                 type="button"
                 className={cn(
                   "inline-flex h-9 w-9 items-center justify-center rounded-md transition-colors xl:hidden",
-                  isTransparentHomeHeader
-                    ? "text-white hover:bg-white/10"
-                    : "text-brand-primary hover:bg-gray-100"
+                  "text-brand-primary hover:bg-gray-100"
                 )}
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               >
@@ -245,10 +237,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                   onError={() => setLogoError(true)}
                 />
               ) : siteSettings?.site_name ? (
-                <span className={cn(
-                  "font-title text-3xl tracking-[0.12em] md:text-4xl",
-                  isTransparentHomeHeader ? "text-white" : "text-brand-primary"
-                )}>
+                <span className="font-title text-3xl tracking-[0.12em] text-brand-primary md:text-4xl">
                   {siteSettings.site_name}
                 </span>
               ) : (
@@ -272,10 +261,8 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                           onClick={handleBrandsMegaMenuClose}
                           className={cn(
                             "group relative flex items-center gap-1 whitespace-nowrap text-sm font-bold transition-colors",
-                            isTransparentHomeHeader
-                              ? "text-white hover:text-white/80"
-                              : "text-brand-primary hover:text-brand-primary/70",
-                            isBrandsMegaMenuOpen && (isTransparentHomeHeader ? "text-white/80" : "text-brand-primary/70")
+                            "text-brand-primary hover:text-brand-primary/70",
+                            isBrandsMegaMenuOpen && "text-brand-primary/70"
                           )}
                         >
                           {item.name}
@@ -304,10 +291,8 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                           onClick={handlePerfumesMegaMenuClose}
                           className={cn(
                             "group relative flex items-center gap-1 whitespace-nowrap text-sm font-bold transition-colors",
-                            isTransparentHomeHeader
-                              ? "text-white hover:text-white/80"
-                              : "text-brand-primary hover:text-brand-primary/70",
-                            isPerfumesMegaMenuOpen && (isTransparentHomeHeader ? "text-white/80" : "text-brand-primary/70")
+                            "text-brand-primary hover:text-brand-primary/70",
+                            isPerfumesMegaMenuOpen && "text-brand-primary/70"
                           )}
                         >
                           {item.name}
@@ -329,9 +314,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                       href={item.href}
                       className={cn(
                         "group relative shrink-0 whitespace-nowrap text-sm font-bold transition-colors",
-                        isTransparentHomeHeader
-                          ? "text-white hover:text-white/80"
-                          : "text-brand-primary hover:text-brand-primary/70"
+                        "text-brand-primary hover:text-brand-primary/70"
                       )}
                     >
                       {item.name}
@@ -349,9 +332,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                 type="button"
                 className={cn(
                   "inline-flex h-9 w-9 items-center justify-center rounded-md transition-colors md:h-10 md:w-10 xl:hidden",
-                  isTransparentHomeHeader
-                    ? "text-white hover:bg-white/10"
-                    : "text-brand-primary hover:bg-gray-100"
+                  "text-brand-primary hover:bg-gray-100"
                 )}
                 onClick={() => setIsSearchDrawerOpen(true)}
                 aria-label={dictionary.common.searchPlaceholder || "Search"}
@@ -377,9 +358,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                 onClick={() => setIsAccountDrawerOpen(true)}
                 className={cn(
                   "relative hidden h-10 w-10 items-center justify-center rounded-full transition-all md:flex",
-                  isTransparentHomeHeader
-                    ? "text-white hover:bg-white/10"
-                    : "text-brand-primary hover:bg-gray-100"
+                  "text-brand-primary hover:bg-gray-100"
                 )}
                 aria-label={dictionary.account.myAccount}
               >
@@ -391,9 +370,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                 href={`${marketPrefix}/${locale}/wishlist`}
                 className={cn(
                   "relative hidden h-10 w-10 items-center justify-center rounded-full transition-all md:flex",
-                  isTransparentHomeHeader
-                    ? "text-white hover:bg-white/10"
-                    : "text-brand-primary hover:bg-gray-100"
+                  "text-brand-primary hover:bg-gray-100"
                 )}
                 aria-label={dictionary.account.wishlist}
               >
@@ -410,9 +387,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                 type="button"
                 className={cn(
                   "relative flex h-9 w-9 items-center justify-center rounded-full transition-all md:h-10 md:w-10",
-                  isTransparentHomeHeader
-                    ? "text-white hover:bg-white/10"
-                    : "text-brand-primary hover:bg-gray-100"
+                  "text-brand-primary hover:bg-gray-100"
                 )}
                 onClick={() => setIsCartOpen(true)}
                 aria-label={dictionary.common.cart}
