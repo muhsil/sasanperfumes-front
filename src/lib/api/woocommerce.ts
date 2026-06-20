@@ -223,13 +223,27 @@ export async function getProducts(params?: {
     const queryString = searchParams.toString();
     const endpoint = `/products${queryString ? `?${queryString}` : ""}`;
 
-    const { data: products, total, totalPages } = await fetchAPIWithPagination<WCProduct[]>(endpoint, {
+    let { data: products, total, totalPages } = await fetchAPIWithPagination<WCProduct[]>(endpoint, {
       tags: ["products"],
       locale: params?.locale,
       currency: params?.currency,
       frontendHost: params?.frontendHost,
       revalidate: 300,
     });
+
+    // Fallback: if non-English locale returns 0 products (no translations), retry without locale
+    if (products.length === 0 && params?.locale && params.locale !== "en") {
+      const fallback = await fetchAPIWithPagination<WCProduct[]>(endpoint, {
+        tags: ["products"],
+        locale: "en",
+        currency: params?.currency,
+        frontendHost: params?.frontendHost,
+        revalidate: 300,
+      });
+      products = fallback.data;
+      total = fallback.total;
+      totalPages = fallback.totalPages;
+    }
 
     const visibleProducts = products.filter(
       (product) =>
@@ -733,29 +747,9 @@ export async function getProductsByCategory(
     ...params,
   });
 
-  if (result.products.length > 0 || !params?.locale || params.locale === "en") {
-    return result;
-  }
-
-  const fallback = await getProducts({
-    per_page: 100,
-    locale: params.locale,
-    currency: params.currency,
-    frontendHost: params.frontendHost,
-  });
-
-  const products = fallback.products.filter((product) =>
-    product.categories?.some(
-      (productCategory) =>
-        productCategory.id === category.id || productCategory.slug === category.slug
-    )
-  );
-
-  return {
-    products,
-    total: products.length,
-    totalPages: products.length > 0 ? 1 : 0,
-  };
+  // getProducts already handles locale fallback internally,
+  // so if Arabic returned 0 it already fell back to English
+  return result;
 }
 
 // Get products filtered by a fragrance note attribute term slug
@@ -1440,6 +1434,11 @@ export async function getFeaturedProducts(params?: {
         product.is_purchasable !== false &&
         (!product.catalog_visibility || product.catalog_visibility === "visible" || product.catalog_visibility === "catalog")
     );
+
+    // Fallback: if non-English locale returns 0 featured products, retry without locale
+    if (visibleFeatured.length === 0 && params?.locale && params.locale !== "en") {
+      return getFeaturedProducts({ ...params, locale: "en" });
+    }
 
     return {
       products: visibleFeatured,
