@@ -163,13 +163,22 @@ export function CurrencyProvider({ children, market = internationalMarket }: Cur
       (price: number, fromCurrency: Currency = API_BASE_CURRENCY): number => {
         if (price === 0) return 0;
       
-        const fromCurrencyInfo = currencies.find((c) => c.code === fromCurrency);
         const toCurrencyInfo = getCurrencyInfo();
-      
-        if (!fromCurrencyInfo || !toCurrencyInfo) return price;
+        if (!toCurrencyInfo) return price;
         if (fromCurrency === currency) return price;
       
-        const priceInAED = price / fromCurrencyInfo.rateFromAED;
+        // Look up source currency rate. If not found in the filtered list
+        // (e.g. sub-site markets only keep their own currency), fall back to
+        // rateFromAED = 1 when the source is the API base currency (AED).
+        const fromCurrencyInfo = currencies.find((c) => c.code === fromCurrency);
+        const fromRate = fromCurrencyInfo
+          ? fromCurrencyInfo.rateFromAED
+          : fromCurrency === API_BASE_CURRENCY
+            ? 1
+            : null;
+        if (fromRate === null) return price;
+      
+        const priceInAED = price / fromRate;
         const convertedPrice = priceInAED * toCurrencyInfo.rateFromAED;
       
         // Round to currency's decimal precision to avoid floating-point errors
