@@ -210,7 +210,7 @@ function SlideContent({ slide, index, locale }: { slide: HeroSliderSettings["sli
       ) : (
         null
       )}
-      <div className="absolute inset-0 bg-gradient-to-r from-black/52 via-black/18 to-black/32" />
+
       {textOverlay}
     </div>
   );
