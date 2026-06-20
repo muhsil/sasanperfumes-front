@@ -213,6 +213,16 @@ export function MegaMenu({
             <div className="flex gap-8">
               {/* Left Side - Categories with Images */}
               <div className={cn("flex-1", isRTL ? "order-2" : "order-1")}>
+                {/* Shop All link */}
+                <Link
+                  href={`${marketPrefix}/${locale}/shop`}
+                  onClick={onClose}
+                  className="inline-flex items-center gap-2 mb-5 px-4 py-2 rounded-full border border-brand-gold/30 bg-brand-beige/50 text-sm font-bold text-brand-primary uppercase tracking-wide hover:bg-brand-beige hover:border-brand-gold transition-colors"
+                >
+                  <Grid3X3 className="h-4 w-4 text-brand-gold" />
+                  {isRTL ? "تسوق الكل" : "Shop All"}
+                </Link>
+
                 <div className={cn("grid gap-8", {
                   "grid-cols-1": Math.min(maxColumns, displayColumns.length) === 1,
                   "grid-cols-2": Math.min(maxColumns, displayColumns.length) === 2,
