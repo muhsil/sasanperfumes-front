@@ -6,8 +6,10 @@ import { X, ArrowRight } from "lucide-react";
 import { useComparison } from "@/contexts/ComparisonContext";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import type { Locale } from "@/config/site";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 export function CompareDrawer({ locale }: { locale: Locale }) {
+  const marketPrefix = useMarketPrefix();
   const { items, remove, clear } = useComparison();
   const isAr = locale === "ar";
 
@@ -63,7 +65,7 @@ export function CompareDrawer({ locale }: { locale: Locale }) {
           </button>
           {items.length >= 2 && (
             <Link
-              href={`/${locale}/compare?ids=${items.map((p) => p.id).join(",")}`}
+              href={`${marketPrefix}/${locale}/compare?ids=${items.map((p) => p.id).join(",")}`}
               className="flex items-center gap-1.5 rounded-lg bg-brand-primary px-4 py-2 text-xs font-semibold text-white hover:bg-brand-primary-dark transition-colors"
             >
               {isAr ? "مقارنة" : "Compare"}

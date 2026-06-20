@@ -15,6 +15,7 @@ import { CategoriesDrawer } from "@/components/layout/CategoriesDrawer";
 import { SearchDrawer } from "@/components/layout/SearchDrawer";
 import { triggerHaptic } from "@/lib/utils/haptics";
 import { normalizeMenuUrl } from "@/config/menu";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface MobileBottomBarProps {
   locale: Locale;
@@ -95,6 +96,7 @@ export function MobileBottomBar({
   whatsAppMessage,
   whatsAppEnabled = true,
 }: MobileBottomBarProps) {
+  const marketPrefix = useMarketPrefix();
   const { wishlistItemsCount } = useWishlist();
   const { setIsAccountDrawerOpen } = useAuth();
   const isKeyboardVisible = useKeyboardVisible();
@@ -141,7 +143,7 @@ export function MobileBottomBar({
     const itemPath = item.url;
 
     if (item.icon === "home" || item.url === "/" || item.url === "" || item.url === `/${locale}`) {
-      return pathname === `/${locale}` || pathname === `/${locale}/`;
+      return pathname === `${marketPrefix}/${locale}` || pathname === `${marketPrefix}/${locale}/`;
     }
     if (item.icon === "grid" || item.url.includes("categories")) {
       return activeDrawer === "categories";
@@ -190,7 +192,7 @@ export function MobileBottomBar({
             const label = isCategoriesItem
               ? (isRTL ? "القائمة" : "Menu")
               : rawLabel;
-            const href = item.url || `/${locale}`;
+            const href = item.url || `${marketPrefix}/${locale}`;
 
             const isWishlist = item.icon === "heart" || item.url.includes("wishlist");
             const isWhatsApp = item.icon === "whatsapp";

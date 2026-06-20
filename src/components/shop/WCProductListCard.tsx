@@ -13,6 +13,7 @@ import { useWishlist } from "@/contexts/WishlistContext";
 import { useAuth } from "@/contexts/AuthContext";
 import type { WCProduct } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface WCProductListCardProps {
   product: WCProduct;
@@ -27,6 +28,7 @@ export function WCProductListCard({
   className,
   bundleProductSlugs = [],
 }: WCProductListCardProps) {
+  const marketPrefix = useMarketPrefix();
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
   const { addToCart } = useCart();
@@ -55,7 +57,7 @@ export function WCProductListCard({
     e.stopPropagation();
     
     if (!isAuthenticated) {
-      router.push(`/${locale}/login`);
+      router.push(`${marketPrefix}/${locale}/login`);
       return;
     }
     
@@ -94,7 +96,7 @@ export function WCProductListCard({
   return (
     <article className={cn("group relative", className)}>
       <Link
-        href={`/${locale}/product/${productSlug}`}
+        href={`${marketPrefix}/${locale}/product/${productSlug}`}
         className="flex gap-4 rounded-lg border border-brand-border/70 bg-brand-ivory p-4 shadow-[0_16px_34px_rgba(20,15,10,0.08)] transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-gold/45 hover:shadow-[0_22px_48px_rgba(20,15,10,0.12)] md:gap-6 md:p-6"
       >
         {/* Product Image */}
@@ -198,7 +200,7 @@ export function WCProductListCard({
           <div className="mt-4 flex items-center gap-2">
             {isBundleProduct ? (
               <Link
-                href={`/${locale}/product/${productSlug}`}
+                href={`${marketPrefix}/${locale}/product/${productSlug}`}
                 className="inline-flex items-center gap-2 rounded-full border border-brand-border/70 bg-brand-ivory px-4 py-2 text-xs font-semibold uppercase text-brand-primary transition-all hover:border-brand-primary/45 hover:bg-brand-primary hover:text-white"
               >
                 <Eye className="h-3.5 w-3.5" />

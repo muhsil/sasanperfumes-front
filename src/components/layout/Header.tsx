@@ -22,6 +22,7 @@ import { SearchDrawer } from "@/components/layout/SearchDrawer";
 import { DesktopSearchDropdown } from "@/components/layout/DesktopSearchDropdown";
 import { BrandsMegaMenu } from "@/components/layout/BrandsMegaMenu";
 import { getHeaderCategoryLinks, getDynamicNavigationItems, type DynamicNavigationItem } from "@/config/menu";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface HeaderProps {
   locale: Locale;
@@ -85,7 +86,8 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
   const { cartItemsCount, setIsCartOpen } = useCart();
   const { setIsAccountDrawerOpen } = useAuth();
   const { wishlistItemsCount } = useWishlist();
-  const isHomePage = pathname === `/${locale}` || pathname === `/${locale}/` || pathname === "/";
+  const marketPrefix = useMarketPrefix();
+  const isHomePage = pathname === `${marketPrefix}/${locale}` || pathname === `${marketPrefix}/${locale}/` || pathname === "/";
   const isTransparentHomeHeader = isHomePage && !isScrolled && headerSettings?.sticky !== false;
 
   const handleBrandsMouseEnter = useCallback(() => {
@@ -106,14 +108,14 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
   }, []);
 
   const navigation = menuItems && menuItems.length > 0
-    ? getDynamicNavigationItems(menuItems, locale)
-    : getHeaderCategoryLinks(locale);
+    ? getDynamicNavigationItems(menuItems, locale, marketPrefix)
+    : getHeaderCategoryLinks(locale, marketPrefix);
 
   const baseMobileNavigation = mobileMenuItems && mobileMenuItems.length > 0
-    ? getDynamicNavigationItems(mobileMenuItems, locale)
+    ? getDynamicNavigationItems(mobileMenuItems, locale, marketPrefix)
     : navigation;
   const mobileBottomNavigation = mobileBottomBarMenuItems && mobileBottomBarMenuItems.length > 0
-    ? getDynamicNavigationItems(mobileBottomBarMenuItems, locale)
+    ? getDynamicNavigationItems(mobileBottomBarMenuItems, locale, marketPrefix)
     : [];
   const mobileNavigation = mergeMobileNavigation(baseMobileNavigation, mobileBottomNavigation);
 
@@ -208,7 +210,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
               </button>
 
               {/* Logo */}
-              <Link href={`/${locale}`} className="absolute left-1/2 -translate-x-1/2 xl:static xl:left-auto xl:translate-x-0">
+              <Link href={`${marketPrefix}/${locale}`} className="absolute left-1/2 -translate-x-1/2 xl:static xl:left-auto xl:translate-x-0">
               {siteSettings?.logo?.url && !logoError ? (
                 <Image
                   src={siteSettings.logo.url}
@@ -333,7 +335,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
 
               {/* Desktop wishlist */}
               <Link
-                href={`/${locale}/wishlist`}
+                href={`${marketPrefix}/${locale}/wishlist`}
                 className={cn(
                   "relative hidden h-10 w-10 items-center justify-center rounded-full transition-all md:flex",
                   isTransparentHomeHeader

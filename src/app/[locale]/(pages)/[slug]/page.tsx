@@ -4,6 +4,8 @@ import { getPageBySlug, getPages, stripHtmlTags, isFunctionalPageSlug } from "@/
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
+import { getRequestMarket } from "@/lib/market/server";
+import { getMarketPathPrefix } from "@/config/market";
 
 // WordPress CMS slugs that have dedicated Next.js pages at different routes.
 // Redirect to the proper frontend routes to avoid duplicate content with broken metadata.
@@ -56,6 +58,8 @@ export async function generateMetadata({
 }
 
 export default async function DynamicPage({ params }: DynamicPageProps) {
+  const market = await getRequestMarket();
+  const pathPrefix = getMarketPathPrefix(market.code);
   const { locale, slug } = await params;
 
   // Redirect WordPress CMS slugs to their proper frontend routes
@@ -77,7 +81,7 @@ export default async function DynamicPage({ params }: DynamicPageProps) {
   const isRTL = locale === "ar";
   const pageTitle = stripHtmlTags(page.title.rendered);
 
-  const breadcrumbItems = [{ name: pageTitle, href: `/${locale}/${slug}` }];
+  const breadcrumbItems = [{ name: pageTitle, href: `${pathPrefix}/${locale}/${slug}` }];
 
   return (
     <div className="container mx-auto px-4 py-3">

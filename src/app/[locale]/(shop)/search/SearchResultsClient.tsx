@@ -11,6 +11,7 @@ import { trackAnalyticsEvent } from "@/lib/utils/analytics";
 import { cn } from "@/lib/utils";
 import type { Locale } from "@/config/site";
 import type { WCProduct } from "@/types/woocommerce";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface SearchResultsClientProps {
   locale: Locale;
@@ -56,6 +57,7 @@ export function SearchResultsClient({
   hiddenGiftProductIds = [],
   bundleProductSlugs = [],
 }: SearchResultsClientProps) {
+  const marketPrefix = useMarketPrefix();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(initialQuery);
@@ -121,13 +123,13 @@ export function SearchResultsClient({
   const handleSearch = (event: React.FormEvent) => {
     event.preventDefault();
     if (inputValue.trim()) {
-      router.push(`/${locale}/search?q=${encodeURIComponent(inputValue.trim())}`);
+      router.push(`${marketPrefix}/${locale}/search?q=${encodeURIComponent(inputValue.trim())}`);
     }
   };
 
   const handleClearSearch = () => {
     setInputValue("");
-    router.push(`/${locale}/search`);
+    router.push(`${marketPrefix}/${locale}/search`);
   };
 
   const showSuggestion = Boolean(query && didYouMean && matchMode !== "exact");
@@ -176,7 +178,7 @@ export function SearchResultsClient({
             <p className="text-sm text-brand-primary/70">
               {isRTL ? "هل تقصد" : "Did you mean"}{" "}
               <Link
-                href={`/${locale}/product/${didYouMean.slug}`}
+                href={`${marketPrefix}/${locale}/product/${didYouMean.slug}`}
                 className="font-semibold text-brand-primary underline decoration-brand-gold decoration-2 underline-offset-4 transition-colors hover:text-brand-primary-dark"
               >
                 {didYouMean.label}
@@ -196,7 +198,7 @@ export function SearchResultsClient({
       {query && products.length > 0 && (
         <div className="px-4 pb-4">
           <Link
-            href={`/${locale}/shop`}
+            href={`${marketPrefix}/${locale}/shop`}
             className="inline-flex items-center gap-2 text-[13px] font-normal tracking-normal text-brand-primary/70 transition-opacity hover:opacity-70"
           >
             <ArrowLeft className={cn("h-4 w-4", isRTL && "rotate-180")} />
@@ -217,7 +219,7 @@ export function SearchResultsClient({
           <h2 className="mb-2 text-2xl font-normal tracking-normal text-brand-primary">{t.startSearching}</h2>
           <p className="mb-8 max-w-md text-sm leading-6 tracking-normal text-brand-primary/60">{t.startSearchingDesc}</p>
           <Link
-            href={`/${locale}/shop`}
+            href={`${marketPrefix}/${locale}/shop`}
             className="inline-flex items-center justify-center rounded-full border border-brand-primary px-8 py-3 text-[13px] font-normal tracking-normal text-brand-primary transition-colors hover:bg-white"
           >
             {t.browseAll}
@@ -233,14 +235,14 @@ export function SearchResultsClient({
           <p className="mb-8 text-sm tracking-normal text-brand-primary/45">{t.tryDifferent}</p>
           {didYouMean && (
             <Link
-              href={`/${locale}/product/${didYouMean.slug}`}
+              href={`${marketPrefix}/${locale}/product/${didYouMean.slug}`}
               className="mb-4 inline-flex items-center justify-center rounded-full bg-brand-primary px-4 py-3 text-[13px] font-semibold text-white transition-colors hover:bg-brand-primary-dark"
             >
               {isRTL ? "اذهب إلى المنتج المقترح" : `Try "${didYouMean.label}"`}
             </Link>
           )}
           <Link
-            href={`/${locale}/shop`}
+            href={`${marketPrefix}/${locale}/shop`}
             className="inline-flex items-center justify-center rounded-full border border-brand-primary px-8 py-3 text-[13px] font-normal tracking-normal text-brand-primary transition-colors hover:bg-white"
           >
             {t.browseAll}

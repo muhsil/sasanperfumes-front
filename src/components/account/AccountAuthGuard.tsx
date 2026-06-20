@@ -4,6 +4,7 @@ import Link from "next/link";
 import { type LucideIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/common/Button";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface AccountAuthGuardProps {
   locale: string;
@@ -33,11 +34,13 @@ function NotAuthenticatedState({
   icon: Icon,
   notLoggedInText,
   loginText,
+  marketPrefix,
 }: {
   locale: string;
   icon: LucideIcon;
   notLoggedInText: string;
   loginText: string;
+  marketPrefix: string;
 }) {
   return (
     <div className="container mx-auto px-4 py-10 md:py-14">
@@ -49,7 +52,7 @@ function NotAuthenticatedState({
         </div>
         <p className="mb-6 text-sm leading-6 text-brand-muted">{notLoggedInText}</p>
         <Button asChild variant="primary" size="lg" className="w-full rounded-md shadow-none hover:translate-y-0">
-          <Link href={`/${locale}/login`}>{loginText}</Link>
+          <Link href={`${marketPrefix}/${locale}/login`}>{loginText}</Link>
         </Button>
       </div>
     </div>
@@ -63,6 +66,7 @@ export function AccountAuthGuard({
   loginText,
   children,
 }: AccountAuthGuardProps) {
+  const marketPrefix = useMarketPrefix();
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
@@ -76,6 +80,7 @@ export function AccountAuthGuard({
         icon={icon}
         notLoggedInText={notLoggedInText}
         loginText={loginText}
+        marketPrefix={marketPrefix}
       />
     );
   }

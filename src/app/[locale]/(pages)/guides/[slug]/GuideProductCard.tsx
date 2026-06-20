@@ -14,6 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { triggerHaptic } from "@/lib/utils/haptics";
 import type { WCProduct } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface GuideProductCardProps {
   product: WCProduct;
@@ -32,6 +33,7 @@ export function GuideProductCard({
   locale,
   productSlug,
 }: GuideProductCardProps) {
+  const marketPrefix = useMarketPrefix();
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isAddedToCart, setIsAddedToCart] = useState(false);
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
@@ -67,7 +69,7 @@ export function GuideProductCard({
     triggerHaptic();
 
     if (!isAuthenticated) {
-      router.push(`/${locale}/login`);
+      router.push(`${marketPrefix}/${locale}/login`);
       return;
     }
 
@@ -127,7 +129,7 @@ export function GuideProductCard({
           </div>
 
           <Link
-            href={`/${locale}/product/${productSlug}`}
+            href={`${marketPrefix}/${locale}/product/${productSlug}`}
             className="block"
           >
             <div className="relative aspect-[4/3] overflow-hidden sm:aspect-square md:aspect-[4/5]">
@@ -160,7 +162,7 @@ export function GuideProductCard({
             </div>
 
             {/* Product Name */}
-            <Link href={`/${locale}/product/${productSlug}`}>
+            <Link href={`${marketPrefix}/${locale}/product/${productSlug}`}>
               <h3 className="mb-1 text-lg font-bold text-brand-primary transition-colors hover:text-brand-primary sm:mb-2 sm:text-xl md:text-2xl">
                 {decodeHtmlEntities(product.name)}
               </h3>
@@ -293,7 +295,7 @@ export function GuideProductCard({
 
             {/* View Product Link */}
             <Link
-              href={`/${locale}/product/${productSlug}`}
+              href={`${marketPrefix}/${locale}/product/${productSlug}`}
               className="text-sm font-medium text-brand-gold underline-offset-4 transition-colors hover:text-brand-primary hover:underline"
             >
               {isRTL ? "عرض التفاصيل" : "View Details"}

@@ -4,6 +4,7 @@ import { useState, useEffect, useSyncExternalStore } from "react";
 import { X, Cookie } from "lucide-react";
 import { getCookie, setCookie } from "cookies-next";
 import { cn } from "@/lib/utils";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface CookieConsentBannerProps {
   locale?: "en" | "ar";
@@ -21,6 +22,7 @@ const getIsMobile = () => window.matchMedia(mobileQuery).matches;
 const getIsMobileServer = () => false;
 
 export function CookieConsentBanner({ locale = "en" }: CookieConsentBannerProps) {
+  const marketPrefix = useMarketPrefix();
   const [isVisible, setIsVisible] = useState(false);
   const isMobile = useSyncExternalStore(subscribeMobile, getIsMobile, getIsMobileServer);
   const isRTL = locale === "ar";
@@ -139,7 +141,7 @@ export function CookieConsentBanner({ locale = "en" }: CookieConsentBannerProps)
                 {t.reject}
               </button>
               <a
-                href={`/${locale}/privacy`}
+                href={`${marketPrefix}/${locale}/privacy`}
                 className={cn("text-white/60 underline-offset-4 hover:text-brand-gold hover:underline", isMobile ? "text-xs" : "text-sm")}
               >
                 {t.learnMore}

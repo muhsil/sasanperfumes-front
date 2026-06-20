@@ -6,6 +6,7 @@ import { Star, ArrowLeft, Gift, TrendingUp, Clock } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/common/Button";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface LoyaltySettings {
   enabled: boolean;
@@ -30,6 +31,7 @@ interface LoyaltyHistoryItem {
 }
 
 export default function LoyaltyPage() {
+  const marketPrefix = useMarketPrefix();
   const router = useRouter();
   const { locale } = useParams<{ locale: string }>();
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -42,7 +44,7 @@ export default function LoyaltyPage() {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push(`/${locale}/login`);
+      router.push(`${marketPrefix}/${locale}/login`);
     }
   }, [isLoading, isAuthenticated, locale, router]);
 
@@ -55,7 +57,7 @@ export default function LoyaltyPage() {
 
   useEffect(() => {
     if (settings && !settings.enabled) {
-      router.replace(`/${locale}/account`);
+      router.replace(`${marketPrefix}/${locale}/account`);
     }
   }, [settings, locale, router]);
 
@@ -122,7 +124,7 @@ export default function LoyaltyPage() {
         <h1 className="mb-2 text-2xl font-bold text-gray-900">{t.title}</h1>
         <p className="mb-6 text-gray-500">{t.signIn}</p>
         <Button asChild>
-          <Link href={`/${locale}/login`}>
+          <Link href={`${marketPrefix}/${locale}/login`}>
             {isRTL ? "تسجيل الدخول" : "Sign In"}
           </Link>
         </Button>
@@ -139,7 +141,7 @@ export default function LoyaltyPage() {
   return (
     <div className="container mx-auto max-w-3xl px-4 py-6" dir={isRTL ? "rtl" : "ltr"}>
       <Link
-        href={`/${locale}/account`}
+        href={`${marketPrefix}/${locale}/account`}
         className="mb-6 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900"
       >
         <ArrowLeft className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />
@@ -197,7 +199,7 @@ export default function LoyaltyPage() {
         <div className="rounded-lg border border-gray-100 bg-white p-8 text-center">
           <p className="text-sm text-gray-500">{t.noHistory}</p>
           <Button asChild className="mt-4" variant="outline" size="sm">
-            <Link href={`/${locale}/shop`}>{t.shopNow}</Link>
+            <Link href={`${marketPrefix}/${locale}/shop`}>{t.shopNow}</Link>
           </Button>
         </div>
       ) : (

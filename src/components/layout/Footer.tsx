@@ -45,9 +45,10 @@ interface FooterProps {
     platform: string;
     url: string;
   }>;
+  pathPrefix?: string;
 }
 
-export function Footer({ locale, dictionary, siteSettings, footerSettings, featureToggles, footerTopSocialLinks }: FooterProps) {
+export function Footer({ locale, dictionary, siteSettings, footerSettings, featureToggles, footerTopSocialLinks, pathPrefix = "" }: FooterProps) {
   const currentYear = new Date().getFullYear();
   const t = (bilingual: { en: string; ar: string }) =>
     locale === "ar" ? bilingual.ar : bilingual.en;
@@ -66,7 +67,7 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
     return featureToggles[toggleKey] !== false;
   };
 
-  const toHref = (url: string) => normalizeMenuUrl(url, locale);
+  const toHref = (url: string) => normalizeMenuUrl(url, locale, pathPrefix);
 
   const footerLinks = {
     quickLinks: (quickLinkItems.length > 0
@@ -76,8 +77,8 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
           url: item.url,
         }))
       : [
-          { name: locale === "ar" ? "من نحن" : "About Us", href: `/${locale}/about-us`, url: "/about-us" },
-          { name: locale === "ar" ? "مواقعنا" : "Our Stores", href: `/${locale}/store-listing`, url: "/store-listing" },
+          { name: locale === "ar" ? "من نحن" : "About Us", href: `${pathPrefix}/${locale}/about-us`, url: "/about-us" },
+          { name: locale === "ar" ? "مواقعنا" : "Our Stores", href: `${pathPrefix}/${locale}/store-listing`, url: "/store-listing" },
           { name: "B2B", href: "#", url: "#" },
         ]).filter((link) => isLinkEnabled(link.url)),
     customerService: (csLinkItems.length > 0
@@ -87,10 +88,10 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
           url: item.url,
         }))
       : [
-          { name: locale === "ar" ? "تواصل معنا" : "Contact Us", href: `/${locale}/contact-us`, url: "/contact-us" },
-          { name: locale === "ar" ? "سياسة التسليم" : "Delivery Policy", href: `/${locale}/privacy-policy`, url: "/privacy-policy" },
-          { name: locale === "ar" ? "سياسة الاستبدال والإرجاع" : "Exchange & Return Policy", href: `/${locale}/refund_returns`, url: "/refund_returns" },
-          { name: locale === "ar" ? "سياسة الدفع" : "Payment Policy", href: `/${locale}/refund_returns`, url: "/refund_returns" },
+          { name: locale === "ar" ? "تواصل معنا" : "Contact Us", href: `${pathPrefix}/${locale}/contact-us`, url: "/contact-us" },
+          { name: locale === "ar" ? "سياسة التسليم" : "Delivery Policy", href: `${pathPrefix}/${locale}/privacy-policy`, url: "/privacy-policy" },
+          { name: locale === "ar" ? "سياسة الاستبدال والإرجاع" : "Exchange & Return Policy", href: `${pathPrefix}/${locale}/refund_returns`, url: "/refund_returns" },
+          { name: locale === "ar" ? "سياسة الدفع" : "Payment Policy", href: `${pathPrefix}/${locale}/refund_returns`, url: "/refund_returns" },
         ]).filter((link) => isLinkEnabled(link.url)),
   };
 

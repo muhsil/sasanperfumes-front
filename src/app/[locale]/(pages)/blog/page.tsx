@@ -8,6 +8,8 @@ import { getBlogPosts, getFeatureToggles } from "@/lib/api/wordpress";
 import { shouldUseUnoptimizedImage } from "@/lib/utils/image";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
+import { getRequestMarket } from "@/lib/market/server";
+import { getMarketPathPrefix } from "@/config/market";
 
 export const revalidate = 300;
 
@@ -47,6 +49,8 @@ function formatDate(dateStr: string, locale: string): string {
 }
 
 export default async function BlogPage({ params }: BlogPageProps) {
+  const market = await getRequestMarket();
+  const pathPrefix = getMarketPathPrefix(market.code);
   const { locale } = await params;
   const isRTL = locale === "ar";
 
@@ -56,7 +60,7 @@ export default async function BlogPage({ params }: BlogPageProps) {
   const { posts } = await getBlogPosts(1, 20);
 
   const breadcrumbItems = [
-    { name: isRTL ? "المدونة" : "Blog", href: `/${locale}/blog` },
+    { name: isRTL ? "المدونة" : "Blog", href: `${pathPrefix}/${locale}/blog` },
   ];
 
   return (
@@ -75,7 +79,7 @@ export default async function BlogPage({ params }: BlogPageProps) {
             {posts.map((post) => (
               <Link
                 key={post.id}
-                href={`/${locale}/blog/${post.slug}`}
+                href={`${pathPrefix}/${locale}/blog/${post.slug}`}
                 className="group flex flex-col border border-[#e7ded7] overflow-hidden"
               >
                 <div className="relative aspect-[4/5] overflow-hidden bg-white">

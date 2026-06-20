@@ -7,6 +7,7 @@ import { ShoppingBag } from "lucide-react";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { Button } from "@/components/common/Button";
 import { decodeHtmlEntities } from "@/lib/utils";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface Product {
   id: number;
@@ -54,6 +55,7 @@ export function SuggestedProducts({
   locale: string;
   isRTL: boolean;
 }) {
+  const marketPrefix = useMarketPrefix();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -126,7 +128,7 @@ export function SuggestedProducts({
         {products.map((product) => (
           <div key={product.id} className="flex flex-col">
             <Link
-              href={`/${locale}/product/${product.slug}`}
+              href={`${marketPrefix}/${locale}/product/${product.slug}`}
               className="relative mb-2 aspect-square overflow-hidden bg-gray-100"
             >
               {product.image ? (
@@ -144,7 +146,7 @@ export function SuggestedProducts({
               )}
             </Link>
             <Link
-              href={`/${locale}/product/${product.slug}`}
+              href={`${marketPrefix}/${locale}/product/${product.slug}`}
               className="mb-2 line-clamp-2 text-xs font-medium text-gray-900 hover:text-gray-700"
             >
               {decodeHtmlEntities(product.name)}
@@ -178,7 +180,7 @@ export function SuggestedProducts({
               className="w-full text-xs"
               asChild
             >
-              <Link href={`/${locale}/product/${product.slug}`}>
+              <Link href={`${marketPrefix}/${locale}/product/${product.slug}`}>
                 {isRTL ? "عرض" : "View"}
               </Link>
             </Button>

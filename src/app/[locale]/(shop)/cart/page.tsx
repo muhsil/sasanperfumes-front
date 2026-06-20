@@ -20,10 +20,12 @@ import { useProductMeta } from "@/hooks/useProductCategories";
 import { SuggestedProducts } from "@/components/checkout/SuggestedProducts";
 import { CartLoyaltyPoints } from "@/components/cart/CartLoyaltyPoints";
 import type { CoCartItem } from "@/lib/api/cocart";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 
 
 export default function CartPage() {
+  const marketPrefix = useMarketPrefix();
   const { locale } = useParams<{ locale: string }>();
   const {
     cart,
@@ -100,7 +102,7 @@ export default function CartPage() {
   };
 
   const breadcrumbItems = [
-    { name: isRTL ? "السلة" : "Cart", href: `/${locale}/cart` },
+    { name: isRTL ? "السلة" : "Cart", href: `${marketPrefix}/${locale}/cart` },
   ];
 
   const formatVariationAttributes = (variation: Record<string, string>): string => {
@@ -217,7 +219,7 @@ export default function CartPage() {
                 <User className="h-4 w-4 text-brand-gold md:h-5 md:w-5" />
                 <div className="flex-1">
                   <p className="text-xs font-medium text-brand-primary md:text-sm">{texts.guestCheckout}</p>
-                  <Link href={`/${locale}/login`} className="text-xs text-brand-muted underline hover:text-brand-primary md:text-sm">
+                  <Link href={`${marketPrefix}/${locale}/login`} className="text-xs text-brand-muted underline hover:text-brand-primary md:text-sm">
                     {texts.loginForBenefits}
                   </Link>
                 </div>
@@ -243,7 +245,7 @@ export default function CartPage() {
           </h2>
           <p className="mb-8 text-brand-muted">{texts.emptyCartDesc}</p>
           <Button asChild>
-            <Link href={`/${locale}/shop`}>{texts.continueShopping}</Link>
+            <Link href={`${marketPrefix}/${locale}/shop`}>{texts.continueShopping}</Link>
           </Button>
         </div>
       ) : (
@@ -398,7 +400,7 @@ export default function CartPage() {
                                       </div>
                                       <div className="flex flex-col justify-center">
                                         <Link
-                                          href={`/${locale}/product/${item.slug}`}
+                                          href={`${marketPrefix}/${locale}/product/${item.slug}`}
                                           className="line-clamp-2 text-sm font-medium leading-tight text-brand-primary hover:text-brand-primary/75 md:text-base"
                                         >
                                           {decodeHtmlEntities(item.name)}
@@ -703,11 +705,11 @@ export default function CartPage() {
               </p>
 
               <Button className="w-full" size="lg" asChild>
-                <Link href={`/${locale}/checkout`}>{texts.checkout}</Link>
+                <Link href={`${marketPrefix}/${locale}/checkout`}>{texts.checkout}</Link>
               </Button>
 
               <Link
-                href={`/${locale}/shop`}
+                href={`${marketPrefix}/${locale}/shop`}
                 className="mt-4 flex items-center justify-center gap-2 text-sm text-brand-muted hover:text-brand-primary"
               >
                 <ArrowLeft className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />
@@ -763,7 +765,7 @@ export default function CartPage() {
               />
             </div>
             <Button size="lg" className="h-10 max-w-[180px] flex-1 px-4 text-xs" asChild>
-              <Link href={`/${locale}/checkout`}>{texts.checkout}</Link>
+              <Link href={`${marketPrefix}/${locale}/checkout`}>{texts.checkout}</Link>
             </Button>
           </div>
         </div>

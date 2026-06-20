@@ -9,6 +9,7 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { Button } from "@/components/common/Button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface AccountDrawerProps {
   locale: string;
@@ -40,6 +41,7 @@ function getUserInitial(name?: string, email?: string) {
 }
 
 export function AccountDrawer({ locale, dictionary }: AccountDrawerProps) {
+  const marketPrefix = useMarketPrefix();
   const { user, isAuthenticated, logout, isAccountDrawerOpen, setIsAccountDrawerOpen } = useAuth();
   const isRTL = locale === "ar";
 
@@ -59,27 +61,27 @@ export function AccountDrawer({ locale, dictionary }: AccountDrawerProps) {
     {
       icon: User,
       label: dictionary.profile || "Profile",
-      href: `/${locale}/account/profile`,
+      href: `${marketPrefix}/${locale}/account/profile`,
     },
     {
       icon: Package,
       label: dictionary.orders,
-      href: `/${locale}/account/orders`,
+      href: `${marketPrefix}/${locale}/account/orders`,
     },
     {
       icon: MapPin,
       label: dictionary.addresses,
-      href: `/${locale}/account/addresses`,
+      href: `${marketPrefix}/${locale}/account/addresses`,
     },
     {
       icon: Heart,
       label: dictionary.wishlist,
-      href: `/${locale}/account/wishlist`,
+      href: `${marketPrefix}/${locale}/account/wishlist`,
     },
     {
       icon: Settings,
       label: dictionary.settings,
-      href: `/${locale}/account/settings`,
+      href: `${marketPrefix}/${locale}/account/settings`,
     },
   ];
 
@@ -153,12 +155,12 @@ export function AccountDrawer({ locale, dictionary }: AccountDrawerProps) {
         <p className="mx-auto mt-2 max-w-[15rem] text-sm leading-6 text-brand-muted">{dictionary.notLoggedIn}</p>
         <div className="mt-6 flex w-full flex-col gap-2.5">
           <Button asChild variant="primary" size="lg" className="w-full">
-            <Link href={`/${locale}/login`} onClick={onClose}>
+            <Link href={`${marketPrefix}/${locale}/login`} onClick={onClose}>
               {dictionary.login}
             </Link>
           </Button>
           <Button asChild variant="outline" size="lg" className="w-full">
-            <Link href={`/${locale}/register`} onClick={onClose}>
+            <Link href={`${marketPrefix}/${locale}/register`} onClick={onClose}>
               {dictionary.register}
             </Link>
           </Button>

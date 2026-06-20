@@ -12,6 +12,7 @@ import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { AccountAuthGuard } from "@/components/account/AccountAuthGuard";
 import { AccountPageHeader } from "@/components/account/AccountPageHeader";
 import { AccountEmptyState } from "@/components/account/AccountEmptyState";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 function getSlugFromProductUrl(productUrl: string | undefined): string | null {
   if (!productUrl) return null;
@@ -53,6 +54,7 @@ const translations = {
 };
 
 export default function WishlistPage({ params }: WishlistPageProps) {
+  const marketPrefix = useMarketPrefix();
   const { isAuthenticated } = useAuth();
   const { wishlistItems, isLoading: wishlistLoading, removeFromWishlist, refreshWishlist } = useWishlist();
   const { addToCart, isLoading: cartLoading } = useCart();
@@ -119,7 +121,7 @@ export default function WishlistPage({ params }: WishlistPageProps) {
         <AccountPageHeader
           locale={locale}
           title={t.wishlist}
-          backHref={`/${locale}/account`}
+          backHref={`${marketPrefix}/${locale}/account`}
           backLabel={t.backToAccount}
         />
 
@@ -134,7 +136,7 @@ export default function WishlistPage({ params }: WishlistPageProps) {
             title={t.wishlist}
             message={t.emptyWishlist}
             actionLabel={t.startShopping}
-            actionHref={`/${locale}/shop`}
+            actionHref={`${marketPrefix}/${locale}/shop`}
           />
         ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -181,7 +183,7 @@ export default function WishlistPage({ params }: WishlistPageProps) {
                     size="sm"
                     className="w-full"
                   >
-                    <Link href={item.product_url || `/${locale}/product/${item.product_id}`}>
+                    <Link href={item.product_url || `${marketPrefix}/${locale}/product/${item.product_id}`}>
                       <Eye className="mr-2 h-4 w-4" />
                       {t.customize}
                     </Link>

@@ -8,6 +8,8 @@ import { getServices, getServicesPageSettings, getFeatureToggles, pickLocale } f
 import { shouldUseUnoptimizedImage } from "@/lib/utils/image";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
+import { getRequestMarket } from "@/lib/market/server";
+import { getMarketPathPrefix } from "@/config/market";
 
 export const revalidate = 300;
 
@@ -35,6 +37,8 @@ export async function generateMetadata({ params }: ServicesPageProps): Promise<M
 }
 
 export default async function ServicesPage({ params }: ServicesPageProps) {
+  const market = await getRequestMarket();
+  const pathPrefix = getMarketPathPrefix(market.code);
   const { locale } = await params;
   const isRTL = locale === "ar";
 
@@ -54,7 +58,7 @@ export default async function ServicesPage({ params }: ServicesPageProps) {
   const ctaLink = pageSettings?.ctaLink || "/contact";
 
   const breadcrumbItems = [
-    { name: isRTL ? "الخدمات" : "Services", href: `/${locale}/services` },
+    { name: isRTL ? "الخدمات" : "Services", href: `${pathPrefix}/${locale}/services` },
   ];
 
   return (
@@ -72,7 +76,7 @@ export default async function ServicesPage({ params }: ServicesPageProps) {
               return (
                 <Link
                   key={service.id}
-                  href={`/${locale}/services/${service.slug}`}
+                  href={`${pathPrefix}/${locale}/services/${service.slug}`}
                   className="group flex flex-col border border-[#e7ded7] overflow-hidden"
                 >
                   <div className="relative aspect-[4/3] overflow-hidden bg-white">

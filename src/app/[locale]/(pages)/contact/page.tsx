@@ -15,6 +15,8 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { getPageSeo, getStaticPageContent, pickLocale, mapRepeater, getFeatureToggles } from "@/lib/api/wordpress";
 import { siteConfig, type Locale } from "@/config/site";
 import type { Metadata } from "next";
+import { getRequestMarket } from "@/lib/market/server";
+import { getMarketPathPrefix } from "@/config/market";
 
 interface ContactPageProps {
   params: Promise<{ locale: string }>;
@@ -50,6 +52,8 @@ export async function generateMetadata({
 }
 
 export default async function ContactPage({ params }: ContactPageProps) {
+  const market = await getRequestMarket();
+  const pathPrefix = getMarketPathPrefix(market.code);
   const { locale } = await params;
   const toggles = await getFeatureToggles();
   if (!toggles.sasanperfumes_contact_enabled) notFound();
@@ -102,7 +106,7 @@ export default async function ContactPage({ params }: ContactPageProps) {
   }));
 
   const breadcrumbItems = [
-    { name: content.heroTitle || dictionary.common.contact, href: `/${locale}/contact-us` },
+    { name: content.heroTitle || dictionary.common.contact, href: `${pathPrefix}/${locale}/contact-us` },
   ];
   const pageTitle = content.heroTitle || dictionary.common.contact;
 
@@ -182,7 +186,7 @@ export default async function ContactPage({ params }: ContactPageProps) {
           <h2 className="mb-4 font-title text-3xl text-brand-ivory md:text-4xl">{content.ctaTitle}</h2>
           {content.ctaSubtitle && <p className="mb-8 text-sm text-brand-ivory/70">{content.ctaSubtitle}</p>}
           <Link
-            href={`/${locale}/private-labeling`}
+            href={`${pathPrefix}/${locale}/private-labeling`}
             className="inline-flex rounded-full border border-brand-gold bg-brand-gold px-8 py-3 text-xs font-semibold uppercase text-brand-primary transition-colors hover:bg-brand-ivory"
           >
             {content.ctaButton}

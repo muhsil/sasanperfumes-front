@@ -12,6 +12,7 @@ import { decodeHtmlEntities } from "@/lib/utils";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 // Lazy-load Swiper JS only when needed (multiple slides)
 let SwiperModule: typeof import("swiper/react") | null = null;
@@ -81,6 +82,7 @@ function getVimeoId(url: string) {
 
 // Shared slide content renderer — used for both static first slide and Swiper slides
 function SlideContent({ slide, index, locale }: { slide: HeroSliderSettings["slides"][0]; index: number; locale: string }) {
+  const marketPrefix = useMarketPrefix();
   const isArabic = locale === "ar";
 
   const isVideo = slide.slide_type === "video" && (
@@ -164,7 +166,7 @@ function SlideContent({ slide, index, locale }: { slide: HeroSliderSettings["sli
           )}
           {slideCta && slideLinkUrl && (
             <Link
-              href={slideLinkUrl.startsWith("/") && !slideLinkUrl.startsWith(`/${locale}/`) ? `/${locale}${slideLinkUrl}` : slideLinkUrl}
+              href={slideLinkUrl.startsWith("/") && !slideLinkUrl.startsWith(`${marketPrefix}/${locale}/`) ? `${marketPrefix}/${locale}${slideLinkUrl}` : slideLinkUrl}
               className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/30 bg-[#b98a49] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-[#1a1714] shadow-[0_18px_32px_rgba(0,0,0,0.25)] transition-all hover:-translate-y-0.5 hover:bg-[#c99a58] md:mt-6 md:px-8 md:py-3"
             >
               {slideCta}
@@ -214,8 +216,8 @@ function SlideContent({ slide, index, locale }: { slide: HeroSliderSettings["sli
   );
 
   if (!isVideo && slideLinkUrl && !slideCta) {
-    const linkUrl = slideLinkUrl.startsWith("/") && !slideLinkUrl.startsWith(`/${locale}/`)
-      ? `/${locale}${slideLinkUrl}`
+    const linkUrl = slideLinkUrl.startsWith("/") && !slideLinkUrl.startsWith(`${marketPrefix}/${locale}/`)
+      ? `${marketPrefix}/${locale}${slideLinkUrl}`
       : slideLinkUrl;
     return (
       <Link href={linkUrl} className="block">

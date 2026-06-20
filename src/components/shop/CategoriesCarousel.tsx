@@ -9,6 +9,7 @@ import Link from "next/link";
 import { decodeHtmlEntities } from "@/lib/utils";
 import type { Locale } from "@/config/site";
 import type { WCCategory } from "@/types/woocommerce";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface CategoriesCarouselProps {
   categories: WCCategory[];
@@ -16,6 +17,7 @@ interface CategoriesCarouselProps {
 }
 
 export function CategoriesCarousel({ categories, locale }: CategoriesCarouselProps) {
+  const marketPrefix = useMarketPrefix();
   return (
     <Swiper
       modules={[FreeMode]}
@@ -27,7 +29,7 @@ export function CategoriesCarousel({ categories, locale }: CategoriesCarouselPro
       {categories.map((category) => (
         <SwiperSlide key={category.id} className="!w-auto">
           <Link
-            href={`/${locale}/category/${category.slug}`}
+            href={`${marketPrefix}/${locale}/category/${category.slug}`}
             className="group flex flex-col items-center gap-3 text-center"
           >
             <span className="relative block h-[72px] w-[72px] overflow-hidden rounded-full bg-[#e6ddd6] ring-1 ring-[#e7ded7] transition-all duration-300 group-hover:ring-brand-primary/20 md:h-[78px] md:w-[78px]">

@@ -7,6 +7,8 @@ import { getStaticPageContent, pickLocale, mapRepeater, getPageSeo, getFeatureTo
 import { shouldUseUnoptimizedImage } from "@/lib/utils/image";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
+import { getRequestMarket } from "@/lib/market/server";
+import { getMarketPathPrefix } from "@/config/market";
 
 export const revalidate = 300;
 
@@ -33,6 +35,8 @@ export async function generateMetadata({ params }: WhatWeDoPageProps): Promise<M
 }
 
 export default async function WhatWeDoPage({ params }: WhatWeDoPageProps) {
+  const market = await getRequestMarket();
+  const pathPrefix = getMarketPathPrefix(market.code);
   const { locale } = await params;
   const isRTL = locale === "ar";
   const toggles = await getFeatureToggles();
@@ -50,7 +54,7 @@ export default async function WhatWeDoPage({ params }: WhatWeDoPageProps) {
   }));
 
   const breadcrumbItems = [
-    { name: title || (isRTL ? "ماذا نفعل" : "What We Do"), href: `/${locale}/what-we-do` },
+    { name: title || (isRTL ? "ماذا نفعل" : "What We Do"), href: `${pathPrefix}/${locale}/what-we-do` },
   ];
 
   return (

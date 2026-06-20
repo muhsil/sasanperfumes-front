@@ -13,6 +13,7 @@ import type { WCProduct } from "@/types/woocommerce";
 import type { GuidePage as WPGuidePage } from "@/types/wordpress";
 import type { GuideProduct } from "@/types/wordpress";
 import { GuideProductCard } from "./GuideProductCard";
+import { getMarketPathPrefix } from "@/config/market";
 import {
   ChevronRight,
   Clock,
@@ -125,6 +126,7 @@ export default async function GuidePage({ params }: GuidePageProps) {
     getRequestMarket(),
     getRequestFrontendHost(),
   ]);
+  const pathPrefix = getMarketPathPrefix(market.code);
 
   // Fetch all products in parallel
   const productPromises = guide.products.map((gp) =>
@@ -199,11 +201,11 @@ export default async function GuidePage({ params }: GuidePageProps) {
   const breadcrumbItems = [
     {
       name: dict.breadcrumb,
-      href: `/${locale}/guides`,
+      href: `${pathPrefix}/${locale}/guides`,
     },
     {
       name: guide.title[validLocale],
-      href: `/${locale}/guides/${slug}`,
+      href: `${pathPrefix}/${locale}/guides/${slug}`,
     },
   ];
 
@@ -334,7 +336,7 @@ export default async function GuidePage({ params }: GuidePageProps) {
                 {relatedGuides.map((related) => (
                   <Link
                     key={related.slug}
-                    href={`/${locale}/guides/${related.slug}`}
+                    href={`${pathPrefix}/${locale}/guides/${related.slug}`}
                     className="group border border-[#e7ded7] bg-white p-6"
                   >
                     <h3 className="text-sm font-normal text-brand-primary">{related.title[validLocale]}</h3>
@@ -358,13 +360,13 @@ export default async function GuidePage({ params }: GuidePageProps) {
           <p className="mt-2 max-w-xl text-sm text-brand-primary/60">{dict.ctaDescription}</p>
           <div className="mt-4 flex flex-wrap items-center gap-4">
             <Link
-              href={`/${locale}/shop`}
+              href={`${pathPrefix}/${locale}/shop`}
               className="inline-flex items-center gap-2 border-b border-brand-primary pb-1 text-xs font-normal tracking-[0.1em] text-brand-primary uppercase"
             >
               {dict.ctaShopButton}
             </Link>
             <Link
-              href={`/${locale}/category/perfumes`}
+              href={`${pathPrefix}/${locale}/category/perfumes`}
               className="inline-flex items-center gap-2 border-b border-brand-primary pb-1 text-xs font-normal tracking-[0.1em] text-brand-primary uppercase"
             >
               {dict.ctaBrowseButton}

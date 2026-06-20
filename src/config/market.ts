@@ -88,3 +88,12 @@ export function isCurrencyAllowedForMarket(currency: Currency, market: MarketCon
   if (market.allowedCurrencies === "all") return true;
   return market.allowedCurrencies.includes(currency);
 }
+
+/**
+ * Returns the URL path prefix for a market.
+ * International returns "" (no prefix), others return "/qa", "/om", "/sa".
+ */
+export function getMarketPathPrefix(marketCode: MarketCode): string {
+  if (marketCode === "intl") return "";
+  return `/${marketCode}`;
+}

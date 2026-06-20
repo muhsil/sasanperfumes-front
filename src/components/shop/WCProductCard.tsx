@@ -15,6 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { triggerHaptic } from "@/lib/utils/haptics";
 import type { WCProduct } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 const RATING_STARS = [1, 2, 3, 4, 5];
 const QuickViewModal = dynamic(() => import("./QuickViewModal").then((mod) => mod.QuickViewModal), {
@@ -38,6 +39,7 @@ export function WCProductCard({
   englishSlug,
   productNameLines = 2,
 }: WCProductCardProps) {
+  const marketPrefix = useMarketPrefix();
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isAddedToCart, setIsAddedToCart] = useState(false);
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
@@ -86,7 +88,7 @@ export function WCProductCard({
     e.stopPropagation();
     triggerHaptic();
     if (!isAuthenticated) {
-      router.push(`/${locale}/login`);
+      router.push(`${marketPrefix}/${locale}/login`);
       return;
     }
     setIsAddingToWishlist(true);
@@ -111,7 +113,7 @@ export function WCProductCard({
 
   const productSlug = englishSlug || getProductSlugFromPermalink(product.permalink, product.slug);
   const isBundleProduct = bundleProductSlugs.includes(productSlug) || bundleProductSlugs.includes(product.slug);
-  const productHref = `/${locale}/product/${productSlug}`;
+  const productHref = `${marketPrefix}/${locale}/product/${productSlug}`;
   const priceSourceCurrency = product.prices.currency_code;
   const prefetchProduct = useCallback(() => {
     if (prefetchedHrefRef.current === productHref) return;

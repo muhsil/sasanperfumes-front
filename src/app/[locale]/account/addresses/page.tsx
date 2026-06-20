@@ -19,6 +19,7 @@ import {
   generateAddressId,
 } from "@/lib/api/customer";
 import { countries } from "@/components/common/CountrySelect";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface AddressesPageProps {
   params: Promise<{ locale: string }>;
@@ -478,6 +479,7 @@ function DeleteConfirmModal({
 }
 
 export default function AddressesPage({ params }: AddressesPageProps) {
+  const marketPrefix = useMarketPrefix();
   const { user, isAuthenticated } = useAuth();
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -675,7 +677,7 @@ export default function AddressesPage({ params }: AddressesPageProps) {
         <AccountPageHeader
           locale={locale}
           title={t.addresses}
-          backHref={`/${locale}/account`}
+          backHref={`${marketPrefix}/${locale}/account`}
           backLabel={t.backToAccount}
         />
         <div className="flex items-center justify-end -mt-4 mb-6">

@@ -15,6 +15,7 @@ import { getDictionary } from "@/i18n";
 import { ChevronRight } from "lucide-react";
 import type { Metadata } from "next";
 import type { ProductPage, ProductPageFAQItem } from "@/types/wordpress";
+import { getMarketPathPrefix } from "@/config/market";
 
 export const revalidate = 300;
 
@@ -329,6 +330,7 @@ export default async function DynamicProductPage({ params }: ProductPageProps) {
     getRequestMarket(),
     getRequestFrontendHost(),
   ]);
+  const pathPrefix = getMarketPathPrefix(market.code);
 
   const [page, dictionary] = await Promise.all([
     getProductPageBySlug(slug, validLocale),
@@ -342,7 +344,7 @@ export default async function DynamicProductPage({ params }: ProductPageProps) {
   const pageTitle = isRTL ? (page.hero.titleAr || page.hero.title || page.title) : (page.hero.title || page.title);
 
   const breadcrumbItems = [
-    { name: pageTitle, href: `/${locale}/products/${slug}` },
+    { name: pageTitle, href: `${pathPrefix}/${locale}/products/${slug}` },
   ];
 
   // Build section order from layout

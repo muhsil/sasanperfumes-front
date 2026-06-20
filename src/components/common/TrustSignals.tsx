@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowUpRight, MessageCircleMore, RotateCcw, ShieldCheck, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { siteConfig, type Locale } from "@/config/site";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface TrustSignalsProps {
   locale: Locale;
@@ -20,6 +21,7 @@ export function TrustSignals({
   variant = "light",
   compact = false,
 }: TrustSignalsProps) {
+  const marketPrefix = useMarketPrefix();
   const isRTL = locale === "ar";
   const whatsappUrl = `https://wa.me/${siteConfig.contact.whatsapp}`;
   const shippingLabel = freeShippingThreshold
@@ -53,13 +55,13 @@ export function TrustSignals({
   ];
 
   const quickLinks = [
-    { label: isRTL ? "من نحن" : "About Us", href: `/${locale}/about-us` },
-    { label: isRTL ? "قصة العلامة" : "Our Story", href: `/${locale}/about-us#brand-story` },
-    { label: isRTL ? "التوريد" : "Sourcing", href: `/${locale}/about-us#sourcing` },
-    { label: isRTL ? "الشحن" : "Shipping", href: `/${locale}/shipping` },
-    { label: isRTL ? "الإرجاع" : "Returns", href: `/${locale}/returns` },
-    { label: isRTL ? "تواصل معنا" : "Contact", href: `/${locale}/contact-us` },
-    { label: isRTL ? "الدفع" : "Payment", href: `/${locale}/refund_returns` },
+    { label: isRTL ? "من نحن" : "About Us", href: `${marketPrefix}/${locale}/about-us` },
+    { label: isRTL ? "قصة العلامة" : "Our Story", href: `${marketPrefix}/${locale}/about-us#brand-story` },
+    { label: isRTL ? "التوريد" : "Sourcing", href: `${marketPrefix}/${locale}/about-us#sourcing` },
+    { label: isRTL ? "الشحن" : "Shipping", href: `${marketPrefix}/${locale}/shipping` },
+    { label: isRTL ? "الإرجاع" : "Returns", href: `${marketPrefix}/${locale}/returns` },
+    { label: isRTL ? "تواصل معنا" : "Contact", href: `${marketPrefix}/${locale}/contact-us` },
+    { label: isRTL ? "الدفع" : "Payment", href: `${marketPrefix}/${locale}/refund_returns` },
   ];
 
   return (
@@ -82,7 +84,7 @@ export function TrustSignals({
           </h3>
         </div>
         <Link
-          href={`/${locale}/contact-us`}
+          href={`${marketPrefix}/${locale}/contact-us`}
           className={cn(
             "hidden items-center gap-1 rounded-full border px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] transition-colors md:inline-flex",
             variant === "dark"

@@ -15,6 +15,7 @@ import { getOrder, formatDate, getOrderDate, type Order } from "@/lib/api/custom
 import { isOrderBundleProduct, isOrderFreeGift, getOrderBundleItems } from "@/components/cart/OrderBundleItemsList";
 import { siteConfig } from "@/config/site";
 import { decodeHtmlEntities } from "@/lib/utils";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface InvoicePageProps {
   params: Promise<{ locale: string; id: string }>;
@@ -82,6 +83,7 @@ const translations = {
 };
 
 export default function InvoicePage({ params }: InvoicePageProps) {
+  const marketPrefix = useMarketPrefix();
   const { isAuthenticated } = useAuth();
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -171,7 +173,7 @@ export default function InvoicePage({ params }: InvoicePageProps) {
           title={t.invoiceNotFound}
           message={error || ""}
           actionLabel={t.backToOrders}
-          actionHref={`/${locale}/account/orders`}
+          actionHref={`${marketPrefix}/${locale}/account/orders`}
         />
       );
     }
@@ -191,7 +193,7 @@ export default function InvoicePage({ params }: InvoicePageProps) {
       <div className="container mx-auto px-4 py-8 print:py-0 print:px-0">
         <div className="mb-6 flex items-center justify-between print:hidden">
           <Link
-            href={`/${locale}/account/orders/${orderId}`}
+            href={`${marketPrefix}/${locale}/account/orders/${orderId}`}
             className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
           >
             <ArrowLeft className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />

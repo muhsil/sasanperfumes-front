@@ -8,6 +8,8 @@ import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { getPageSeo, getStaticPageContent, pickLocale, mapRepeater, mapFAQGroups, getFeatureToggles } from "@/lib/api/wordpress";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
+import { getRequestMarket } from "@/lib/market/server";
+import { getMarketPathPrefix } from "@/config/market";
 import {
   ArrowRight,
   Check,
@@ -91,6 +93,8 @@ export async function generateMetadata({
 }
 
 export default async function ReturnsPage({ params }: ReturnsPageProps) {
+  const market = await getRequestMarket();
+  const pathPrefix = getMarketPathPrefix(market.code);
   const { locale } = await params;
   const toggles = await getFeatureToggles();
   if (!toggles.sasanperfumes_returns_enabled) notFound();
@@ -121,7 +125,7 @@ export default async function ReturnsPage({ params }: ReturnsPageProps) {
   const notEligibleItems = mapReturnsItems(wp?.returns_not_eligible, locale);
 
   const breadcrumbItems = [
-    { name: dictionary.footer.returnPolicy, href: `/${locale}/returns` },
+    { name: dictionary.footer.returnPolicy, href: `${pathPrefix}/${locale}/returns` },
   ];
 
   return (
@@ -241,7 +245,7 @@ export default async function ReturnsPage({ params }: ReturnsPageProps) {
               </div>
             </div>
             <Link
-              href={`/${locale}/contact`}
+              href={`${pathPrefix}/${locale}/contact`}
               className="inline-flex w-fit items-center gap-2 border-b border-brand-primary pb-1 text-xs font-normal uppercase tracking-[0.1em] text-brand-primary transition-opacity hover:opacity-70"
             >
               {dictionary.common.contact}

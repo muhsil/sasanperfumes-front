@@ -8,6 +8,7 @@ import { getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
 import { BuildYourOwnSetClient } from "./BuildYourOwnSetClient";
+import { getMarketPathPrefix } from "@/config/market";
 
 export const revalidate = 300;
 
@@ -56,15 +57,16 @@ export default async function BuildYourOwnSetPage({
     getRequestMarket(),
     getRequestFrontendHost(),
   ]);
+  const pathPrefix = getMarketPathPrefix(market.code);
 
   const breadcrumbItems = [
     {
       name: isRTL ? "المتجر" : "Shop",
-      href: `/${locale}/shop`,
+      href: `${pathPrefix}/${locale}/shop`,
     },
     {
       name: isRTL ? "اصنع مجموعتك الخاصة" : "Build Your Own Set",
-      href: `/${locale}/build-your-own-set`,
+      href: `${pathPrefix}/${locale}/build-your-own-set`,
     },
   ];
 

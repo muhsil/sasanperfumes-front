@@ -14,6 +14,7 @@ import { CategoryClient } from "./CategoryClient";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { categorySeoContent } from "@/data/category-seo-content";
 import { getCategorySeoContent, getCategorySubtitle } from "@/lib/api/wordpress";
+import { getMarketPathPrefix } from "@/config/market";
 
 // Helper to check if a slug contains non-ASCII characters (e.g., Arabic)
 function isNonAsciiSlug(slug: string): boolean {
@@ -120,26 +121,27 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     getRequestMarket(),
     getRequestFrontendHost(),
   ]);
+  const pathPrefix = getMarketPathPrefix(market.code);
 
   // If the URL contains a non-ASCII slug (e.g., Arabic), redirect to the English slug
   // This prevents duplicate content issues where both Arabic-slug and English-slug URLs get indexed
   if (isNonAsciiSlug(slug)) {
     const englishSlug = getEnglishSlugFromLocalizedSlug(slug);
     if (englishSlug && englishSlug !== slug) {
-      redirect(`/${locale}/category/${englishSlug}`);
+      redirect(`${pathPrefix}/${locale}/category/${englishSlug}`);
     }
     // If no English slug mapping found, try to find via URL-encoded version
     const encodedSlug = encodeURIComponent(slug);
     const englishSlugFromEncoded = getEnglishSlugFromLocalizedSlug(encodedSlug);
     if (englishSlugFromEncoded && englishSlugFromEncoded !== slug) {
-      redirect(`/${locale}/category/${englishSlugFromEncoded}`);
+      redirect(`${pathPrefix}/${locale}/category/${englishSlugFromEncoded}`);
     }
   }
 
   // Also check if the slug is a URL-encoded Arabic slug (e.g., %d8%a7%d9%84%d8%b9%d8%b7%d9%88%d8%b1)
   const englishSlugFromMapping = getEnglishSlugFromLocalizedSlug(slug);
   if (englishSlugFromMapping && englishSlugFromMapping !== slug) {
-    redirect(`/${locale}/category/${englishSlugFromMapping}`);
+    redirect(`${pathPrefix}/${locale}/category/${englishSlugFromMapping}`);
   }
 
   // Fetch category and products from WooCommerce API
@@ -193,8 +195,8 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   });
 
     const breadcrumbItems = [
-      { name: dictionary.common.shop, href: `/${locale}/shop` },
-      { name: decodeHtmlEntities(category.name), href: `/${locale}/category/${slug}` },
+      { name: dictionary.common.shop, href: `${pathPrefix}/${locale}/shop` },
+      { name: decodeHtmlEntities(category.name), href: `${pathPrefix}/${locale}/category/${slug}` },
     ];
 
   const categoryUrl = `${siteConfig.url}/${locale}/category/${slug}`;

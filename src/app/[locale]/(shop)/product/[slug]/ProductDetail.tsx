@@ -36,6 +36,7 @@ import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { triggerHaptic } from "@/lib/utils/haptics";
 import { fbTrackViewContent } from "@/lib/utils/fbpixel";
 import { trackAnalyticsEvent } from "@/lib/utils/analytics";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 function getDisplayPrice(product: WCProduct, selectedVariation?: WCProductVariation | null) {
   if (selectedVariation?.prices) {
@@ -589,6 +590,7 @@ interface ProductDetailProps {
 }
 
 export function ProductDetail({ product, locale, relatedProducts = [], upsellProducts = [], addonForms = [], englishCategorySlug, localizedCategoryName, hiddenGiftProductIds = [], freeShippingThreshold, reviewsEnabled = true }: ProductDetailProps) {
+  const marketPrefix = useMarketPrefix();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -858,9 +860,9 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
   // Use the localized category name from the API (properly localized) or fall back to the embedded category name
   const categoryNameForBreadcrumb = localizedCategoryName || primaryCategory?.name;
   const breadcrumbItems = [
-    { name: isRTL ? "المتجر" : "Shop", href: `/${locale}/shop` },
-    ...(primaryCategory && categorySlugForUrl && categoryNameForBreadcrumb ? [{ name: decodeHtmlEntities(categoryNameForBreadcrumb), href: `/${locale}/category/${categorySlugForUrl}` }] : []),
-    { name: decodeHtmlEntities(product.name), href: `/${locale}/product/${product.slug}` },
+    { name: isRTL ? "المتجر" : "Shop", href: `${marketPrefix}/${locale}/shop` },
+    ...(primaryCategory && categorySlugForUrl && categoryNameForBreadcrumb ? [{ name: decodeHtmlEntities(categoryNameForBreadcrumb), href: `${marketPrefix}/${locale}/category/${categorySlugForUrl}` }] : []),
+    { name: decodeHtmlEntities(product.name), href: `${marketPrefix}/${locale}/product/${product.slug}` },
   ];
   const productDisplayName = formatProductDisplayName(product.name);
   const sanitizedShortDescription = product.short_description ? sanitizeProductDescription(product.short_description) : "";
@@ -947,7 +949,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
   const handleWishlistToggle = async () => {
     triggerHaptic();
     if (!isAuthenticated) {
-      router.push(`/${locale}/login`);
+      router.push(`${marketPrefix}/${locale}/login`);
       return;
     }
     
@@ -1406,7 +1408,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           <div className="mb-4 flex w-full flex-wrap items-center gap-x-2 gap-y-2 self-start">
             {primaryCategory && categorySlugForUrl && (
               <Link
-                href={`/${locale}/category/${categorySlugForUrl}`}
+                href={`${marketPrefix}/${locale}/category/${categorySlugForUrl}`}
                 className="rounded-full border border-brand-border/70 bg-transparent px-3 py-1.5 text-[10px] font-semibold uppercase leading-none text-brand-primary transition-colors hover:border-brand-primary/45 hover:bg-transparent"
               >
                 {decodeHtmlEntities(primaryCategory.name)}

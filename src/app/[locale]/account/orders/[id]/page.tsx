@@ -16,6 +16,7 @@ import { OrderBundleItemsList, isOrderBundleProduct, isOrderFreeGift } from "@/c
 import { OrderNotes } from "@/components/account/OrderNotes";
 import { getProductsByIds, searchProductByName } from "@/lib/api/woocommerce";
 import { decodeHtmlEntities } from "@/lib/utils";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface OrderDetailPageProps {
   params: Promise<{ locale: string; id: string }>;
@@ -197,6 +198,7 @@ function AddressCard({ title, address, icon: Icon }: { title: string; address: O
 }
 
 export default function OrderDetailPage({ params }: OrderDetailPageProps) {
+  const marketPrefix = useMarketPrefix();
   const { isAuthenticated } = useAuth();
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -328,7 +330,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           title={t.orderNotFound}
           message={error || ""}
           actionLabel={t.backToOrders}
-          actionHref={`/${locale}/account/orders`}
+          actionHref={`${marketPrefix}/${locale}/account/orders`}
         />
       );
     }
@@ -347,7 +349,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
       <div className="container mx-auto px-4 py-8" dir={isRTL ? "rtl" : "ltr"}>
       <div className="mb-8">
         <Link
-          href={`/${locale}/account/orders`}
+          href={`${marketPrefix}/${locale}/account/orders`}
           className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4"
         >
           <ArrowLeft className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />

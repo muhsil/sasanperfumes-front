@@ -9,6 +9,7 @@ import { Input } from "@/components/common/Input";
 import { AccountAuthGuard } from "@/components/account/AccountAuthGuard";
 import { AccountPageHeader } from "@/components/account/AccountPageHeader";
 import { getCustomer, updateCustomer, type Customer } from "@/lib/api/customer";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface ProfilePageProps {
   params: Promise<{ locale: string }>;
@@ -50,6 +51,7 @@ const translations = {
 };
 
 export default function ProfilePage({ params }: ProfilePageProps) {
+  const marketPrefix = useMarketPrefix();
   const { user, isAuthenticated } = useAuth();
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [, setIsLoading] = useState(true);
@@ -158,7 +160,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
         <AccountPageHeader
           locale={locale}
           title={t.profile}
-          backHref={`/${locale}/account`}
+          backHref={`${marketPrefix}/${locale}/account`}
           backLabel={t.backToAccount}
         />
 

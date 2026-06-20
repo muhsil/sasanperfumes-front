@@ -9,6 +9,8 @@ import { generateMetadata as generateSeoMetadata, generateFAQJsonLd } from "@/li
 import { getPageSeo, getStaticPageContent, pickLocale, mapRepeater, mapFAQGroups, getFeatureToggles } from "@/lib/api/wordpress";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
+import { getRequestMarket } from "@/lib/market/server";
+import { getMarketPathPrefix } from "@/config/market";
 
 interface FAQPageProps {
   params: Promise<{ locale: string }>;
@@ -44,6 +46,8 @@ export async function generateMetadata({
 }
 
 export default async function FAQPage({ params }: FAQPageProps) {
+  const market = await getRequestMarket();
+  const pathPrefix = getMarketPathPrefix(market.code);
   const { locale } = await params;
   const toggles = await getFeatureToggles();
   if (!toggles.sasanperfumes_faq_enabled) nextNotFound();
@@ -65,7 +69,7 @@ export default async function FAQPage({ params }: FAQPageProps) {
   );
 
   const breadcrumbItems = [
-    { name: title, href: `/${locale}/faq` },
+    { name: title, href: `${pathPrefix}/${locale}/faq` },
   ];
 
   // Flatten groups for JsonLd

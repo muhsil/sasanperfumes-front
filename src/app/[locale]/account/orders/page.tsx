@@ -10,6 +10,7 @@ import { AccountPageHeader } from "@/components/account/AccountPageHeader";
 import { AccountEmptyState } from "@/components/account/AccountEmptyState";
 import { AccountLoadingSpinner } from "@/components/account/AccountLoadingSpinner";
 import { getCustomerOrders, formatOrderStatus, getOrderStatusColor, formatDate, getOrderDate, type Order } from "@/lib/api/customer";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface OrdersPageProps {
   params: Promise<{ locale: string }>;
@@ -54,6 +55,7 @@ const translations = {
 
 
 export default function OrdersPage({ params }: OrdersPageProps) {
+  const marketPrefix = useMarketPrefix();
   const { user, isAuthenticated } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -98,7 +100,7 @@ export default function OrdersPage({ params }: OrdersPageProps) {
         <AccountPageHeader
           locale={locale}
           title={t.orders}
-          backHref={`/${locale}/account`}
+          backHref={`${marketPrefix}/${locale}/account`}
           backLabel={t.backToAccount}
         />
 
@@ -110,7 +112,7 @@ export default function OrdersPage({ params }: OrdersPageProps) {
             title={t.orderHistory}
             message={t.noOrders}
             actionLabel={t.startShopping}
-            actionHref={`/${locale}/shop`}
+            actionHref={`${marketPrefix}/${locale}/shop`}
           />
         ) : (
         <div className="space-y-0 divide-y divide-gray-200">
@@ -149,14 +151,14 @@ export default function OrdersPage({ params }: OrdersPageProps) {
                 </div>
                 <div className="flex gap-2 pt-2">
                   <Link
-                    href={`/${locale}/account/orders/${order.id}`}
+                    href={`${marketPrefix}/${locale}/account/orders/${order.id}`}
                     className="text-xs text-blue-600 hover:text-blue-800 underline"
                   >
                     {t.viewOrder}
                   </Link>
                   {order.status === "completed" && (
                     <Link
-                      href={`/${locale}/account/orders/${order.id}/invoice`}
+                      href={`${marketPrefix}/${locale}/account/orders/${order.id}/invoice`}
                       className="text-xs text-blue-600 hover:text-blue-800 underline"
                     >
                       {t.showInvoice}

@@ -6,6 +6,7 @@ import Image from "next/image";
 import type { Locale } from "@/config/site";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { shouldUseUnoptimizedImage } from "@/lib/utils/image";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface BrandData {
   id: number;
@@ -28,6 +29,7 @@ export function BrandsMegaMenu({ isOpen, onClose, locale }: BrandsMegaMenuProps)
   const [loading, setLoading] = useState(false);
   const hasFetchedRef = useRef(false);
   const isRTL = locale === "ar";
+  const marketPrefix = useMarketPrefix();
 
   const fetchBrands = useCallback(async () => {
     if (brandsFetchPromise[locale]) {
@@ -74,7 +76,7 @@ export function BrandsMegaMenu({ isOpen, onClose, locale }: BrandsMegaMenuProps)
             {isRTL ? "العلامات التجارية" : "Our Brands"}
           </h3>
           <Link
-            href={`/${locale}/brands`}
+            href={`${marketPrefix}/${locale}/brands`}
             className="text-xs font-medium text-brand-gold hover:underline"
             onClick={onClose}
           >
@@ -95,7 +97,7 @@ export function BrandsMegaMenu({ isOpen, onClose, locale }: BrandsMegaMenuProps)
             {brands.map((brand) => (
               <Link
                 key={brand.id}
-                href={`/${locale}/brands/${brand.slug}`}
+                href={`${marketPrefix}/${locale}/brands/${brand.slug}`}
                 className="group flex flex-col items-center gap-2 transition-transform duration-200 hover:-translate-y-0.5"
                 onClick={onClose}
               >

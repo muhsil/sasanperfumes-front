@@ -7,12 +7,14 @@ import { Button } from "@/components/common/Button";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { useNotification } from "@/contexts/NotificationContext";
 import { forgotPassword } from "@/lib/api/auth";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface ForgotPasswordPageProps {
   params: Promise<{ locale: string }>;
 }
 
 export default function ForgotPasswordPage({ params }: ForgotPasswordPageProps) {
+  const marketPrefix = useMarketPrefix();
   const { notify } = useNotification();
   const [locale, setLocale] = useState<string>("en");
   const [isLoading, setIsLoading] = useState(false);
@@ -103,7 +105,7 @@ export default function ForgotPasswordPage({ params }: ForgotPasswordPageProps) 
       title={texts.title}
       subtitle={texts.subtitle}
       footer={
-        <Link href={`/${locale}/login`} className="font-semibold text-brand-primary hover:underline">
+        <Link href={`${marketPrefix}/${locale}/login`} className="font-semibold text-brand-primary hover:underline">
           {texts.backToLogin}
         </Link>
       }

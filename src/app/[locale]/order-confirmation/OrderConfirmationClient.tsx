@@ -10,6 +10,7 @@ import { OrderBundleItemsList, isOrderBundleProduct, isOrderFreeGift } from "@/c
 import { fbTrackPurchase } from "@/lib/utils/fbpixel";
 import type { OrderLineItem } from "@/lib/api/customer";
 import { decodeHtmlEntities } from "@/lib/utils";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface OrderMetaData {
   id: number;
@@ -100,6 +101,7 @@ interface OrderConfirmationClientProps {
 }
 
 export default function OrderConfirmationClient({ locale }: OrderConfirmationClientProps) {
+  const marketPrefix = useMarketPrefix();
   const searchParams = useSearchParams();
   const orderId = searchParams.get("order_id");
   const orderKey = searchParams.get("order_key");
@@ -464,7 +466,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
           <p className="mb-8 text-gray-600">
             {error || (isRTL ? "لم نتمكن من تحميل تفاصيل الطلب" : "We couldn't load your order details")}
           </p>
-          <Link href={`/${locale}/shop`}>
+          <Link href={`${marketPrefix}/${locale}/shop`}>
             <Button>{isRTL ? "العودة للتسوق" : "Continue Shopping"}</Button>
           </Link>
         </div>
@@ -698,12 +700,12 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
                   : "A confirmation email has been sent to your email address"}
               </p>
               <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
-                <Link href={`/${locale}/shop`}>
+                <Link href={`${marketPrefix}/${locale}/shop`}>
                   <Button variant="outline">
                     {isRTL ? "متابعة التسوق" : "Continue Shopping"}
                   </Button>
                 </Link>
-                <Link href={`/${locale}/account/orders`}>
+                <Link href={`${marketPrefix}/${locale}/account/orders`}>
                   <Button>{isRTL ? "عرض طلباتي" : "View My Orders"}</Button>
                 </Link>
               </div>
@@ -720,7 +722,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
                 : "You can retry the payment or continue shopping"}
             </p>
             <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
-              <Link href={`/${locale}/shop`}>
+              <Link href={`${marketPrefix}/${locale}/shop`}>
                 <Button variant="outline">
                   {isRTL ? "متابعة التسوق" : "Continue Shopping"}
                 </Button>

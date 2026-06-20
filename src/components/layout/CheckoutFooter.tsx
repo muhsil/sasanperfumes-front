@@ -9,24 +9,25 @@ interface CheckoutFooterProps {
   locale: Locale;
   dictionary: Dictionary;
   siteSettings?: SiteSettings | null;
+  pathPrefix?: string;
 }
 
-export function CheckoutFooter({ locale, dictionary, siteSettings }: CheckoutFooterProps) {
+export function CheckoutFooter({ locale, dictionary, siteSettings, pathPrefix = "" }: CheckoutFooterProps) {
   const currentYear = new Date().getFullYear();
   const displaySiteName = siteSettings?.site_name?.trim() || "";
 
   const essentialLinks = [
-    { name: dictionary.common.shop, href: `/${locale}/shop` },
-    { name: dictionary.common.contact, href: `/${locale}/contact` },
-    { name: dictionary.footer.privacyPolicy, href: `/${locale}/privacy` },
-    { name: dictionary.footer.termsConditions, href: `/${locale}/terms-and-conditions` },
+    { name: dictionary.common.shop, href: `${pathPrefix}/${locale}/shop` },
+    { name: dictionary.common.contact, href: `${pathPrefix}/${locale}/contact` },
+    { name: dictionary.footer.privacyPolicy, href: `${pathPrefix}/${locale}/privacy` },
+    { name: dictionary.footer.termsConditions, href: `${pathPrefix}/${locale}/terms-and-conditions` },
   ];
 
   return (
     <footer className="border-t border-gray-100 bg-white pb-20 md:pb-0">
       <div className="container mx-auto px-4 py-6 md:py-8">
         <div className="flex flex-col items-center space-y-5">
-          <Link href={`/${locale}`} className="inline-block">
+          <Link href={`${pathPrefix}/${locale}`} className="inline-block">
             {siteSettings?.logo?.url ? (
               <Image
                 src={siteSettings.logo.url}

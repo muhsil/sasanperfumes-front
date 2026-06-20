@@ -11,6 +11,7 @@ import type { FeaturedProductsSettings } from "@/types/wordpress";
 
 import "swiper/css";
 import "swiper/css/navigation";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface FeaturedProductsSliderProps {
   settings: FeaturedProductsSettings;
@@ -48,6 +49,7 @@ export function FeaturedProductsSlider({
   bundleProductSlugs = [],
   englishProductSlugs = {},
 }: FeaturedProductsSliderProps) {
+  const marketPrefix = useMarketPrefix();
   if (isLoading) {
     return <FeaturedProductsSliderSkeleton />;
   }
@@ -102,7 +104,7 @@ export function FeaturedProductsSlider({
             )}
           </div>
           <Link
-            href={`/${locale}/shop`}
+            href={`${marketPrefix}/${locale}/shop`}
             className="hidden text-sm text-brand-primary underline underline-offset-4 hover:no-underline md:inline-block"
           >
             {viewAllText}

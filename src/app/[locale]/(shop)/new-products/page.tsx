@@ -9,6 +9,7 @@ import { getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
 import { NewProductsClient } from "./NewProductsClient";
+import { getMarketPathPrefix } from "@/config/market";
 
 export const revalidate = 300;
 
@@ -56,10 +57,11 @@ export default async function NewProductsPage({ params }: NewProductsPageProps) 
     getRequestMarket(),
     getRequestFrontendHost(),
   ]);
+  const pathPrefix = getMarketPathPrefix(market.code);
 
   const breadcrumbItems = [
-    { name: dictionary.common.shop, href: `/${locale}/shop` },
-    { name: dictionary.sections.newProducts.title, href: `/${locale}/new-products` },
+    { name: dictionary.common.shop, href: `${pathPrefix}/${locale}/shop` },
+    { name: dictionary.sections.newProducts.title, href: `${pathPrefix}/${locale}/new-products` },
   ];
 
   const [productsResult, giftProductIds, bundleProductSlugs] = await Promise.all([

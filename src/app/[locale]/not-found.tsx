@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Home, ShoppingBag, Search, Sparkles } from "lucide-react";
 import { Button } from "@/components/common/Button";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 export default function NotFound() {
+  const marketPrefix = useMarketPrefix();
   const params = useParams<{ locale: string }>();
   const locale = params?.locale || "en";
   const isRTL = locale === "ar";
@@ -62,13 +64,13 @@ export default function NotFound() {
 
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Button asChild size="lg">
-              <Link href={`/${locale}`} className="flex items-center gap-2">
+              <Link href={`${marketPrefix}/${locale}`} className="flex items-center gap-2">
                 <Home className="h-4 w-4" />
                 {texts.backHome}
               </Link>
             </Button>
             <Button variant="outline" asChild size="lg">
-              <Link href={`/${locale}/shop`} className="flex items-center gap-2">
+              <Link href={`${marketPrefix}/${locale}/shop`} className="flex items-center gap-2">
                 <ShoppingBag className="h-4 w-4" />
                 {texts.browseShop}
               </Link>
@@ -115,7 +117,7 @@ export default function NotFound() {
           <p className="mb-6 text-brand-primary">{texts.helpDescription}</p>
           <Button variant="outline" asChild size="sm">
             <Link
-              href={`/${locale}/contact`}
+              href={`${marketPrefix}/${locale}/contact`}
               className="flex items-center gap-2"
             >
               {texts.contactUs}
