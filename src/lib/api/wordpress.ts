@@ -640,6 +640,26 @@ function extractWPMarketFromHost(frontendHost?: string): string | undefined {
   return undefined;
 }
 
+async function detectMarketFromRequest(): Promise<string | undefined> {
+  try {
+    const { headers: getHeaders } = await import("next/headers");
+    const reqHeaders = await getHeaders();
+    const explicitMarket = reqHeaders.get("x-market")?.toLowerCase();
+    if (explicitMarket && WP_KNOWN_MARKETS.has(explicitMarket)) {
+      return explicitMarket;
+    }
+    const host = reqHeaders.get("x-frontend-host") || reqHeaders.get("host") || "";
+    for (const m of WP_KNOWN_MARKETS) {
+      if (host.includes(`/${m}`) || host.startsWith(`${m}.`)) {
+        return m;
+      }
+    }
+  } catch {
+    // Not in a request context (client-side or build time)
+  }
+  return undefined;
+}
+
 async function fetchWPAPI<T>(
   endpoint: string,
   options: FetchOptions = {}
@@ -649,7 +669,7 @@ async function fetchWPAPI<T>(
     frontendHost ? appendQueryParam(url, "frontend_host", frontendHost) : url
   );
 
-  const market = extractWPMarketFromHost(frontendHost);
+  const market = extractWPMarketFromHost(frontendHost) || await detectMarketFromRequest();
   const apiHeaders = market
     ? backendHeaders({ ...WP_API_HEADERS, "x-market": market })
     : backendHeaders(WP_API_HEADERS);

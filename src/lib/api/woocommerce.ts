@@ -80,6 +80,26 @@ function extractMarketFromHost(frontendHost?: string): string | undefined {
   return undefined;
 }
 
+async function detectMarketFromRequest(): Promise<string | undefined> {
+  try {
+    const { headers: getHeaders } = await import("next/headers");
+    const reqHeaders = await getHeaders();
+    const explicitMarket = reqHeaders.get("x-market")?.toLowerCase();
+    if (explicitMarket && KNOWN_MARKETS.has(explicitMarket)) {
+      return explicitMarket;
+    }
+    const host = reqHeaders.get("x-frontend-host") || reqHeaders.get("host") || "";
+    for (const m of KNOWN_MARKETS) {
+      if (host.includes(`/${m}`) || host.startsWith(`${m}.`)) {
+        return m;
+      }
+    }
+  } catch {
+    // Not in a request context (client-side or build time)
+  }
+  return undefined;
+}
+
 function getCurrencyMinorUnit(currency?: Currency): number {
   const code = (currency || DEFAULT_API_CURRENCY).toUpperCase();
   return ["BHD", "KWD", "OMR"].includes(code) ? 3 : 2;
@@ -138,19 +158,19 @@ async function fetchAPI<T>(
   const separator = url.includes("?") ? "&" : "?";
   url = `${url}${separator}currency=${currencyToUse}`;
 
-  const market = extractMarketFromHost(frontendHost);
-  const headers = market
+  const market = extractMarketFromHost(frontendHost) || await detectMarketFromRequest();
+  const hdrs = market
     ? backendHeaders({ "x-market": market })
     : backendHeaders();
 
   const response = await fetch(url, disableRuntimeCache
-    ? { cache: "no-store", headers }
+    ? { cache: "no-store", headers: hdrs }
     : {
         next: {
           revalidate,
           tags,
         },
-        headers,
+        headers: hdrs,
       });
 
   if (!response.ok) {
@@ -184,19 +204,19 @@ async function fetchAPIWithPagination<T>(
   const separator = url.includes("?") ? "&" : "?";
   url = `${url}${separator}currency=${currencyToUse}`;
 
-  const market = extractMarketFromHost(frontendHost);
-  const headers = market
+  const market = extractMarketFromHost(frontendHost) || await detectMarketFromRequest();
+  const hdrs = market
     ? backendHeaders({ "x-market": market })
     : backendHeaders();
 
   const response = await fetch(url, disableRuntimeCache
-    ? { cache: "no-store", headers }
+    ? { cache: "no-store", headers: hdrs }
     : {
         next: {
           revalidate,
           tags,
         },
-        headers,
+        headers: hdrs,
       });
 
   if (!response.ok) {
