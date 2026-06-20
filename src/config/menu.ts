@@ -29,7 +29,7 @@ export interface NavigationItem {
  */
 export const navigationItems: NavigationItem[] = [
   {
-    name: { en: "Perfume", ar: "العطور" },
+    name: { en: "Perfumes", ar: "العطور" },
     href: "/category/perfumes",
     hasMegaMenu: true,
   },
@@ -38,17 +38,16 @@ export const navigationItems: NavigationItem[] = [
     href: "/category/all-over-spray",
   },
   {
-    name: { en: "Fragrance", ar: "العطور" },
-    href: "/shop",
-    hasMegaMenu: true,
-  },
-  {
-    name: { en: "Hair mist", ar: "معطر الشعر" },
+    name: { en: "Hair Mist", ar: "معطر الشعر" },
     href: "/category/sasan-hair-mist",
   },
   {
-    name: { en: "Oud & Dakhoon", ar: "العود والدخون" },
+    name: { en: "Oud Perfumes", ar: "عطور العود" },
     href: "/category/oud-perfumes",
+  },
+  {
+    name: { en: "Gift Set", ar: "مجموعات الهدايا" },
+    href: "/category/gift-set",
   },
 ];
 
@@ -56,7 +55,7 @@ export const navigationItems: NavigationItem[] = [
  * Static Header Category Links
  *
  * Category links displayed in the header navigation.
- * Order: Perfume, All Over Spray, Fragrance, Hair mist, Oud & Dakhoon
+ * Order: Perfumes, All Over Spray, Hair Mist, Oud Perfumes, Gift Set
  */
 export const headerCategoryLinks: NavigationItem[] = navigationItems;
 
@@ -86,6 +85,9 @@ function getLiveHeaderMenuKey(item: MenuItemLike): string | null {
   }
   if (title.includes("oud") || title.includes("dakhoon") || url.includes("oud-perfumes")) {
     return "oud-dakhoon";
+  }
+  if (title.includes("gift") || url.includes("gift-set")) {
+    return "gift-set";
   }
 
   return null;
@@ -441,7 +443,43 @@ export interface MenuSubcategory {
  * Categories displayed in the mega menu dropdown.
  * Each category can have subcategories.
  */
-export const megaMenuCategories: MenuCategory[] = [];
+export const megaMenuCategories: MenuCategory[] = [
+  {
+    id: 262,
+    name: { en: "Men's Perfumes", ar: "عطور رجالية" },
+    slug: "mens-perfumes",
+  },
+  {
+    id: 273,
+    name: { en: "Women's Perfumes", ar: "عطور نسائية" },
+    slug: "woman-perfumes",
+  },
+  {
+    id: 270,
+    name: { en: "Unisex", ar: "عطور للجنسين" },
+    slug: "unisex",
+  },
+  {
+    id: 264,
+    name: { en: "Oud Perfumes", ar: "عطور العود" },
+    slug: "oud-perfumes",
+  },
+  {
+    id: 267,
+    name: { en: "Summer Perfume", ar: "عطور صيفية" },
+    slug: "summer-perfume",
+  },
+  {
+    id: 271,
+    name: { en: "Winter Perfume", ar: "عطور شتوية" },
+    slug: "winter-perfume",
+  },
+  {
+    id: 263,
+    name: { en: "New Arrival", ar: "وصل حديثاً" },
+    slug: "new-arrival",
+  },
+];
 
 /**
  * Get mega menu categories formatted for display

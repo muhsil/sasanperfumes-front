@@ -224,13 +224,13 @@ export function MegaMenu({
     id: cat.id,
     name: cat.name,
     slug: cat.slug,
-    url: `${marketPrefix}/${locale}/shop?category=${cat.slug}`,
+    url: `${marketPrefix}/${locale}/category/${cat.slug}`,
     image: cat.image,
     children: cat.children.map((child) => ({
       id: child.id,
       name: child.name,
       slug: child.slug,
-      url: `${marketPrefix}/${locale}/shop?category=${child.slug}`,
+      url: `${marketPrefix}/${locale}/category/${child.slug}`,
     })),
   }));
 
