@@ -238,10 +238,6 @@ a {
   min-height: clamp(560px, 78svh, 860px);
 }
 
-.home-view-section--media {
-  min-height: 100svh;
-}
-
 .home-view-section__inner {
   width: 100%;
 }
@@ -249,10 +245,6 @@ a {
 @media (width < 48rem) {
   .home-view-section {
     min-height: auto;
-  }
-
-  .home-view-section--media {
-    min-height: 100svh;
   }
 }
 
