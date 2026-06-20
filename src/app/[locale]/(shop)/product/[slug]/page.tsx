@@ -89,7 +89,7 @@ export async function generateMetadata({
   const [product, backendMetaDesc, siteSettings] = await Promise.all([
     getProductBySlug(slug, locale as Locale, market.defaultCurrency, frontendHost),
     getProductMetaDescription(slug, locale as Locale),
-    getSiteSettings(locale as Locale),
+    getSiteSettings(locale as Locale, frontendHost),
   ]);
   const siteName = siteSettings.site_name || siteConfig.name;
 
@@ -244,9 +244,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
     getFreeGiftProductIds(market.defaultCurrency, frontendHost),
     getHiddenProductIds(frontendHost),
     getBundleConfig(slug, locale as Locale, frontendHost),
-    getTopbarSettings(),
-    getFeatureToggles(),
-    getSiteSettings(locale as Locale),
+    getTopbarSettings(undefined, frontendHost),
+    getFeatureToggles(frontendHost),
+    getSiteSettings(locale as Locale, frontendHost),
   ]);
   const siteName = siteSettings.site_name || siteConfig.name;
 

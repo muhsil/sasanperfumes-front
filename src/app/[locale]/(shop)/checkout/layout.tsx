@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { CheckoutFooter } from "@/components/layout/CheckoutFooter";
 import { getDictionary } from "@/i18n";
 import { getSiteSettings } from "@/lib/api/wordpress";
+import { getRequestFrontendHost } from "@/lib/market/server";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { type Locale } from "@/config/site";
 
@@ -32,7 +33,8 @@ export default async function CheckoutLayout({
   const { locale } = await params;
   const validLocale = locale as Locale;
   const dictionary = await getDictionary(validLocale);
-  const siteSettings = await getSiteSettings(validLocale);
+  const frontendHost = await getRequestFrontendHost();
+  const siteSettings = await getSiteSettings(validLocale, frontendHost);
 
   return (
     <>

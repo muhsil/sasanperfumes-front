@@ -17,7 +17,7 @@ import { siteConfig, localeConfig, type Locale } from "@/config/site";
 import { INDEX_NOFOLLOW_ROBOTS, generateOrganizationJsonLd, generateWebSiteJsonLd, generateLocalBusinessJsonLd } from "@/lib/utils/seo";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getSiteSettings, getHeaderSettings, getPrimaryMenu, getMobileHeaderMenu, getMobileBottomBarMenu, getMobileBarSettings, getCategoriesDrawerMenu, getTopbarSettings, getSeoSettings, getFooterSettings, getWhatsAppSettings, getFeatureToggles, getStaticPageContent, mapRepeater, pickLocale } from "@/lib/api/wordpress";
-import { getRequestMarket } from "@/lib/market/server";
+import { getRequestMarket, getRequestFrontendHost } from "@/lib/market/server";
 import { getMarketPathPrefix } from "@/config/market";
 import { TrackingScripts } from "@/components/tracking";
 import { Suspense } from "react";
@@ -54,8 +54,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const validLocale = locale as Locale;
+  const frontendHost = await getRequestFrontendHost();
   
-  const siteSettings = await getSiteSettings(validLocale);
+  const siteSettings = await getSiteSettings(validLocale, frontendHost);
   const metadataSiteName = siteSettings.site_name || siteConfig.name;
   const metadataDescription = siteSettings.tagline || siteConfig.description;
   
@@ -97,22 +98,25 @@ export default async function LocaleLayout({
   const validLocale = locale as Locale;
   const dictionary = await getDictionary(validLocale);
   const { dir } = localeConfig[validLocale];
-  const market = await getRequestMarket();
+  const [market, frontendHost] = await Promise.all([
+    getRequestMarket(),
+    getRequestFrontendHost(),
+  ]);
 
   // Fetch site settings, header settings, topbar settings, menu, and SEO settings in parallel
   const [siteSettings, headerSettings, topbarSettings, menuItems, mobileMenuItems, mobileBottomBarMenu, mobileBarSettings, categoriesDrawerMenu, seoSettings, footerSettings, whatsAppSettings, featureToggles, contactPageContent] = await Promise.all([
-    getSiteSettings(validLocale),
-    getHeaderSettings(),
-    getTopbarSettings(validLocale),
-    getPrimaryMenu(validLocale),
+    getSiteSettings(validLocale, frontendHost),
+    getHeaderSettings(frontendHost),
+    getTopbarSettings(validLocale, frontendHost),
+    getPrimaryMenu(validLocale, frontendHost),
     getMobileHeaderMenu(validLocale),
     getMobileBottomBarMenu(validLocale),
     getMobileBarSettings(validLocale),
     getCategoriesDrawerMenu(validLocale),
-    getSeoSettings(validLocale),
-    getFooterSettings(),
+    getSeoSettings(validLocale, frontendHost),
+    getFooterSettings(frontendHost),
     getWhatsAppSettings(),
-    getFeatureToggles(),
+    getFeatureToggles(frontendHost),
     getStaticPageContent("contact"),
   ]);
   const footerTopSocialLinks = mapRepeater(contactPageContent?.contact_social, validLocale, (item) => ({
