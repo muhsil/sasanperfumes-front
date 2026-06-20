@@ -101,7 +101,7 @@ export default async function ShopPage({ params }: ShopPageProps) {
   const filteredTotal = productsResult.total - (productsResult.products.length - filteredProducts.length);
 
   return (
-    <div className="page-flush bg-transparent text-brand-primary">
+    <div className="page-flush container mx-auto px-4 bg-transparent text-brand-primary">
       <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} className="sr-only" />
 
       <CollectionPageHeader

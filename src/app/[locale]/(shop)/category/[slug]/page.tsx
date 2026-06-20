@@ -96,7 +96,7 @@ async function CategorySeoSection({ slug, locale }: { slug: string; locale: Loca
   if (!title && !description) return null;
 
   return (
-    <div className="bg-gradient-to-r from-[#e0d9cf] to-[#ebe6df] px-4 py-12 md:py-16">
+    <div className="bg-gradient-to-r from-[#e0d9cf] to-[#ebe6df] py-12 md:py-16">
       <div className="mx-auto w-full">
         {title && (
           <h2 className="mb-6 text-3xl font-normal leading-tight tracking-normal text-brand-primary md:text-4xl">
@@ -231,7 +231,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     : "";
 
   return (
-    <div className="page-flush bg-transparent text-brand-primary">
+    <div className="page-flush container mx-auto px-4 bg-transparent text-brand-primary">
       <JsonLd data={collectionJsonLd} />
       <JsonLd data={itemListJsonLd} />
       <JsonLd data={breadcrumbJsonLd} />
