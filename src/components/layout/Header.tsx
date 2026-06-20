@@ -21,6 +21,7 @@ import { CategoriesDrawer } from "@/components/layout/CategoriesDrawer";
 import { SearchDrawer } from "@/components/layout/SearchDrawer";
 import { DesktopSearchDropdown } from "@/components/layout/DesktopSearchDropdown";
 import { BrandsMegaMenu } from "@/components/layout/BrandsMegaMenu";
+import { MegaMenu } from "@/components/layout/MegaMenu";
 import { getHeaderCategoryLinks, getDynamicNavigationItems, type DynamicNavigationItem } from "@/config/menu";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
@@ -56,12 +57,14 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const [isBrandsMegaMenuOpen, setIsBrandsMegaMenuOpen] = useState(false);
+  const [isPerfumesMegaMenuOpen, setIsPerfumesMegaMenuOpen] = useState(false);
   const [topbarDismissed, setTopbarDismissed] = useState(false);
   const [logoError, setLogoError] = useState(false);
   const [isCategoriesDrawerOpen, setIsCategoriesDrawerOpen] = useState(false);
   const [isSearchDrawerOpen, setIsSearchDrawerOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const brandsMegaMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const perfumesMegaMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isRTL = locale === "ar";
   const pathname = usePathname();
 
@@ -69,6 +72,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
     const id = setTimeout(() => {
       setIsMobileMenuOpen(false);
       setIsBrandsMegaMenuOpen(false);
+      setIsPerfumesMegaMenuOpen(false);
       setIsSearchDrawerOpen(false);
     }, 0);
     return () => clearTimeout(id);
@@ -105,6 +109,23 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
 
   const handleBrandsMegaMenuClose = useCallback(() => {
     setIsBrandsMegaMenuOpen(false);
+  }, []);
+
+  const handlePerfumesMouseEnter = useCallback(() => {
+    if (perfumesMegaMenuTimeoutRef.current) clearTimeout(perfumesMegaMenuTimeoutRef.current);
+    setIsPerfumesMegaMenuOpen(true);
+  }, []);
+
+  const handlePerfumesMouseLeave = useCallback(() => {
+    perfumesMegaMenuTimeoutRef.current = setTimeout(() => setIsPerfumesMegaMenuOpen(false), 150);
+  }, []);
+
+  const handlePerfumesMegaMenuMouseEnter = useCallback(() => {
+    if (perfumesMegaMenuTimeoutRef.current) clearTimeout(perfumesMegaMenuTimeoutRef.current);
+  }, []);
+
+  const handlePerfumesMegaMenuClose = useCallback(() => {
+    setIsPerfumesMegaMenuOpen(false);
   }, []);
 
   const navigation = menuItems && menuItems.length > 0
@@ -270,6 +291,38 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                     );
                   }
 
+                  if (item.hasMegaMenu) {
+                    return (
+                      <div
+                        key={item.name}
+                        className="relative shrink-0"
+                        onMouseEnter={handlePerfumesMouseEnter}
+                        onMouseLeave={handlePerfumesMouseLeave}
+                      >
+                        <Link
+                          href={item.href}
+                          onClick={handlePerfumesMegaMenuClose}
+                          className={cn(
+                            "group relative flex items-center gap-1 whitespace-nowrap text-sm font-bold transition-colors",
+                            isTransparentHomeHeader
+                              ? "text-white hover:text-white/80"
+                              : "text-brand-primary hover:text-brand-primary/70",
+                            isPerfumesMegaMenuOpen && (isTransparentHomeHeader ? "text-white/80" : "text-brand-primary/70")
+                          )}
+                        >
+                          {item.name}
+                          <svg
+                            className={cn("h-3 w-3 transition-transform duration-200", isPerfumesMegaMenuOpen && "rotate-180")}
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                          <span className="absolute inset-x-0 -bottom-1 h-px origin-left scale-x-0 bg-brand-gold transition-transform duration-300 group-hover:scale-x-100" />
+                        </Link>
+                      </div>
+                    );
+                  }
+
                   return (
                     <Link
                       key={item.name}
@@ -377,6 +430,10 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
 
         <div onMouseEnter={handleBrandsMegaMenuMouseEnter} onMouseLeave={handleBrandsMouseLeave}>
           <BrandsMegaMenu isOpen={isBrandsMegaMenuOpen} onClose={handleBrandsMegaMenuClose} locale={locale} />
+        </div>
+
+        <div onMouseEnter={handlePerfumesMegaMenuMouseEnter} onMouseLeave={handlePerfumesMouseLeave}>
+          <MegaMenu isOpen={isPerfumesMegaMenuOpen} onClose={handlePerfumesMegaMenuClose} locale={locale} dictionary={dictionary} />
         </div>
 
         {/* Mobile menu drawer overlay and sidebar */}
