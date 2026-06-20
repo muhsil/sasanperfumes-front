@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import type { Locale } from "@/config/site";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 import {
   MapPin,
   Navigation,
@@ -106,11 +107,12 @@ interface StoreLocatorClientProps {
 }
 
 export default function StoreLocatorClient({ dict, locale, stores: storeList, content: cms }: StoreLocatorClientProps) {
+  const marketPrefix = useMarketPrefix();
   const isRTL = locale === "ar";
   const countries = buildCountries(storeList);
 
   const breadcrumbItems = [
-    { name: cms.heroSubtitle || dict.heroSubtitle, href: `/${locale}/store-listing` },
+    { name: cms.heroSubtitle || dict.heroSubtitle, href: `${marketPrefix}/${locale}/store-listing` },
   ];
 
   const content = {
@@ -264,7 +266,7 @@ export default function StoreLocatorClient({ dict, locale, stores: storeList, co
           <h2 className="font-normal text-2xl text-brand-primary md:text-3xl">{content.ctaTitle}</h2>
           <p className="mt-2 max-w-2xl text-sm text-brand-primary/60">{content.ctaSubtitle}</p>
           <Link
-            href={`/${locale}/shop`}
+            href={`${marketPrefix}/${locale}/shop`}
             className="mt-4 inline-flex items-center gap-2 border-b border-brand-primary pb-1 text-xs font-normal tracking-[0.1em] text-brand-primary uppercase"
           >
             {content.ctaButton}

@@ -9,6 +9,8 @@ import { decodeHtmlEntities } from "@/lib/utils";
 import { shouldUseUnoptimizedImage } from "@/lib/utils/image";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
+import { getRequestMarket } from "@/lib/market/server";
+import { getMarketPathPrefix } from "@/config/market";
 
 export const revalidate = 300;
 
@@ -36,6 +38,8 @@ export async function generateMetadata({ params }: BrandsPageProps): Promise<Met
 }
 
 export default async function BrandsPage({ params }: BrandsPageProps) {
+  const market = await getRequestMarket();
+  const pathPrefix = getMarketPathPrefix(market.code);
   const { locale } = await params;
   const isRTL = locale === "ar";
 
@@ -53,7 +57,7 @@ export default async function BrandsPage({ params }: BrandsPageProps) {
   const decodedTitle = decodeHtmlEntities(title);
 
   const breadcrumbItems = [
-    { name: isRTL ? "العلامات التجارية" : "Brands", href: `/${locale}/brands` },
+    { name: isRTL ? "العلامات التجارية" : "Brands", href: `${pathPrefix}/${locale}/brands` },
   ];
 
   return (
@@ -73,7 +77,7 @@ export default async function BrandsPage({ params }: BrandsPageProps) {
                 return (
                   <Link
                     key={brand.id}
-                    href={`/${locale}/brands/${brand.slug}`}
+                    href={`${pathPrefix}/${locale}/brands/${brand.slug}`}
                     className="group flex min-h-full flex-col items-center text-center outline-none transition-transform duration-300 hover:-translate-y-1 focus-visible:ring-2 focus-visible:ring-brand-primary/40"
                   >
                     <div className="relative w-full max-w-[220px] p-2 sm:max-w-[240px] sm:p-3 md:p-4">

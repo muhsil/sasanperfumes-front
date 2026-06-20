@@ -8,12 +8,14 @@ import { Button } from "@/components/common/Button";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface LoginPageProps {
   params: Promise<{ locale: string }>;
 }
 
 export default function LoginPage({ params }: LoginPageProps) {
+  const marketPrefix = useMarketPrefix();
   const router = useRouter();
   const { login, googleLogin, isLoading } = useAuth();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -149,7 +151,7 @@ export default function LoginPage({ params }: LoginPageProps) {
     });
 
     if (response.success) {
-      router.push(`/${locale}/account`);
+      router.push(`${marketPrefix}/${locale}/account`);
     } else {
       if (response.error?.code === "rate_limit_exceeded" && response.error.retry_after) {
         startCountdown(response.error.retry_after);
@@ -177,7 +179,7 @@ export default function LoginPage({ params }: LoginPageProps) {
         <>
           <span className="text-brand-muted">{texts.noAccount} </span>
           <Link
-            href={`/${locale}/register`}
+            href={`${marketPrefix}/${locale}/register`}
             className="font-semibold text-brand-primary transition-colors hover:text-brand-primary-dark"
           >
             {texts.signUpLink}
@@ -192,7 +194,7 @@ export default function LoginPage({ params }: LoginPageProps) {
           try {
             const response = await googleLogin(credential);
             if (response.success) {
-              router.push(`/${locale}/account`);
+              router.push(`${marketPrefix}/${locale}/account`);
             } else {
               setErrors({ general: response.error?.message || texts.googleSignInError });
             }
@@ -223,7 +225,7 @@ export default function LoginPage({ params }: LoginPageProps) {
         <p>
           {texts.returningUserMessage}{" "}
           <Link
-            href={`/${locale}/forgot-password`}
+            href={`${marketPrefix}/${locale}/forgot-password`}
             className="font-semibold text-brand-primary hover:underline"
           >
             {texts.returningUserLink}
@@ -245,7 +247,7 @@ export default function LoginPage({ params }: LoginPageProps) {
             <div>
               <p>{errors.general}</p>
               <Link
-                href={`/${locale}/forgot-password`}
+                href={`${marketPrefix}/${locale}/forgot-password`}
                 className="mt-2 inline-block font-semibold text-brand-primary hover:underline"
               >
                 {texts.loginFailedSuggestion}
@@ -283,7 +285,7 @@ export default function LoginPage({ params }: LoginPageProps) {
         />
 
         <div className={`text-sm ${isRTL ? "text-right" : "text-left"}`}>
-          <Link href={`/${locale}/forgot-password`} className="font-medium text-brand-primary hover:underline">
+          <Link href={`${marketPrefix}/${locale}/forgot-password`} className="font-medium text-brand-primary hover:underline">
             {texts.forgotPassword}
           </Link>
         </div>

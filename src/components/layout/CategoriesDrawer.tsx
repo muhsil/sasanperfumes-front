@@ -17,6 +17,7 @@ import { getCategories } from "@/lib/api/woocommerce";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { triggerHaptic } from "@/lib/utils/haptics";
 import { translateToArabic } from "@/config/menu";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 function CategorySkeleton() {
   return (
@@ -85,6 +86,7 @@ export function CategoriesDrawer({
   menuItems,
 }: CategoriesDrawerProps) {
   // DEV MODE: Cache disabled for faster development
+  const marketPrefix = useMarketPrefix();
   const [categories, setCategories] = useState<WCCategory[]>([]);
   const [brands, setBrands] = useState<BrandItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -306,7 +308,7 @@ export function CategoriesDrawer({
                   {brands.map((brand) => (
                     <li key={brand.id}>
                       <Link
-                        href={`/${locale}/brands/${brand.slug}`}
+                        href={`${marketPrefix}/${locale}/brands/${brand.slug}`}
                         onClick={handleClose}
                         className="flex items-center gap-3 rounded-lg px-4 py-3 text-gray-900 font-semibold transition-all hover:bg-gray-100 active:scale-[0.98]"
                       >
@@ -351,7 +353,7 @@ export function CategoriesDrawer({
                     <li key={category.id}>
                       <div className="flex items-center">
                                                 <Link
-                                                  href={`/${locale}/category/${category.slug}`}
+                                                  href={`${marketPrefix}/${locale}/category/${category.slug}`}
                                                   onClick={handleClose}
                                                   className="flex flex-1 items-center gap-3 rounded-lg px-4 py-3 text-gray-900 font-semibold transition-all hover:bg-gray-100 active:scale-[0.98]"
                                                 >
@@ -402,7 +404,7 @@ export function CategoriesDrawer({
                           {childCategories.map((child) => (
                             <li key={child.id}>
                                                             <Link
-                                                              href={`/${locale}/category/${child.slug}`}
+                                                              href={`${marketPrefix}/${locale}/category/${child.slug}`}
                                                               onClick={handleClose}
                                                               className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-gray-600 transition-all hover:bg-brand-beige hover:text-brand-primary"
                                                             >
@@ -423,7 +425,7 @@ export function CategoriesDrawer({
 
         <div className="border-t p-4 pb-safe">
                     <Link
-                      href={activeTab === "brands" ? `/${locale}/brands` : `/${locale}/shop`}
+                      href={activeTab === "brands" ? `${marketPrefix}/${locale}/brands` : `${marketPrefix}/${locale}/shop`}
                       onClick={handleClose}
                       className="flex w-full items-center justify-center rounded-lg bg-black px-4 py-3 font-medium text-white transition-all hover:bg-gray-800 active:scale-[0.98]"
                     >

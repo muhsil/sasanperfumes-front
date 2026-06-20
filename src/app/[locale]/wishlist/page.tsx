@@ -10,6 +10,7 @@ import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useCart } from "@/contexts/CartContext";
 import type { Locale } from "@/config/site";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 function getSlugFromProductUrl(productUrl: string | undefined): string | null {
   if (!productUrl) return null;
@@ -22,6 +23,7 @@ interface WishlistPageProps {
 }
 
 export default function WishlistPage({ params }: WishlistPageProps) {
+  const marketPrefix = useMarketPrefix();
   const [locale, setLocale] = useState<string>("en");
   const [bundleProductSlugs, setBundleProductSlugs] = useState<string[]>([]);
 
@@ -58,7 +60,7 @@ export default function WishlistPage({ params }: WishlistPageProps) {
   const isEmpty = wishlistItems.length === 0;
 
   const breadcrumbItems = [
-    { name: isRTL ? "قائمة الرغبات" : "Wishlist", href: `/${locale}/wishlist` },
+    { name: isRTL ? "قائمة الرغبات" : "Wishlist", href: `${marketPrefix}/${locale}/wishlist` },
   ];
 
   const isBundleProduct = (productUrl: string | undefined): boolean => {
@@ -150,7 +152,7 @@ export default function WishlistPage({ params }: WishlistPageProps) {
             </h2>
             <p className="mb-8 text-gray-600">{texts.emptyWishlistDesc}</p>
             <Button asChild>
-              <Link href={`/${locale}/shop`}>{texts.continueShopping}</Link>
+              <Link href={`${marketPrefix}/${locale}/shop`}>{texts.continueShopping}</Link>
             </Button>
           </div>
         ) : (
@@ -191,7 +193,7 @@ export default function WishlistPage({ params }: WishlistPageProps) {
                       </div>
                       <div className="flex flex-col justify-center">
                         <Link
-                          href={item.product_url || `/${locale}/product/${item.product_id}`}
+                          href={item.product_url || `${marketPrefix}/${locale}/product/${item.product_id}`}
                           className="font-medium text-gray-900 hover:text-gray-700 line-clamp-2 uppercase"
                         >
                           {item.product_name}
@@ -242,7 +244,7 @@ export default function WishlistPage({ params }: WishlistPageProps) {
                           size="sm"
                           className="flex-1 md:flex-none"
                         >
-                          <Link href={item.product_url || `/${locale}/product/${item.product_id}`}>
+                          <Link href={item.product_url || `${marketPrefix}/${locale}/product/${item.product_id}`}>
                             <Eye className="h-4 w-4 mr-2" />
                             {texts.customize}
                           </Link>
@@ -274,7 +276,7 @@ export default function WishlistPage({ params }: WishlistPageProps) {
 
             <div className="border-t p-4">
               <Link
-                href={`/${locale}/shop`}
+                href={`${marketPrefix}/${locale}/shop`}
                 className="flex items-center justify-center gap-2 text-sm text-gray-600 hover:text-gray-900"
               >
                 <ArrowLeft className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />

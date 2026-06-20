@@ -7,6 +7,8 @@ import { getBlogPost, getBlogPosts, getFeatureToggles } from "@/lib/api/wordpres
 import { shouldUseUnoptimizedImage } from "@/lib/utils/image";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
+import { getRequestMarket } from "@/lib/market/server";
+import { getMarketPathPrefix } from "@/config/market";
 
 export const revalidate = 300;
 
@@ -48,6 +50,8 @@ export async function generateMetadata({ params }: BlogDetailPageProps): Promise
 }
 
 export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
+  const market = await getRequestMarket();
+  const pathPrefix = getMarketPathPrefix(market.code);
   const { locale, slug } = await params;
   const toggles = await getFeatureToggles();
   if (!toggles.sasanperfumes_blog_enabled) notFound();
@@ -61,8 +65,8 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
   const relatedPosts = allPosts.filter((p) => p.id !== post.id).slice(0, 3);
 
   const breadcrumbItems = [
-    { name: isRTL ? "المدونة" : "Blog", href: `/${locale}/blog` },
-    { name: stripHtml(post.title), href: `/${locale}/blog/${slug}` },
+    { name: isRTL ? "المدونة" : "Blog", href: `${pathPrefix}/${locale}/blog` },
+    { name: stripHtml(post.title), href: `${pathPrefix}/${locale}/blog/${slug}` },
   ];
 
   return (
@@ -130,7 +134,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
               {relatedPosts.map((rp) => (
                 <Link
                   key={rp.id}
-                  href={`/${locale}/blog/${rp.slug}`}
+                  href={`${pathPrefix}/${locale}/blog/${rp.slug}`}
                   className="group overflow-hidden border border-[#e7ded7] bg-white"
                 >
                   <div className="relative aspect-[16/10] overflow-hidden bg-brand-beige">
@@ -161,7 +165,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
       {/* Back to Blog */}
       <section className="px-4 py-8">
         <Link
-          href={`/${locale}/blog`}
+          href={`${pathPrefix}/${locale}/blog`}
           className="inline-flex items-center gap-2 border border-brand-primary px-8 py-3 text-sm font-medium text-brand-primary transition-colors hover:bg-brand-primary hover:text-white"
         >
           <svg className="h-4 w-4 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -8,6 +8,7 @@ import type { Dictionary } from "@/i18n";
 import type { Locale } from "@/config/site";
 import { cn, decodeHtmlEntities } from "@/lib/utils";
 import { getMegaMenuCategories } from "@/config/menu";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface MobileCategoryMenuProps {
   locale: Locale;
@@ -21,6 +22,7 @@ export function MobileCategoryMenu({
   onNavigate,
 }: MobileCategoryMenuProps) {
   // Static categories from config
+  const marketPrefix = useMarketPrefix();
   const staticCategories = getMegaMenuCategories(locale);
   const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
   const isRTL = locale === "ar";
@@ -53,7 +55,7 @@ export function MobileCategoryMenu({
           <div key={category.id}>
             <div className="flex items-center">
               <Link
-                href={`/${locale}/shop?category=${category.slug}`}
+                href={`${marketPrefix}/${locale}/shop?category=${category.slug}`}
                 onClick={onNavigate}
                 className={cn(
                   "flex-1 flex items-center gap-3 rounded-md px-3 py-2",
@@ -109,7 +111,7 @@ export function MobileCategoryMenu({
                 {category.children.map((child) => (
                   <Link
                     key={child.id}
-                    href={`/${locale}/shop?category=${child.slug}`}
+                    href={`${marketPrefix}/${locale}/shop?category=${child.slug}`}
                     onClick={onNavigate}
                     className={cn(
                       "flex items-center gap-2 rounded-md px-3 py-2",
@@ -130,7 +132,7 @@ export function MobileCategoryMenu({
       
       <div className="mt-3 px-3">
         <Link
-          href={`/${locale}/shop`}
+          href={`${marketPrefix}/${locale}/shop`}
           onClick={onNavigate}
           className={cn(
             "flex items-center justify-center gap-2 w-full",

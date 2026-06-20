@@ -98,23 +98,25 @@ function shouldUseLiveHeaderNavigation(items: MenuItemLike[]): boolean {
 
 /**
  * Get navigation items for a specific locale
+ * @param pathPrefix - Market path prefix (e.g. "/qa", "/sa", "" for intl)
  */
-export function getNavigationItems(locale: Locale) {
+export function getNavigationItems(locale: Locale, pathPrefix = "") {
   return navigationItems.map((item) => ({
     name: item.name[locale],
-    href: `/${locale}${item.href}`,
+    href: `${pathPrefix}/${locale}${item.href}`,
     hasMegaMenu: item.hasMegaMenu,
   }));
 }
 
 /**
  * Get header category links for a specific locale
+ * @param pathPrefix - Market path prefix (e.g. "/qa", "/sa", "" for intl)
  */
-export function getHeaderCategoryLinks(locale: Locale) {
+export function getHeaderCategoryLinks(locale: Locale, pathPrefix = "") {
   return headerCategoryLinks.map((item, index) => ({
     id: index + 1,
     name: item.name[locale],
-    href: `/${locale}${item.href}`,
+    href: `${pathPrefix}/${locale}${item.href}`,
     hasMegaMenu: item.hasMegaMenu ?? false,
     hasBrandsMegaMenu: false,
   }));
@@ -216,7 +218,7 @@ export function shouldHaveBrandsMegaMenu(title: string): boolean {
  * Normalize WordPress URL to a locale-aware frontend route.
  * Returns `#` unchanged so menu headings can stay non-navigational.
  */
-export function normalizeMenuUrl(url: string, locale: Locale): string {
+export function normalizeMenuUrl(url: string, locale: Locale, pathPrefix = ""): string {
   if (!url) return "#";
 
   const trimmedUrl = url.trim();
@@ -276,32 +278,32 @@ export function normalizeMenuUrl(url: string, locale: Locale): string {
   const normalizedQuery = normalizedUrl.includes("?") ? normalizedUrl.slice(normalizedUrl.indexOf("?")) : "";
 
   if (normalizedUrlPath === "/" || normalizedUrlPath === "") {
-    return `/${locale}${normalizedQuery}`;
+    return `${pathPrefix}/${locale}${normalizedQuery}`;
   }
 
   if (normalizedUrlPath.startsWith("/category/")) {
     const slug = normalizedUrlPath.replace("/category/", "").replace(/\/$/, "");
-    return `/${locale}/category/${slug}`;
+    return `${pathPrefix}/${locale}/category/${slug}`;
   }
 
   if (normalizedUrlPath.startsWith("/product-category/")) {
     const slug = normalizedUrlPath.replace("/product-category/", "").replace(/\/$/, "");
-    return `/${locale}/category/${slug}`;
+    return `${pathPrefix}/${locale}/category/${slug}`;
   }
 
   if (normalizedUrlPath === "/fragrance" || normalizedUrlPath === "/fragrance/") {
-    return `/${locale}/shop`;
+    return `${pathPrefix}/${locale}/shop`;
   }
 
   if (normalizedUrlPath.startsWith("/shop")) {
-    return `/${locale}${normalizedUrlPath}${normalizedQuery}`;
+    return `${pathPrefix}/${locale}${normalizedUrlPath}${normalizedQuery}`;
   }
 
   if (normalizedUrlPath.startsWith("/")) {
-    return `/${locale}${normalizedUrl}`;
+    return `${pathPrefix}/${locale}${normalizedUrl}`;
   }
 
-  return `/${locale}/${normalizedUrl}`;
+  return `${pathPrefix}/${locale}/${normalizedUrl}`;
 }
 
 /**
@@ -310,13 +312,14 @@ export function normalizeMenuUrl(url: string, locale: Locale): string {
  */
 export function getDynamicNavigationItems(
   menuItems: Array<{ id: number; title: string; url: string; parent: number }> | null | undefined,
-  locale: Locale
+  locale: Locale,
+  pathPrefix = ""
 ): DynamicNavigationItem[] {
   if (!menuItems || menuItems.length === 0) {
     return navigationItems.map((item, index) => ({
       id: index + 1,
       name: item.name[locale],
-      href: `/${locale}${item.href}`,
+      href: `${pathPrefix}/${locale}${item.href}`,
       hasMegaMenu: item.hasMegaMenu ?? false,
       hasBrandsMegaMenu: false,
     }));
@@ -328,7 +331,7 @@ export function getDynamicNavigationItems(
     return navigationItems.map((item, index) => ({
       id: index + 1,
       name: item.name[locale],
-      href: `/${locale}${item.href}`,
+      href: `${pathPrefix}/${locale}${item.href}`,
       hasMegaMenu: item.hasMegaMenu ?? false,
       hasBrandsMegaMenu: false,
     }));
@@ -337,7 +340,7 @@ export function getDynamicNavigationItems(
   const normalizedItems = topLevelItems
     .map((item, index) => {
       const title = locale === "ar" ? translateToArabic(item.title) : decodeHtmlEntities(item.title);
-    const href = normalizeMenuUrl(item.url, locale);
+    const href = normalizeMenuUrl(item.url, locale, pathPrefix);
     const normalizedTitle = title.toLowerCase().trim();
     const normalizedHref = href.toLowerCase();
     const [hrefPath, hrefQuery = ""] = normalizedHref.split("?");
@@ -350,9 +353,9 @@ export function getDynamicNavigationItems(
       normalizedTitle === "shop" ||
       normalizedTitle === "shop all" ||
       normalizedTitle === "shopall" ||
-      hrefPath === `/${locale}/shop` ||
-      hrefPath === `/${locale}/shop/`;
-    const shopHref = `/${locale}/shop${hrefQuery ? `?${hrefQuery}` : ""}`;
+      hrefPath === `${pathPrefix}/${locale}/shop` ||
+      hrefPath === `${pathPrefix}/${locale}/shop/`;
+    const shopHref = `${pathPrefix}/${locale}/shop${hrefQuery ? `?${hrefQuery}` : ""}`;
 
       return {
         id: item.id,
@@ -371,7 +374,7 @@ export function getDynamicNavigationItems(
   const hasShopAll = normalizedItems.some((item) => {
     const normalized = item.name.toLowerCase().trim();
     const href = item.href.toLowerCase();
-    return normalized === "shop all" || normalized === "shop" || href === `/${locale}/shop` || href.startsWith(`/${locale}/shop?`);
+    return normalized === "shop all" || normalized === "shop" || href === `${pathPrefix}/${locale}/shop` || href.startsWith(`${pathPrefix}/${locale}/shop?`);
   });
 
   const withShopAll = hasShopAll
@@ -380,7 +383,7 @@ export function getDynamicNavigationItems(
         {
           id: -1,
           name: locale === "ar" ? "تسوق الكل" : "Shop All",
-          href: `/${locale}/shop`,
+          href: `${pathPrefix}/${locale}/shop`,
           hasMegaMenu: true,
           hasBrandsMegaMenu: false,
           __order: -1,

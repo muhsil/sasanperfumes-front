@@ -12,6 +12,7 @@ import type { Metadata } from "next";
 import { CategoryClient } from "../../category/[slug]/CategoryClient";
 import { notesSeoContent, ALL_NOTE_SLUGS } from "@/data/notes-seo-content";
 import { getNoteSeo } from "@/lib/api/wordpress";
+import { getMarketPathPrefix } from "@/config/market";
 
 // Revalidate every 5 minutes
 export const revalidate = 300;
@@ -75,6 +76,7 @@ export default async function NotePage({ params }: NotePageProps) {
     getRequestMarket(),
     getRequestFrontendHost(),
   ]);
+  const pathPrefix = getMarketPathPrefix(market.code);
 
   // Try WP API first to get attribute mapping, then fall back to hardcoded SEO content
   const wpNote = await getNoteSeo(slug);
@@ -134,9 +136,9 @@ export default async function NotePage({ params }: NotePageProps) {
     : `${noteName} Fragrances`;
 
   const breadcrumbItems = [
-    { name: dictionary.common.shop, href: `/${locale}/shop` },
-    { name: isRTL ? "نوتات عطرية" : "Fragrance Notes", href: `/${locale}/shop` },
-    { name: noteName, href: `/${locale}/notes/${slug}` },
+    { name: dictionary.common.shop, href: `${pathPrefix}/${locale}/shop` },
+    { name: isRTL ? "نوتات عطرية" : "Fragrance Notes", href: `${pathPrefix}/${locale}/shop` },
+    { name: noteName, href: `${pathPrefix}/${locale}/notes/${slug}` },
   ];
 
   const breadcrumbJsonLd = generateBreadcrumbJsonLd([

@@ -22,6 +22,8 @@ import { shouldUseUnoptimizedImage } from "@/lib/utils/image";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
 import { ServicesWithAnimation } from "@/components/sections";
+import { getRequestMarket } from "@/lib/market/server";
+import { getMarketPathPrefix } from "@/config/market";
 
 interface AboutPageProps {
   params: Promise<{ locale: string }>;
@@ -126,11 +128,11 @@ const arabicKeywords = [
   },
 */
 
-function localizedHref(rawHref: string, locale: string, fallback: string) {
+function localizedHref(rawHref: string, locale: string, fallback: string, pathPrefix = "") {
   const href = rawHref || fallback;
-  if (href.startsWith("http") || href.startsWith(`/${locale}/`)) return href;
-  if (href.startsWith("/")) return `/${locale}${href}`;
-  return `/${locale}/${href}`;
+  if (href.startsWith("http") || href.startsWith(`${pathPrefix}/${locale}/`)) return href;
+  if (href.startsWith("/")) return `${pathPrefix}/${locale}${href}`;
+  return `${pathPrefix}/${locale}/${href}`;
 }
 
 function pickImageUrl(...values: unknown[]): string {
@@ -213,6 +215,8 @@ export async function generateMetadata({
 }
 
 export default async function AboutPage({ params }: AboutPageProps) {
+  const market = await getRequestMarket();
+  const pathPrefix = getMarketPathPrefix(market.code);
   const { locale } = await params;
   const toggles = await getFeatureToggles();
   if (!toggles.sasanperfumes_about_enabled) notFound();
@@ -295,7 +299,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
   const ctaSubtitle = pickLocale(wp?.cta_subtitle, locale, "");
   const ctaButton = pickLocale(wp?.cta_button, locale, "");
   const rawCtaLink = pickLocale(wp?.cta_link, locale, "");
-  const ctaLink = rawCtaLink ? localizedHref(rawCtaLink, locale, "") : "";
+  const ctaLink = rawCtaLink ? localizedHref(rawCtaLink, locale, "", pathPrefix) : "";
 
   const brandFaqItems = mapRepeater(wp?.faq_items, locale, (item) => ({
     question: locale === "ar" ? (item.q?.ar || item.q_ar || "") : (item.q?.en || item.q_en || ""),
@@ -303,7 +307,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
   })).filter((item) => item.question || item.answer);
 
   const breadcrumbItems = [
-    { name: dictionary.common.about, href: `/${locale}/about-us` },
+    { name: dictionary.common.about, href: `${pathPrefix}/${locale}/about-us` },
   ];
 
   const hasHeroContent = Boolean(heroSubtitle || title || heroDescription || (ctaButton && ctaLink));

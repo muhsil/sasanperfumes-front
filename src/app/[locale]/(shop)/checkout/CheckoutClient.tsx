@@ -28,6 +28,7 @@ import type { CoCartItem } from "@/lib/api/cocart";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { GiftWrapOption } from "@/components/checkout/GiftWrapOption";
 import { CheckoutLoyaltyPoints } from "@/components/checkout/CheckoutLoyaltyPoints";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface ShippingRate {
   rate_id: string;
@@ -141,6 +142,7 @@ const emptyAddress: AddressFormData = {
 };
 
 export default function CheckoutClient() {
+  const marketPrefix = useMarketPrefix();
   const { locale } = useParams<{ locale: string }>();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -447,7 +449,7 @@ export default function CheckoutClient() {
           const timer = setInterval(() => {
             setEmptyCartCountdown((prev) => {
               if (prev === null || prev <= 1) {
-                router.push(`/${locale}`);
+                router.push(`${marketPrefix}/${locale}`);
                 return 0;
               }
               return prev - 1;
@@ -595,8 +597,8 @@ export default function CheckoutClient() {
     }, [discountedCartSubtotal, shippingTotal, shippingPackages, cartTotal, cartFeeTotal, customsFee, cart?.fees]);
 
     const breadcrumbItems = [
-    { name: isRTL ? "السلة" : "Cart", href: `/${locale}/cart` },
-    { name: isRTL ? "الدفع" : "Checkout", href: `/${locale}/checkout` },
+    { name: isRTL ? "السلة" : "Cart", href: `${marketPrefix}/${locale}/cart` },
+    { name: isRTL ? "الدفع" : "Checkout", href: `${marketPrefix}/${locale}/checkout` },
   ];
 
   const checkoutTitle = breadcrumbItems[1]?.name || "Checkout";
@@ -1349,7 +1351,7 @@ export default function CheckoutClient() {
             } else if (data.payment_url) {
               window.location.href = data.payment_url;
             } else {
-              router.push(`/${locale}/order-confirmation?order_id=${data.order_id}&order_key=${data.order_key}`);
+              router.push(`${marketPrefix}/${locale}/order-confirmation?order_id=${data.order_id}&order_key=${data.order_key}`);
             }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred while placing your order");
@@ -1477,7 +1479,7 @@ export default function CheckoutClient() {
                   </p>
                   <button
                     type="button"
-                    onClick={() => router.push(`/${locale}`)}
+                    onClick={() => router.push(`${marketPrefix}/${locale}`)}
                     className="mt-4 inline-flex items-center rounded-full bg-brand-primary px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-primary-dark"
                   >
                     {isRTL ? "العودة للرئيسية الآن" : "Go to Home Now"}
@@ -1542,7 +1544,7 @@ export default function CheckoutClient() {
                           type="button"
                           variant="primary"
                           size="sm"
-                          onClick={() => router.push(`/${locale}/login?redirect=${encodeURIComponent(`/${locale}/checkout`)}`)}
+                          onClick={() => router.push(`${marketPrefix}/${locale}/login?redirect=${encodeURIComponent(`${marketPrefix}/${locale}/checkout`)}`)}
                         >
                           {isRTL ? "تسجيل الدخول" : "Log In"}
                         </Button>

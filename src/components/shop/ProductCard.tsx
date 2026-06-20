@@ -13,6 +13,7 @@ import { useComparison } from "@/contexts/ComparisonContext";
 import { cn, decodeHtmlEntities } from "@/lib/utils";
 import type { Product } from "@/types";
 import type { Locale } from "@/config/site";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface ProductCardProps {
   product: Product;
@@ -22,6 +23,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, locale, className, wcProduct }: ProductCardProps) {
+  const marketPrefix = useMarketPrefix();
   const [isAddedToCart, setIsAddedToCart] = useState(false);
   const { addToCart, isLoading } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist, isLoading: isWishlistLoading } = useWishlist();
@@ -45,7 +47,7 @@ export function ProductCard({ product, locale, className, wcProduct }: ProductCa
     quickView: isAr ? "\u0646\u0638\u0631\u0629 \u0633\u0631\u064a\u0639\u0629" : "Quick view",
   };
 
-  const productHref = `/${locale}/product/${product.slug}`;
+  const productHref = `${marketPrefix}/${locale}/product/${product.slug}`;
   const productName = decodeHtmlEntities(product.name);
   const variationAttributes = product.attributes.nodes.filter((attribute) => attribute.variation && attribute.options.length > 0);
   const variationTerms = variationAttributes.flatMap((attribute) =>

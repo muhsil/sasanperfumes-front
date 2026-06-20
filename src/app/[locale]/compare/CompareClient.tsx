@@ -9,10 +9,12 @@ import { useCart } from "@/contexts/CartContext";
 import type { WCProduct } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
 import { decodeHtmlEntities } from "@/lib/utils";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface CompareClientProps { locale: Locale; productIds: number[]; }
 
 export function CompareClient({ locale, productIds }: CompareClientProps) {
+  const marketPrefix = useMarketPrefix();
   const [products, setProducts] = useState<WCProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const { addToCart } = useCart();
@@ -41,7 +43,7 @@ export function CompareClient({ locale, productIds }: CompareClientProps) {
       <div className="mx-auto max-w-7xl px-4">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">{isAr ? "مقارنة المنتجات" : "Compare Products"}</h1>
-          <Link href={`/${locale}/shop`} className="text-sm text-brand-primary hover:underline">
+          <Link href={`${marketPrefix}/${locale}/shop`} className="text-sm text-brand-primary hover:underline">
             {isAr ? "← متابعة التسوق" : "← Continue Shopping"}
           </Link>
         </div>
@@ -53,7 +55,7 @@ export function CompareClient({ locale, productIds }: CompareClientProps) {
                 <th className="w-32 p-4 text-start text-sm font-medium text-gray-500">{isAr ? "المنتج" : "Product"}</th>
                 {products.map((p) => (
                   <th key={p.id} className="p-4">
-                    <Link href={`/${locale}/product/${p.slug}`} className="block">
+                    <Link href={`${marketPrefix}/${locale}/product/${p.slug}`} className="block">
                       {p.images[0]?.src && (
                         <div className="relative mx-auto mb-3 h-40 w-40 overflow-hidden rounded-xl">
                           <Image src={p.images[0].src} alt={p.name} fill className="object-cover" sizes="160px" />

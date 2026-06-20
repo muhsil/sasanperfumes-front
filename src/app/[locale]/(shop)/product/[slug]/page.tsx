@@ -12,6 +12,7 @@ import { siteConfig, type Locale } from "@/config/site";
 import { decodeHtmlEntities } from "@/lib/utils";
 import type { Metadata } from "next";
 import type { WCProduct } from "@/types/woocommerce";
+import { getMarketPathPrefix } from "@/config/market";
 
 // Helper to check if a slug contains non-ASCII characters (e.g., Arabic)
 function isNonAsciiSlug(slug: string): boolean {
@@ -213,6 +214,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     getRequestMarket(),
     getRequestFrontendHost(),
   ]);
+  const pathPrefix = getMarketPathPrefix(market.code);
   const frontendBaseUrl = frontendHost ? `https://${frontendHost}` : siteConfig.url;
   
   // If the URL contains a non-ASCII slug (e.g., Arabic), find the product and redirect to English slug
@@ -224,7 +226,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       const englishSlug = await getEnglishSlugForProduct(product.id, frontendHost);
       if (englishSlug && englishSlug !== slug) {
         // Redirect to the English slug URL
-        redirect(`/${locale}/product/${englishSlug}`);
+        redirect(`${pathPrefix}/${locale}/product/${englishSlug}`);
       }
       // If no English slug available, fall through to render the product with Arabic slug
       // This handles cases where WPML doesn't have an English translation
@@ -275,11 +277,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
     const breadcrumbItems = [
       {
         name: isRTL ? "المتجر" : "Shop",
-        href: `/${locale}/shop`,
+        href: `${pathPrefix}/${locale}/shop`,
       },
       {
         name: decodeHtmlEntities(product.name),
-        href: `/${locale}/product/${slug}`,
+        href: `${pathPrefix}/${locale}/product/${slug}`,
       },
     ];
     

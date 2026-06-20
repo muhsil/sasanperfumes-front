@@ -2,6 +2,7 @@
 
 import { ServicesSlider } from "./ServicesSlider";
 import type { Locale } from "@/config/site";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface Service {
   id: number;
@@ -22,6 +23,7 @@ export function ServicesWithAnimation({
   locale,
   isRTL,
 }: ServicesWithAnimationProps) {
+  const marketPrefix = useMarketPrefix();
   return (
     <section className="bg-white pt-8 md:pt-10 lg:pt-12 pb-0">
       <div className="mb-8 section-shell md:mb-12">
@@ -34,7 +36,7 @@ export function ServicesWithAnimation({
       </div>
       <div className="mt-8 section-shell pb-8">
         <a
-          href={`/${locale}/services`}
+          href={`${marketPrefix}/${locale}/services`}
           className="inline-flex items-center gap-2 border-b border-brand-primary pb-1 text-xs font-bold tracking-[0.1em] text-brand-primary uppercase transition-colors hover:text-brand-primary/70"
         >
           {isRTL ? "جميع الخدمات" : "View All Services"}

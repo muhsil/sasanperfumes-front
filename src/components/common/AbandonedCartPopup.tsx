@@ -5,6 +5,7 @@ import Link from "next/link";
 import { X, Copy, Check, ShoppingBag } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import type { Locale } from "@/config/site";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface AbandonedSettings {
   enabled: boolean; idle_minutes: number;
@@ -15,6 +16,7 @@ interface AbandonedSettings {
 const SESSION_KEY = "sasanperfumes_ab_popup_shown";
 
 export function AbandonedCartPopup({ locale }: { locale: Locale }) {
+  const marketPrefix = useMarketPrefix();
   const { cart } = useCart();
   const [settings, setSettings] = useState<AbandonedSettings | null>(null);
   const [open, setOpen] = useState(false);
@@ -98,7 +100,7 @@ export function AbandonedCartPopup({ locale }: { locale: Locale }) {
         )}
 
         <Link
-          href={`/${locale}/checkout`}
+          href={`${marketPrefix}/${locale}/checkout`}
           onClick={() => setOpen(false)}
           className="block w-full rounded-xl bg-brand-primary py-3 text-center text-sm font-semibold text-white hover:bg-brand-primary-dark transition-colors"
         >

@@ -13,6 +13,7 @@ interface CollectionPageHeaderProps {
   locale: Locale;
   categories?: WCCategory[];
   className?: string;
+  pathPrefix?: string;
 }
 
 function stripHtml(value?: string | null): string {
@@ -28,6 +29,7 @@ export function CollectionPageHeader({
   locale,
   categories = [],
   className,
+  pathPrefix = "",
 }: CollectionPageHeaderProps) {
   const isRTL = locale === "ar";
   const visibleCategories = categories.filter((category) => category.count > 0).slice(0, 8);
@@ -48,7 +50,7 @@ export function CollectionPageHeader({
             {visibleCategories.map((category) => (
             <Link
               key={category.id}
-              href={`/${locale}/category/${category.slug}`}
+              href={`${pathPrefix}/${locale}/category/${category.slug}`}
               className="group flex shrink-0 flex-col items-center gap-3 text-center"
             >
               <span className="relative block h-[72px] w-[72px] overflow-hidden rounded-full bg-brand-beige ring-1 ring-brand-border transition-all duration-300 group-hover:ring-brand-primary/30 md:h-[78px] md:w-[78px]">

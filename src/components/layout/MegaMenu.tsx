@@ -13,6 +13,7 @@ import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { MiniProductGridSkeleton, CategoriesGridSkeleton } from "@/components/common/Skeleton";
 import { getMegaMenuCategories } from "@/config/menu";
 import { getMegaMenuData, type MegaMenuColumn, type MegaMenuData, type MegaMenuSettings } from "@/lib/api/wordpress";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 const productsFetchPromise: Record<string, Promise<WCProduct[]> | null> = {};
 const menuDataFetchPromise: Record<string, Promise<MegaMenuData | null> | null> = {};
@@ -53,6 +54,7 @@ export function MegaMenu({
   megaMenuSettings,
 }: MegaMenuProps) {
   void dictionary; // Reserved for future use
+  const marketPrefix = useMarketPrefix();
   const displayMode = megaMenuSettings?.displayMode || "child-based";
   const showProducts = megaMenuSettings?.showProducts !== false;
   const maxColumns = megaMenuSettings?.maxColumns || 3;
@@ -168,13 +170,13 @@ export function MegaMenu({
         id: cat.id,
         name: cat.name,
         slug: cat.slug,
-        url: `/${locale}/shop?category=${cat.slug}`,
+        url: `${marketPrefix}/${locale}/shop?category=${cat.slug}`,
         image: cat.image,
         children: cat.children.map((child) => ({
           id: child.id,
           name: child.name,
           slug: child.slug,
-          url: `/${locale}/shop?category=${child.slug}`,
+          url: `${marketPrefix}/${locale}/shop?category=${child.slug}`,
         })),
       }));
 
@@ -222,7 +224,7 @@ export function MegaMenu({
                     <div key={column.id} className="flex flex-col">
                       {/* Category Header with Image */}
                       <Link
-                        href={column.url || `/${locale}/shop?category=${column.slug}`}
+                        href={column.url || `${marketPrefix}/${locale}/shop?category=${column.slug}`}
                         onClick={onClose}
                         className="flex items-center gap-2 mb-3 group"
                       >
@@ -250,7 +252,7 @@ export function MegaMenu({
                         {column.children.slice(0, 8).map((child) => (
                           <Link
                             key={child.id}
-                            href={child.url || `/${locale}/shop?category=${child.slug}`}
+                            href={child.url || `${marketPrefix}/${locale}/shop?category=${child.slug}`}
                             onClick={onClose}
                             className="block text-sm text-gray-600 hover:text-brand-primary transition-colors"
                           >
@@ -259,7 +261,7 @@ export function MegaMenu({
                         ))}
                         {column.children.length > 8 && (
                           <Link
-                            href={column.url || `/${locale}/shop?category=${column.slug}`}
+                            href={column.url || `${marketPrefix}/${locale}/shop?category=${column.slug}`}
                             onClick={onClose}
                             className="block text-sm font-medium text-brand-primary hover:text-brand-primary-dark transition-colors"
                           >
@@ -288,7 +290,7 @@ export function MegaMenu({
                       return (
                       <Link
                         key={product.id}
-                        href={`/${locale}/product/${productSlug}`}
+                        href={`${marketPrefix}/${locale}/product/${productSlug}`}
                         onClick={onClose}
                         className="group block"
                       >

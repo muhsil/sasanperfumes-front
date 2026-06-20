@@ -8,6 +8,8 @@ import { getFeatureToggles, getPrivateLabelingData, pickLocale } from "@/lib/api
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
+import { getRequestMarket } from "@/lib/market/server";
+import { getMarketPathPrefix } from "@/config/market";
 
 export const revalidate = 300;
 
@@ -21,13 +23,13 @@ interface ContentItem {
   description: string;
 }
 
-function localizedHref(rawHref: string, locale: string, fallback: string) {
+function localizedHref(rawHref: string, locale: string, fallback: string, pathPrefix = "") {
   const href = rawHref || fallback;
   if (!href) return "";
   if (href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:")) return href;
-  if (href.startsWith("http") || href.startsWith(`/${locale}/`)) return href;
-  if (href.startsWith("/")) return `/${locale}${href}`;
-  return `/${locale}/${href}`;
+  if (href.startsWith("http") || href.startsWith(`${pathPrefix}/${locale}/`)) return href;
+  if (href.startsWith("/")) return `${pathPrefix}/${locale}${href}`;
+  return `${pathPrefix}/${locale}/${href}`;
 }
 
 function fixedBackgroundStyle(image: string) {
@@ -130,6 +132,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function PrivateLabelingPage({ params }: PageProps) {
+  const market = await getRequestMarket();
+  const pathPrefix = getMarketPathPrefix(market.code);
   const { locale } = await params;
   const isRTL = locale === "ar";
 
@@ -144,7 +148,7 @@ export default async function PrivateLabelingPage({ params }: PageProps) {
     description: pickLocale(data?.hero?.description, locale, ""),
     image: data?.hero?.image || "",
     ctaText: pickLocale(data?.hero?.ctaText, locale, ""),
-    ctaLink: localizedHref(data?.hero?.ctaLink || "#enquiry-form", locale, "#enquiry-form"),
+    ctaLink: localizedHref(data?.hero?.ctaLink || "#enquiry-form", locale, "#enquiry-form", pathPrefix),
   };
 
   const intro = {
@@ -187,7 +191,7 @@ export default async function PrivateLabelingPage({ params }: PageProps) {
     title: pickLocale(data?.cta?.title, locale, ""),
     description: pickLocale(data?.cta?.description, locale, ""),
     buttonText: pickLocale(data?.cta?.buttonText, locale, ""),
-    buttonLink: localizedHref(data?.cta?.buttonLink || "#enquiry-form", locale, "#enquiry-form"),
+    buttonLink: localizedHref(data?.cta?.buttonLink || "#enquiry-form", locale, "#enquiry-form", pathPrefix),
   };
 
   const sectionTitles = {
@@ -217,7 +221,7 @@ export default async function PrivateLabelingPage({ params }: PageProps) {
   };
 
   const breadcrumbItems = [
-    { name: hero.title || formContent.title, href: `/${locale}/private-labeling` },
+    { name: hero.title || formContent.title, href: `${pathPrefix}/${locale}/private-labeling` },
   ];
 
   const heroStats = process

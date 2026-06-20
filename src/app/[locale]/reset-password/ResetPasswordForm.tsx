@@ -8,12 +8,14 @@ import { Button } from "@/components/common/Button";
 import { AuthBackground } from "@/components/common/AuthBackground";
 import { useNotification } from "@/contexts/NotificationContext";
 import { resetPassword } from "@/lib/api/auth";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface ResetPasswordFormProps {
   locale: string;
 }
 
 export default function ResetPasswordForm({ locale }: ResetPasswordFormProps) {
+  const marketPrefix = useMarketPrefix();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { notify } = useNotification();
@@ -113,7 +115,7 @@ export default function ResetPasswordForm({ locale }: ResetPasswordFormProps) {
         setSuccessMessage(response.message || texts.successMessage);
         notify("success", response.message || texts.successMessage);
         setTimeout(() => {
-          router.push(`/${locale}/login`);
+          router.push(`${marketPrefix}/${locale}/login`);
         }, 3000);
       } else {
         setErrors({
@@ -141,14 +143,14 @@ export default function ResetPasswordForm({ locale }: ResetPasswordFormProps) {
 
             <div className="space-y-4">
               <Link
-                href={`/${locale}/forgot-password`}
+                href={`${marketPrefix}/${locale}/forgot-password`}
                 className="block w-full rounded-md bg-brand-primary px-4 py-3 text-center font-medium text-white hover:bg-brand-primary-dark"
               >
                 {texts.requestNewLink}
               </Link>
               
               <Link
-                href={`/${locale}/login`}
+                href={`${marketPrefix}/${locale}/login`}
                 className="block text-center font-medium text-brand-primary hover:underline"
               >
                 {texts.backToLogin}
@@ -228,7 +230,7 @@ export default function ResetPasswordForm({ locale }: ResetPasswordFormProps) {
 
           <div className={`mt-6 text-center text-sm ${isRTL ? "rtl" : ""}`}>
             <Link
-              href={`/${locale}/login`}
+              href={`${marketPrefix}/${locale}/login`}
               className="font-medium text-brand-primary hover:underline"
             >
               {texts.backToLogin}

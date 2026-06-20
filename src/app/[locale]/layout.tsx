@@ -18,6 +18,7 @@ import { INDEX_NOFOLLOW_ROBOTS, generateOrganizationJsonLd, generateWebSiteJsonL
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getSiteSettings, getHeaderSettings, getPrimaryMenu, getMobileHeaderMenu, getMobileBottomBarMenu, getMobileBarSettings, getCategoriesDrawerMenu, getTopbarSettings, getSeoSettings, getFooterSettings, getWhatsAppSettings, getFeatureToggles, getStaticPageContent, mapRepeater, pickLocale } from "@/lib/api/wordpress";
 import { getRequestMarket } from "@/lib/market/server";
+import { getMarketPathPrefix } from "@/config/market";
 import { TrackingScripts } from "@/components/tracking";
 import { Suspense } from "react";
 
@@ -179,7 +180,7 @@ export default async function LocaleLayout({
                 <main id="main-content" className="section-reveal flex-1" role="main">
                   <MobileEnhancements>{children}</MobileEnhancements>
                 </main>
-                <Footer locale={validLocale} dictionary={dictionary} siteSettings={siteSettings} footerSettings={footerSettings} featureToggles={featureToggles} footerTopSocialLinks={footerTopSocialLinks} />
+                <Footer locale={validLocale} dictionary={dictionary} siteSettings={siteSettings} footerSettings={footerSettings} featureToggles={featureToggles} footerTopSocialLinks={footerTopSocialLinks} pathPrefix={getMarketPathPrefix(market.code)} />
                 <MobileBottomBar
                   locale={validLocale}
                   settings={mobileBarSettings}

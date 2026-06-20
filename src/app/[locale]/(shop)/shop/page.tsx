@@ -11,6 +11,7 @@ import { getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
 import { ShopClient } from "./ShopClient";
+import { getMarketPathPrefix } from "@/config/market";
 
 // Increased revalidate time for better cache hit rates (5 minutes instead of 60 seconds)
 export const revalidate = 300;
@@ -67,13 +68,14 @@ export default async function ShopPage({ params }: ShopPageProps) {
     getRequestMarket(),
     getRequestFrontendHost(),
   ]);
+  const pathPrefix = getMarketPathPrefix(market.code);
 
   const subtitle = pickLocale(wp?.subtitle, locale,
     isRTL ? "اكتشف مجموعتنا الكاملة من المنتجات" : "Discover our complete collection of products"
   );
 
   const breadcrumbItems = [
-    { name: dictionary.common.shop, href: `/${locale}/shop` },
+    { name: dictionary.common.shop, href: `${pathPrefix}/${locale}/shop` },
   ];
 
   // Fetch products, gift product info (IDs and slugs), and bundle product slugs in parallel

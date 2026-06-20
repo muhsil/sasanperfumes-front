@@ -8,12 +8,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/common/Button";
 import { LoyaltyDashboard } from "@/components/account/LoyaltyDashboard";
 import { ReferralProgram } from "@/components/account/ReferralProgram";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface AccountPageProps {
   params: Promise<{ locale: string }>;
 }
 
 export default function AccountPage({ params }: AccountPageProps) {
+  const marketPrefix = useMarketPrefix();
   const router = useRouter();
   const { user, isAuthenticated, isLoading, logout } = useAuth();
   const [locale, setLocale] = useState<string>("en");
@@ -24,7 +26,7 @@ export default function AccountPage({ params }: AccountPageProps) {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push(`/${locale}/login`);
+      router.push(`${marketPrefix}/${locale}/login`);
     }
   }, [isLoading, isAuthenticated, locale, router]);
 
@@ -72,31 +74,31 @@ export default function AccountPage({ params }: AccountPageProps) {
       icon: Package,
       label: texts.orders,
       description: texts.ordersDesc,
-      href: `/${locale}/account/orders`,
+      href: `${marketPrefix}/${locale}/account/orders`,
     },
     {
       icon: MapPin,
       label: texts.addresses,
       description: texts.addressesDesc,
-      href: `/${locale}/account/addresses`,
+      href: `${marketPrefix}/${locale}/account/addresses`,
     },
     {
       icon: Heart,
       label: texts.wishlist,
       description: texts.wishlistDesc,
-      href: `/${locale}/account/wishlist`,
+      href: `${marketPrefix}/${locale}/account/wishlist`,
     },
     {
       icon: Settings,
       label: texts.settings,
       description: texts.settingsDesc,
-      href: `/${locale}/account/settings`,
+      href: `${marketPrefix}/${locale}/account/settings`,
     },
   ];
 
   const handleLogout = () => {
     logout();
-    router.push(`/${locale}`);
+    router.push(`${marketPrefix}/${locale}`);
   };
 
   if (isLoading) {

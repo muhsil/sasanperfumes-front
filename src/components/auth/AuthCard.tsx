@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Home } from "lucide-react";
 import { AuthBackground } from "@/components/common/AuthBackground";
 import { cn } from "@/lib/utils";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface AuthCardProps {
   locale: string;
@@ -24,6 +25,7 @@ export function AuthCard({
   footer,
   className,
 }: AuthCardProps) {
+  const marketPrefix = useMarketPrefix();
   const isRTL = locale === "ar";
 
   return (
@@ -49,7 +51,7 @@ export function AuthCard({
             )}
           </div>
           <Link
-            href={`/${locale}`}
+            href={`${marketPrefix}/${locale}`}
             className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-brand-border/70 bg-white text-brand-primary transition-colors hover:border-brand-primary/40 hover:bg-brand-beige"
             aria-label="Home"
           >

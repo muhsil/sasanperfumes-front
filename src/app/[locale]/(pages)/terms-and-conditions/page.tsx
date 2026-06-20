@@ -8,6 +8,8 @@ import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { getPageSeo, getStaticPageContent, pickLocale, mapRepeater, mapFAQGroups, getFeatureToggles } from "@/lib/api/wordpress";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
+import { getRequestMarket } from "@/lib/market/server";
+import { getMarketPathPrefix } from "@/config/market";
 
 interface TermsPageProps {
   params: Promise<{ locale: string }>;
@@ -43,6 +45,8 @@ export async function generateMetadata({
 }
 
 export default async function TermsPage({ params }: TermsPageProps) {
+  const market = await getRequestMarket();
+  const pathPrefix = getMarketPathPrefix(market.code);
   const { locale } = await params;
   const toggles = await getFeatureToggles();
   if (!toggles.sasanperfumes_terms_enabled) notFound();
@@ -64,7 +68,7 @@ export default async function TermsPage({ params }: TermsPageProps) {
   }));
 
   const breadcrumbItems = [
-    { name: dictionary.footer.termsConditions, href: `/${locale}/terms-and-conditions` },
+    { name: dictionary.footer.termsConditions, href: `${pathPrefix}/${locale}/terms-and-conditions` },
   ];
 
   return (
@@ -104,7 +108,7 @@ export default async function TermsPage({ params }: TermsPageProps) {
 
           <div className="border-t border-[#e7ded7] pt-8">
             <a
-              href={`/${locale}/contact`}
+              href={`${pathPrefix}/${locale}/contact`}
               className="inline-flex items-center gap-2 border-b border-brand-primary pb-1 text-xs font-normal tracking-[0.1em] text-brand-primary uppercase"
             >
               {dictionary.common.contact}

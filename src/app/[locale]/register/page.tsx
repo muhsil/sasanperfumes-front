@@ -12,12 +12,14 @@ import { validatePhoneNumber, parsePhoneNumber } from "@/lib/utils/phone";
 import { useNotification } from "@/contexts/NotificationContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface RegisterPageProps {
   params: Promise<{ locale: string }>;
 }
 
 export default function RegisterPage({ params }: RegisterPageProps) {
+  const marketPrefix = useMarketPrefix();
   const router = useRouter();
   const { notify } = useNotification();
   const { googleLogin } = useAuth();
@@ -180,7 +182,7 @@ export default function RegisterPage({ params }: RegisterPageProps) {
         setSuccessMessage(texts.registerSuccess);
         notify("success", texts.registerSuccess);
         setTimeout(() => {
-          router.push(`/${locale}/login`);
+          router.push(`${marketPrefix}/${locale}/login`);
         }, 2000);
       } else {
         setErrors({
@@ -213,7 +215,7 @@ export default function RegisterPage({ params }: RegisterPageProps) {
         <>
           <span className="text-brand-muted">{texts.hasAccount} </span>
           <Link
-            href={`/${locale}/login`}
+            href={`${marketPrefix}/${locale}/login`}
             className="font-semibold text-brand-primary transition-colors hover:text-brand-primary-dark"
           >
             {texts.signInLink}
@@ -240,7 +242,7 @@ export default function RegisterPage({ params }: RegisterPageProps) {
           try {
             const response = await googleLogin(credential);
             if (response.success) {
-              router.push(`/${locale}/account`);
+              router.push(`${marketPrefix}/${locale}/account`);
             } else {
               setErrors({ general: response.error?.message || texts.googleSignUpError });
             }
@@ -348,7 +350,7 @@ export default function RegisterPage({ params }: RegisterPageProps) {
           />
           <label htmlFor="terms" className="text-sm leading-6 text-brand-primary">
             {texts.termsLabel}{" "}
-            <Link href={`/${locale}/terms-and-conditions`} className="font-medium text-brand-primary hover:underline">
+            <Link href={`${marketPrefix}/${locale}/terms-and-conditions`} className="font-medium text-brand-primary hover:underline">
               {texts.termsLink}
             </Link>
           </label>

@@ -10,6 +10,7 @@ import { ProductListing } from "@/components/shop/ProductListing";
 import { BLUR_DATA_URL, cn, decodeHtmlEntities } from "@/lib/utils";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
+import { getMarketPathPrefix } from "@/config/market";
 
 export const revalidate = 300;
 
@@ -59,6 +60,7 @@ export default async function BrandDetailPage({ params }: BrandPageProps) {
     getRequestMarket(),
     getRequestFrontendHost(),
   ]);
+  const pathPrefix = getMarketPathPrefix(market.code);
 
   const isRTL = locale === "ar";
   const brandName = decodeHtmlEntities(brand.name);
@@ -76,8 +78,8 @@ export default async function BrandDetailPage({ params }: BrandPageProps) {
   });
 
   const breadcrumbItems = [
-    { name: isRTL ? "Ø§Ù„Ø¹Ù„Ø§Ù…Ø§Øª Ø§Ù„ØªØ¬Ø§Ø±ÙŠØ©" : "Brands", href: `/${locale}/brands` },
-    { name: brandName, href: `/${locale}/brands/${slug}` },
+    { name: isRTL ? "Ø§Ù„Ø¹Ù„Ø§Ù…Ø§Øª Ø§Ù„ØªØ¬Ø§Ø±ÙŠØ©" : "Brands", href: `${pathPrefix}/${locale}/brands` },
+    { name: brandName, href: `${pathPrefix}/${locale}/brands/${slug}` },
   ];
 
   const brandImage = brand.logo || brand.banner || brand.image;

@@ -15,6 +15,7 @@ import { decodeHtmlEntities, BLUR_DATA_URL } from "@/lib/utils";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface ExtraCategoryItem {
   id: string;
@@ -79,6 +80,7 @@ export function CategorySection({
   fallbackImages = {},
   variant = "light",
 }: CategorySectionProps) {
+  const marketPrefix = useMarketPrefix();
   if (isLoading) {
     return <CategorySectionSkeleton count={settings.categories_count || 6} />;
   }
@@ -202,7 +204,7 @@ export function CategorySection({
                 return (
                   <SwiperSlide key={category.slug}>
                     <Link
-                      href={`/${locale}/category/${categorySlugForUrl}`}
+                      href={`${marketPrefix}/${locale}/category/${categorySlugForUrl}`}
                       className="group flex flex-col"
                     >
                       <div className={cardClassName}>

@@ -7,6 +7,8 @@ import { getService, getServices, getFeatureToggles, pickLocale } from "@/lib/ap
 import { shouldUseUnoptimizedImage } from "@/lib/utils/image";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
+import { getRequestMarket } from "@/lib/market/server";
+import { getMarketPathPrefix } from "@/config/market";
 
 export const revalidate = 300;
 
@@ -46,6 +48,8 @@ export async function generateMetadata({ params }: ServicePageProps): Promise<Me
 
 
 export default async function ServiceDetailPage({ params }: ServicePageProps) {
+  const market = await getRequestMarket();
+  const pathPrefix = getMarketPathPrefix(market.code);
   const { locale, slug } = await params;
   const toggles = await getFeatureToggles();
   if (!toggles.sasanperfumes_services_page_enabled) notFound();
@@ -64,8 +68,8 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
   }));
 
   const breadcrumbItems = [
-    { name: isRTL ? "الخدمات" : "Services", href: `/${locale}/services` },
-    { name: title, href: `/${locale}/services/${slug}` },
+    { name: isRTL ? "الخدمات" : "Services", href: `${pathPrefix}/${locale}/services` },
+    { name: title, href: `${pathPrefix}/${locale}/services/${slug}` },
   ];
 
   return (
@@ -155,7 +159,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
               : "Get in touch with us for a personalized consultation"}
           </p>
           <Link
-            href={`/${locale}/contact`}
+            href={`${pathPrefix}/${locale}/contact`}
             className="mt-4 inline-flex items-center gap-2 border-b border-brand-primary pb-1 text-xs font-normal tracking-[0.1em] text-brand-primary uppercase"
           >
             {isRTL ? "تواصل معنا" : "Contact Us"}
@@ -166,7 +170,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
       {/* Back to Services */}
       <section className="px-4 py-8">
         <Link
-          href={`/${locale}/services`}
+          href={`${pathPrefix}/${locale}/services`}
           className="inline-flex items-center gap-2 border-b border-brand-primary pb-1 text-xs font-normal tracking-[0.1em] text-brand-primary uppercase"
         >
           <svg className="h-4 w-4 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">

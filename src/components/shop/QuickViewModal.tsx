@@ -14,6 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { triggerHaptic } from "@/lib/utils/haptics";
 import type { WCProduct } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface QuickViewModalProps {
   product: WCProduct;
@@ -36,6 +37,7 @@ function sanitizeQuickViewDescription(html: string): string {
 }
 
 export function QuickViewModal({ product, locale, isOpen, onClose, englishSlug }: QuickViewModalProps) {
+  const marketPrefix = useMarketPrefix();
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isAddedToCart, setIsAddedToCart] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -64,7 +66,7 @@ export function QuickViewModal({ product, locale, isOpen, onClose, englishSlug }
   const productName = decodeHtmlEntities(product.name);
   const shortDescription = sanitizeQuickViewDescription(product.short_description || "");
   const productSlug = englishSlug || product.slug;
-  const productHref = `/${locale}/product/${productSlug}`;
+  const productHref = `${marketPrefix}/${locale}/product/${productSlug}`;
   const mainImage = product.images[0];
   const isOutOfStock = !product.is_in_stock;
 
@@ -169,7 +171,7 @@ export function QuickViewModal({ product, locale, isOpen, onClose, englishSlug }
   const handleWishlistToggle = async () => {
     triggerHaptic();
     if (!isAuthenticated) {
-      window.location.href = `/${locale}/login`;
+      window.location.href = `${marketPrefix}/${locale}/login`;
       return;
     }
     try {

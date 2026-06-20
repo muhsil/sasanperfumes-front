@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { GroupedFAQAccordion, type FAQGroup, type FAQItem } from "@/components/common/GroupedFAQAccordion";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 type BilingualField = {
   en?: string;
@@ -129,6 +130,7 @@ async function fetchFaqData(): Promise<FAQPageData | null> {
 }
 
 export function FAQPageContent({ locale, initialData, dictionary, contactLabel }: FAQPageContentProps) {
+  const marketPrefix = useMarketPrefix();
   const [data, setData] = useState<FAQPageData | null>(initialData);
 
   useEffect(() => {
@@ -191,7 +193,7 @@ export function FAQPageContent({ locale, initialData, dictionary, contactLabel }
             </div>
           )}
           <a
-            href={`/${locale}/contact`}
+            href={`${marketPrefix}/${locale}/contact`}
             className="inline-flex items-center gap-2 border-b border-brand-primary pb-1 text-xs font-normal tracking-[0.1em] text-brand-primary uppercase"
           >
             {contactLabel}

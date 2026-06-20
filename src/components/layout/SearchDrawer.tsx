@@ -16,6 +16,7 @@ import { searchProducts, type SearchSuggestion } from "@/lib/api/search";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { getProductSlugFromPermalink, decodeHtmlEntities } from "@/lib/utils";
 import { useFreeGift } from "@/contexts/FreeGiftContext";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface SearchDrawerProps {
   isOpen: boolean;
@@ -32,6 +33,7 @@ export function SearchDrawer({
 }: SearchDrawerProps) {
   const router = useRouter();
   const { getFreeGiftProductIds } = useFreeGift();
+  const marketPrefix = useMarketPrefix();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<WCProduct[]>([]);
   const [loading, setLoading] = useState(false);
@@ -96,7 +98,7 @@ export function SearchDrawer({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
-      router.push(`/${locale}/search?q=${encodeURIComponent(query.trim())}`);
+      router.push(`${marketPrefix}/${locale}/search?q=${encodeURIComponent(query.trim())}`);
       onClose();
     }
   };
@@ -142,7 +144,7 @@ export function SearchDrawer({
       return;
     }
 
-    router.push(`/${locale}/search?q=${encodeURIComponent(query.trim())}`);
+    router.push(`${marketPrefix}/${locale}/search?q=${encodeURIComponent(query.trim())}`);
     handleClose();
   }, [handleClose, locale, query, router]);
 
@@ -231,7 +233,7 @@ export function SearchDrawer({
               <p className="text-brand-muted">{dictionary.common.noResults || "No products found"}</p>
               {didYouMean && matchMode !== "exact" && (
                 <Link
-                  href={`/${locale}/product/${didYouMean.slug}`}
+                  href={`${marketPrefix}/${locale}/product/${didYouMean.slug}`}
                   onClick={handleClose}
                   className="mt-4 inline-flex items-center rounded-full bg-brand-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-primary-dark"
                 >
@@ -245,7 +247,7 @@ export function SearchDrawer({
                 <div className="mx-3 mt-3 rounded-lg border border-brand-border/70 bg-brand-beige/50 px-3 py-2 text-sm text-brand-primary/75">
                   {isRTL ? "هل تقصد" : "Did you mean"}{" "}
                   <Link
-                    href={`/${locale}/product/${didYouMean.slug}`}
+                    href={`${marketPrefix}/${locale}/product/${didYouMean.slug}`}
                     onClick={handleClose}
                     className="font-semibold text-brand-primary underline decoration-brand-gold decoration-2 underline-offset-4"
                   >
@@ -259,7 +261,7 @@ export function SearchDrawer({
                 return (
                   <Link
                     key={product.id}
-                    href={`/${locale}/product/${productSlug}`}
+                    href={`${marketPrefix}/${locale}/product/${productSlug}`}
                     onClick={handleClose}
                     className="flex items-center gap-3 rounded-lg border border-transparent p-3 transition-all hover:border-brand-border/60 hover:bg-brand-beige active:scale-[0.98]"
                   >

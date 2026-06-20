@@ -6,6 +6,7 @@ import { shouldUseUnoptimizedImage } from "@/lib/utils/image";
 import { pickLocale } from "@/lib/api/wordpress";
 import type { Locale } from "@/config/site";
 import { Skeleton } from "@/components/common/Skeleton";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface Service {
   id: number;
@@ -49,6 +50,7 @@ export function HomepageServicesGrid({
   locale,
   isRTL,
 }: HomepageServicesGridProps) {
+  const marketPrefix = useMarketPrefix();
   return (
     <section className="bg-white pt-8 md:pt-10 lg:pt-12 pb-0">
       <div className="mb-8 section-shell md:mb-10">
@@ -65,7 +67,7 @@ export function HomepageServicesGrid({
           return (
             <Link
               key={service.id}
-              href={`/${locale}/services/${service.slug}`}
+              href={`${marketPrefix}/${locale}/services/${service.slug}`}
               data-service-card
               className="group relative block overflow-hidden"
             >
@@ -143,7 +145,7 @@ export function HomepageServicesGrid({
 
       <div className="mt-8 section-shell pb-10">
         <Link
-          href={`/${locale}/services`}
+          href={`${marketPrefix}/${locale}/services`}
           className="inline-flex items-center gap-2 border-b border-brand-primary pb-1 text-xs font-normal tracking-[0.1em] text-brand-primary uppercase transition-colors hover:text-brand-primary/70"
         >
           {isRTL ? "جميع الخدمات" : "View All Services"}

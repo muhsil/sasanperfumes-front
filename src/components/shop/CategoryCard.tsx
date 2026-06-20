@@ -9,6 +9,7 @@ interface CategoryCardProps {
   locale: Locale;
   className?: string;
   variant?: "default" | "featured";
+  pathPrefix?: string;
 }
 
 export function CategoryCard({
@@ -16,10 +17,11 @@ export function CategoryCard({
   locale,
   className,
   variant = "default",
+  pathPrefix = "",
 }: CategoryCardProps) {
   return (
     <Link
-      href={`/${locale}/category/${category.slug}`}
+      href={`${pathPrefix}/${locale}/category/${category.slug}`}
       className={cn(
         "group relative block overflow-hidden rounded-lg border border-brand-border/70 bg-brand-ivory shadow-[0_16px_34px_rgba(20,15,10,0.08)] transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-gold/45",
         variant === "featured" ? "aspect-[4/3]" : "aspect-square",

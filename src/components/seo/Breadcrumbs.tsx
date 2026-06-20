@@ -15,14 +15,15 @@ interface BreadcrumbsProps {
   locale: Locale;
   className?: string;
   contained?: boolean;
+  pathPrefix?: string;
 }
 
-export function Breadcrumbs({ items, locale, className, contained = true }: BreadcrumbsProps) {
+export function Breadcrumbs({ items, locale, className, contained = true, pathPrefix = "" }: BreadcrumbsProps) {
   const isRTL = locale === "ar";
   const isVisuallyHidden = typeof className === "string" && className.split(/\s+/).includes("sr-only");
 
   const allItems = [
-    { name: isRTL ? "الرئيسية" : "Home", href: `/${locale}` },
+    { name: isRTL ? "الرئيسية" : "Home", href: `${pathPrefix}/${locale}` },
     ...items,
   ];
 

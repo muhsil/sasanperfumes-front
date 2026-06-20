@@ -12,6 +12,7 @@ import { searchProducts, type SearchSuggestion } from "@/lib/api/search";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { cn, getProductSlugFromPermalink, decodeHtmlEntities } from "@/lib/utils";
 import { useFreeGift } from "@/contexts/FreeGiftContext";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface DesktopSearchDropdownProps {
   locale: Locale;
@@ -24,6 +25,7 @@ export function DesktopSearchDropdown({
 }: DesktopSearchDropdownProps) {
   const router = useRouter();
   const { getFreeGiftProductIds } = useFreeGift();
+  const marketPrefix = useMarketPrefix();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<WCProduct[]>([]);
   const [loading, setLoading] = useState(false);
@@ -178,7 +180,7 @@ export function DesktopSearchDropdown({
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (query.trim()) {
-      router.push(`/${locale}/search?q=${encodeURIComponent(query.trim())}`);
+      router.push(`${marketPrefix}/${locale}/search?q=${encodeURIComponent(query.trim())}`);
       handleClose();
     }
   };
@@ -200,7 +202,7 @@ export function DesktopSearchDropdown({
           e.preventDefault();
           const selectedProduct = results[highlightedIndex];
           const productSlug = getProductSlugFromPermalink(selectedProduct.permalink, selectedProduct.slug);
-          router.push(`/${locale}/product/${productSlug}`);
+          router.push(`${marketPrefix}/${locale}/product/${productSlug}`);
           handleClose();
         } else {
           handleSubmit();
@@ -343,7 +345,7 @@ export function DesktopSearchDropdown({
                 </p>
                 {didYouMean && matchMode !== "exact" && (
                   <Link
-                    href={`/${locale}/product/${didYouMean.slug}`}
+                    href={`${marketPrefix}/${locale}/product/${didYouMean.slug}`}
                     onClick={handleClose}
                     className="mt-4 inline-flex items-center rounded-full bg-brand-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-primary-dark"
                   >
@@ -363,7 +365,7 @@ export function DesktopSearchDropdown({
                   <div className="border-b border-brand-border/70 bg-brand-beige/40 px-6 py-3 text-sm text-brand-primary/75">
                     {isRTL ? "هل تقصد" : "Did you mean"}{" "}
                     <Link
-                      href={`/${locale}/product/${didYouMean.slug}`}
+                      href={`${marketPrefix}/${locale}/product/${didYouMean.slug}`}
                       onClick={handleClose}
                       className="font-semibold text-brand-primary underline decoration-brand-gold decoration-2 underline-offset-4"
                     >
@@ -383,7 +385,7 @@ export function DesktopSearchDropdown({
                     return (
                       <Link
                         key={product.id}
-                        href={`/${locale}/product/${productSlug}`}
+                        href={`${marketPrefix}/${locale}/product/${productSlug}`}
                         onClick={handleProductClick}
                         className={cn(
                           "group flex items-center gap-5 px-6 py-5 transition-all hover:bg-brand-beige/60",

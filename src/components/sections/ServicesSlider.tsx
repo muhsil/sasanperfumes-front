@@ -10,6 +10,7 @@ import type { Locale } from "@/config/site";
 
 import "swiper/css";
 import "swiper/css/pagination";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface Service {
   id: number;
@@ -27,6 +28,7 @@ interface ServicesSliderProps {
 
 export function ServicesSlider({ services, locale, isRTL }: ServicesSliderProps) {
 
+  const marketPrefix = useMarketPrefix();
   return (
     <div className="relative" dir={isRTL ? "rtl" : "ltr"}>
       <style>{`
@@ -78,7 +80,7 @@ export function ServicesSlider({ services, locale, isRTL }: ServicesSliderProps)
           return (
             <SwiperSlide key={service.id} className="h-auto">
               <Link
-                href={`/${locale}/services/${service.slug}`}
+                href={`${marketPrefix}/${locale}/services/${service.slug}`}
                 className="group relative flex flex-col border border-[#e7ded7] overflow-hidden transition-all duration-300 hover:shadow-[0_12px_40px_rgba(74,22,51,0.12)] hover:border-brand-primary/20 h-full"
               >
                 {service.image ? (
