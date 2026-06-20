@@ -780,12 +780,13 @@ const defaultBanners: BannersSettings = {
 
 // Fetch site settings from WordPress Customizer (Appearance > Customize)
 // This uses the WordPress Plugin API and root endpoint for site identity settings
-export async function getSiteSettings(locale?: Locale): Promise<SiteSettings> {
+export async function getSiteSettings(locale?: Locale, frontendHost?: string): Promise<SiteSettings> {
   // First try to get site settings from WordPress Plugin API endpoint
   const pluginSiteData = await fetchWPAPI<WPPluginSiteSettings>(
     "/sasanperfumes/v1/site-settings",
     {
       locale,
+      frontendHost,
       tags: ["site-settings"],
       revalidate: 600,
     }
@@ -799,6 +800,7 @@ export async function getSiteSettings(locale?: Locale): Promise<SiteSettings> {
         "",
         {
           locale,
+          frontendHost,
           tags: ["site-settings"],
           revalidate: 600,
         }
@@ -926,12 +928,13 @@ export async function getSiteSettings(locale?: Locale): Promise<SiteSettings> {
 }
 
 // Fetch home page settings from WordPress Plugin API
-export async function getHomePageSettings(locale?: Locale): Promise<HomePageACF> {
+export async function getHomePageSettings(locale?: Locale, frontendHost?: string): Promise<HomePageACF> {
   // First try to fetch from the WordPress Plugin API endpoint
   const pluginData = await fetchWPAPI<WPPluginHomeSettings>(
     "/sasanperfumes/v1/home-settings",
     {
       locale,
+      frontendHost,
       tags: ["home-settings"],
       revalidate: 600,
     }
@@ -956,6 +959,7 @@ export async function getHomePageSettings(locale?: Locale): Promise<HomePageACF>
     {
       tags: ["home-page-settings"],
       locale,
+      frontendHost,
       revalidate: 300,
     }
   );
@@ -983,8 +987,8 @@ export async function getHomePageSettings(locale?: Locale): Promise<HomePageACF>
 }
 
 // Fetch hero slider settings
-export async function getHeroSlider(locale?: Locale): Promise<HeroSliderSettings> {
-  const settings = await getHomePageSettings(locale);
+export async function getHeroSlider(locale?: Locale, frontendHost?: string): Promise<HeroSliderSettings> {
+  const settings = await getHomePageSettings(locale, frontendHost);
   return settings.hero_slider;
 }
 
@@ -1105,13 +1109,14 @@ function transformMenu(rawMenu: RawWPMenu): WPMenu {
 }
 
 // Fetch WordPress menu by location
-export async function getMenu(location: string, locale?: Locale): Promise<WPMenu | null> {
+export async function getMenu(location: string, locale?: Locale, frontendHost?: string): Promise<WPMenu | null> {
   if (location === "primary") {
     const sasanMenu = await fetchWPAPI<SasanMenu>(
       "/sasanperfumes/v1/menu/primary",
       {
         tags: ["menus", "menu-primary"],
         locale,
+        frontendHost,
         revalidate: 600,
       }
     );
@@ -1126,6 +1131,7 @@ export async function getMenu(location: string, locale?: Locale): Promise<WPMenu
     {
       tags: ["menus", `menu-${location}`],
       locale,
+      frontendHost,
       revalidate: 600,
     }
   );
@@ -1138,8 +1144,8 @@ export async function getMenu(location: string, locale?: Locale): Promise<WPMenu
 }
 
 // Fetch primary navigation menu
-export async function getPrimaryMenu(locale?: Locale): Promise<WPMenu | null> {
-  return getMenu("primary", locale);
+export async function getPrimaryMenu(locale?: Locale, frontendHost?: string): Promise<WPMenu | null> {
+  return getMenu("primary", locale, frontendHost);
 }
 
 // Fetch mobile header menu (used for Categories drawer - separate from primary/desktop menu)
@@ -1191,12 +1197,13 @@ const defaultMobileBarItems: MobileBarItem[] = [
 ];
 
 // Fetch SEO settings from WordPress Plugin API
-export async function getSeoSettings(locale?: Locale): Promise<SeoSettings> {
+export async function getSeoSettings(locale?: Locale, frontendHost?: string): Promise<SeoSettings> {
   const data = await fetchWPAPI<WPPluginSeoSettings>(
     "/sasanperfumes/v1/seo-settings",
     {
       tags: ["seo-settings"],
       locale,
+      frontendHost,
       revalidate: 600,
     }
   );
@@ -1254,11 +1261,12 @@ export async function getSeoSettings(locale?: Locale): Promise<SeoSettings> {
 }
 
 // Fetch header settings from WordPress Plugin API
-export async function getHeaderSettings(): Promise<HeaderSettings> {
+export async function getHeaderSettings(frontendHost?: string): Promise<HeaderSettings> {
   const data = await fetchWPAPI<WPPluginHeaderSettings>(
     "/sasanperfumes/v1/header-settings",
     {
       tags: ["header-settings"],
+      frontendHost,
       revalidate: 600,
     }
   );
@@ -1341,12 +1349,13 @@ const defaultTopbarSettings: TopbarSettings = {
 };
 
 // Fetch topbar settings from WordPress Plugin API
-export async function getTopbarSettings(locale?: Locale): Promise<TopbarSettings> {
+export async function getTopbarSettings(locale?: Locale, frontendHost?: string): Promise<TopbarSettings> {
   const data = await fetchWPAPI<WPPluginTopbarSettings>(
     "/sasanperfumes/v1/topbar",
     {
       tags: ["topbar-settings"],
       locale,
+      frontendHost,
       revalidate: 600,
     }
   );
@@ -1430,9 +1439,10 @@ const defaultFooterSettings: FooterSettings = {
   },
 };
 
-export async function getFooterSettings(): Promise<FooterSettings> {
+export async function getFooterSettings(frontendHost?: string): Promise<FooterSettings> {
   const data = await fetchWPAPI<FooterSettings>("/sasanperfumes/v1/footer-settings", {
     tags: ["footer-settings"],
+    frontendHost,
     revalidate: 600,
   });
 
@@ -1871,10 +1881,10 @@ const defaultHomeSections: HomeSections = {
   seoContent: { enabled: true, title: { en: 'Shop Premium Perfumes Online in the UAE', ar: 'تسوق العطور الفاخرة اون لاين في الإمارات' }, paragraphs: [] },
 };
 
-export async function getHomeSections(): Promise<HomeSections> {
+export async function getHomeSections(frontendHost?: string): Promise<HomeSections> {
   const data = await fetchWPAPI<HomeSections>(
     "/sasanperfumes/v1/home-sections",
-    { tags: ["home-sections"], revalidate: 600 }
+    { tags: ["home-sections"], frontendHost, revalidate: 600 }
   );
   return rebrandApiContent(data ?? defaultHomeSections);
 }
@@ -2318,9 +2328,10 @@ function normalizeFeatureToggles(data?: Partial<FeatureToggles> | Record<string,
   ) as FeatureToggles;
 }
 
-export async function getFeatureToggles(): Promise<FeatureToggles> {
+export async function getFeatureToggles(frontendHost?: string): Promise<FeatureToggles> {
   const data = await fetchWPAPI<Partial<FeatureToggles> | Record<string, unknown>>("/sasanperfumes/v1/feature-toggles", {
     tags: ["feature-toggles"],
+    frontendHost,
     noCache: true,
   });
   return normalizeFeatureToggles(data);

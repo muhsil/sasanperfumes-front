@@ -35,7 +35,8 @@ export async function generateMetadata({
   const validLocale = locale as Locale;
   const isArabic = validLocale === "ar";
 
-  const seoSettings = await getSeoSettings(validLocale);
+  const frontendHost = await getRequestFrontendHost();
+  const seoSettings = await getSeoSettings(validLocale, frontendHost);
 
   const seoTitle = (isArabic ? seoSettings.titleAr : seoSettings.title) || siteConfig.name;
   const seoDescription = (isArabic ? seoSettings.descriptionAr : seoSettings.description) || siteConfig.description;
@@ -302,9 +303,9 @@ export default async function HomePage({ params }: HomePageProps) {
 
   const [dictionary, homeSettings, homeSections, siteSettings] = await Promise.all([
     getDictionary(validLocale),
-    getHomePageSettings(validLocale),
-    getHomeSections(),
-    getSiteSettings(validLocale),
+    getHomePageSettings(validLocale, frontendHost),
+    getHomeSections(frontendHost),
+    getSiteSettings(validLocale, frontendHost),
   ]);
 
   const t = (bi: { en: string; ar: string }) => isRTL ? bi.ar : bi.en;
