@@ -223,7 +223,7 @@ export default async function LocaleLayout({
                 }}
               />
               <NetworkStatusBanner locale={validLocale} />
-              <LocationCurrencyBanner locale={validLocale} />
+              {market.code === "intl" && <LocationCurrencyBanner locale={validLocale} />}
               <CookieConsentBanner locale={validLocale} />
               {showWhatsApp && (
                 <div className="print:hidden">
