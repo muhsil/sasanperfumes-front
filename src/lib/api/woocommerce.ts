@@ -67,6 +67,19 @@ function withFrontendHostParam(url: string, frontendHost?: string): string {
   return `${url}${separator}frontend_host=${encodeURIComponent(frontendHost)}`;
 }
 
+const KNOWN_MARKETS = new Set(["qa", "om", "sa"]);
+
+function extractMarketFromHost(frontendHost?: string): string | undefined {
+  if (!frontendHost) return undefined;
+  const lower = frontendHost.toLowerCase();
+  for (const m of KNOWN_MARKETS) {
+    if (lower.endsWith(`/${m}`) || lower.includes(`/${m}/`) || lower.startsWith(`${m}.`)) {
+      return m;
+    }
+  }
+  return undefined;
+}
+
 function getCurrencyMinorUnit(currency?: Currency): number {
   const code = (currency || DEFAULT_API_CURRENCY).toUpperCase();
   return ["BHD", "KWD", "OMR"].includes(code) ? 3 : 2;
@@ -125,14 +138,19 @@ async function fetchAPI<T>(
   const separator = url.includes("?") ? "&" : "?";
   url = `${url}${separator}currency=${currencyToUse}`;
 
+  const market = extractMarketFromHost(frontendHost);
+  const headers = market
+    ? backendHeaders({ "x-market": market })
+    : backendHeaders();
+
   const response = await fetch(url, disableRuntimeCache
-    ? { cache: "no-store", headers: backendHeaders() }
+    ? { cache: "no-store", headers }
     : {
         next: {
           revalidate,
           tags,
         },
-        headers: backendHeaders(),
+        headers,
       });
 
   if (!response.ok) {
@@ -166,14 +184,19 @@ async function fetchAPIWithPagination<T>(
   const separator = url.includes("?") ? "&" : "?";
   url = `${url}${separator}currency=${currencyToUse}`;
 
+  const market = extractMarketFromHost(frontendHost);
+  const headers = market
+    ? backendHeaders({ "x-market": market })
+    : backendHeaders();
+
   const response = await fetch(url, disableRuntimeCache
-    ? { cache: "no-store", headers: backendHeaders() }
+    ? { cache: "no-store", headers }
     : {
         next: {
           revalidate,
           tags,
         },
-        headers: backendHeaders(),
+        headers,
       });
 
   if (!response.ok) {

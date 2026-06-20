@@ -627,6 +627,19 @@ interface FetchOptions {
   frontendHost?: string;
 }
 
+const WP_KNOWN_MARKETS = new Set(["qa", "om", "sa"]);
+
+function extractWPMarketFromHost(frontendHost?: string): string | undefined {
+  if (!frontendHost) return undefined;
+  const lower = frontendHost.toLowerCase();
+  for (const m of WP_KNOWN_MARKETS) {
+    if (lower.endsWith(`/${m}`) || lower.includes(`/${m}/`) || lower.startsWith(`${m}.`)) {
+      return m;
+    }
+  }
+  return undefined;
+}
+
 async function fetchWPAPI<T>(
   endpoint: string,
   options: FetchOptions = {}
@@ -636,12 +649,17 @@ async function fetchWPAPI<T>(
     frontendHost ? appendQueryParam(url, "frontend_host", frontendHost) : url
   );
 
+  const market = extractWPMarketFromHost(frontendHost);
+  const apiHeaders = market
+    ? backendHeaders({ ...WP_API_HEADERS, "x-market": market })
+    : backendHeaders(WP_API_HEADERS);
+
   try {
       const shouldBypassCache = disableRuntimeCache || noCache || CMS_FORCE_DYNAMIC_CACHE || isCmsContentEndpoint(endpoint);
       const fetchOptions: RequestInit = shouldBypassCache
-        ? { headers: backendHeaders(WP_API_HEADERS), cache: "no-store" }
+        ? { headers: apiHeaders, cache: "no-store" }
         : {
-          headers: backendHeaders(WP_API_HEADERS),
+          headers: apiHeaders,
           next: {
             revalidate,
             tags,
@@ -652,7 +670,7 @@ async function fetchWPAPI<T>(
       let response = await fetch(url, fetchOptions);
 
       if (response.status === 403) {
-        response = await fetch(url, { headers: backendHeaders(WP_API_HEADERS) });
+        response = await fetch(url, { headers: apiHeaders });
       }
 
       if (!response.ok) {
