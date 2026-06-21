@@ -4,6 +4,7 @@ import {
   backendHeaders,
   extractMarketCode,
   rewriteBackendUrlForMarket,
+  wpJsonBaseForMarket,
 } from "@/lib/utils/backendFetch";
 import type {
   WCProduct,
@@ -189,7 +190,9 @@ function buildStoreAPIUrls(
   market: string | undefined,
   options: Pick<FetchOptions, "locale" | "currency" | "frontendHost">
 ): string[] {
-  const rootApiBase = market ? withExplicitHttpsPort(siteConfig.apiUrl) : siteConfig.apiUrl.replace(/\/+$/, "");
+  const rootApiBase = market
+    ? withExplicitHttpsPort(wpJsonBaseForMarket(market).replace(/\/wp-json$/, ""))
+    : siteConfig.apiUrl.replace(/\/+$/, "");
   const apiBases = [`${rootApiBase}/wp-json/wc/store/v1`];
   const currencyToUse = options.currency || DEFAULT_API_CURRENCY;
 
@@ -265,7 +268,7 @@ async function fetchStoreAPI<T>(
   const { revalidate = 60, tags } = options;
   const urls = buildStoreAPIUrls(endpoint, market, options);
   const hdrs = market
-    ? backendHeaders({ "X-Market": market, "Cache-Control": "no-cache", "Pragma": "no-cache" })
+    ? backendHeaders({ "Origin": "https://cms.shapehive.com", "X-Market": market, "Cache-Control": "no-cache", "Pragma": "no-cache" })
     : backendHeaders();
   const fetchOptions: RequestInit = disableRuntimeCache
     ? { cache: "no-store", headers: hdrs }
