@@ -81,28 +81,79 @@ function withFrontendHostParam(url: string, frontendHost?: string): string {
 }
 
 const KNOWN_MARKETS = new Set(["qa", "om", "sa"]);
+let hostingerEnvLoaded = false;
+
+function loadHostingerEnvInline(): void {
+  if (hostingerEnvLoaded || typeof window !== "undefined") return;
+
+  try {
+    const runtimeRequire = eval("require") as NodeRequire;
+    const fs = runtimeRequire("fs") as typeof import("fs");
+    const path = runtimeRequire("path") as typeof import("path");
+    const possiblePaths = [
+      path.join(process.cwd(), ".builds", "config", ".env"),
+      path.join(process.cwd(), "..", ".builds", "config", ".env"),
+      path.join(process.cwd(), ".env"),
+      path.join(process.cwd(), ".env.local"),
+    ];
+
+    for (const envPath of possiblePaths) {
+      if (!fs.existsSync(envPath)) continue;
+      const envContent = fs.readFileSync(envPath, "utf-8");
+      for (const line of envContent.split("\n")) {
+        const trimmedLine = line.trim();
+        if (!trimmedLine || trimmedLine.startsWith("#")) continue;
+        const match = trimmedLine.match(/^([^=]+)=(.*)$/);
+        if (!match) continue;
+        const key = match[1].trim();
+        let value = match[2].trim();
+        if (
+          (value.startsWith("'") && value.endsWith("'")) ||
+          (value.startsWith('"') && value.endsWith('"'))
+        ) {
+          value = value.slice(1, -1);
+        }
+        if (!process.env[key]) {
+          process.env[key] = value;
+        }
+      }
+      hostingerEnvLoaded = true;
+      return;
+    }
+  } catch {
+    // Client bundles and non-Node runtimes fall back to existing process.env values.
+  }
+
+  hostingerEnvLoaded = true;
+}
+
+function getRuntimeEnvVar(key: string): string | undefined {
+  if (process.env[key]) return process.env[key];
+  loadHostingerEnvInline();
+  return process.env[key];
+}
 
 function getRestCredentialsForMarket(market?: string | null): { consumerKey: string; consumerSecret: string } {
   switch (market?.toLowerCase()) {
     case "qa":
       return {
-        consumerKey: process.env.WC_CONSUMER_KEY_QA || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY_QA || process.env.WC_CONSUMER_KEY || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || "",
-        consumerSecret: process.env.WC_CONSUMER_SECRET_QA || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET_QA || process.env.WC_CONSUMER_SECRET || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET || "",
+        consumerKey: process.env.WC_CONSUMER_KEY_QA || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY_QA || getRuntimeEnvVar("WC_CONSUMER_KEY_QA") || getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_KEY_QA") || getRuntimeEnvVar("WC_CONSUMER_KEY") || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || "",
+        consumerSecret: process.env.WC_CONSUMER_SECRET_QA || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET_QA || getRuntimeEnvVar("WC_CONSUMER_SECRET_QA") || getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_SECRET_QA") || getRuntimeEnvVar("WC_CONSUMER_SECRET") || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET || "",
       };
     case "om":
       return {
-        consumerKey: process.env.WC_CONSUMER_KEY_OM || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY_OM || process.env.WC_CONSUMER_KEY || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || "",
-        consumerSecret: process.env.WC_CONSUMER_SECRET_OM || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET_OM || process.env.WC_CONSUMER_SECRET || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET || "",
+        consumerKey: process.env.WC_CONSUMER_KEY_OM || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY_OM || getRuntimeEnvVar("WC_CONSUMER_KEY_OM") || getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_KEY_OM") || getRuntimeEnvVar("WC_CONSUMER_KEY") || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || "",
+        consumerSecret: process.env.WC_CONSUMER_SECRET_OM || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET_OM || getRuntimeEnvVar("WC_CONSUMER_SECRET_OM") || getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_SECRET_OM") || getRuntimeEnvVar("WC_CONSUMER_SECRET") || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET || "",
       };
     case "sa":
       return {
-        consumerKey: process.env.WC_CONSUMER_KEY_SA || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY_SA || process.env.WC_CONSUMER_KEY || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || "",
-        consumerSecret: process.env.WC_CONSUMER_SECRET_SA || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET_SA || process.env.WC_CONSUMER_SECRET || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET || "",
+        consumerKey: process.env.WC_CONSUMER_KEY_SA || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY_SA || getRuntimeEnvVar("WC_CONSUMER_KEY_SA") || getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_KEY_SA") || getRuntimeEnvVar("WC_CONSUMER_KEY") || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || "",
+        consumerSecret: process.env.WC_CONSUMER_SECRET_SA || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET_SA || getRuntimeEnvVar("WC_CONSUMER_SECRET_SA") || getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_SECRET_SA") || getRuntimeEnvVar("WC_CONSUMER_SECRET") || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET || "",
       };
     default:
       return {
-        consumerKey: process.env.WC_CONSUMER_KEY || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || "",
-        consumerSecret: process.env.WC_CONSUMER_SECRET || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET || "",
+        consumerKey: process.env.WC_CONSUMER_KEY || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || getRuntimeEnvVar("WC_CONSUMER_KEY") || getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_KEY") || "",
+        consumerSecret: process.env.WC_CONSUMER_SECRET || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET || getRuntimeEnvVar("WC_CONSUMER_SECRET") || getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_SECRET") || "",
       };
   }
 }
