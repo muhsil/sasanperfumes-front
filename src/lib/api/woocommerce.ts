@@ -68,6 +68,14 @@ function withExplicitHttpsPort(url: string): string {
   }
 }
 
+function cmsMarketHost(market: string): string {
+  try {
+    return `${new URL(siteConfig.apiUrl).hostname}/${market}`;
+  } catch {
+    return `cms.shapehive.com/${market}`;
+  }
+}
+
 async function fetchWithTimeout(url: string, init: RequestInit = {}, timeoutMs = BACKEND_FETCH_TIMEOUT_MS): Promise<Response> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
@@ -191,6 +199,7 @@ function buildStoreAPIUrls(
       url = appendQueryParam(url, "lang", options.locale);
     }
     if (market) {
+      url = appendQueryParam(url, "frontend_host", cmsMarketHost(market));
       url = appendQueryParam(url, "_market_cache_bust", `${market}-${Date.now()}`);
     } else {
       url = appendQueryParam(url, "currency", currencyToUse);
