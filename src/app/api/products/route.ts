@@ -192,7 +192,10 @@ export async function GET(request: NextRequest) {
         result.products = result.products.slice(0, per_page);
       }
 
-      productsCache.set(cacheKey, { data: result, timestamp: Date.now() });
+      const isMarketEmptyRead = market.code !== "intl" && result.products.length === 0;
+      if (!isMarketEmptyRead) {
+        productsCache.set(cacheKey, { data: result, timestamp: Date.now() });
+      }
     }
 
     const response = lightweight

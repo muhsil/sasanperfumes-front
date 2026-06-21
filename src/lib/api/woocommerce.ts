@@ -545,6 +545,22 @@ export async function getProducts(params?: {
   } catch (error) {
     console.warn(`Failed to fetch products: ${formatFetchError(error)}`);
     const market = extractMarketFromHost(params?.frontendHost) || await detectMarketFromRequest();
+    if (market && params?.locale && params.locale !== "en") {
+      try {
+        const fallback = await getProducts({
+          ...params,
+          locale: "en",
+        });
+
+        return {
+          ...fallback,
+          products: localizeMarketProducts(fallback.products, params.locale, market),
+        };
+      } catch (fallbackError) {
+        console.warn(`Failed to fetch fallback products: ${formatFetchError(fallbackError)}`);
+      }
+    }
+
     if (market) {
       return {
         products: [],
