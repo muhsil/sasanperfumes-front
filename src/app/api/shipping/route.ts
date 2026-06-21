@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { siteConfig } from "@/config/site";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
+import { getRequestMarket } from "@/lib/market/server";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 const WC_API_BASE = `${siteConfig.apiUrl}/wp-json/wc/v3`;
 
-function getBasicAuthParams(): string {
-  const { consumerKey, consumerSecret } = getWcCredentials();
+function getBasicAuthParams(marketCode?: string): string {
+  const { consumerKey, consumerSecret } = getWcCredentials(marketCode);
   return `consumer_key=${consumerKey}&consumer_secret=${consumerSecret}`;
 }
 
@@ -86,8 +87,8 @@ const CONTINENT_COUNTRIES: Record<string, string[]> = {
   SA: ["AR", "BO", "BR", "CL", "CO", "EC", "FK", "GF", "GY", "PY", "PE", "SR", "UY", "VE"],
 };
 
-async function findZoneForCountry(country: string): Promise<number | null> {
-  const authParams = getBasicAuthParams();
+async function findZoneForCountry(country: string, marketCode?: string): Promise<number | null> {
+  const authParams = getBasicAuthParams(marketCode);
   const zonesUrl = `${WC_API_BASE}/shipping/zones?${authParams}`;
   const zonesResponse = await fetch(zonesUrl, {
     method: "GET",
@@ -130,8 +131,8 @@ async function findZoneForCountry(country: string): Promise<number | null> {
   return 0;
 }
 
-async function getZoneMethods(zoneId: number): Promise<ZoneMethod[]> {
-  const authParams = getBasicAuthParams();
+async function getZoneMethods(zoneId: number, marketCode?: string): Promise<ZoneMethod[]> {
+  const authParams = getBasicAuthParams(marketCode);
   const methodsUrl = `${WC_API_BASE}/shipping/zones/${zoneId}/methods?${authParams}`;
   const response = await fetch(methodsUrl, {
     method: "GET",
@@ -313,6 +314,7 @@ function buildShippingRates(
 
 export async function GET(request: NextRequest) {
   try {
+    const market = await getRequestMarket();
     const country = request.nextUrl.searchParams.get("country") || "AE";
     const city = request.nextUrl.searchParams.get("city") || "";
     const postcode = request.nextUrl.searchParams.get("postcode") || "";
@@ -321,7 +323,7 @@ export async function GET(request: NextRequest) {
     const currencyCode = request.nextUrl.searchParams.get("currency_code") || "AED";
     const currencySymbol = request.nextUrl.searchParams.get("currency_symbol") || "د.إ";
 
-    const zoneId = await findZoneForCountry(country);
+    const zoneId = await findZoneForCountry(country, market.code);
 
     if (zoneId === null) {
       return NextResponse.json(
@@ -330,7 +332,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const methods = await getZoneMethods(zoneId);
+    const methods = await getZoneMethods(zoneId, market.code);
     const shippingRates = buildShippingRates(methods, cartSubtotal, currencyCode, currencySymbol, cartWeight);
 
     const selectedRate = shippingRates.find(r => r.selected);

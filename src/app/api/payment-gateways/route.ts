@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getEnvVar, getWcCredentials } from "@/lib/utils/loadEnv";
 import { API_BASE as BASE_URL, backendHeaders, noCacheUrl } from "@/lib/utils/backendFetch";
+import { getRequestMarket } from "@/lib/market/server";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -23,8 +24,8 @@ function gatewaysJson(data: Record<string, unknown>, init?: ResponseInit) {
   return NextResponse.json(data, { ...init, headers });
 }
 
-function getBasicAuthParams(): string {
-  const { consumerKey, consumerSecret } = getWcCredentials();
+function getBasicAuthParams(marketCode?: string): string {
+  const { consumerKey, consumerSecret } = getWcCredentials(marketCode);
   return `consumer_key=${consumerKey}&consumer_secret=${consumerSecret}`;
 }
 
@@ -92,14 +93,15 @@ interface CartResponse {
 
 export async function GET() {
   try {
+    const market = await getRequestMarket();
     if (gatewaysCache && Date.now() - gatewaysCache.timestamp < GATEWAYS_CACHE_TTL) {
       return gatewaysJson(gatewaysCache.data);
     }
 
-    const { consumerKey, consumerSecret } = getWcCredentials();
+    const { consumerKey, consumerSecret } = getWcCredentials(market.code);
     
     if (consumerKey && consumerSecret) {
-      const url = `${API_BASE}/payment_gateways?${getBasicAuthParams()}`;
+      const url = `${API_BASE}/payment_gateways?${getBasicAuthParams(market.code)}`;
       
       const response = await fetch(noCacheUrl(url), {
         method: "GET",

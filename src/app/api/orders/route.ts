@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { verifyAuth, unauthorizedResponse, forbiddenResponse } from "@/lib/security";
 import { API_BASE as BASE_URL, backendHeaders, backendPostHeaders, noCacheUrl, parseBackendJson } from "@/lib/utils/backendFetch";
+import { getRequestMarket } from "@/lib/market/server";
 
 const API_BASE = `${BASE_URL}/wp-json/wc/v3`;
 
-function getBasicAuthParams(): string {
-  const { consumerKey, consumerSecret } = getWcCredentials();
+function getBasicAuthParams(marketCode?: string): string {
+  const { consumerKey, consumerSecret } = getWcCredentials(marketCode);
   return `consumer_key=${consumerKey}&consumer_secret=${consumerSecret}`;
 }
 
@@ -118,11 +119,12 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get("status");
 
   try {
+    const market = await getRequestMarket();
     let url: string;
     
     if (orderId) {
       // First fetch the order
-      const orderUrl = `${API_BASE}/orders/${orderId}?${getBasicAuthParams()}`;
+      const orderUrl = `${API_BASE}/orders/${orderId}?${getBasicAuthParams(market.code)}`;
       const orderResponse = await fetch(noCacheUrl(orderUrl), {
         method: "GET",
         headers: backendHeaders(),
@@ -223,7 +225,7 @@ export async function GET(request: NextRequest) {
       if (page) params.set("page", page);
       if (perPage) params.set("per_page", perPage);
       if (status) params.set("status", status);
-      url = `${API_BASE}/orders?${params.toString()}&${getBasicAuthParams()}`;
+      url = `${API_BASE}/orders?${params.toString()}&${getBasicAuthParams(market.code)}`;
     } else {
       return NextResponse.json(
         { success: false, error: { code: "missing_params", message: "Order ID or Customer ID is required" } },
@@ -284,6 +286,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const market = await getRequestMarket();
     const body = await request.json();
     const paymentMethod =
       typeof body.payment_method === "string" && body.payment_method.trim()
@@ -339,7 +342,7 @@ export async function POST(request: NextRequest) {
       orderData.meta_data = body.meta_data;
     }
 
-    const url = `${API_BASE}/orders?${getBasicAuthParams()}`;
+    const url = `${API_BASE}/orders?${getBasicAuthParams(market.code)}`;
     
     const response = await fetch(noCacheUrl(url), {
       method: "POST",
@@ -436,6 +439,7 @@ interface UpdateOrderRequest {
 
 export async function PUT(request: NextRequest) {
   try {
+    const market = await getRequestMarket();
     const body: UpdateOrderRequest = await request.json();
     
     if (!body.order_id) {
@@ -582,7 +586,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const url = `${API_BASE}/orders/${body.order_id}?${getBasicAuthParams()}`;
+    const url = `${API_BASE}/orders/${body.order_id}?${getBasicAuthParams(market.code)}`;
     
     const response = await fetch(noCacheUrl(url), {
       method: "PUT",

@@ -129,19 +129,76 @@ export function getMyFatoorahConfig(): {
   return { apiKey, country, testMode };
 }
 
-export function getWcCredentials(): { consumerKey: string; consumerSecret: string } {
-  // Direct literal references allow Next.js to inline these at build time
-  const consumerKey =
-    process.env.WC_CONSUMER_KEY ||
-    process.env.NEXT_PUBLIC_WC_CONSUMER_KEY ||
-    getEnvVar("WC_CONSUMER_KEY") ||
-    getEnvVar("NEXT_PUBLIC_WC_CONSUMER_KEY") ||
-    "";
-  const consumerSecret =
-    process.env.WC_CONSUMER_SECRET ||
-    process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET ||
-    getEnvVar("WC_CONSUMER_SECRET") ||
-    getEnvVar("NEXT_PUBLIC_WC_CONSUMER_SECRET") ||
-    "";
-  return { consumerKey, consumerSecret };
+function getGlobalWcCredentials(): { consumerKey: string; consumerSecret: string } {
+  return {
+    consumerKey:
+      process.env.WC_CONSUMER_KEY ||
+      process.env.NEXT_PUBLIC_WC_CONSUMER_KEY ||
+      getEnvVar("WC_CONSUMER_KEY") ||
+      getEnvVar("NEXT_PUBLIC_WC_CONSUMER_KEY") ||
+      "",
+    consumerSecret:
+      process.env.WC_CONSUMER_SECRET ||
+      process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET ||
+      getEnvVar("WC_CONSUMER_SECRET") ||
+      getEnvVar("NEXT_PUBLIC_WC_CONSUMER_SECRET") ||
+      "",
+  };
+}
+
+export function getWcCredentials(marketCode?: string | null): { consumerKey: string; consumerSecret: string } {
+  const market = marketCode?.toLowerCase();
+  const marketCredentials: Record<string, { consumerKey: string; consumerSecret: string }> = {
+    qa: {
+      consumerKey:
+        process.env.WC_CONSUMER_KEY_QA ||
+        process.env.NEXT_PUBLIC_WC_CONSUMER_KEY_QA ||
+        getEnvVar("WC_CONSUMER_KEY_QA") ||
+        getEnvVar("NEXT_PUBLIC_WC_CONSUMER_KEY_QA") ||
+        "",
+      consumerSecret:
+        process.env.WC_CONSUMER_SECRET_QA ||
+        process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET_QA ||
+        getEnvVar("WC_CONSUMER_SECRET_QA") ||
+        getEnvVar("NEXT_PUBLIC_WC_CONSUMER_SECRET_QA") ||
+        "",
+    },
+    om: {
+      consumerKey:
+        process.env.WC_CONSUMER_KEY_OM ||
+        process.env.NEXT_PUBLIC_WC_CONSUMER_KEY_OM ||
+        getEnvVar("WC_CONSUMER_KEY_OM") ||
+        getEnvVar("NEXT_PUBLIC_WC_CONSUMER_KEY_OM") ||
+        "",
+      consumerSecret:
+        process.env.WC_CONSUMER_SECRET_OM ||
+        process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET_OM ||
+        getEnvVar("WC_CONSUMER_SECRET_OM") ||
+        getEnvVar("NEXT_PUBLIC_WC_CONSUMER_SECRET_OM") ||
+        "",
+    },
+    sa: {
+      consumerKey:
+        process.env.WC_CONSUMER_KEY_SA ||
+        process.env.NEXT_PUBLIC_WC_CONSUMER_KEY_SA ||
+        getEnvVar("WC_CONSUMER_KEY_SA") ||
+        getEnvVar("NEXT_PUBLIC_WC_CONSUMER_KEY_SA") ||
+        "",
+      consumerSecret:
+        process.env.WC_CONSUMER_SECRET_SA ||
+        process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET_SA ||
+        getEnvVar("WC_CONSUMER_SECRET_SA") ||
+        getEnvVar("NEXT_PUBLIC_WC_CONSUMER_SECRET_SA") ||
+        "",
+    },
+  };
+
+  if (market && market !== "intl") {
+    const credentials = marketCredentials[market];
+    if (credentials?.consumerKey && credentials.consumerSecret) {
+      return credentials;
+    }
+  }
+
+  return getGlobalWcCredentials();
 }
