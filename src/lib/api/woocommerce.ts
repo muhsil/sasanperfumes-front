@@ -56,6 +56,18 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
 const DEFAULT_API_CURRENCY = API_BASE_CURRENCY;
 const BACKEND_FETCH_TIMEOUT_MS = 8000;
 
+function withExplicitHttpsPort(url: string): string {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol === "https:" && !parsed.port) {
+      parsed.port = "443";
+    }
+    return parsed.toString().replace(/\/+$/, "");
+  } catch {
+    return url;
+  }
+}
+
 async function fetchWithTimeout(url: string, init: RequestInit = {}, timeoutMs = BACKEND_FETCH_TIMEOUT_MS): Promise<Response> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
@@ -169,8 +181,8 @@ function buildStoreAPIUrls(
   market: string | undefined,
   options: Pick<FetchOptions, "locale" | "currency" | "frontendHost">
 ): string[] {
-  const rootStoreApi = `${siteConfig.apiUrl.replace(/\/+$/, "")}/wp-json/wc/store/v1`;
-  const apiBases = [rootStoreApi];
+  const rootApiBase = market ? withExplicitHttpsPort(siteConfig.apiUrl) : siteConfig.apiUrl.replace(/\/+$/, "");
+  const apiBases = [`${rootApiBase}/wp-json/wc/store/v1`];
   const currencyToUse = options.currency || DEFAULT_API_CURRENCY;
 
   return uniqueUrls(apiBases.map((apiBase) => {
@@ -244,7 +256,7 @@ async function fetchStoreAPI<T>(
   const { revalidate = 60, tags } = options;
   const urls = buildStoreAPIUrls(endpoint, market, options);
   const hdrs = market
-    ? backendHeaders({ "x-market": market, "Cache-Control": "no-cache", "Pragma": "no-cache" })
+    ? backendHeaders({ "X-Market": market, "Cache-Control": "no-cache", "Pragma": "no-cache" })
     : backendHeaders();
   const fetchOptions: RequestInit = disableRuntimeCache
     ? { cache: "no-store", headers: hdrs }
