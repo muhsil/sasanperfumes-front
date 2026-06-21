@@ -1,12 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { backendHeaders, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
-import { getWcCredentials } from "@/lib/utils/loadEnv";
+import { getEnvVar } from "@/lib/utils/loadEnv";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 export const revalidate = 0;
 
 const MARKET_CODES = new Set(["qa", "om", "sa"]);
+
+function getMarketCredentials(market: string): { consumerKey: string; consumerSecret: string } {
+  const suffix = market.toUpperCase();
+  return {
+    consumerKey:
+      getEnvVar(`WC_CONSUMER_KEY_${suffix}`) ||
+      getEnvVar(`NEXT_PUBLIC_WC_CONSUMER_KEY_${suffix}`) ||
+      "",
+    consumerSecret:
+      getEnvVar(`WC_CONSUMER_SECRET_${suffix}`) ||
+      getEnvVar(`NEXT_PUBLIC_WC_CONSUMER_SECRET_${suffix}`) ||
+      "",
+  };
+}
 
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
@@ -16,7 +30,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ products: [], total: 0, totalPages: 0 }, { status: 400 });
   }
 
-  const credentials = getWcCredentials(market);
+  const credentials = getMarketCredentials(market);
   if (!credentials.consumerKey || !credentials.consumerSecret) {
     return NextResponse.json({ products: [], total: 0, totalPages: 0 }, { status: 503 });
   }
