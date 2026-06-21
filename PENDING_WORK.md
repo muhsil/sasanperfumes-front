@@ -103,6 +103,7 @@ Repo fix:
 
 - `scripts/setup-multisite-network.php` now ensures the ShapeHive plugin is active on each path-based market site unless it is already network-active.
 - `scripts/sync-market-content.php` also activates the plugin on market sites before syncing content.
+- Live CMS note: production currently has an active legacy plugin folder, `anbar-frontend-settings/anbar-frontend-settings.php`, plus inactive `sasanperfumes-frontend-settings` duplicates. The setup/sync scripts now treat the active legacy folder as valid to avoid activating a duplicate copy and triggering a fatal error.
 
 Run after deployment:
 

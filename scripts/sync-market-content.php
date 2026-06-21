@@ -94,17 +94,36 @@ function shapehive_market_ensure_plugin_active(int $siteId): bool {
         require_once ABSPATH . 'wp-admin/includes/plugin.php';
     }
 
-    $plugin = 'sasanperfumes-frontend-settings/sasanperfumes-frontend-settings.php';
-    if (function_exists('is_plugin_active_for_network') && is_plugin_active_for_network($plugin)) {
-        return true;
+    $plugins = array(
+        'sasanperfumes-frontend-settings/sasanperfumes-frontend-settings.php',
+        'anbar-frontend-settings/anbar-frontend-settings.php',
+    );
+
+    foreach ($plugins as $plugin) {
+        if (function_exists('is_plugin_active_for_network') && is_plugin_active_for_network($plugin)) {
+            return true;
+        }
     }
 
     switch_to_blog($siteId);
-    $active = is_plugin_active($plugin);
-    if (!$active && file_exists(WP_PLUGIN_DIR . '/' . $plugin)) {
-        $result = activate_plugin($plugin, '', false, true);
-        $active = !is_wp_error($result);
-        if (!$active) {
+    $active = false;
+    foreach ($plugins as $plugin) {
+        if (is_plugin_active($plugin)) {
+            $active = true;
+            break;
+        }
+    }
+
+    if (!$active) {
+        foreach ($plugins as $plugin) {
+            if (!file_exists(WP_PLUGIN_DIR . '/' . $plugin)) {
+                continue;
+            }
+            $result = activate_plugin($plugin, '', false, true);
+            $active = !is_wp_error($result);
+            if ($active) {
+                break;
+            }
             echo "  WARN: could not activate {$plugin} on site_id={$siteId}: " . $result->get_error_message() . "\n";
         }
     }
