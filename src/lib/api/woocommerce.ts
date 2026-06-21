@@ -95,10 +95,23 @@ async function detectMarketFromRequest(): Promise<string | undefined> {
     if (explicitMarket && KNOWN_MARKETS.has(explicitMarket)) {
       return explicitMarket;
     }
-    const host = reqHeaders.get("x-frontend-host") || reqHeaders.get("host") || "";
-    for (const m of KNOWN_MARKETS) {
-      if (host.includes(`/${m}`) || host.startsWith(`${m}.`)) {
-        return m;
+    const candidates = [
+      reqHeaders.get("x-frontend-host"),
+      reqHeaders.get("referer"),
+      reqHeaders.get("x-forwarded-host"),
+      reqHeaders.get("host"),
+    ];
+    for (const candidate of candidates) {
+      if (!candidate) continue;
+      const market = extractMarketCode(candidate);
+      if (market && KNOWN_MARKETS.has(market)) {
+        return market;
+      }
+      const normalized = candidate.replace(/^https?:\/\//, "").toLowerCase();
+      for (const m of KNOWN_MARKETS) {
+        if (normalized.startsWith(`${m}.`)) {
+          return m;
+        }
       }
     }
   } catch {
