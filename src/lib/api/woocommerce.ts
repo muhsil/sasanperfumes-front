@@ -320,6 +320,72 @@ function getProductUILabels(locale?: Locale) {
   };
 }
 
+const ARABIC_MARKET_PRODUCT_COPY: Record<string, {
+  name: string;
+  shortDescription: string;
+  description: string;
+}> = {
+  "test-perfume-qatar": {
+    name: "عطر ساسان الفاخر - قطر",
+    shortDescription: "<p>عطر فاخر من ساسان للعطور مصمم لذوق قطر، يجمع بين اللمسة الشرقية الراقية والثبات اليومي.</p>",
+    description: "<p>عطر ساسان الفاخر - قطر يقدم تجربة عطرية متوازنة تناسب الإهداء والاستخدام اليومي. نفحات دافئة وفاخرة تمنح حضوراً أنيقاً يدوم، مع تغليف مناسب لعشاق العطور الراقية في قطر.</p>",
+  },
+  "test-perfume-oman": {
+    name: "عطر ساسان الفاخر - عمان",
+    shortDescription: "<p>توليفة عطرية راقية من ساسان للعطور مستوحاة من أناقة عمان ودفء العطور الشرقية.</p>",
+    description: "<p>عطر ساسان الفاخر - عمان صمم لمحبي الروائح الهادئة والفخمة. يمنحك مزيجاً أنيقاً من العمق والثبات، ويصلح للاستخدام اليومي والمناسبات الخاصة مع لمسة شرقية واضحة.</p>",
+  },
+  "test-perfume-saudi": {
+    name: "عطر ساسان الفاخر - السعودية",
+    shortDescription: "<p>عطر فاخر من ساسان للعطور يناسب الذوق السعودي، بثبات مميز وحضور شرقي أنيق.</p>",
+    description: "<p>عطر ساسان الفاخر - السعودية يجمع بين الفخامة والدفء في تركيبة مناسبة للمناسبات والروتين اليومي. اختيار مثالي لمن يبحث عن عطر راق بثبات جيد وطابع شرقي معاصر.</p>",
+  },
+};
+
+function localizeMarketProduct(product: WCProduct, locale?: Locale, market?: string): WCProduct {
+  if (locale !== "ar" || !market) {
+    return product;
+  }
+
+  const copy = ARABIC_MARKET_PRODUCT_COPY[product.slug];
+  if (!copy) {
+    return product;
+  }
+
+  const labels = getProductUILabels(locale);
+  return {
+    ...product,
+    name: copy.name,
+    short_description: copy.shortDescription,
+    description: copy.description,
+    stock_availability: product.stock_availability
+      ? {
+          ...product.stock_availability,
+          text: product.is_in_stock ? labels.inStockText : labels.outOfStockText,
+        }
+      : product.stock_availability,
+    add_to_cart: product.add_to_cart
+      ? {
+          ...product.add_to_cart,
+          text: labels.addToCartText,
+          single_text: labels.addToCartText,
+        }
+      : product.add_to_cart,
+  };
+}
+
+function localizeMarketProducts(products: WCProduct[], locale?: Locale, market?: string): WCProduct[] {
+  return products.map((product) => localizeMarketProduct(product, locale, market));
+}
+
+async function requestMarketForLocale(locale?: Locale, frontendHost?: string): Promise<string | undefined> {
+  if (locale !== "ar") {
+    return undefined;
+  }
+
+  return extractMarketFromHost(frontendHost) || await detectMarketFromRequest();
+}
+
 async function fetchAPI<T>(
   endpoint: string,
   options: FetchOptions = {}
@@ -468,9 +534,11 @@ export async function getProducts(params?: {
         product.catalog_visibility === "visible" ||
         product.catalog_visibility === "catalog"
     );
+    const market = await requestMarketForLocale(params?.locale, params?.frontendHost);
+    const localizedProducts = localizeMarketProducts(visibleProducts, params?.locale, market);
 
     return {
-      products: visibleProducts,
+      products: localizedProducts,
       total: total - (products.length - visibleProducts.length),
       totalPages,
     };
@@ -520,7 +588,8 @@ export const getProductBySlug = cache(async function getProductBySlug(
       });
       
       if (localizedProducts.length > 0) {
-        return localizedProducts[0];
+        const market = await requestMarketForLocale(locale, frontendHost);
+        return localizeMarketProduct(localizedProducts[0], locale, market);
       }
     }
     
@@ -535,7 +604,8 @@ export const getProductBySlug = cache(async function getProductBySlug(
       return null;
     }
     
-    return products[0];
+    const market = await requestMarketForLocale(locale, frontendHost);
+    return localizeMarketProduct(products[0], locale, market);
   } catch {
     const market = extractMarketFromHost(frontendHost) || await detectMarketFromRequest();
     if (market) {
@@ -627,7 +697,8 @@ export async function getProductById(
       frontendHost,
     });
 
-    return product;
+    const market = await requestMarketForLocale(locale, frontendHost);
+    return localizeMarketProduct(product, locale, market);
   } catch {
     return null;
   }
@@ -654,7 +725,8 @@ export async function getProductsByIds(
       }
     );
 
-    return products;
+    const market = await requestMarketForLocale(locale, frontendHost);
+    return localizeMarketProducts(products, locale, market);
   } catch {
     return [];
   }
@@ -1670,9 +1742,11 @@ export async function getFeaturedProducts(params?: {
     if (visibleFeatured.length === 0 && params?.locale && params.locale !== "en") {
       return getFeaturedProducts({ ...params, locale: "en" });
     }
+    const market = await requestMarketForLocale(params?.locale, params?.frontendHost);
+    const localizedFeatured = localizeMarketProducts(visibleFeatured, params?.locale, market);
 
     return {
-      products: visibleFeatured,
+      products: localizedFeatured,
       total: total - (transformedProducts.length - visibleFeatured.length),
       totalPages,
     };
