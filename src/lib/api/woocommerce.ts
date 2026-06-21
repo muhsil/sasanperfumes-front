@@ -1,6 +1,5 @@
 import { cache } from "react";
 import { disableRuntimeCache, siteConfig, API_BASE_CURRENCY, type Locale, type Currency } from "@/config/site";
-import { fetchMarketProductsRest } from "@/lib/api/marketProductsRest";
 import {
   backendHeaders,
   extractMarketCode,
@@ -198,147 +197,6 @@ function getProductUILabels(locale?: Locale) {
   };
 }
 
-function transformRestProductToStoreProduct(
-  product: Record<string, unknown>,
-  currencyCode: Currency,
-  locale?: Locale
-): WCProduct {
-  const labels = getProductUILabels(locale);
-  const minorUnit = getCurrencyMinorUnit(currencyCode);
-  const productType = String(product.type || "simple") as WCProduct["type"];
-  const stockStatus = String(product.stock_status || "");
-
-  return {
-    id: Number(product.id) || 0,
-    name: String(product.name || ""),
-    slug: String(product.slug || ""),
-    parent: Number(product.parent_id) || 0,
-    type: productType,
-    variation: "",
-    permalink: String(product.permalink || ""),
-    sku: String(product.sku || ""),
-    short_description: String(product.short_description || ""),
-    description: String(product.description || ""),
-    on_sale: Boolean(product.on_sale),
-    prices: {
-      price: toMinorUnitPrice(product.price, minorUnit),
-      regular_price: toMinorUnitPrice(product.regular_price || product.price, minorUnit),
-      sale_price: product.sale_price ? toMinorUnitPrice(product.sale_price, minorUnit) : "",
-      price_range: null,
-      currency_code: currencyCode,
-      currency_symbol: currencyCode,
-      currency_minor_unit: minorUnit,
-      currency_decimal_separator: ".",
-      currency_thousand_separator: ",",
-      currency_prefix: "",
-      currency_suffix: ` ${currencyCode}`,
-    },
-    price_html: String(product.price_html || ""),
-    average_rating: String(product.average_rating || "0"),
-    review_count: Number(product.rating_count) || 0,
-    images: Array.isArray(product.images) ? (product.images as Array<Record<string, unknown>>).map((img) => ({
-      id: Number(img.id) || 0,
-      src: String(img.src || ""),
-      thumbnail: String(img.src || ""),
-      srcset: "",
-      sizes: "",
-      name: String(img.name || ""),
-      alt: String(img.alt || ""),
-    })) : [],
-    categories: Array.isArray(product.categories) ? (product.categories as Array<Record<string, unknown>>).map((cat) => ({
-      id: Number(cat.id) || 0,
-      name: String(cat.name || ""),
-      slug: String(cat.slug || ""),
-      link: "",
-    })) : [],
-    tags: Array.isArray(product.tags) ? (product.tags as Array<Record<string, unknown>>).map((tag) => ({
-      id: Number(tag.id) || 0,
-      name: String(tag.name || ""),
-      slug: String(tag.slug || ""),
-    })) : [],
-    brands: Array.isArray(product.brands)
-      ? (product.brands as Array<Record<string, unknown>>).map((brand) => ({
-          id: Number(brand.id) || 0,
-          name: String(brand.name || ""),
-          slug: String(brand.slug || ""),
-        }))
-      : [],
-    attributes: [],
-    variations: [],
-    grouped_products: [],
-    has_options: productType === "variable",
-    is_purchasable: product.purchasable !== false && product.status === "publish",
-    is_in_stock: stockStatus === "instock",
-    catalog_visibility: (product.catalog_visibility as WCProduct["catalog_visibility"]) || "visible",
-    is_on_backorder: stockStatus === "onbackorder",
-    low_stock_remaining: null,
-    stock_availability: {
-      text: stockStatus === "instock" ? labels.inStockText : labels.outOfStockText,
-      class: stockStatus === "instock" ? "in-stock" : "out-of-stock",
-    },
-    sold_individually: Boolean(product.sold_individually),
-    add_to_cart: {
-      text: labels.addToCartText,
-      description: "",
-      url: "",
-      single_text: labels.addToCartText,
-      minimum: 1,
-      maximum: 9999,
-      multiple_of: 1,
-    },
-    extensions: {},
-  };
-}
-
-async function fetchRestProductsForMarket(
-  params: {
-    page?: number;
-    per_page?: number;
-    search?: string;
-    slug?: string;
-    orderby?: string;
-    order?: "asc" | "desc";
-    include?: number[];
-    locale?: Locale;
-    currency?: Currency;
-  },
-  market: string
-): Promise<WCProductsResponse> {
-  const currencyCode = params.currency || DEFAULT_API_CURRENCY;
-  const payload = await fetchMarketProductsRest({
-    page: params.page,
-    per_page: params.per_page,
-    search: params.search,
-    slug: params.slug,
-    orderby: params.orderby,
-    order: params.order,
-    include: params.include,
-    lang: params.locale,
-  }, market);
-  const products = Array.isArray(payload.products) ? payload.products : [];
-  if (!Array.isArray(products)) {
-    return { products: [], total: 0, totalPages: 0 };
-  }
-  if (products.length === 0 && params.locale) {
-    return fetchRestProductsForMarket({ ...params, locale: undefined }, market);
-  }
-
-  const transformedProducts = products.map((product) =>
-    transformRestProductToStoreProduct(product, currencyCode, params.locale)
-  );
-  const visibleProducts = transformedProducts.filter(
-    (product) =>
-      product.is_purchasable !== false &&
-      (!product.catalog_visibility || product.catalog_visibility === "visible" || product.catalog_visibility === "catalog")
-  );
-
-  return {
-    products: visibleProducts,
-    total: Number(payload.total) || visibleProducts.length,
-    totalPages: Number(payload.totalPages) || 1,
-  };
-}
-
 async function fetchAPI<T>(
   endpoint: string,
   options: FetchOptions = {}
@@ -488,25 +346,6 @@ export async function getProducts(params?: {
         product.catalog_visibility === "catalog"
     );
 
-    if (visibleProducts.length === 0) {
-      const market = extractMarketFromHost(params?.frontendHost) || await detectMarketFromRequest();
-      if (market) {
-        const restFallback = await fetchRestProductsForMarket({
-          page: params?.page,
-          per_page: params?.per_page,
-          search: params?.search,
-          orderby: params?.orderby,
-          order: params?.order,
-          include: params?.include,
-          locale: params?.locale,
-          currency: params?.currency,
-        }, market);
-        if (restFallback.products.length > 0) {
-          return restFallback;
-        }
-      }
-    }
-
     return {
       products: visibleProducts,
       total: total - (products.length - visibleProducts.length),
@@ -516,16 +355,11 @@ export async function getProducts(params?: {
     console.warn(`Failed to fetch products: ${formatFetchError(error)}`);
     const market = extractMarketFromHost(params?.frontendHost) || await detectMarketFromRequest();
     if (market) {
-      return fetchRestProductsForMarket({
-        page: params?.page,
-        per_page: params?.per_page,
-        search: params?.search,
-        orderby: params?.orderby,
-        order: params?.order,
-        include: params?.include,
-        locale: params?.locale,
-        currency: params?.currency,
-      }, market);
+      return {
+        products: [],
+        total: 0,
+        totalPages: 0,
+      };
     }
 
     return {
@@ -575,16 +409,6 @@ export const getProductBySlug = cache(async function getProductBySlug(
     });
 
     if (products.length === 0) {
-      const market = extractMarketFromHost(frontendHost);
-      if (market) {
-        const restFallback = await fetchRestProductsForMarket({
-          per_page: 1,
-          slug,
-          locale,
-          currency,
-        }, market);
-        return restFallback.products[0] || null;
-      }
       return null;
     }
     
@@ -592,13 +416,7 @@ export const getProductBySlug = cache(async function getProductBySlug(
   } catch {
     const market = extractMarketFromHost(frontendHost) || await detectMarketFromRequest();
     if (market) {
-      const restFallback = await fetchRestProductsForMarket({
-        per_page: 1,
-        slug,
-        locale,
-        currency,
-      }, market);
-      return restFallback.products[0] || null;
+      return null;
     }
 
     return null;
