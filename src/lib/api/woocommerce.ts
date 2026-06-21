@@ -151,10 +151,17 @@ async function fetchWithPublicDns(url: string, init: RequestInit, timeoutMs: num
       {
         method: init.method || "GET",
         headers,
-        lookup: (hostname, _options, callback) => {
+        lookup: (hostname, options, callback) => {
           dns.resolve4(hostname, (error, addresses) => {
             if (error || addresses.length === 0) {
-              callback(error || new Error(`No public DNS A record for ${hostname}`), "", 4);
+              callback(error || new Error(`No public DNS A record for ${hostname}`), undefined as never, undefined as never);
+              return;
+            }
+            if (typeof options === "object" && options.all) {
+              (callback as (err: NodeJS.ErrnoException | null, addresses: dns.LookupAddress[]) => void)(
+                null,
+                addresses.map((address) => ({ address, family: 4 }))
+              );
               return;
             }
             callback(null, addresses[0], 4);
