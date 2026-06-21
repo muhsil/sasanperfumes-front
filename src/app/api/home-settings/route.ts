@@ -3,10 +3,8 @@ import { normalizeMarketHost } from "@/config/market";
 import {
   API_BASE,
   backendHeaders,
-  extractMarketCode,
   fetchBackend,
   safeJsonResponse,
-  wpJsonBaseForMarket,
 } from "@/lib/utils/backendFetch";
 
 export const dynamic = "force-dynamic";
@@ -25,15 +23,48 @@ const fallbackHomeSettings = {
   },
 };
 
-const responseHeaders = {
-  "Cache-Control": "no-store, max-age=0",
-  "Vary": "Host, X-Frontend-Host, X-Market",
-  "X-ShapeHive-Market-Routing": "v2",
-};
+const MARKET_CODES = new Set(["qa", "om", "sa"]);
 
-function fallbackResponse() {
+function extractRouteMarket(value?: string | null): string {
+  const normalized = (value || "").trim().toLowerCase();
+  if (!normalized) return "";
+
+  if (MARKET_CODES.has(normalized)) {
+    return normalized;
+  }
+
+  try {
+    const parsed = new URL(normalized.includes("://") ? normalized : `https://${normalized}`);
+    const firstPath = parsed.pathname.split("/").filter(Boolean)[0] || "";
+    return MARKET_CODES.has(firstPath) ? firstPath : "";
+  } catch {
+    const segments = normalized.replace(/^https?:\/\//, "").split("/").filter(Boolean);
+    const market = segments.find((segment) => MARKET_CODES.has(segment));
+    return market || "";
+  }
+}
+
+function wpJsonBaseForRouteMarket(market: string): string {
+  const parsed = new URL(API_BASE.replace(/\/+$/, ""));
+  const segments = parsed.pathname.split("/").filter(Boolean);
+  if (segments[0] !== market) {
+    parsed.pathname = `/${[market, ...segments].join("/")}`;
+  }
+  return `${parsed.toString().replace(/\/+$/, "")}/wp-json`;
+}
+
+function responseHeaders(market?: string) {
+  return {
+    "Cache-Control": "no-store, max-age=0",
+    "Vary": "Host, X-Frontend-Host, X-Market",
+    "X-ShapeHive-Market-Routing": "v2",
+    "X-ShapeHive-Market": market || "intl",
+  };
+}
+
+function fallbackResponse(market?: string) {
   return NextResponse.json(fallbackHomeSettings, {
-    headers: responseHeaders,
+    headers: responseHeaders(market),
   });
 }
 
@@ -45,7 +76,10 @@ export async function GET(request: NextRequest) {
   );
   const queryMarket = request.nextUrl.searchParams.get("market")?.toLowerCase();
   const explicitMarket = request.headers.get("x-market")?.toLowerCase();
-  const market = extractMarketCode(queryMarket) || extractMarketCode(explicitMarket) || extractMarketCode(frontendHost);
+  const market =
+    extractRouteMarket(queryMarket) ||
+    extractRouteMarket(explicitMarket) ||
+    extractRouteMarket(frontendHost);
   const locale = request.nextUrl.searchParams.get("lang") || request.nextUrl.searchParams.get("locale") || "";
   const withParam = (endpoint: string, key: string, value: string) =>
     `${endpoint}${endpoint.includes("?") ? "&" : "?"}${key}=${encodeURIComponent(value)}`;
@@ -57,7 +91,13 @@ export async function GET(request: NextRequest) {
   );
   const homeSettingsEndpoints = market
     ? [
-        withLocale(withParam(`${wpJsonBaseForMarket(market)}/sasanperfumes/v1/home-settings`, "_market_cache_bust", `${market}-${Date.now()}`)),
+        withLocale(
+          withParam(
+            `${wpJsonBaseForRouteMarket(market)}/sasanperfumes/v1/home-settings`,
+            "_market_cache_bust",
+            `${market}-${Date.now()}`
+          )
+        ),
         fallbackEndpoint,
       ]
     : [fallbackEndpoint];
@@ -72,7 +112,7 @@ export async function GET(request: NextRequest) {
 
       if (response.ok) {
         return NextResponse.json(data, {
-          headers: responseHeaders,
+          headers: responseHeaders(market),
         });
       }
 
@@ -81,15 +121,15 @@ export async function GET(request: NextRequest) {
         const retryData = await safeJsonResponse(retry);
         if (retry.ok) {
           return NextResponse.json(retryData, {
-            headers: responseHeaders,
+            headers: responseHeaders(market),
           });
         }
       }
     }
 
-    return fallbackResponse();
+    return fallbackResponse(market);
   } catch (error) {
     console.warn("Home settings fallback used:", error instanceof Error ? error.message : error);
-    return fallbackResponse();
+    return fallbackResponse(market);
   }
 }
