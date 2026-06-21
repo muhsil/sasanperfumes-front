@@ -172,9 +172,7 @@ function buildStoreAPIUrls(
   options: Pick<FetchOptions, "locale" | "currency" | "frontendHost">
 ): string[] {
   const rootStoreApi = `${siteConfig.apiUrl.replace(/\/+$/, "")}/wp-json/wc/store/v1`;
-  const apiBases = market
-    ? [`${wpJsonBaseForMarket(market)}/wc/store/v1`, rootStoreApi]
-    : [rootStoreApi];
+  const apiBases = market ? [`${wpJsonBaseForMarket(market)}/wc/store/v1`] : [rootStoreApi];
   const currencyToUse = options.currency || DEFAULT_API_CURRENCY;
 
   return uniqueUrls(apiBases.map((apiBase) => {
@@ -184,8 +182,10 @@ function buildStoreAPIUrls(
     }
     if (market) {
       url = appendQueryParam(url, "_market_cache_bust", `${market}-${Date.now()}`);
+    } else {
+      url = appendQueryParam(url, "currency", currencyToUse);
     }
-    return appendQueryParam(url, "currency", currencyToUse);
+    return url;
   }));
 }
 
