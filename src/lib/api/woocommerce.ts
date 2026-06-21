@@ -588,6 +588,8 @@ export const getProductBySlug = cache(async function getProductBySlug(
   currency?: Currency,
   frontendHost?: string
 ): Promise<WCProduct | null> {
+  const market = await requestMarketForLocale(locale, frontendHost);
+
   try {
     // URL encode the slug to handle non-ASCII characters (e.g., Arabic slugs)
     const encodedSlug = encodeURIComponent(slug);
@@ -604,8 +606,20 @@ export const getProductBySlug = cache(async function getProductBySlug(
       });
       
       if (localizedProducts.length > 0) {
-        const market = await requestMarketForLocale(locale, frontendHost);
         return localizeMarketProduct(localizedProducts[0], locale, market);
+      }
+
+      if (locale !== "en") {
+        const englishProducts = await fetchAPI<WCProduct[]>(`/products?slug=${encodedSlug}`, {
+          tags: ["products", `product-${slug}-en-fallback`],
+          locale: "en",
+          currency,
+          frontendHost,
+        });
+
+        if (englishProducts.length > 0) {
+          return localizeMarketProduct(englishProducts[0], locale, market);
+        }
       }
     }
     
@@ -620,12 +634,24 @@ export const getProductBySlug = cache(async function getProductBySlug(
       return null;
     }
     
-    const market = await requestMarketForLocale(locale, frontendHost);
     return localizeMarketProduct(products[0], locale, market);
   } catch {
-    const market = extractMarketFromHost(frontendHost) || await detectMarketFromRequest();
-    if (market) {
-      return null;
+    if (market && locale && locale !== "en") {
+      try {
+        const encodedSlug = encodeURIComponent(slug);
+        const englishProducts = await fetchAPI<WCProduct[]>(`/products?slug=${encodedSlug}`, {
+          tags: ["products", `product-${slug}-en-fallback`],
+          locale: "en",
+          currency,
+          frontendHost,
+        });
+
+        return englishProducts.length > 0
+          ? localizeMarketProduct(englishProducts[0], locale, market)
+          : null;
+      } catch {
+        return null;
+      }
     }
 
     return null;
