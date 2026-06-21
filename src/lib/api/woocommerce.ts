@@ -2,6 +2,7 @@ import { cache } from "react";
 import dns from "dns";
 import https from "https";
 import { disableRuntimeCache, siteConfig, API_BASE_CURRENCY, type Locale, type Currency } from "@/config/site";
+import { getWcCredentials } from "@/lib/utils/loadEnv";
 import {
   backendHeaders,
   extractMarketCode,
@@ -1438,8 +1439,8 @@ export async function getFreeGiftProductInfo(currency?: string, frontendHost?: s
 // so we fetch all products and filter client-side by the catalog_visibility property
 export async function getHiddenProductIds(frontendHost?: string): Promise<number[]> {
   try {
-    const consumerKey = process.env.WC_CONSUMER_KEY;
-    const consumerSecret = process.env.WC_CONSUMER_SECRET;
+    const market = extractMarketFromHost(frontendHost);
+    const { consumerKey, consumerSecret } = getWcCredentials(market);
     if (!consumerKey || !consumerSecret) {
       return [];
     }
@@ -1453,12 +1454,12 @@ export async function getHiddenProductIds(frontendHost?: string): Promise<number
     
     const response = await fetch(url, {
       headers: {
-        ...(backendHeaders() as Record<string, string>),
+        ...(backendHeaders(market ? { "Origin": "https://cms.shapehive.com", "X-Market": market } : undefined) as Record<string, string>),
         Authorization: `Basic ${Buffer.from(`${consumerKey}:${consumerSecret}`).toString("base64")}`,
       },
       next: {
         revalidate: 600, // Hidden products rarely change - cache for 10 minutes
-        tags: ["products", "hidden-products"],
+        tags: ["products", `hidden-products-${market || "intl"}`],
       },
     });
 
