@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getFeaturedProducts, getProducts } from "@/lib/api/woocommerce";
-import { getMarketByHost } from "@/config/market";
-import { getRequestFrontendHost } from "@/lib/market/server";
+import { getMarketByHost, normalizeMarketHost } from "@/config/market";
 import type { Locale } from "@/config/site";
 import type { WCProduct, WCProductLightweight } from "@/types/woocommerce";
 
@@ -14,6 +13,32 @@ interface CachedProducts {
   timestamp: number;
 }
 const productsCache = new Map<string, CachedProducts>();
+const MARKET_CODES = new Set(["qa", "om", "sa"]);
+
+function getFrontendHost(request: NextRequest): string {
+  const explicitMarket = request.headers.get("x-market")?.toLowerCase();
+  const rawHost =
+    request.headers.get("x-frontend-host") ||
+    request.headers.get("x-forwarded-host") ||
+    request.headers.get("host") ||
+    "";
+
+  if (explicitMarket && MARKET_CODES.has(explicitMarket)) {
+    const normalizedHost = normalizeMarketHost(rawHost).replace(/\/(qa|om|sa)$/, "");
+    return normalizedHost ? `${normalizedHost}/${explicitMarket}` : normalizeMarketHost(`${rawHost}/${explicitMarket}`);
+  }
+
+  const candidates = [
+    request.headers.get("x-frontend-host"),
+    request.headers.get("referer"),
+    request.headers.get("x-forwarded-host"),
+    request.headers.get("host"),
+  ]
+    .map((candidate) => normalizeMarketHost(candidate))
+    .filter(Boolean);
+
+  return candidates.find((candidate) => /\/(qa|om|sa)$/.test(candidate)) || candidates[0] || "";
+}
 
 /**
  * Transform a full WCProduct into a lightweight version
@@ -89,7 +114,7 @@ function toProductLightweight(product: WCProduct): WCProductLightweight {
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  const frontendHost = await getRequestFrontendHost();
+  const frontendHost = getFrontendHost(request);
   const market = getMarketByHost(frontendHost);
   
   const page = parseInt(searchParams.get("page") || "1", 10);

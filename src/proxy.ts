@@ -165,7 +165,8 @@ export function proxy(request: NextRequest) {
   const second = segments[1]?.toLowerCase();
   const refererPath = getPathFromHeader(request);
   const { market: refererMarket, locale: refererLocale } = getMarketAndLocale(refererPath);
-  const market = routeMarket || refererMarket;
+  const explicitMarket = request.headers.get("x-market")?.toLowerCase();
+  const market = routeMarket || refererMarket || (MARKET_PREFIX_SEGMENTS.has(explicitMarket || "") ? explicitMarket : undefined);
 
   if (isBlockedRequest(request)) {
     return new NextResponse("Not Found", { status: 404 });

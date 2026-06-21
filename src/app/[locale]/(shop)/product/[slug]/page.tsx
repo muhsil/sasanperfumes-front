@@ -47,8 +47,8 @@ function getProductJsonLdData(product: WCProduct, locale: string, slug: string, 
   });
 }
 
-// Increased revalidate time for better cache hit rates (5 minutes instead of 60 seconds)
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 // Pre-render top products at build time for better performance
 // Always use English slugs for URLs regardless of locale
