@@ -44,6 +44,8 @@ export async function GET(request: NextRequest) {
   const explicitMarket = request.headers.get("x-market")?.toLowerCase();
   const market = extractMarketCode(queryMarket) || extractMarketCode(frontendHost) || extractMarketCode(explicitMarket);
   const locale = request.nextUrl.searchParams.get("lang") || request.nextUrl.searchParams.get("locale") || "";
+  const withParam = (endpoint: string, key: string, value: string) =>
+    `${endpoint}${endpoint.includes("?") ? "&" : "?"}${key}=${encodeURIComponent(value)}`;
   const withLocale = (endpoint: string) => locale
     ? `${endpoint}${endpoint.includes("?") ? "&" : "?"}lang=${encodeURIComponent(locale)}`
     : endpoint;
@@ -52,11 +54,11 @@ export async function GET(request: NextRequest) {
   );
   const homeSettingsEndpoints = market
     ? [
-        withLocale(`${wpJsonBaseForMarket(market)}/sasanperfumes/v1/home-settings`),
+        withLocale(withParam(`${wpJsonBaseForMarket(market)}/sasanperfumes/v1/home-settings`, "_market_cache_bust", `${market}-${Date.now()}`)),
         fallbackEndpoint,
       ]
     : [fallbackEndpoint];
-  const headers = market ? backendHeaders({ "x-market": market }) : backendHeaders();
+  const headers = backendHeaders({ "Cache-Control": "no-cache", "Pragma": "no-cache" });
 
   try {
     for (const endpoint of homeSettingsEndpoints) {

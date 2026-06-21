@@ -671,17 +671,18 @@ async function fetchWPAPI<T>(
   const market = extractWPMarketFromHost(frontendHost) || await detectMarketFromRequest();
   const apiBases = market ? [wpJsonBaseForMarket(market), WP_API_BASE] : [WP_API_BASE];
   const marketApiBase = market ? wpJsonBaseForMarket(market) : "";
+  const marketCacheBust = market ? `${market}-${Date.now()}` : "";
   const urls = uniqueUrls(
     apiBases.flatMap((apiBase) =>
       buildWPAPIUrls(endpoint, locale, apiBase).map((url) =>
-        frontendHost && apiBase !== marketApiBase ? appendQueryParam(url, "frontend_host", frontendHost) : url
+        apiBase === marketApiBase
+          ? appendQueryParam(url, "_market_cache_bust", marketCacheBust)
+          : frontendHost ? appendQueryParam(url, "frontend_host", frontendHost) : url
       )
     )
   );
 
-  const apiHeaders = market
-    ? backendHeaders({ ...WP_API_HEADERS, "x-market": market })
-    : backendHeaders(WP_API_HEADERS);
+  const apiHeaders = backendHeaders(WP_API_HEADERS);
 
   try {
       const shouldBypassCache = disableRuntimeCache || noCache || CMS_FORCE_DYNAMIC_CACHE || isCmsContentEndpoint(endpoint);
