@@ -1,4 +1,6 @@
 import { cache } from "react";
+import dns from "dns";
+import https from "https";
 import { disableRuntimeCache, siteConfig, API_BASE_CURRENCY, type Locale, type Currency } from "@/config/site";
 import {
   backendHeaders,
@@ -57,6 +59,23 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
 const DEFAULT_API_CURRENCY = API_BASE_CURRENCY;
 const BACKEND_FETCH_TIMEOUT_MS = 8000;
 
+function headersToRecord(headers?: HeadersInit): Record<string, string> {
+  if (!headers) return {};
+  if (headers instanceof Headers) {
+    const result: Record<string, string> = {};
+    headers.forEach((value, key) => {
+      result[key] = value;
+    });
+    return result;
+  }
+  if (Array.isArray(headers)) {
+    return Object.fromEntries(headers.map(([key, value]) => [key, String(value)]));
+  }
+  return Object.fromEntries(
+    Object.entries(headers).map(([key, value]) => [key, String(value)])
+  );
+}
+
 function withExplicitHttpsPort(url: string): string {
   try {
     const parsed = new URL(url);
@@ -78,6 +97,10 @@ function cmsMarketHost(market: string): string {
 }
 
 async function fetchWithTimeout(url: string, init: RequestInit = {}, timeoutMs = BACKEND_FETCH_TIMEOUT_MS): Promise<Response> {
+  if (shouldUsePublicDnsForCms(url, init)) {
+    return fetchWithPublicDns(url, init, timeoutMs);
+  }
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -89,6 +112,76 @@ async function fetchWithTimeout(url: string, init: RequestInit = {}, timeoutMs =
   } finally {
     clearTimeout(timeout);
   }
+}
+
+function shouldUsePublicDnsForCms(url: string, init: RequestInit): boolean {
+  try {
+    const parsed = new URL(url);
+    const headers = headersToRecord(init.headers);
+    return (
+      parsed.hostname === "cms.shapehive.com" &&
+      parsed.pathname.includes("/wp-json/wc/store/v1/products") &&
+      parsed.searchParams.has("_market_cache_bust") &&
+      Boolean(headers["X-Market"] || headers["x-market"])
+    );
+  } catch {
+    return false;
+  }
+}
+
+function responseHeadersFromNode(headers: Record<string, string | string[] | undefined>): Headers {
+  const responseHeaders = new Headers();
+  Object.entries(headers).forEach(([key, value]) => {
+    if (Array.isArray(value)) {
+      value.forEach((entry) => responseHeaders.append(key, entry));
+    } else if (value !== undefined) {
+      responseHeaders.set(key, value);
+    }
+  });
+  return responseHeaders;
+}
+
+async function fetchWithPublicDns(url: string, init: RequestInit, timeoutMs: number): Promise<Response> {
+  const parsed = new URL(url);
+  const headers = headersToRecord(init.headers);
+
+  return new Promise<Response>((resolve, reject) => {
+    const request = https.request(
+      parsed,
+      {
+        method: init.method || "GET",
+        headers,
+        lookup: (hostname, _options, callback) => {
+          dns.resolve4(hostname, (error, addresses) => {
+            if (error || addresses.length === 0) {
+              callback(error || new Error(`No public DNS A record for ${hostname}`), "", 4);
+              return;
+            }
+            callback(null, addresses[0], 4);
+          });
+        },
+      },
+      (incoming) => {
+        const chunks: Buffer[] = [];
+        incoming.on("data", (chunk: Buffer) => chunks.push(chunk));
+        incoming.on("end", () => {
+          resolve(new Response(Buffer.concat(chunks), {
+            status: incoming.statusCode || 200,
+            statusText: incoming.statusMessage || "",
+            headers: responseHeadersFromNode(incoming.headers),
+          }));
+        });
+      }
+    );
+
+    const timeout = setTimeout(() => {
+      request.destroy(new Error("CMS Store API public DNS request timed out"));
+    }, timeoutMs);
+
+    request.on("error", reject);
+    request.on("close", () => clearTimeout(timeout));
+    request.end();
+  });
 }
 
 function formatFetchError(error: unknown): string {
