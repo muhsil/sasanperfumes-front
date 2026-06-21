@@ -64,6 +64,18 @@ function sasanperfumes_normalize_frontend_host_with_market(?string $host): strin
     $host_part = strtolower(trim($host_part));
     if (!$host_part) return '';
 
+    $host_labels = explode('.', $host_part);
+    $subdomain_market = (string) ($host_labels[0] ?? '');
+    if (count($host_labels) > 2 && in_array($subdomain_market, $known_markets, true)) {
+        $base_host = implode('.', array_slice($host_labels, 1));
+        if ($base_host !== '') {
+            $host_part = $base_host;
+            if (empty($parts[1])) {
+                return $host_part . '/' . $subdomain_market;
+            }
+        }
+    }
+
     if (empty($parts[1])) {
         return $host_part;
     }
@@ -435,12 +447,17 @@ function sasanperfumes_get_incoming_frontend_host(): string {
     $origin_host = $_SERVER['HTTP_ORIGIN'] ?? '';
     $forwarded_host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? '';
     $host_header = $_SERVER['HTTP_HOST'] ?? '';
-    $market_candidate = $_SERVER['HTTP_X_MARKET'] ?? '';
+    $market_candidate = $_SERVER['HTTP_X_MARKET'] ?? ($_GET['market'] ?? '');
+    $request_uri = $_SERVER['REQUEST_URI'] ?? '';
+    $request_path = is_string($request_uri) ? (string) parse_url($request_uri, PHP_URL_PATH) : '';
+    $request_segments = array_values(array_filter(explode('/', trim($request_path, '/')), 'strlen'));
+    $path_market_candidate = (string) ($request_segments[0] ?? '');
 
     $candidates[] = $_SERVER['HTTP_X_FRONTEND_HOST'] ?? '';
     $candidates[] = $_GET['frontend_host'] ?? '';
     $candidates[] = sasanperfumes_build_frontend_host_from_market((string) $market_candidate, (string) $forwarded_host);
     $candidates[] = sasanperfumes_build_frontend_host_from_market((string) $market_candidate, (string) $host_header);
+    $candidates[] = sasanperfumes_build_frontend_host_from_market($path_market_candidate, (string) $host_header);
     $candidates[] = $market_candidate;
     $candidates[] = $forwarded_host;
     $candidates[] = $origin_host;
