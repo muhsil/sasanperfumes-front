@@ -161,7 +161,9 @@ export async function GET() {
     // and exclude BNPL providers (Tamara, Tabby) since we can't confirm their enabled status.
     const excludedFromFallback = ["tamara", "tamara-gateway", "tabby", "tabby_installments", "tabby_checkout"];
     
-    const gateways = paymentMethodIds
+    const fallbackPaymentMethodIds = Array.from(new Set([...paymentMethodIds, "cod"]));
+
+    const gateways = fallbackPaymentMethodIds
       .filter((id: string) => !excludedFromFallback.includes(id))
       .map((id: string, index: number) => {
         const details = PAYMENT_METHOD_DETAILS[id] || {
