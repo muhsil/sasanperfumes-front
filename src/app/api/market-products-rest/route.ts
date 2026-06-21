@@ -23,6 +23,8 @@ export async function GET(request: NextRequest) {
 
   const restParams = new URLSearchParams();
   restParams.set("status", "publish");
+  restParams.set("consumer_key", credentials.consumerKey);
+  restParams.set("consumer_secret", credentials.consumerSecret);
   restParams.set("per_page", params.get("per_page") || "12");
   for (const key of ["page", "search", "slug", "orderby", "order", "include", "lang"]) {
     const value = params.get(key);
@@ -30,13 +32,20 @@ export async function GET(request: NextRequest) {
   }
   restParams.set("_market_cache_bust", `${market}-${Date.now()}`);
 
-  const response = await fetch(`${wpJsonBaseForMarket(market)}/wc/v3/products?${restParams.toString()}`, {
-    cache: "no-store",
-    headers: {
-      ...(backendHeaders({ "x-market": market, "Cache-Control": "no-cache", "Pragma": "no-cache" }) as Record<string, string>),
-      Authorization: `Basic ${Buffer.from(`${credentials.consumerKey}:${credentials.consumerSecret}`).toString("base64")}`,
-    },
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+  let response: Response;
+  try {
+    response = await fetch(`${wpJsonBaseForMarket(market)}/wc/v3/products?${restParams.toString()}`, {
+      cache: "no-store",
+      signal: controller.signal,
+      headers: backendHeaders({ "x-market": market, "Cache-Control": "no-cache", "Pragma": "no-cache" }),
+    });
+  } catch {
+    return NextResponse.json({ products: [], total: 0, totalPages: 0 }, { status: 504 });
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!response.ok) {
     return NextResponse.json({ products: [], total: 0, totalPages: 0 }, { status: response.status });
