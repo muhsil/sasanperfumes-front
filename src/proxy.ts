@@ -152,6 +152,7 @@ function rewriteMarketPathToLocaleRoute(
   const rest = segments.slice(2);
   const rewriteUrl = request.nextUrl.clone();
   rewriteUrl.pathname = `/${locale}${rest.length ? `/${rest.join("/")}` : ""}`;
+  rewriteUrl.searchParams.set("__market", market);
   const requestHeaders = applyRequestRoutingHeaders(request, locale, market);
   const response = NextResponse.rewrite(rewriteUrl, { request: { headers: requestHeaders } });
   return addSecurityHeaders(response);
@@ -187,6 +188,12 @@ export function proxy(request: NextRequest) {
       routeLocale || refererLocale || getLocale(request),
       market
     );
+    if (market) {
+      const rewriteUrl = request.nextUrl.clone();
+      rewriteUrl.searchParams.set("__market", market);
+      const response = NextResponse.rewrite(rewriteUrl, { request: { headers: requestHeaders } });
+      return addSecurityHeaders(response);
+    }
     const response = NextResponse.next({ request: { headers: requestHeaders } });
     return addSecurityHeaders(response);
   }

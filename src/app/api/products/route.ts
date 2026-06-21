@@ -16,7 +16,8 @@ const productsCache = new Map<string, CachedProducts>();
 const MARKET_CODES = new Set(["qa", "om", "sa"]);
 
 function getFrontendHost(request: NextRequest): string {
-  const explicitMarket = request.headers.get("x-market")?.toLowerCase();
+  const queryMarket = request.nextUrl.searchParams.get("__market")?.toLowerCase();
+  const explicitMarket = queryMarket || request.headers.get("x-market")?.toLowerCase();
   const rawHost =
     request.headers.get("x-frontend-host") ||
     request.headers.get("x-forwarded-host") ||

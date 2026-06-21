@@ -12,7 +12,9 @@ import { siteConfig, type Locale } from "@/config/site";
 import { decodeHtmlEntities } from "@/lib/utils";
 import type { Metadata } from "next";
 import type { WCProduct } from "@/types/woocommerce";
-import { getMarketPathPrefix } from "@/config/market";
+import { getMarketByHost, getMarketPathPrefix } from "@/config/market";
+
+const MARKET_CODES = new Set(["qa", "om", "sa"]);
 
 // Helper to check if a slug contains non-ASCII characters (e.g., Arabic)
 function isNonAsciiSlug(slug: string): boolean {
@@ -74,16 +76,36 @@ export async function generateStaticParams() {
 
 interface ProductPageProps {
   params: Promise<{ locale: string; slug: string }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-export async function generateMetadata({
-  params,
-}: ProductPageProps): Promise<Metadata> {
-  const { locale, slug } = await params;
+async function getProductPageMarketContext(searchParams?: ProductPageProps["searchParams"]) {
+  const resolvedSearchParams = searchParams ? await searchParams.catch(() => undefined) : undefined;
+  const rawMarket = resolvedSearchParams?.__market;
+  const internalMarket = (Array.isArray(rawMarket) ? rawMarket[0] : rawMarket)?.toLowerCase();
+
+  if (internalMarket && MARKET_CODES.has(internalMarket)) {
+    const frontendHost = `shapehive.com/${internalMarket}`;
+    return {
+      market: getMarketByHost(frontendHost),
+      frontendHost,
+    };
+  }
+
   const [market, frontendHost] = await Promise.all([
     getRequestMarket(),
     getRequestFrontendHost(),
   ]);
+
+  return { market, frontendHost };
+}
+
+export async function generateMetadata({
+  params,
+  searchParams,
+}: ProductPageProps): Promise<Metadata> {
+  const { locale, slug } = await params;
+  const { market, frontendHost } = await getProductPageMarketContext(searchParams);
 
   // Fetch product and backend-generated meta description in parallel
   const [product, backendMetaDesc, siteSettings] = await Promise.all([
@@ -208,12 +230,9 @@ export async function generateMetadata({
   };
 }
 
-export default async function ProductPage({ params }: ProductPageProps) {
+export default async function ProductPage({ params, searchParams }: ProductPageProps) {
   const { locale, slug } = await params;
-  const [market, frontendHost] = await Promise.all([
-    getRequestMarket(),
-    getRequestFrontendHost(),
-  ]);
+  const { market, frontendHost } = await getProductPageMarketContext(searchParams);
   const pathPrefix = getMarketPathPrefix(market.code);
   const frontendBaseUrl = frontendHost ? `https://${frontendHost}` : siteConfig.url;
   
