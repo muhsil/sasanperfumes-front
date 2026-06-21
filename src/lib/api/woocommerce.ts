@@ -83,13 +83,13 @@ function withFrontendHostParam(url: string, frontendHost?: string): string {
 const KNOWN_MARKETS = new Set(["qa", "om", "sa"]);
 let hostingerEnvLoaded = false;
 
-function loadHostingerEnvInline(): void {
+async function loadHostingerEnvInline(): Promise<void> {
   if (hostingerEnvLoaded || typeof window !== "undefined") return;
 
   try {
-    const runtimeRequire = eval("require") as NodeRequire;
-    const fs = runtimeRequire("fs") as typeof import("fs");
-    const path = runtimeRequire("path") as typeof import("path");
+    const runtimeImport = new Function("specifier", "return import(specifier)") as (specifier: string) => Promise<unknown>;
+    const fs = await runtimeImport("node:fs") as typeof import("fs");
+    const path = await runtimeImport("node:path") as typeof import("path");
     const possiblePaths = [
       path.join(process.cwd(), ".builds", "config", ".env"),
       path.join(process.cwd(), "..", ".builds", "config", ".env"),
@@ -127,33 +127,33 @@ function loadHostingerEnvInline(): void {
   hostingerEnvLoaded = true;
 }
 
-function getRuntimeEnvVar(key: string): string | undefined {
+async function getRuntimeEnvVar(key: string): Promise<string | undefined> {
   if (process.env[key]) return process.env[key];
-  loadHostingerEnvInline();
+  await loadHostingerEnvInline();
   return process.env[key];
 }
 
-function getRestCredentialsForMarket(market?: string | null): { consumerKey: string; consumerSecret: string } {
+async function getRestCredentialsForMarket(market?: string | null): Promise<{ consumerKey: string; consumerSecret: string }> {
   switch (market?.toLowerCase()) {
     case "qa":
       return {
-        consumerKey: process.env.WC_CONSUMER_KEY_QA || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY_QA || getRuntimeEnvVar("WC_CONSUMER_KEY_QA") || getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_KEY_QA") || getRuntimeEnvVar("WC_CONSUMER_KEY") || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || "",
-        consumerSecret: process.env.WC_CONSUMER_SECRET_QA || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET_QA || getRuntimeEnvVar("WC_CONSUMER_SECRET_QA") || getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_SECRET_QA") || getRuntimeEnvVar("WC_CONSUMER_SECRET") || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET || "",
+        consumerKey: process.env.WC_CONSUMER_KEY_QA || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY_QA || await getRuntimeEnvVar("WC_CONSUMER_KEY_QA") || await getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_KEY_QA") || await getRuntimeEnvVar("WC_CONSUMER_KEY") || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || "",
+        consumerSecret: process.env.WC_CONSUMER_SECRET_QA || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET_QA || await getRuntimeEnvVar("WC_CONSUMER_SECRET_QA") || await getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_SECRET_QA") || await getRuntimeEnvVar("WC_CONSUMER_SECRET") || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET || "",
       };
     case "om":
       return {
-        consumerKey: process.env.WC_CONSUMER_KEY_OM || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY_OM || getRuntimeEnvVar("WC_CONSUMER_KEY_OM") || getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_KEY_OM") || getRuntimeEnvVar("WC_CONSUMER_KEY") || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || "",
-        consumerSecret: process.env.WC_CONSUMER_SECRET_OM || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET_OM || getRuntimeEnvVar("WC_CONSUMER_SECRET_OM") || getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_SECRET_OM") || getRuntimeEnvVar("WC_CONSUMER_SECRET") || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET || "",
+        consumerKey: process.env.WC_CONSUMER_KEY_OM || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY_OM || await getRuntimeEnvVar("WC_CONSUMER_KEY_OM") || await getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_KEY_OM") || await getRuntimeEnvVar("WC_CONSUMER_KEY") || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || "",
+        consumerSecret: process.env.WC_CONSUMER_SECRET_OM || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET_OM || await getRuntimeEnvVar("WC_CONSUMER_SECRET_OM") || await getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_SECRET_OM") || await getRuntimeEnvVar("WC_CONSUMER_SECRET") || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET || "",
       };
     case "sa":
       return {
-        consumerKey: process.env.WC_CONSUMER_KEY_SA || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY_SA || getRuntimeEnvVar("WC_CONSUMER_KEY_SA") || getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_KEY_SA") || getRuntimeEnvVar("WC_CONSUMER_KEY") || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || "",
-        consumerSecret: process.env.WC_CONSUMER_SECRET_SA || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET_SA || getRuntimeEnvVar("WC_CONSUMER_SECRET_SA") || getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_SECRET_SA") || getRuntimeEnvVar("WC_CONSUMER_SECRET") || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET || "",
+        consumerKey: process.env.WC_CONSUMER_KEY_SA || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY_SA || await getRuntimeEnvVar("WC_CONSUMER_KEY_SA") || await getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_KEY_SA") || await getRuntimeEnvVar("WC_CONSUMER_KEY") || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || "",
+        consumerSecret: process.env.WC_CONSUMER_SECRET_SA || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET_SA || await getRuntimeEnvVar("WC_CONSUMER_SECRET_SA") || await getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_SECRET_SA") || await getRuntimeEnvVar("WC_CONSUMER_SECRET") || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET || "",
       };
     default:
       return {
-        consumerKey: process.env.WC_CONSUMER_KEY || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || getRuntimeEnvVar("WC_CONSUMER_KEY") || getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_KEY") || "",
-        consumerSecret: process.env.WC_CONSUMER_SECRET || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET || getRuntimeEnvVar("WC_CONSUMER_SECRET") || getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_SECRET") || "",
+        consumerKey: process.env.WC_CONSUMER_KEY || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || await getRuntimeEnvVar("WC_CONSUMER_KEY") || await getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_KEY") || "",
+        consumerSecret: process.env.WC_CONSUMER_SECRET || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET || await getRuntimeEnvVar("WC_CONSUMER_SECRET") || await getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_SECRET") || "",
       };
   }
 }
@@ -364,7 +364,7 @@ async function fetchRestProductsForMarket(
   },
   market: string
 ): Promise<WCProductsResponse> {
-  const credentials = getRestCredentialsForMarket(market);
+  const credentials = await getRestCredentialsForMarket(market);
   if (!credentials.consumerKey || !credentials.consumerSecret) {
     return { products: [], total: 0, totalPages: 0 };
   }
