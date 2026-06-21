@@ -15,6 +15,14 @@ interface CachedGateways {
 }
 let gatewaysCache: CachedGateways | null = null;
 
+function gatewaysJson(data: Record<string, unknown>, init?: ResponseInit) {
+  const headers = new Headers(init?.headers);
+  headers.set("Cache-Control", "no-store, no-cache, max-age=0, must-revalidate");
+  headers.set("Pragma", "no-cache");
+  headers.set("Vary", "Host, X-Frontend-Host, Referer");
+  return NextResponse.json(data, { ...init, headers });
+}
+
 function getBasicAuthParams(): string {
   const { consumerKey, consumerSecret } = getWcCredentials();
   return `consumer_key=${consumerKey}&consumer_secret=${consumerSecret}`;
@@ -85,7 +93,7 @@ interface CartResponse {
 export async function GET() {
   try {
     if (gatewaysCache && Date.now() - gatewaysCache.timestamp < GATEWAYS_CACHE_TTL) {
-      return NextResponse.json(gatewaysCache.data);
+      return gatewaysJson(gatewaysCache.data);
     }
 
     const { consumerKey, consumerSecret } = getWcCredentials();
@@ -127,7 +135,7 @@ export async function GET() {
           myfatoorah_test_mode: myFatoorahTestMode,
         };
         gatewaysCache = { data: responseData, timestamp: Date.now() };
-        return NextResponse.json(responseData);
+        return gatewaysJson(responseData);
       }
     }
     
@@ -142,7 +150,7 @@ export async function GET() {
     const storeData: CartResponse = await storeResponse.json();
 
     if (!storeResponse.ok) {
-      return NextResponse.json(
+      return gatewaysJson(
         {
           success: false,
           error: {
@@ -190,9 +198,9 @@ export async function GET() {
       myfatoorah_test_mode: myFatoorahTestMode,
     };
     gatewaysCache = { data: fallbackData, timestamp: Date.now() };
-    return NextResponse.json(fallbackData);
+    return gatewaysJson(fallbackData);
   } catch (error) {
-    return NextResponse.json(
+    return gatewaysJson(
       {
         success: false,
         error: {
