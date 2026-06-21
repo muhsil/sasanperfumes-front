@@ -4,7 +4,6 @@ import {
   backendHeaders,
   extractMarketCode,
   rewriteBackendUrlForMarket,
-  wpJsonBaseForMarket,
 } from "@/lib/utils/backendFetch";
 import type {
   WCProduct,
@@ -171,7 +170,7 @@ function buildStoreAPIUrls(
   options: Pick<FetchOptions, "locale" | "currency" | "frontendHost">
 ): string[] {
   const rootStoreApi = `${siteConfig.apiUrl.replace(/\/+$/, "")}/wp-json/wc/store/v1`;
-  const apiBases = market ? [`${wpJsonBaseForMarket(market)}/wc/store/v1`] : [rootStoreApi];
+  const apiBases = [rootStoreApi];
   const currencyToUse = options.currency || DEFAULT_API_CURRENCY;
 
   return uniqueUrls(apiBases.map((apiBase) => {
