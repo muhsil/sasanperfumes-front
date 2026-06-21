@@ -26,6 +26,34 @@ async function testEndpoint(label: string, url: string, method: string, headers?
   }
 }
 
+async function testHomeSettings(label: string, url: string, headers?: HeadersInit) {
+  try {
+    const response = await fetch(url, { headers });
+    const text = await response.text();
+    let hero = "";
+    try {
+      const data = parseBackendJson<{ hero?: { slides?: { image?: string }[] } }>(text);
+      hero = data.hero?.slides?.[0]?.image || "";
+    } catch {
+      // Keep the raw diagnostics below when JSON parsing fails.
+    }
+
+    return {
+      label,
+      url,
+      headers_sent: headers ? Object.keys(headers) : "none",
+      status: response.status,
+      is_json: (() => { try { parseBackendJson(text); return true; } catch { return false; } })(),
+      hero,
+      is_market_hero: hero.includes("/qa/wp-content/") || hero.includes("/om/wp-content/") || hero.includes("/sa/wp-content/"),
+      is_default_buy_hero: hero.includes("BUY-scaled.webp"),
+      snippet: text.slice(0, 300),
+    };
+  } catch (error) {
+    return { label, url, error: error instanceof Error ? error.message : "Unknown" };
+  }
+}
+
 export async function GET() {
   const cocartUrl = `${BASE}/wp-json/cocart/v2/cart`;
   const cocartAddUrl = `${BASE}/wp-json/cocart/v2/cart/add-item`;
@@ -34,6 +62,12 @@ export async function GET() {
   const wpPosts = `${BASE}/wp-json/wp/v2/posts`;
   const freeGiftsRules = `${BASE}/wp-json/sasanperfumes-free-gifts/v1/rules`;
   const timestamp = `_t=${Date.now()}`;
+  const homeHeaders = {
+    "Accept": "application/json",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/125.0 Safari/537.36",
+    "Cache-Control": "no-cache",
+    "Pragma": "no-cache",
+  };
 
   const consumerKey = process.env.WC_CONSUMER_KEY;
   const consumerSecret = process.env.WC_CONSUMER_SECRET;
@@ -80,6 +114,9 @@ export async function GET() {
     testEndpoint("12_cocart_with_useragent", cocartUrl, "GET", {
       "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
     }),
+    testHomeSettings("14_home_settings_qa_direct", `${BASE}/qa/wp-json/sasanperfumes/v1/home-settings?lang=en&_t=${Date.now()}`, homeHeaders),
+    testHomeSettings("15_home_settings_qa_rest_route", `${BASE}/qa/?rest_route=/sasanperfumes/v1/home-settings&lang=en&_t=${Date.now()}`, homeHeaders),
+    testHomeSettings("16_home_settings_qa_with_frontend_host", `${BASE}/qa/wp-json/sasanperfumes/v1/home-settings?lang=en&frontend_host=shapehive.com%2Fqa&_t=${Date.now()}`, homeHeaders),
     ...(hasWcAuth ? [testEndpoint("13_wc_v3_products_with_auth", wcV3Products, "GET", wcV3Headers)] : []),
   ]);
 
