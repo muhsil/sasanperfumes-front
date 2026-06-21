@@ -40,8 +40,9 @@ export async function GET(request: NextRequest) {
     request.headers.get("x-forwarded-host") ||
     request.headers.get("host")
   );
+  const queryMarket = request.nextUrl.searchParams.get("market")?.toLowerCase();
   const explicitMarket = request.headers.get("x-market")?.toLowerCase();
-  const market = extractMarketCode(frontendHost) || extractMarketCode(explicitMarket);
+  const market = extractMarketCode(queryMarket) || extractMarketCode(frontendHost) || extractMarketCode(explicitMarket);
   const locale = request.nextUrl.searchParams.get("lang") || request.nextUrl.searchParams.get("locale") || "";
   const withLocale = (endpoint: string) => locale
     ? `${endpoint}${endpoint.includes("?") ? "&" : "?"}lang=${encodeURIComponent(locale)}`

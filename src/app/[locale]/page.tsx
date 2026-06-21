@@ -21,7 +21,8 @@ import { ProductSectionSkeleton } from "@/components/sections/ProductSection";
 import { siteConfig, type Currency, type Locale } from "@/config/site";
 import type { Metadata } from "next";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 const HOME_PRODUCT_COUNT = 5;
 
 interface HomePageProps {

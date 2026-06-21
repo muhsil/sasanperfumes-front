@@ -11,7 +11,8 @@ import type { Metadata } from "next";
 import { NewProductsClient } from "./NewProductsClient";
 import { getMarketPathPrefix } from "@/config/market";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 interface NewProductsPageProps {
   params: Promise<{ locale: string }>;

@@ -13,8 +13,8 @@ import type { Metadata } from "next";
 import { ShopClient } from "./ShopClient";
 import { getMarketPathPrefix } from "@/config/market";
 
-// Increased revalidate time for better cache hit rates (5 minutes instead of 60 seconds)
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 const SHOP_PRODUCTS_PER_PAGE = 30;
 
 interface ShopPageProps {

@@ -10,7 +10,8 @@ import type { Metadata } from "next";
 import { BuildYourOwnSetClient } from "./BuildYourOwnSetClient";
 import { getMarketPathPrefix } from "@/config/market";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 interface BuildYourOwnSetPageProps {
   params: Promise<{ locale: string }>;

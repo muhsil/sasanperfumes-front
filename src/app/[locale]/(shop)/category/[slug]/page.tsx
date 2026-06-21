@@ -21,8 +21,8 @@ function isNonAsciiSlug(slug: string): boolean {
   return /[^\x00-\x7F]/.test(slug);
 }
 
-// Increased revalidate time for better cache hit rates (5 minutes instead of 60 seconds)
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 // Pre-render all categories at build time for better performance
 // Always use English slugs for URLs regardless of locale to prevent duplicate content

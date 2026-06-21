@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { RelatedProducts } from "./RelatedProducts";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 import type { WCProduct } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
 
@@ -25,18 +26,22 @@ interface BrandProductsProps {
 }
 
 export function BrandProducts({ brandName, brandSlug, currentProductId, locale, categorySlug }: BrandProductsProps) {
+  const marketPrefix = useMarketPrefix();
   const [products, setProducts] = useState<WCProduct[]>([]);
   const [settings, setSettings] = useState<BrandSliderSettings | null>(null);
   const isRTL = locale === "ar";
 
   useEffect(() => {
-    fetch("/api/home-settings")
+    const params = new URLSearchParams({ lang: locale });
+    if (marketPrefix) params.set("market", marketPrefix.slice(1));
+
+    fetch(`/api/home-settings?${params.toString()}`)
       .then((r) => r.json())
       .then((d) => {
         if (d?.brandSlider) setSettings(d.brandSlider);
       })
       .catch(() => {});
-  }, []);
+  }, [locale, marketPrefix]);
 
   useEffect(() => {
     if (settings && !settings.enabled) return;
