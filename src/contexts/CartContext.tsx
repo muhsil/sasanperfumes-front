@@ -8,7 +8,7 @@ import { useNotification } from "./NotificationContext";
 import { useAuth } from "./AuthContext";
 import { getBundleItems, getBundleItemsTotal } from "@/components/cart/BundleItemsList";
 import { getBundleData } from "@/lib/utils/bundleStorage";
-import { decodeHtmlEntities } from "@/lib/utils";
+import { decodeHtmlEntities, getLocalizedMarketPath, getMarketPrefixFromPath } from "@/lib/utils";
 import { omnisendTrackAddToCart, type OmnisendLineItem } from "@/lib/utils/omnisend";
 import { fbTrackAddToCart } from "@/lib/utils/fbpixel";
 import { trackAnalyticsEvent } from "@/lib/utils/analytics";
@@ -22,6 +22,21 @@ function getCartActionUrl(locale: string, action: string, params: Record<string,
     searchParams.set(key, value);
   });
   return `/api/cart?${searchParams.toString()}`;
+}
+
+function getCurrentMarketPrefix(): string {
+  if (typeof window === "undefined") return "";
+  return getMarketPrefixFromPath(window.location.pathname);
+}
+
+function getTrackingProductUrl(slug: string | undefined, locale: string): string {
+  if (!slug || typeof window === "undefined") return "";
+  return `${window.location.origin}${getLocalizedMarketPath(`/product/${slug}`, locale, getCurrentMarketPrefix())}`;
+}
+
+function getTrackingCartUrl(locale: string): string {
+  if (typeof window === "undefined") return "";
+  return `${window.location.origin}${getLocalizedMarketPath("/cart", locale, getCurrentMarketPrefix())}`;
 }
 
 // LocalStorage cache key for cart data (temporary caching strategy)
@@ -380,9 +395,7 @@ export function CartProvider({ children, locale }: CartProviderProps) {
             productTitle: ci.name || ci.title || "",
             productPrice: parseFloat(ci.price || "0") / currDivisor,
             productImageURL: ci.featured_image || "",
-            productURL: ci.slug
-              ? `${typeof window !== "undefined" ? window.location.origin : ""}/en/product/${ci.slug}`
-              : "",
+            productURL: getTrackingProductUrl(ci.slug, locale),
           }));
 
           // Facebook Pixel: AddToCart
@@ -410,9 +423,7 @@ export function CartProvider({ children, locale }: CartProviderProps) {
               productTitle: addedItem.name || addedItem.title || "",
               productPrice: itemPrice,
               productImageURL: addedItem.featured_image || "",
-              productURL: addedItem.slug
-                ? `${typeof window !== "undefined" ? window.location.origin : ""}/en/product/${addedItem.slug}`
-                : "",
+              productURL: getTrackingProductUrl(addedItem.slug, locale),
             },
             lineItems,
             value: cartValue,
@@ -435,9 +446,7 @@ export function CartProvider({ children, locale }: CartProviderProps) {
               quantity: ci.quantity.value,
               price: Math.round(parseFloat(ci.price || "0")),
               imageUrl: ci.featured_image || "",
-              productUrl: ci.slug
-                ? `${siteOrigin}/en/product/${ci.slug}`
-                : "",
+              productUrl: ci.slug ? `${siteOrigin}${getLocalizedMarketPath(`/product/${ci.slug}`, locale, getCurrentMarketPrefix())}` : "",
             }));
 
             fetch("/api/omnisend/cart", {
@@ -448,7 +457,7 @@ export function CartProvider({ children, locale }: CartProviderProps) {
                 email: user.user_email,
                 currency: cartForTracking.currency?.currency_code || "AED",
                 cartSum: Math.round(parseFloat(cartForTracking.totals?.total || "0")),
-                cartRecoveryUrl: `${siteOrigin}/en/cart`,
+                cartRecoveryUrl: siteOrigin ? getTrackingCartUrl(locale) : "",
                 products: omnisendProducts,
               }),
             }).catch((err) => {

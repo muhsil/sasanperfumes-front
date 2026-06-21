@@ -670,9 +670,12 @@ async function fetchWPAPI<T>(
   const { revalidate = 300, tags, locale, noCache = false, frontendHost } = options;
   const market = extractWPMarketFromHost(frontendHost) || await detectMarketFromRequest();
   const apiBases = market ? [wpJsonBaseForMarket(market), WP_API_BASE] : [WP_API_BASE];
+  const marketApiBase = market ? wpJsonBaseForMarket(market) : "";
   const urls = uniqueUrls(
-    apiBases.flatMap((apiBase) => buildWPAPIUrls(endpoint, locale, apiBase)).map((url) =>
-      frontendHost ? appendQueryParam(url, "frontend_host", frontendHost) : url
+    apiBases.flatMap((apiBase) =>
+      buildWPAPIUrls(endpoint, locale, apiBase).map((url) =>
+        frontendHost && apiBase !== marketApiBase ? appendQueryParam(url, "frontend_host", frontendHost) : url
+      )
     )
   );
 

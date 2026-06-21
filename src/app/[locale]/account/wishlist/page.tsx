@@ -13,6 +13,7 @@ import { AccountAuthGuard } from "@/components/account/AccountAuthGuard";
 import { AccountPageHeader } from "@/components/account/AccountPageHeader";
 import { AccountEmptyState } from "@/components/account/AccountEmptyState";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
+import { getLocalizedMarketPath } from "@/lib/utils";
 
 function getSlugFromProductUrl(productUrl: string | undefined): string | null {
   if (!productUrl) return null;
@@ -90,6 +91,10 @@ export default function WishlistPage({ params }: WishlistPageProps) {
     const slug = getSlugFromProductUrl(productUrl);
     return slug ? bundleProductSlugs.includes(slug) : false;
   };
+  const getProductHref = (productUrl: string | undefined, productId: number): string =>
+    productUrl
+      ? getLocalizedMarketPath(productUrl, locale, marketPrefix)
+      : `${marketPrefix}/${locale}/product/${productId}`;
 
   const handleAddToCart = async (productId: number) => {
     try {
@@ -183,7 +188,7 @@ export default function WishlistPage({ params }: WishlistPageProps) {
                     size="sm"
                     className="w-full"
                   >
-                    <Link href={item.product_url || `${marketPrefix}/${locale}/product/${item.product_id}`}>
+                    <Link href={getProductHref(item.product_url, item.product_id)}>
                       <Eye className="mr-2 h-4 w-4" />
                       {t.customize}
                     </Link>

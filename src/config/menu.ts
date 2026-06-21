@@ -216,6 +216,42 @@ export function shouldHaveBrandsMegaMenu(title: string): boolean {
   return brandTitles.includes(title.toLowerCase().trim());
 }
 
+const MARKET_MENU_SEGMENTS = new Set(["qa", "om", "sa"]);
+const LOCALE_MENU_SEGMENTS = new Set(["en", "ar"]);
+
+function normalizePathPrefix(pathPrefix: string): string {
+  const trimmed = pathPrefix.trim().replace(/\/+$/, "");
+  if (!trimmed || trimmed === "/" || trimmed === "undefined" || trimmed === "/undefined") return "";
+  return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+}
+
+function stripMenuRoutePrefix(value: string): string {
+  const [pathAndHash, query = ""] = value.split("?");
+  const [pathOnly, hash = ""] = pathAndHash.split("#");
+  const segments = pathOnly.split("/").filter(Boolean);
+  const first = segments[0]?.toLowerCase();
+  const second = segments[1]?.toLowerCase();
+  const third = segments[2]?.toLowerCase();
+
+  let rest = segments;
+  if (LOCALE_MENU_SEGMENTS.has(first || "") && MARKET_MENU_SEGMENTS.has(second || "")) {
+    rest = LOCALE_MENU_SEGMENTS.has(third || "") ? segments.slice(3) : segments.slice(2);
+  } else if (MARKET_MENU_SEGMENTS.has(first || "") && LOCALE_MENU_SEGMENTS.has(second || "")) {
+    rest = segments.slice(2);
+  } else if (MARKET_MENU_SEGMENTS.has(first || "")) {
+    rest = segments.slice(1);
+  } else if (LOCALE_MENU_SEGMENTS.has(first || "")) {
+    rest = segments.slice(1);
+  } else if (first === "undefined") {
+    rest = LOCALE_MENU_SEGMENTS.has(second || "") ? segments.slice(2) : segments.slice(1);
+  }
+
+  const normalizedPath = `/${rest.join("/")}`;
+  const normalizedQuery = query ? `?${query}` : "";
+  const normalizedHash = hash ? `#${hash}` : "";
+  return `${normalizedPath}${normalizedQuery}${normalizedHash}`;
+}
+
 /**
  * Normalize WordPress URL to a locale-aware frontend route.
  * Returns `#` unchanged so menu headings can stay non-navigational.
@@ -226,6 +262,7 @@ export function normalizeMenuUrl(url: string, locale: Locale, pathPrefix = ""): 
   const trimmedUrl = url.trim();
   if (trimmedUrl === "#") return "#";
 
+  const safePathPrefix = normalizePathPrefix(pathPrefix);
   let normalizedUrl = trimmedUrl;
   if (/^https?:\/\//i.test(trimmedUrl)) {
     try {
@@ -241,7 +278,7 @@ export function normalizeMenuUrl(url: string, locale: Locale, pathPrefix = ""): 
     }
   }
 
-  normalizedUrl = normalizedUrl.replace(/^\/?(en|ar)(?=\/|$)/, "");
+  normalizedUrl = stripMenuRoutePrefix(normalizedUrl);
   if (!normalizedUrl.startsWith("/")) {
     normalizedUrl = `/${normalizedUrl}`;
   }
@@ -280,32 +317,32 @@ export function normalizeMenuUrl(url: string, locale: Locale, pathPrefix = ""): 
   const normalizedQuery = normalizedUrl.includes("?") ? normalizedUrl.slice(normalizedUrl.indexOf("?")) : "";
 
   if (normalizedUrlPath === "/" || normalizedUrlPath === "") {
-    return `${pathPrefix}/${locale}${normalizedQuery}`;
+    return `${safePathPrefix}/${locale}${normalizedQuery}`;
   }
 
   if (normalizedUrlPath.startsWith("/category/")) {
     const slug = normalizedUrlPath.replace("/category/", "").replace(/\/$/, "");
-    return `${pathPrefix}/${locale}/category/${slug}`;
+    return `${safePathPrefix}/${locale}/category/${slug}`;
   }
 
   if (normalizedUrlPath.startsWith("/product-category/")) {
     const slug = normalizedUrlPath.replace("/product-category/", "").replace(/\/$/, "");
-    return `${pathPrefix}/${locale}/category/${slug}`;
+    return `${safePathPrefix}/${locale}/category/${slug}`;
   }
 
   if (normalizedUrlPath === "/fragrance" || normalizedUrlPath === "/fragrance/") {
-    return `${pathPrefix}/${locale}/shop`;
+    return `${safePathPrefix}/${locale}/shop`;
   }
 
   if (normalizedUrlPath.startsWith("/shop")) {
-    return `${pathPrefix}/${locale}${normalizedUrlPath}${normalizedQuery}`;
+    return `${safePathPrefix}/${locale}${normalizedUrlPath}${normalizedQuery}`;
   }
 
   if (normalizedUrlPath.startsWith("/")) {
-    return `${pathPrefix}/${locale}${normalizedUrl}`;
+    return `${safePathPrefix}/${locale}${normalizedUrl}`;
   }
 
-  return `${pathPrefix}/${locale}/${normalizedUrl}`;
+  return `${safePathPrefix}/${locale}/${normalizedUrl}`;
 }
 
 /**

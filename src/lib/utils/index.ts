@@ -69,23 +69,114 @@ export function slugify(text: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+const MARKET_PATH_SEGMENTS = new Set(["qa", "om", "sa"]);
+const LOCALE_PATH_SEGMENTS = new Set(["en", "ar"]);
+
+function splitPathAndSuffix(pathname: string): { segments: string[]; suffix: string } {
+  const value = pathname || "/";
+  const hashIndex = value.indexOf("#");
+  const hash = hashIndex >= 0 ? value.slice(hashIndex) : "";
+  const withoutHash = hashIndex >= 0 ? value.slice(0, hashIndex) : value;
+  const queryIndex = withoutHash.indexOf("?");
+  const query = queryIndex >= 0 ? withoutHash.slice(queryIndex) : "";
+  const path = queryIndex >= 0 ? withoutHash.slice(0, queryIndex) : withoutHash;
+
+  return {
+    segments: path.split("/").filter(Boolean),
+    suffix: `${query}${hash}`,
+  };
+}
+
+function joinPathSegments(segments: string[], suffix = ""): string {
+  return `/${segments.filter(Boolean).join("/")}${suffix}`;
+}
+
+function isMarketSegment(segment?: string): boolean {
+  return MARKET_PATH_SEGMENTS.has(segment?.toLowerCase() || "");
+}
+
+function isLocaleSegment(segment?: string): segment is "en" | "ar" {
+  return LOCALE_PATH_SEGMENTS.has(segment?.toLowerCase() || "");
+}
+
+function normalizeLocale(locale: string): "en" | "ar" {
+  return locale === "ar" ? "ar" : "en";
+}
+
+export function getMarketPrefixFromPath(pathname: string): string {
+  const { segments } = splitPathAndSuffix(pathname);
+  const first = segments[0]?.toLowerCase();
+  const second = segments[1]?.toLowerCase();
+
+  if (isMarketSegment(first)) return `/${first}`;
+  if (isLocaleSegment(first) && isMarketSegment(second)) return `/${second}`;
+
+  return "";
+}
+
 export function getLocaleFromPath(pathname: string): "en" | "ar" {
-  const segments = pathname.split("/").filter(Boolean);
-  if (segments[0] === "ar") return "ar";
+  const { segments } = splitPathAndSuffix(pathname);
+  const first = segments[0]?.toLowerCase();
+  const second = segments[1]?.toLowerCase();
+
+  if (isMarketSegment(first) && isLocaleSegment(second)) return normalizeLocale(second);
+  if (isLocaleSegment(first)) return normalizeLocale(first);
+
   return "en";
 }
 
 export function getPathWithoutLocale(pathname: string): string {
-  const segments = pathname.split("/").filter(Boolean);
-  if (segments[0] === "en" || segments[0] === "ar") {
-    return "/" + segments.slice(1).join("/");
+  const { segments, suffix } = splitPathAndSuffix(pathname);
+  const first = segments[0]?.toLowerCase();
+  const second = segments[1]?.toLowerCase();
+  const third = segments[2]?.toLowerCase();
+
+  if (isLocaleSegment(first) && isMarketSegment(second)) {
+    const rest = isLocaleSegment(third) ? segments.slice(3) : segments.slice(2);
+    return joinPathSegments([second, ...rest], suffix);
   }
-  return pathname;
+
+  if (first === "undefined") {
+    const rest = isLocaleSegment(second) ? segments.slice(2) : segments.slice(1);
+    return joinPathSegments(rest, suffix);
+  }
+
+  if (isMarketSegment(first) && isLocaleSegment(second)) {
+    return joinPathSegments([first, ...segments.slice(2)], suffix);
+  }
+
+  if (isLocaleSegment(first)) {
+    return joinPathSegments(segments.slice(1), suffix);
+  }
+
+  return joinPathSegments(segments, suffix);
 }
 
 export function getLocalizedPath(pathname: string, locale: string): string {
   const pathWithoutLocale = getPathWithoutLocale(pathname);
-  return `/${locale}${pathWithoutLocale}`;
+  const { segments, suffix } = splitPathAndSuffix(pathWithoutLocale);
+  const first = segments[0]?.toLowerCase();
+  const normalizedLocale = normalizeLocale(locale);
+
+  if (isMarketSegment(first)) {
+    return joinPathSegments([first, normalizedLocale, ...segments.slice(1)], suffix);
+  }
+
+  return joinPathSegments([normalizedLocale, ...segments], suffix);
+}
+
+export function getLocalizedMarketPath(pathname: string, locale: string, marketPrefix = ""): string {
+  const normalizedMarket = marketPrefix.replace(/^\/+/, "").toLowerCase();
+  if (!isMarketSegment(normalizedMarket)) {
+    return getLocalizedPath(pathname, locale);
+  }
+
+  const pathWithoutLocale = getPathWithoutLocale(pathname);
+  const { segments, suffix } = splitPathAndSuffix(pathWithoutLocale);
+  const first = segments[0]?.toLowerCase();
+  const rest = isMarketSegment(first) ? segments.slice(1) : segments;
+
+  return getLocalizedPath(joinPathSegments([normalizedMarket, ...rest], suffix), locale);
 }
 
 export function decodeHtmlEntities(text: string): string {

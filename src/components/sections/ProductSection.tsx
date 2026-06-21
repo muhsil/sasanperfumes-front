@@ -6,7 +6,8 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Navigation } from "swiper/modules";
 import { WCProductCard } from "@/components/shop/WCProductCard";
 import { ProductGridSkeleton, SectionHeaderSkeleton } from "@/components/common/Skeleton";
-import { getLocalizedPath } from "@/lib/utils";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
+import { getLocalizedMarketPath } from "@/lib/utils";
 import type { WCProduct } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
 import type { ProductSectionSettings } from "@/types/wordpress";
@@ -66,6 +67,8 @@ export function ProductSection({
   bundleProductSlugs = [],
   englishProductSlugs = {},
 }: ProductSectionProps) {
+  const marketPrefix = useMarketPrefix();
+
   if (isLoading) {
     return <ProductSectionSkeleton count={settings.products_count || 4} fullView={fullView} />;
   }
@@ -96,7 +99,7 @@ export function ProductSection({
   const viewAllLink =
     rawViewAllLink.startsWith("http://") || rawViewAllLink.startsWith("https://")
       ? rawViewAllLink
-      : getLocalizedPath(rawViewAllLink, locale);
+      : getLocalizedMarketPath(rawViewAllLink, locale, marketPrefix);
 
   const getVisibilityClass = () => {
     if (settings.hide_on_mobile && settings.hide_on_desktop) return "hidden";

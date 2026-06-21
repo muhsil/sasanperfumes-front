@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { Globe } from "lucide-react";
 import { type Locale } from "@/config/site";
-import { getPathWithoutLocale, cn } from "@/lib/utils";
+import { getLocalizedPath, cn } from "@/lib/utils";
 
 interface LanguageSwitcherProps {
   locale: Locale;
@@ -18,14 +18,14 @@ const locales: { code: Locale; name: string; nativeName: string }[] = [
 
 export function LanguageSwitcher({ locale, className, alternateUrl }: LanguageSwitcherProps) {
   const pathname = usePathname();
-  const pathWithoutLocale = getPathWithoutLocale(pathname);
 
   // Get the target locale (opposite of current)
   const targetLocale = locale === "en" ? "ar" : "en";
   const targetLocaleData = locales.find((l) => l.code === targetLocale);
 
   const handleSwitch = () => {
-    const newHref = alternateUrl || `/${targetLocale}${pathWithoutLocale}`;
+    const currentPathname = window.location.pathname || pathname;
+    const newHref = alternateUrl || getLocalizedPath(currentPathname, targetLocale);
     // Full page reload to ensure all server/client state (dictionary, layout)
     // is refreshed for the new locale. router.push() does a soft navigation
     // which can leave stale Arabic/English dictionary text in client components.

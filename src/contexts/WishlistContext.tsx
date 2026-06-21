@@ -14,6 +14,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotification } from "@/contexts/NotificationContext";
 import { omnisendTrackAddedToWishlist } from "@/lib/utils/omnisend";
+import { getLocalizedMarketPath, getMarketPrefixFromPath } from "@/lib/utils";
 
 const WISHLIST_COUNT_CACHE_KEY = "sasanperfumes_wishlist_count";
 
@@ -44,6 +45,12 @@ interface WishlistProviderProps {
 
 function resolveLocale(locale?: WishlistLocale | string): WishlistLocale {
   return locale === "ar" ? "ar" : "en";
+}
+
+function getTrackingWishlistProductUrl(productUrl: string | undefined, locale: WishlistLocale): string {
+  if (!productUrl || typeof window === "undefined") return productUrl || "";
+  const marketPrefix = getMarketPrefixFromPath(window.location.pathname);
+  return `${window.location.origin}${getLocalizedMarketPath(productUrl, locale, marketPrefix)}`;
 }
 
 // Helper functions for localStorage caching (outside component to avoid SSR issues)
@@ -158,7 +165,7 @@ export function WishlistProvider({ children, locale = "en" }: WishlistProviderPr
               productTitle: addedWishlistItem.product_name || "",
               productPrice: parseFloat(addedWishlistItem.product_price || "0"),
               productImageURL: addedWishlistItem.product_image || "",
-              productURL: addedWishlistItem.product_url || "",
+              productURL: getTrackingWishlistProductUrl(addedWishlistItem.product_url, resolvedLocale),
               email: user?.user_email || "",
             });
           }

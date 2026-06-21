@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { normalizeMarketHost } from "@/config/market";
-import { API_BASE, backendHeaders, fetchBackend, safeJsonResponse } from "@/lib/utils/backendFetch";
+import {
+  API_BASE,
+  backendHeaders,
+  extractMarketCode,
+  fetchBackend,
+  safeJsonResponse,
+  wpJsonBaseForMarket,
+} from "@/lib/utils/backendFetch";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -33,14 +40,27 @@ export async function GET(request: NextRequest) {
     request.headers.get("x-forwarded-host") ||
     request.headers.get("host")
   );
-  const homeSettingsEndpoints = [
-    `${API_BASE}/wp-json/sasanperfumes/v1/home-settings${frontendHost ? `?frontend_host=${encodeURIComponent(frontendHost)}` : ""}`,
-  ];
+  const explicitMarket = request.headers.get("x-market")?.toLowerCase();
+  const market = extractMarketCode(frontendHost) || extractMarketCode(explicitMarket);
+  const locale = request.nextUrl.searchParams.get("lang") || request.nextUrl.searchParams.get("locale") || "";
+  const withLocale = (endpoint: string) => locale
+    ? `${endpoint}${endpoint.includes("?") ? "&" : "?"}lang=${encodeURIComponent(locale)}`
+    : endpoint;
+  const fallbackEndpoint = withLocale(
+    `${API_BASE}/wp-json/sasanperfumes/v1/home-settings${frontendHost ? `?frontend_host=${encodeURIComponent(frontendHost)}` : ""}`
+  );
+  const homeSettingsEndpoints = market
+    ? [
+        withLocale(`${wpJsonBaseForMarket(market)}/sasanperfumes/v1/home-settings`),
+        fallbackEndpoint,
+      ]
+    : [fallbackEndpoint];
+  const headers = market ? backendHeaders({ "x-market": market }) : backendHeaders();
 
   try {
     for (const endpoint of homeSettingsEndpoints) {
       const response = await fetchBackend(endpoint, {
-        headers: backendHeaders(),
+        headers,
       });
       const data = await safeJsonResponse(response);
 

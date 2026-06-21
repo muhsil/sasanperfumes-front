@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { shouldUseUnoptimizedImage } from "@/lib/utils/image";
 import type { HeroSliderSettings } from "@/types/wordpress";
-import { decodeHtmlEntities } from "@/lib/utils";
+import { decodeHtmlEntities, getLocalizedMarketPath } from "@/lib/utils";
 
 // Swiper CSS — imported statically (small footprint, needed before JS loads)
 import "swiper/css";
@@ -97,6 +97,10 @@ function SlideContent({ slide, index, locale }: { slide: HeroSliderSettings["sli
   const slideSubtitle = rawSubtitle ? decodeHtmlEntities(rawSubtitle) : rawSubtitle;
   const slideCta = rawCta ? decodeHtmlEntities(rawCta) : rawCta;
   const slideLinkUrl = slide.linkUrl || slide.link?.url || "";
+  const slideHref =
+    slideLinkUrl.startsWith("/")
+      ? getLocalizedMarketPath(slideLinkUrl, locale, marketPrefix)
+      : slideLinkUrl;
 
   const renderVideo = (desktop: boolean) => {
     const url = desktop
@@ -166,7 +170,7 @@ function SlideContent({ slide, index, locale }: { slide: HeroSliderSettings["sli
           )}
           {slideCta && slideLinkUrl && (
             <Link
-              href={slideLinkUrl.startsWith("/") && !slideLinkUrl.startsWith(`${marketPrefix}/${locale}/`) ? `${marketPrefix}/${locale}${slideLinkUrl}` : slideLinkUrl}
+              href={slideHref}
               className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/30 bg-[#b98a49] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-[#1a1714] shadow-[0_18px_32px_rgba(0,0,0,0.25)] transition-all hover:-translate-y-0.5 hover:bg-[#c99a58] md:mt-6 md:px-8 md:py-3"
             >
               {slideCta}
@@ -216,11 +220,8 @@ function SlideContent({ slide, index, locale }: { slide: HeroSliderSettings["sli
   );
 
   if (!isVideo && slideLinkUrl && !slideCta) {
-    const linkUrl = slideLinkUrl.startsWith("/") && !slideLinkUrl.startsWith(`${marketPrefix}/${locale}/`)
-      ? `${marketPrefix}/${locale}${slideLinkUrl}`
-      : slideLinkUrl;
     return (
-      <Link href={linkUrl} className="block">
+      <Link href={slideHref} className="block">
         {mediaContent}
       </Link>
     );

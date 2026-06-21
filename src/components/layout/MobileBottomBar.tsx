@@ -69,7 +69,7 @@ function inferIconFromMenuItem(item: WPMenuItem): string {
 }
 
 // Convert WordPress menu items to MobileBarSettings items
-function wpMenuToBarItems(wpItems: WPMenuItem[], locale: Locale): MobileBarSettings["items"] {
+function wpMenuToBarItems(wpItems: WPMenuItem[], locale: Locale, marketPrefix = ""): MobileBarSettings["items"] {
   return wpItems
     .filter((item) => item.parent === 0)
     .map((item) => {
@@ -79,7 +79,7 @@ function wpMenuToBarItems(wpItems: WPMenuItem[], locale: Locale): MobileBarSetti
         icon,
         label: isCategoriesItem ? "Menu" : item.title,
         labelAr: isCategoriesItem ? "القائمة" : (locale === "ar" ? item.title : ""),
-        url: normalizeMenuUrl(item.url || "/", locale),
+        url: normalizeMenuUrl(item.url || "/", locale, marketPrefix),
       };
     });
 }
@@ -129,7 +129,7 @@ export function MobileBottomBar({
   }, []);
 
   const effectiveSettings: MobileBarSettings = mobileBottomBarMenuItems && mobileBottomBarMenuItems.length > 0
-    ? { enabled: true, items: wpMenuToBarItems(mobileBottomBarMenuItems, locale) }
+    ? { enabled: true, items: wpMenuToBarItems(mobileBottomBarMenuItems, locale, marketPrefix) }
     : settings;
 
   const isRTL = locale === "ar";
@@ -140,9 +140,9 @@ export function MobileBottomBar({
   }
 
   const isItemActive = (item: MobileBarSettings["items"][0]) => {
-    const itemPath = item.url;
+    const itemPath = item.url ? normalizeMenuUrl(item.url, locale, marketPrefix) : "";
 
-    if (item.icon === "home" || item.url === "/" || item.url === "" || item.url === `/${locale}`) {
+    if (item.icon === "home" || itemPath === `${marketPrefix}/${locale}` || itemPath === `${marketPrefix}/${locale}/`) {
       return pathname === `${marketPrefix}/${locale}` || pathname === `${marketPrefix}/${locale}/`;
     }
     if (item.icon === "grid" || item.url.includes("categories")) {
@@ -192,7 +192,7 @@ export function MobileBottomBar({
             const label = isCategoriesItem
               ? (isRTL ? "القائمة" : "Menu")
               : rawLabel;
-            const href = item.url || `${marketPrefix}/${locale}`;
+            const href = item.url ? normalizeMenuUrl(item.url, locale, marketPrefix) : `${marketPrefix}/${locale}`;
 
             const isWishlist = item.icon === "heart" || item.url.includes("wishlist");
             const isWhatsApp = item.icon === "whatsapp";

@@ -1,8 +1,21 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
+import { getMarketPrefixFromPath } from "@/lib/utils";
 
-const MARKET_CODES = new Set(["qa", "om", "sa"]);
+function subscribeToPathname(onStoreChange: () => void) {
+  window.addEventListener("popstate", onStoreChange);
+  return () => window.removeEventListener("popstate", onStoreChange);
+}
+
+function getBrowserPathname(): string {
+  return window.location.pathname;
+}
+
+function getServerPathname(): string {
+  return "";
+}
 
 /**
  * Returns the market path prefix based on the current URL.
@@ -10,9 +23,7 @@ const MARKET_CODES = new Set(["qa", "om", "sa"]);
  */
 export function useMarketPrefix(): string {
   const pathname = usePathname();
-  const firstSegment = pathname.split("/")[1];
-  if (MARKET_CODES.has(firstSegment)) {
-    return `/${firstSegment}`;
-  }
-  return "";
+  const browserPathname = useSyncExternalStore(subscribeToPathname, getBrowserPathname, getServerPathname);
+
+  return getMarketPrefixFromPath(browserPathname) || getMarketPrefixFromPath(pathname);
 }

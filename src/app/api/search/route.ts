@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProducts } from "@/lib/api/woocommerce";
-import { getMarketByHost, normalizeMarketHost } from "@/config/market";
+import { getMarketByHost, getMarketPathPrefix, normalizeMarketHost } from "@/config/market";
 import { buildSearchSuggestion, createSearchIndexEntry, mergeRankedSearchEntries, normalizeSearchText, rankSearchEntries } from "@/lib/search";
 import type { Locale } from "@/config/site";
 import type { WCProduct, WCProductsResponse } from "@/types/woocommerce";
@@ -114,6 +114,7 @@ export async function GET(request: NextRequest) {
     request.headers.get("host")
   );
   const market = getMarketByHost(frontendHost);
+  const pathPrefix = getMarketPathPrefix(market.code);
   const locale = (searchParams.get("locale") as Locale) || "en";
   const query = searchParams.get("q") || "";
   const perPage = Math.min(Math.max(parseInt(searchParams.get("per_page") || "12", 10), 1), 40);
@@ -166,7 +167,7 @@ export async function GET(request: NextRequest) {
         didYouMean: didYouMean
           ? {
               ...didYouMean,
-              href: `/${locale}/product/${didYouMean.slug}`,
+              href: `${pathPrefix}/${locale}/product/${didYouMean.slug}`,
             }
           : null,
         matchMode,

@@ -11,6 +11,7 @@ import { useWishlist } from "@/contexts/WishlistContext";
 import { useCart } from "@/contexts/CartContext";
 import type { Locale } from "@/config/site";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
+import { getLocalizedMarketPath } from "@/lib/utils";
 
 function getSlugFromProductUrl(productUrl: string | undefined): string | null {
   if (!productUrl) return null;
@@ -67,6 +68,10 @@ export default function WishlistPage({ params }: WishlistPageProps) {
     const slug = getSlugFromProductUrl(productUrl);
     return slug ? bundleProductSlugs.includes(slug) : false;
   };
+  const getProductHref = (productUrl: string | undefined, productId: number): string =>
+    productUrl
+      ? getLocalizedMarketPath(productUrl, locale, marketPrefix)
+      : `${marketPrefix}/${locale}/product/${productId}`;
 
   const t = {
     en: {
@@ -193,7 +198,7 @@ export default function WishlistPage({ params }: WishlistPageProps) {
                       </div>
                       <div className="flex flex-col justify-center">
                         <Link
-                          href={item.product_url || `${marketPrefix}/${locale}/product/${item.product_id}`}
+                          href={getProductHref(item.product_url, item.product_id)}
                           className="font-medium text-gray-900 hover:text-gray-700 line-clamp-2 uppercase"
                         >
                           {item.product_name}
@@ -244,7 +249,7 @@ export default function WishlistPage({ params }: WishlistPageProps) {
                           size="sm"
                           className="flex-1 md:flex-none"
                         >
-                          <Link href={item.product_url || `${marketPrefix}/${locale}/product/${item.product_id}`}>
+                          <Link href={getProductHref(item.product_url, item.product_id)}>
                             <Eye className="h-4 w-4 mr-2" />
                             {texts.customize}
                           </Link>
