@@ -25,12 +25,15 @@ const fallbackHomeSettings = {
   },
 };
 
+const responseHeaders = {
+  "Cache-Control": "no-store, max-age=0",
+  "Vary": "Host, X-Frontend-Host, X-Market",
+  "X-ShapeHive-Market-Routing": "v2",
+};
+
 function fallbackResponse() {
   return NextResponse.json(fallbackHomeSettings, {
-    headers: {
-      "Cache-Control": "no-store, max-age=0",
-      "Vary": "Host, X-Frontend-Host",
-    },
+    headers: responseHeaders,
   });
 }
 
@@ -42,7 +45,7 @@ export async function GET(request: NextRequest) {
   );
   const queryMarket = request.nextUrl.searchParams.get("market")?.toLowerCase();
   const explicitMarket = request.headers.get("x-market")?.toLowerCase();
-  const market = extractMarketCode(queryMarket) || extractMarketCode(frontendHost) || extractMarketCode(explicitMarket);
+  const market = extractMarketCode(queryMarket) || extractMarketCode(explicitMarket) || extractMarketCode(frontendHost);
   const locale = request.nextUrl.searchParams.get("lang") || request.nextUrl.searchParams.get("locale") || "";
   const withParam = (endpoint: string, key: string, value: string) =>
     `${endpoint}${endpoint.includes("?") ? "&" : "?"}${key}=${encodeURIComponent(value)}`;
@@ -69,10 +72,7 @@ export async function GET(request: NextRequest) {
 
       if (response.ok) {
         return NextResponse.json(data, {
-          headers: {
-            "Cache-Control": "no-store, max-age=0",
-            "Vary": "Host, X-Frontend-Host",
-          },
+          headers: responseHeaders,
         });
       }
 
@@ -81,10 +81,7 @@ export async function GET(request: NextRequest) {
         const retryData = await safeJsonResponse(retry);
         if (retry.ok) {
           return NextResponse.json(retryData, {
-            headers: {
-              "Cache-Control": "no-store, max-age=0",
-              "Vary": "Host, X-Frontend-Host",
-            },
+            headers: responseHeaders,
           });
         }
       }

@@ -87,6 +87,12 @@ function addNoStoreHeaders(response: NextResponse): NextResponse {
   return response;
 }
 
+function redirectToPath(request: NextRequest, pathname: string, status = 301): NextResponse {
+  const redirectUrl = new URL(request.url);
+  redirectUrl.pathname = pathname;
+  return addSecurityHeaders(NextResponse.redirect(redirectUrl, { status }));
+}
+
 function normalizeHostHeader(value: string | null): string {
   if (!value) return "";
   const host = value.split(",")[0].trim();
@@ -212,21 +218,24 @@ export function proxy(request: NextRequest) {
     const correctedMarket = second || "";
     const restStart = LOCALE_SEGMENTS.has(segments[2]?.toLowerCase() || "") ? 3 : 2;
     const rest = segments.slice(restStart);
-    request.nextUrl.pathname = `/${correctedMarket}/${correctedLocale}${rest.length ? `/${rest.join("/")}` : ""}`;
-    return NextResponse.redirect(request.nextUrl, { status: 301 });
+    return redirectToPath(
+      request,
+      `/${correctedMarket}/${correctedLocale}${rest.length ? `/${rest.join("/")}` : ""}`
+    );
   }
 
   // Fix links generated with a missing market value: /undefined/en/... -> /en/...
   if (first === "undefined") {
     if (MARKET_PREFIX_SEGMENTS.has(second || "") && LOCALE_SEGMENTS.has(segments[2]?.toLowerCase() || "")) {
       const rest = segments.slice(3);
-      request.nextUrl.pathname = `/${second}/${segments[2].toLowerCase()}${rest.length ? `/${rest.join("/")}` : ""}`;
-      return NextResponse.redirect(request.nextUrl, { status: 301 });
+      return redirectToPath(
+        request,
+        `/${second}/${segments[2].toLowerCase()}${rest.length ? `/${rest.join("/")}` : ""}`
+      );
     }
     if (LOCALE_SEGMENTS.has(second || "")) {
       const rest = segments.slice(2);
-      request.nextUrl.pathname = `/${second}${rest.length ? `/${rest.join("/")}` : ""}`;
-      return NextResponse.redirect(request.nextUrl, { status: 301 });
+      return redirectToPath(request, `/${second}${rest.length ? `/${rest.join("/")}` : ""}`);
     }
   }
 
@@ -236,24 +245,24 @@ export function proxy(request: NextRequest) {
       ? segments[2].toLowerCase()
       : getLocale(request);
     const rest = LOCALE_SEGMENTS.has(segments[2]?.toLowerCase() || "") ? segments.slice(3) : segments.slice(2);
-    request.nextUrl.pathname = `/${first}/${correctedLocale}${rest.length ? `/${rest.join("/")}` : ""}`;
-    return NextResponse.redirect(request.nextUrl, { status: 301 });
+    return redirectToPath(
+      request,
+      `/${first}/${correctedLocale}${rest.length ? `/${rest.join("/")}` : ""}`
+    );
   }
 
   // Fix duplicated locale prefix: /en/en/... -> /en/... or /ar/ar/... -> /ar/...
   if (LOCALE_SEGMENTS.has(first || "") && LOCALE_SEGMENTS.has(second || "") && first === second) {
     const correctLocale = first || defaultLocale;
     const rest = segments.length > 2 ? `/${segments.slice(2).join("/")}` : "";
-    request.nextUrl.pathname = `/${correctLocale}${rest}`;
-    return NextResponse.redirect(request.nextUrl, { status: 301 });
+    return redirectToPath(request, `/${correctLocale}${rest}`);
   }
 
   // Fix repeated locale after market prefix: /qa/en/en/... or /qa/en/ar/... -> /qa/en/...
   if (routeLocale && LOCALE_SEGMENTS.has(segments[2]?.toLowerCase() || "") && segments.length > 2) {
     const rest = segments.slice(3);
     const corrected = `/${market}/${routeLocale}${rest.length ? `/${rest.join("/")}` : ""}`;
-    request.nextUrl.pathname = corrected;
-    return NextResponse.redirect(request.nextUrl, { status: 301 });
+    return redirectToPath(request, corrected);
   }
 
   // Keep public market URLs (/qa/en/...) while rendering the existing locale route (/en/...).
