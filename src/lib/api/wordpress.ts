@@ -1887,12 +1887,151 @@ const defaultHomeSections: HomeSections = {
   seoContent: { enabled: true, title: { en: 'Shop Premium Perfumes Online in the UAE', ar: 'تسوق العطور الفاخرة اون لاين في الإمارات' }, paragraphs: [] },
 };
 
+const sasanFallbackHomeSections: HomeSections = {
+  whyChooseUs: {
+    enabled: true,
+    eyebrow: { en: "Our Promise", ar: "وعدنا" },
+    title: { en: "Perfume shopping made personal", ar: "تسوق عطور بتجربة شخصية" },
+    subtitle: {
+      en: "Sasan Perfumes brings curated fragrances, careful packing, and reliable regional delivery together in one bilingual store.",
+      ar: "تجمع ساسان للعطور بين العطور المختارة بعناية والتغليف المتقن والتوصيل الموثوق في متجر ثنائي اللغة.",
+    },
+    items: [
+      {
+        title: { en: "Authentic selections", ar: "اختيارات أصلية" },
+        description: { en: "Clear product details help every customer choose with confidence.", ar: "تفاصيل واضحة تساعد كل عميل على الاختيار بثقة." },
+      },
+      {
+        title: { en: "Regional checkout", ar: "دفع مناسب للمنطقة" },
+        description: { en: "Market-specific currency, payment, and COD flows keep orders simple.", ar: "عملات وطرق دفع ودفع عند الاستلام مخصصة لكل سوق لتسهيل الطلب." },
+      },
+      {
+        title: { en: "Bilingual service", ar: "خدمة ثنائية اللغة" },
+        description: { en: "English and Arabic storefronts support browsing from product page to checkout.", ar: "واجهات إنجليزية وعربية تدعم التصفح من صفحة المنتج حتى إتمام الطلب." },
+      },
+    ],
+  },
+  ourStory: {
+    enabled: true,
+    eyebrow: { en: "Sasan Perfumes", ar: "ساسان للعطور" },
+    title: { en: "Fragrance for everyday elegance", ar: "عطور لأناقة كل يوم" },
+    description1: {
+      en: "Sasan Perfumes is built for customers who want distinctive scents, transparent product details, and a store experience that feels easy in English and Arabic.",
+      ar: "تأسست ساسان للعطور للعملاء الذين يبحثون عن روائح مميزة وتفاصيل واضحة وتجربة تسوق سهلة بالإنجليزية والعربية.",
+    },
+    description2: {
+      en: "From fresh daily wear to rich evening blends, the collection helps every customer find a fragrance that suits their style and occasion.",
+      ar: "من العطور اليومية المنعشة إلى الخلطات الغنية للمناسبات، تساعد المجموعة كل عميل على إيجاد العطر المناسب لذوقه ومناسبته.",
+    },
+    image: "",
+    stats: [
+      { value: "2", label: { en: "Languages", ar: "لغتان" } },
+      { value: "4", label: { en: "Regional stores", ar: "متاجر إقليمية" } },
+      { value: "COD", label: { en: "Cash on delivery", ar: "الدفع عند الاستلام" } },
+    ],
+  },
+  faq: {
+    enabled: true,
+    eyebrow: { en: "Help", ar: "مساعدة" },
+    title: { en: "Shopping questions", ar: "أسئلة التسوق" },
+    subtitle: { en: "Quick answers for perfume orders, payment, delivery, and returns.", ar: "إجابات سريعة حول طلبات العطور والدفع والتوصيل والاسترجاع." },
+    items: [
+      {
+        question: { en: "Can I order with cash on delivery?", ar: "هل يمكنني الطلب بالدفع عند الاستلام؟" },
+        answer: { en: "Yes. COD is available on supported regional stores during checkout.", ar: "نعم، الدفع عند الاستلام متاح في المتاجر الإقليمية المدعومة أثناء إتمام الطلب." },
+      },
+      {
+        question: { en: "Are prices shown in my market currency?", ar: "هل تظهر الأسعار بعملة السوق الخاص بي؟" },
+        answer: { en: "Yes. Qatar, Oman, Saudi Arabia, and the main store use their configured currencies.", ar: "نعم، تستخدم متاجر قطر وعمان والسعودية والمتجر الرئيسي العملات المخصصة لها." },
+      },
+      {
+        question: { en: "Can I browse in Arabic?", ar: "هل يمكنني التصفح باللغة العربية؟" },
+        answer: { en: "Yes. The storefront supports Arabic layout and Arabic shopping labels.", ar: "نعم، يدعم المتجر التخطيط العربي وتسميات التسوق العربية." },
+      },
+    ],
+  },
+  seoContent: {
+    enabled: true,
+    title: { en: "Shop premium perfumes online with Sasan Perfumes", ar: "تسوق العطور الفاخرة أونلاين مع ساسان للعطور" },
+    paragraphs: [
+      {
+        en: "Explore curated perfumes with clear product pages, regional pricing, and a checkout flow designed for customers across the Gulf.",
+        ar: "اكتشف مجموعة مختارة من العطور مع صفحات منتجات واضحة وأسعار إقليمية وتجربة دفع مصممة لعملاء الخليج.",
+      },
+      {
+        en: "Sasan Perfumes supports English and Arabic browsing, market-specific currencies, and cash on delivery where available.",
+        ar: "يدعم متجر ساسان للعطور التصفح بالإنجليزية والعربية والعملات الخاصة بكل سوق والدفع عند الاستلام حيثما كان متاحا.",
+      },
+    ],
+  },
+};
+
+function hasBilingualContent(value?: { en?: string; ar?: string } | null): boolean {
+  return Boolean(value?.en?.trim() || value?.ar?.trim());
+}
+
+function mergeBilingualContent<T extends { en: string; ar: string }>(value: T | undefined, fallback: T): T {
+  return {
+    en: value?.en?.trim() ? value.en : fallback.en,
+    ar: value?.ar?.trim() ? value.ar : fallback.ar,
+  } as T;
+}
+
+function normalizeHomeSections(data?: HomeSections | null): HomeSections {
+  const source = data ?? defaultHomeSections;
+  return {
+    whyChooseUs: {
+      ...sasanFallbackHomeSections.whyChooseUs,
+      ...(source.whyChooseUs || {}),
+      enabled: source.whyChooseUs?.enabled !== false,
+      eyebrow: mergeBilingualContent(source.whyChooseUs?.eyebrow, sasanFallbackHomeSections.whyChooseUs.eyebrow),
+      title: mergeBilingualContent(source.whyChooseUs?.title, sasanFallbackHomeSections.whyChooseUs.title),
+      subtitle: mergeBilingualContent(source.whyChooseUs?.subtitle, sasanFallbackHomeSections.whyChooseUs.subtitle),
+      items: source.whyChooseUs?.items?.some((item) => hasBilingualContent(item.title) || hasBilingualContent(item.description))
+        ? source.whyChooseUs.items
+        : sasanFallbackHomeSections.whyChooseUs.items,
+    },
+    ourStory: {
+      ...sasanFallbackHomeSections.ourStory,
+      ...(source.ourStory || {}),
+      enabled: source.ourStory?.enabled !== false,
+      eyebrow: mergeBilingualContent(source.ourStory?.eyebrow, sasanFallbackHomeSections.ourStory.eyebrow),
+      title: mergeBilingualContent(source.ourStory?.title, sasanFallbackHomeSections.ourStory.title),
+      description1: mergeBilingualContent(source.ourStory?.description1, sasanFallbackHomeSections.ourStory.description1),
+      description2: mergeBilingualContent(source.ourStory?.description2, sasanFallbackHomeSections.ourStory.description2),
+      stats: source.ourStory?.stats?.some((stat) => stat.value || hasBilingualContent(stat.label))
+        ? source.ourStory.stats
+        : sasanFallbackHomeSections.ourStory.stats,
+    },
+    faq: {
+      ...sasanFallbackHomeSections.faq,
+      ...(source.faq || {}),
+      enabled: source.faq?.enabled !== false,
+      eyebrow: mergeBilingualContent(source.faq?.eyebrow, sasanFallbackHomeSections.faq.eyebrow),
+      title: mergeBilingualContent(source.faq?.title, sasanFallbackHomeSections.faq.title),
+      subtitle: mergeBilingualContent(source.faq?.subtitle, sasanFallbackHomeSections.faq.subtitle),
+      items: source.faq?.items?.some((item) => hasBilingualContent(item.question) || hasBilingualContent(item.answer))
+        ? source.faq.items
+        : sasanFallbackHomeSections.faq.items,
+    },
+    seoContent: {
+      ...sasanFallbackHomeSections.seoContent,
+      ...(source.seoContent || {}),
+      enabled: source.seoContent?.enabled !== false,
+      title: mergeBilingualContent(source.seoContent?.title, sasanFallbackHomeSections.seoContent.title),
+      paragraphs: source.seoContent?.paragraphs?.some(hasBilingualContent)
+        ? source.seoContent.paragraphs
+        : sasanFallbackHomeSections.seoContent.paragraphs,
+    },
+  };
+}
+
 export async function getHomeSections(frontendHost?: string): Promise<HomeSections> {
   const data = await fetchWPAPI<HomeSections>(
     "/sasanperfumes/v1/home-sections",
     { tags: ["home-sections"], frontendHost, revalidate: 600 }
   );
-  return rebrandApiContent(data ?? defaultHomeSections);
+  return rebrandApiContent(normalizeHomeSections(data));
 }
 
 // ─── Guide Pages (sasanperfumes_guide CPT) ─────────────────────────────────
@@ -2345,6 +2484,36 @@ const defaultFeatureToggles: FeatureToggles = {
   sasanperfumes_home_seo_enabled: true,
 };
 
+const forcedVisibleSectionToggles = new Set([
+  "sasanperfumes_shop_enabled",
+  "sasanperfumes_about_enabled",
+  "sasanperfumes_contact_enabled",
+  "sasanperfumes_shipping_enabled",
+  "sasanperfumes_returns_enabled",
+  "sasanperfumes_privacy_enabled",
+  "sasanperfumes_terms_enabled",
+  "sasanperfumes_reviews_enabled",
+  "sasanperfumes_brands_page_enabled",
+  "sasanperfumes_services_page_enabled",
+  "sasanperfumes_what_we_do_enabled",
+  "sasanperfumes_store_locator_enabled",
+  "sasanperfumes_faq_enabled",
+  "sasanperfumes_private_labeling_enabled",
+  "sasanperfumes_home_services_enabled",
+  "sasanperfumes_home_notes_enabled",
+  "sasanperfumes_scent_guide_enabled",
+  "sasanperfumes_brands_slider_enabled",
+  "sasanperfumes_hero_enabled",
+  "sasanperfumes_categories_enabled",
+  "sasanperfumes_collections_enabled",
+  "sasanperfumes_banners_enabled",
+  "sasanperfumes_topbar_enabled",
+  "sasanperfumes_home_wcus_enabled",
+  "sasanperfumes_home_story_enabled",
+  "sasanperfumes_home_faq_enabled",
+  "sasanperfumes_home_seo_enabled",
+]);
+
 function parseBooleanLike(value: unknown, fallback = false): boolean {
   if (typeof value === "boolean") return value;
   if (typeof value === "number") return value !== 0;
@@ -2373,7 +2542,9 @@ function normalizeFeatureToggles(data?: Partial<FeatureToggles> | Record<string,
   return Object.fromEntries(
     Object.entries(merged).map(([key, value]) => [
       key,
-      parseBooleanLike(value, defaultFeatureToggles[key as keyof FeatureToggles] ?? false),
+      forcedVisibleSectionToggles.has(key)
+        ? true
+        : parseBooleanLike(value, defaultFeatureToggles[key as keyof FeatureToggles] ?? false),
     ])
   ) as FeatureToggles;
 }

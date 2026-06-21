@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { disableRuntimeCache, siteConfig, API_BASE_CURRENCY, type Locale, type Currency } from "@/config/site";
+import { fetchMarketProductsRest } from "@/lib/api/marketProductsRest";
 import {
   backendHeaders,
   extractMarketCode,
@@ -55,6 +56,21 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
 
 // Default currency for Store API requests - ensures prices are returned in the base currency
 const DEFAULT_API_CURRENCY = API_BASE_CURRENCY;
+const BACKEND_FETCH_TIMEOUT_MS = 8000;
+
+async function fetchWithTimeout(url: string, init: RequestInit = {}, timeoutMs = BACKEND_FETCH_TIMEOUT_MS): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, {
+      ...init,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 function formatFetchError(error: unknown): string {
   if (!(error instanceof Error)) {
@@ -289,29 +305,17 @@ async function fetchRestProductsForMarket(
   market: string
 ): Promise<WCProductsResponse> {
   const currencyCode = params.currency || DEFAULT_API_CURRENCY;
-  const searchParams = new URLSearchParams();
-  searchParams.set("market", market);
-  searchParams.set("per_page", String(params.per_page || 12));
-  if (params.page) searchParams.set("page", String(params.page));
-  if (params.search) searchParams.set("search", params.search);
-  if (params.slug) searchParams.set("slug", params.slug);
-  if (params.orderby) searchParams.set("orderby", params.orderby);
-  if (params.order) searchParams.set("order", params.order);
-  if (params.include?.length) searchParams.set("include", params.include.join(","));
-  if (params.locale) searchParams.set("lang", params.locale);
-  searchParams.set("_market_cache_bust", `${market}-${Date.now()}`);
-
-  const response = await fetch(`${siteConfig.url}/api/market-products-rest?${searchParams.toString()}`, {
-    cache: "no-store",
-    headers: backendHeaders({ "Cache-Control": "no-cache", "Pragma": "no-cache" }),
-  });
-
-  if (!response.ok) {
-    return { products: [], total: 0, totalPages: 0 };
-  }
-
-  const payload = await response.json();
-  const products = Array.isArray(payload?.products) ? payload.products : [];
+  const payload = await fetchMarketProductsRest({
+    page: params.page,
+    per_page: params.per_page,
+    search: params.search,
+    slug: params.slug,
+    orderby: params.orderby,
+    order: params.order,
+    include: params.include,
+    lang: params.locale,
+  }, market);
+  const products = Array.isArray(payload.products) ? payload.products : [];
   if (!Array.isArray(products)) {
     return { products: [], total: 0, totalPages: 0 };
   }
@@ -330,8 +334,8 @@ async function fetchRestProductsForMarket(
 
   return {
     products: visibleProducts,
-    total: Number(payload?.total) || visibleProducts.length,
-    totalPages: Number(payload?.totalPages) || 1,
+    total: Number(payload.total) || visibleProducts.length,
+    totalPages: Number(payload.totalPages) || 1,
   };
 }
 
@@ -397,7 +401,7 @@ async function fetchStoreAPI<T>(
   let lastError = "";
 
   for (const url of urls) {
-    const response = await fetch(url, fetchOptions);
+    const response = await fetchWithTimeout(url, fetchOptions);
 
     if (!response.ok) {
       lastError = `${response.status} ${response.statusText}`;
@@ -485,7 +489,7 @@ export async function getProducts(params?: {
     );
 
     if (visibleProducts.length === 0) {
-      const market = extractMarketFromHost(params?.frontendHost);
+      const market = extractMarketFromHost(params?.frontendHost) || await detectMarketFromRequest();
       if (market) {
         const restFallback = await fetchRestProductsForMarket({
           page: params?.page,
@@ -510,6 +514,20 @@ export async function getProducts(params?: {
     };
   } catch (error) {
     console.warn(`Failed to fetch products: ${formatFetchError(error)}`);
+    const market = extractMarketFromHost(params?.frontendHost) || await detectMarketFromRequest();
+    if (market) {
+      return fetchRestProductsForMarket({
+        page: params?.page,
+        per_page: params?.per_page,
+        search: params?.search,
+        orderby: params?.orderby,
+        order: params?.order,
+        include: params?.include,
+        locale: params?.locale,
+        currency: params?.currency,
+      }, market);
+    }
+
     return {
       products: [],
       total: 0,
@@ -572,6 +590,17 @@ export const getProductBySlug = cache(async function getProductBySlug(
     
     return products[0];
   } catch {
+    const market = extractMarketFromHost(frontendHost) || await detectMarketFromRequest();
+    if (market) {
+      const restFallback = await fetchRestProductsForMarket({
+        per_page: 1,
+        slug,
+        locale,
+        currency,
+      }, market);
+      return restFallback.products[0] || null;
+    }
+
     return null;
   }
 });

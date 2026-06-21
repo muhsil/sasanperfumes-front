@@ -6,7 +6,6 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, FreeMode } from "swiper/modules";
 import { WCProductCard } from "./WCProductCard";
 import { useRecentlyViewed } from "@/hooks";
-import { getProductsByIds } from "@/lib/api/woocommerce";
 import type { WCProduct } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
 
@@ -51,7 +50,11 @@ export function RecentlyViewed({
       }
 
       try {
-        const fetchedProducts = await getProductsByIds(recentIds, locale);
+        const response = await fetch(
+          `/api/products?include=${encodeURIComponent(recentIds.join(","))}&per_page=${recentIds.length}&locale=${encodeURIComponent(locale)}`
+        );
+        const payload = response.ok ? await response.json() : { products: [] };
+        const fetchedProducts = Array.isArray(payload.products) ? payload.products as WCProduct[] : [];
         const hiddenGiftIdsSet = new Set(hiddenGiftProductIds);
         const orderedProducts = recentIds
           .map((id) => fetchedProducts.find((p) => p.id === id))

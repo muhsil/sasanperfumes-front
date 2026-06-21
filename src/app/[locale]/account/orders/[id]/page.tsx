@@ -14,9 +14,9 @@ import { OrderPrice, OrderCurrencyBadge } from "@/components/common/OrderPrice";
 import { getOrder, formatOrderStatus, getOrderStatusColor, formatDate, getOrderDate, canCancelOrder, cancelOrder, type Order, type OrderLineItem } from "@/lib/api/customer";
 import { OrderBundleItemsList, isOrderBundleProduct, isOrderFreeGift } from "@/components/cart/OrderBundleItemsList";
 import { OrderNotes } from "@/components/account/OrderNotes";
-import { getProductsByIds, searchProductByName } from "@/lib/api/woocommerce";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
+import type { WCProduct } from "@/types/woocommerce";
 
 interface OrderDetailPageProps {
   params: Promise<{ locale: string; id: string }>;
@@ -197,6 +197,23 @@ function AddressCard({ title, address, icon: Icon }: { title: string; address: O
   );
 }
 
+async function fetchProductsByIds(productIds: number[], locale: "en" | "ar"): Promise<WCProduct[]> {
+  const response = await fetch(
+    `/api/products?include=${encodeURIComponent(productIds.join(","))}&per_page=${productIds.length}&locale=${encodeURIComponent(locale)}`
+  );
+  const payload = response.ok ? await response.json() : { products: [] };
+  return Array.isArray(payload.products) ? payload.products as WCProduct[] : [];
+}
+
+async function searchProductImageByName(name: string, locale: "en" | "ar"): Promise<string | null> {
+  const response = await fetch(
+    `/api/products?search=${encodeURIComponent(name)}&per_page=1&locale=${encodeURIComponent(locale)}`
+  );
+  const payload = response.ok ? await response.json() : { products: [] };
+  const product = Array.isArray(payload.products) ? payload.products[0] as WCProduct | undefined : undefined;
+  return product?.images?.[0]?.src || null;
+}
+
 export default function OrderDetailPage({ params }: OrderDetailPageProps) {
   const marketPrefix = useMarketPrefix();
   const { isAuthenticated } = useAuth();
@@ -235,7 +252,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
             if (validIdItems.length > 0) {
               try {
                 const productIds = validIdItems.map((item: OrderLineItem) => item.product_id);
-                const products = await getProductsByIds(productIds, locale);
+                const products = await fetchProductsByIds(productIds, locale);
                 products.forEach((product) => {
                   if (product.images && product.images.length > 0) {
                     imageMap[product.id] = product.images[0].src;
@@ -250,9 +267,9 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
             if (zeroIdItems.length > 0) {
               const searchPromises = zeroIdItems.map(async (item: OrderLineItem) => {
                 try {
-                  const product = await searchProductByName(item.name, locale);
-                  if (product?.images && product.images.length > 0) {
-                    imageMap[item.id] = product.images[0].src;
+                  const imageUrl = await searchProductImageByName(item.name, locale);
+                  if (imageUrl) {
+                    imageMap[item.id] = imageUrl;
                   }
                 } catch {
                   // skip

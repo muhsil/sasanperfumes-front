@@ -1,26 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { backendHeaders, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
-import { getEnvVar } from "@/lib/utils/loadEnv";
+import { fetchMarketProductsRest } from "@/lib/api/marketProductsRest";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 export const revalidate = 0;
 
 const MARKET_CODES = new Set(["qa", "om", "sa"]);
-
-function getMarketCredentials(market: string): { consumerKey: string; consumerSecret: string } {
-  const suffix = market.toUpperCase();
-  return {
-    consumerKey:
-      getEnvVar(`WC_CONSUMER_KEY_${suffix}`) ||
-      getEnvVar(`NEXT_PUBLIC_WC_CONSUMER_KEY_${suffix}`) ||
-      "",
-    consumerSecret:
-      getEnvVar(`WC_CONSUMER_SECRET_${suffix}`) ||
-      getEnvVar(`NEXT_PUBLIC_WC_CONSUMER_SECRET_${suffix}`) ||
-      "",
-  };
-}
 
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
@@ -30,95 +15,26 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ products: [], total: 0, totalPages: 0 }, { status: 400 });
   }
 
-  const credentials = getMarketCredentials(market);
-  if (!credentials.consumerKey || !credentials.consumerSecret) {
-    return NextResponse.json({ products: [], total: 0, totalPages: 0 }, { status: 503 });
-  }
+  const include = params.get("include");
+  const result = await fetchMarketProductsRest({
+    page: params.get("page") ? Number(params.get("page")) : undefined,
+    per_page: params.get("per_page") ? Number(params.get("per_page")) : undefined,
+    search: params.get("search") || undefined,
+    slug: params.get("slug") || undefined,
+    orderby: params.get("orderby") || undefined,
+    order: (params.get("order") as "asc" | "desc") || undefined,
+    include: include ? include.split(",").map((id) => Number(id)).filter(Number.isFinite) : undefined,
+    lang: params.get("lang") || undefined,
+  }, market);
 
-  const restParams = new URLSearchParams();
-  restParams.set("status", "publish");
-  restParams.set("consumer_key", credentials.consumerKey);
-  restParams.set("consumer_secret", credentials.consumerSecret);
-  restParams.set("per_page", params.get("per_page") || "12");
-  for (const key of ["page", "search", "slug", "orderby", "order", "include", "lang"]) {
-    const value = params.get(key);
-    if (value) restParams.set(key, value);
-  }
-  restParams.set("_market_cache_bust", `${market}-${Date.now()}`);
-
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15000);
-  let response: Response;
-  try {
-    const wpJsonBase = wpJsonBaseForMarket(market);
-    const slug = params.get("slug");
-    const search = params.get("search");
-
-    if (slug || search) {
-      const wpParams = new URLSearchParams();
-      if (slug) wpParams.set("slug", slug);
-      if (search) wpParams.set("search", search);
-      wpParams.set("per_page", params.get("per_page") || "12");
-      wpParams.set("_market_cache_bust", `${market}-${Date.now()}`);
-
-      const wpResponse = await fetch(`${wpJsonBase}/wp/v2/product?${wpParams.toString()}`, {
-        cache: "no-store",
-        signal: controller.signal,
-        headers: backendHeaders({ "Cache-Control": "no-cache", "Pragma": "no-cache" }),
-      });
-      const wpProducts = await wpResponse.json().catch(() => []);
-
-      if (Array.isArray(wpProducts) && wpProducts.length > 0) {
-        const products = [];
-        for (const post of wpProducts) {
-          const id = Number((post as Record<string, unknown>).id);
-          if (!id) continue;
-          const productResponse = await fetch(`${wpJsonBase}/wc/v3/products/${id}?${restParams.toString()}`, {
-            cache: "no-store",
-            signal: controller.signal,
-            headers: backendHeaders({ "x-market": market, "Cache-Control": "no-cache", "Pragma": "no-cache" }),
-          });
-          if (productResponse.ok) {
-            const product = await productResponse.json().catch(() => null);
-            if (product) products.push(product);
-          }
-        }
-
-        return NextResponse.json(
-          { products, total: products.length, totalPages: 1 },
-          {
-            headers: {
-              "Cache-Control": "no-store, no-cache, max-age=0, must-revalidate",
-              "Pragma": "no-cache",
-            },
-          }
-        );
-      }
-    }
-
-    response = await fetch(`${wpJsonBase}/wc/v3/products?${restParams.toString()}`, {
-      cache: "no-store",
-      signal: controller.signal,
-      headers: backendHeaders({ "x-market": market, "Cache-Control": "no-cache", "Pragma": "no-cache" }),
-    });
-  } catch {
-    return NextResponse.json({ products: [], total: 0, totalPages: 0 }, { status: 504 });
-  } finally {
-    clearTimeout(timeout);
-  }
-
-  if (!response.ok) {
-    return NextResponse.json({ products: [], total: 0, totalPages: 0 }, { status: response.status });
-  }
-
-  const products = await response.json();
   return NextResponse.json(
     {
-      products: Array.isArray(products) ? products : [],
-      total: parseInt(response.headers.get("X-WP-Total") || "0", 10),
-      totalPages: parseInt(response.headers.get("X-WP-TotalPages") || "1", 10),
+      products: result.products,
+      total: result.total,
+      totalPages: result.totalPages,
     },
     {
+      status: result.status && result.status >= 400 ? result.status : 200,
       headers: {
         "Cache-Control": "no-store, no-cache, max-age=0, must-revalidate",
         "Pragma": "no-cache",

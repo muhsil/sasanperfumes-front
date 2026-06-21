@@ -7,7 +7,6 @@ import { Grid3X3 } from "lucide-react";
 import type { Dictionary } from "@/i18n";
 import type { Locale } from "@/config/site";
 import type { WCProduct } from "@/types/woocommerce";
-import { getProductById } from "@/lib/api/woocommerce";
 import { cn, getProductSlugFromPermalink, decodeHtmlEntities } from "@/lib/utils";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { MiniProductGridSkeleton, CategoriesGridSkeleton } from "@/components/common/Skeleton";
@@ -121,9 +120,17 @@ export function MegaMenu({
     setProductsLoading(true);
     try {
       // Fetch only the specific product IDs from the menu
-      productsFetchPromise[locale] = Promise.all(
-        productIds.map((id) => getProductById(id, locale))
-      ).then((products) => products.filter((p): p is WCProduct => p !== null));
+      const include = productIds.join(",");
+      productsFetchPromise[locale] = fetch(
+        `/api/products?include=${encodeURIComponent(include)}&per_page=${productIds.length}&locale=${encodeURIComponent(locale)}`
+      )
+        .then((response) => response.ok ? response.json() : { products: [] })
+        .then((payload: { products?: WCProduct[] }) => {
+          const products = Array.isArray(payload.products) ? payload.products : [];
+          return productIds
+            .map((id) => products.find((product) => product.id === id))
+            .filter((product): product is WCProduct => Boolean(product));
+        });
 
       const prods = await productsFetchPromise[locale];
       if (prods) {

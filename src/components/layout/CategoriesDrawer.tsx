@@ -13,7 +13,6 @@ import type { Locale } from "@/config/site";
 import type { WCCategory } from "@/types/woocommerce";
 import type { WPMenuItem } from "@/types/wordpress";
 import type { BrandItem } from "@/lib/api/wordpress";
-import { getCategories } from "@/lib/api/woocommerce";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { triggerHaptic } from "@/lib/utils/haptics";
 import { translateToArabic } from "@/config/menu";
@@ -171,7 +170,9 @@ export function CategoriesDrawer({
     setLoading(true);
     try {
       // Create a shared promise for concurrent requests
-      fetchPromise[locale] = getCategories(locale).then((cats) => {
+      fetchPromise[locale] = fetch(`/api/categories?locale=${encodeURIComponent(locale)}`)
+        .then((response) => response.ok ? response.json() : [])
+        .then((cats: WCCategory[]) => {
         const filtered = cats.filter((cat) => cat.count > 0);
         return filtered;
       });
