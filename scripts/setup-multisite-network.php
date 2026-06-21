@@ -4,6 +4,7 @@
  *
  * Usage (WP-CLI):
  *   wp eval-file scripts/setup-multisite-network.php
+ *   wp eval-file scripts/setup-multisite-network.php -- --force-per-site
  *
  * This script updates:
  * 1) Network default frontend URL.
@@ -19,6 +20,17 @@ if (!defined('ABSPATH')) {
 if (!is_multisite()) {
     echo "This site is not configured as WordPress multisite.\n";
     exit(1);
+}
+
+$argv = isset($argv) ? (array) $argv : array();
+
+function shapehive_flag_present(array $args, string $flag): bool {
+    foreach ($args as $arg) {
+        if ($arg === $flag) {
+            return true;
+        }
+    }
+    return false;
 }
 
 $network_default = 'https://shapehive.com';
@@ -102,7 +114,7 @@ function shapehive_ensure_market_site(array $site): int {
     return (int) $created;
 }
 
-function shapehive_ensure_market_plugin_active(int $site_id): bool {
+function shapehive_ensure_market_plugin_active(int $site_id, bool $force_per_site = false): bool {
     if ($site_id <= 0) {
         return false;
     }
@@ -118,35 +130,35 @@ function shapehive_ensure_market_plugin_active(int $site_id): bool {
 
     foreach ($plugins as $plugin) {
         if (function_exists('is_plugin_active_for_network') && is_plugin_active_for_network($plugin)) {
+            if (!$force_per_site) {
+                return true;
+            }
+            deactivate_plugins($plugin, false, true);
+        }
+
+        switch_to_blog($site_id);
+        if (is_plugin_active($plugin)) {
+            restore_current_blog();
             return true;
         }
-    }
+        restore_current_blog();
 
-    switch_to_blog($site_id);
-    $active = false;
-    foreach ($plugins as $plugin) {
-        if (is_plugin_active($plugin)) {
-            $active = true;
-            break;
+        if (!file_exists(WP_PLUGIN_DIR . '/' . $plugin)) {
+            continue;
         }
-    }
 
-    if (!$active) {
-        foreach ($plugins as $plugin) {
-            if (!file_exists(WP_PLUGIN_DIR . '/' . $plugin)) {
-                continue;
-            }
-            $result = activate_plugin($plugin, '', false, true);
-            $active = !is_wp_error($result);
-            if ($active) {
-                break;
-            }
-            echo "Could not activate {$plugin} on site_id={$site_id}: " . $result->get_error_message() . "\n";
+        switch_to_blog($site_id);
+        $result = activate_plugin($plugin, '', false, true);
+        restore_current_blog();
+
+        if (!is_wp_error($result)) {
+            return true;
         }
-    }
-    restore_current_blog();
 
-    return $active;
+        echo "Could not activate {$plugin} on site_id={$site_id}: " . $result->get_error_message() . "\n";
+    }
+
+    return false;
 }
 
 $updated = [
@@ -154,6 +166,7 @@ $updated = [
     'matched' => 0,
     'ensured_markets' => 0,
 ];
+$forcePerSite = shapehive_flag_present($argv, '--force-per-site');
 
 foreach ($market_sites as $market => $site) {
     $site_id = shapehive_ensure_market_site($site);
@@ -166,7 +179,7 @@ foreach ($market_sites as $market => $site) {
     update_blog_status($site_id, 'archived', '0');
     update_blog_status($site_id, 'spam', '0');
     update_blog_status($site_id, 'deleted', '0');
-    shapehive_ensure_market_plugin_active($site_id);
+    shapehive_ensure_market_plugin_active($site_id, $forcePerSite);
     $updated['ensured_markets']++;
 }
 

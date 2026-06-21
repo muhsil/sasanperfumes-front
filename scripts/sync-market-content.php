@@ -5,7 +5,9 @@
  * Usage:
  *   wp eval-file scripts/sync-market-content.php -- --dry-run
  *   wp eval-file scripts/sync-market-content.php -- --markets=qa,om,sa
+ *   wp eval-file scripts/sync-market-content.php -- --markets=qa,om,sa --force-per-site
  *   wp eval-file scripts/sync-market-content.php -- --markets=qa --overwrite
+ *   wp eval-file scripts/sync-market-content.php -- --markets=qa --overwrite --force-per-site
  *
  * Default behavior creates missing records only. Use --overwrite to refresh
  * existing market records from the source site. Market records remain separate
@@ -85,7 +87,7 @@ function shapehive_market_ensure_site(array $market, bool $dryRun): int {
     return (int) $created;
 }
 
-function shapehive_market_ensure_plugin_active(int $siteId): bool {
+function shapehive_market_ensure_plugin_active(int $siteId, bool $forcePerSite = false): bool {
     if ($siteId <= 0) {
         return false;
     }
@@ -99,9 +101,17 @@ function shapehive_market_ensure_plugin_active(int $siteId): bool {
         'anbar-frontend-settings/anbar-frontend-settings.php',
     );
 
-    foreach ($plugins as $plugin) {
-        if (function_exists('is_plugin_active_for_network') && is_plugin_active_for_network($plugin)) {
-            return true;
+    if ($forcePerSite) {
+        foreach ($plugins as $plugin) {
+            if (function_exists('is_plugin_active_for_network') && is_plugin_active_for_network($plugin)) {
+                deactivate_plugins($plugin, false, true);
+            }
+        }
+    } else {
+        foreach ($plugins as $plugin) {
+            if (function_exists('is_plugin_active_for_network') && is_plugin_active_for_network($plugin)) {
+                return true;
+            }
         }
     }
 
@@ -475,6 +485,7 @@ function shapehive_market_sync_target(array $source, array $market, int $targetS
 
 $dryRun = shapehive_market_arg_has($argv, '--dry-run');
 $overwrite = shapehive_market_arg_has($argv, '--overwrite');
+$forcePerSite = shapehive_market_arg_has($argv, '--force-per-site');
 $marketsArg = shapehive_market_arg_get($argv, '--markets', 'qa,om,sa');
 $requestedMarkets = array_filter(array_map('trim', explode(',', strtolower($marketsArg))));
 
@@ -568,7 +579,7 @@ foreach ($requestedMarkets as $marketCode) {
     }
 
     if (!$dryRun) {
-        shapehive_market_ensure_plugin_active($targetSiteId);
+        shapehive_market_ensure_plugin_active($targetSiteId, $forcePerSite);
     }
 
     $stats = shapehive_market_sync_target($source, $market, $targetSiteId, $overwrite, $dryRun);
