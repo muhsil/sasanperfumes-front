@@ -8,7 +8,7 @@ import { generateMetadata as generateSeoMetadata, generateCollectionPageJsonLd, 
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getCategoryBySlug, getProductsByCategory, getCategories, getFreeGiftProductInfo, getBundleEnabledProductSlugs, getEnglishSlugFromLocalizedSlug } from "@/lib/api/woocommerce";
 import { siteConfig, type Locale } from "@/config/site";
-import { getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
+import { getMarketHintFromSearchParams, getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
 import type { Metadata } from "next";
 import { CategoryClient } from "./CategoryClient";
 import { decodeHtmlEntities } from "@/lib/utils";
@@ -48,15 +48,18 @@ export async function generateStaticParams() {
 
 interface CategoryPageProps {
   params: Promise<{ locale: string; slug: string }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: CategoryPageProps): Promise<Metadata> {
   const { locale, slug } = await params;
+  const marketHint = getMarketHintFromSearchParams(await searchParams);
   const [market, frontendHost] = await Promise.all([
-    getRequestMarket(),
-    getRequestFrontendHost(),
+    getRequestMarket(marketHint),
+    getRequestFrontendHost(marketHint),
   ]);
   const category = await getCategoryBySlug(slug, locale as Locale, market.defaultCurrency, frontendHost);
   const categoryName = decodeHtmlEntities(category?.name || slug.charAt(0).toUpperCase() + slug.slice(1));
@@ -114,12 +117,13 @@ async function CategorySeoSection({ slug, locale }: { slug: string; locale: Loca
   );
 }
 
-export default async function CategoryPage({ params }: CategoryPageProps) {
+export default async function CategoryPage({ params, searchParams }: CategoryPageProps) {
   const { locale, slug } = await params;
+  const marketHint = getMarketHintFromSearchParams(await searchParams);
   const dictionary = await getDictionary(locale as Locale);
   const [market, frontendHost] = await Promise.all([
-    getRequestMarket(),
-    getRequestFrontendHost(),
+    getRequestMarket(marketHint),
+    getRequestFrontendHost(marketHint),
   ]);
   const pathPrefix = getMarketPathPrefix(market.code);
 

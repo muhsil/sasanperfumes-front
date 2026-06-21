@@ -4,7 +4,7 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { getProducts, getProductBySlug, getBundleConfig } from "@/lib/api/woocommerce";
 import { getPageSeo } from "@/lib/api/wordpress";
-import { getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
+import { getMarketHintFromSearchParams, getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
 import { BuildYourOwnSetClient } from "./BuildYourOwnSetClient";
@@ -15,6 +15,7 @@ export const revalidate = 0;
 
 interface BuildYourOwnSetPageProps {
   params: Promise<{ locale: string }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 // Default SEO values (fallback when WordPress page doesn't exist)
@@ -51,12 +52,14 @@ export async function generateMetadata({
 
 export default async function BuildYourOwnSetPage({
   params,
+  searchParams,
 }: BuildYourOwnSetPageProps) {
   const { locale } = await params;
+  const marketHint = getMarketHintFromSearchParams(await searchParams);
   const isRTL = locale === "ar";
   const [market, frontendHost] = await Promise.all([
-    getRequestMarket(),
-    getRequestFrontendHost(),
+    getRequestMarket(marketHint),
+    getRequestFrontendHost(marketHint),
   ]);
   const pathPrefix = getMarketPathPrefix(market.code);
 

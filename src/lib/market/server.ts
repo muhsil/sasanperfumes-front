@@ -2,6 +2,17 @@ import { headers } from "next/headers";
 import { getMarketByHost, normalizeMarketHost, type MarketConfig } from "@/config/market";
 
 const MARKETS = new Set(["qa", "om", "sa"]);
+export type MarketSearchParams = { [key: string]: string | string[] | undefined };
+
+function normalizeMarketHint(marketHint?: string | string[] | null): string {
+  const value = Array.isArray(marketHint) ? marketHint[0] : marketHint;
+  const normalized = value?.toLowerCase() || "";
+  return MARKETS.has(normalized) ? normalized : "";
+}
+
+export function getMarketHintFromSearchParams(searchParams?: MarketSearchParams | null): string {
+  return normalizeMarketHint(searchParams?.__market || searchParams?.market);
+}
 
 function pickMarketAwareHost(candidates: Array<string | null>): string {
   const normalized = candidates
@@ -11,10 +22,11 @@ function pickMarketAwareHost(candidates: Array<string | null>): string {
   return normalized.find((candidate) => /\/(qa|om|sa)$/.test(candidate)) || normalized[0] || "";
 }
 
-export async function getRequestFrontendHost(): Promise<string> {
+export async function getRequestFrontendHost(marketHint?: string | string[] | null): Promise<string> {
   try {
     const requestHeaders = await headers();
-    const explicitMarket = requestHeaders.get("x-market")?.toLowerCase();
+    const hintedMarket = normalizeMarketHint(marketHint);
+    const explicitMarket = hintedMarket || requestHeaders.get("x-market")?.toLowerCase();
     const host =
       requestHeaders.get("x-frontend-host") ||
       requestHeaders.get("x-forwarded-host") ||
@@ -38,6 +50,6 @@ export async function getRequestFrontendHost(): Promise<string> {
   }
 }
 
-export async function getRequestMarket(): Promise<MarketConfig> {
-  return getMarketByHost(await getRequestFrontendHost());
+export async function getRequestMarket(marketHint?: string | string[] | null): Promise<MarketConfig> {
+  return getMarketByHost(await getRequestFrontendHost(marketHint));
 }

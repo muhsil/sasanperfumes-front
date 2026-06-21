@@ -7,7 +7,7 @@ import { getDictionary } from "@/i18n";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { getProducts, getFreeGiftProductInfo, getBundleEnabledProductSlugs } from "@/lib/api/woocommerce";
 import { getPageSeo, getStaticPageContent, pickLocale, getFeatureToggles } from "@/lib/api/wordpress";
-import { getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
+import { getMarketHintFromSearchParams, getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
 import { ShopClient } from "./ShopClient";
@@ -57,16 +57,17 @@ export async function generateMetadata({
   });
 }
 
-export default async function ShopPage({ params }: ShopPageProps) {
+export default async function ShopPage({ params, searchParams }: ShopPageProps) {
   const { locale } = await params;
+  const marketHint = getMarketHintFromSearchParams(await searchParams);
   const toggles = await getFeatureToggles();
   if (!toggles.sasanperfumes_shop_enabled) notFound();
   const dictionary = await getDictionary(locale as Locale);
   const isRTL = locale === "ar";
   const wp = await getStaticPageContent("shop");
   const [market, frontendHost] = await Promise.all([
-    getRequestMarket(),
-    getRequestFrontendHost(),
+    getRequestMarket(marketHint),
+    getRequestFrontendHost(marketHint),
   ]);
   const pathPrefix = getMarketPathPrefix(market.code);
 

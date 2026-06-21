@@ -5,7 +5,7 @@ import { getDictionary } from "@/i18n";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { getNewProducts, getFreeGiftProductIds, getBundleEnabledProductSlugs } from "@/lib/api/woocommerce";
 import { getPageSeo } from "@/lib/api/wordpress";
-import { getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
+import { getMarketHintFromSearchParams, getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
 import { NewProductsClient } from "./NewProductsClient";
@@ -16,6 +16,7 @@ export const revalidate = 0;
 
 interface NewProductsPageProps {
   params: Promise<{ locale: string }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 // Default SEO values (fallback when WordPress page doesn't exist)
@@ -50,13 +51,14 @@ export async function generateMetadata({
   });
 }
 
-export default async function NewProductsPage({ params }: NewProductsPageProps) {
+export default async function NewProductsPage({ params, searchParams }: NewProductsPageProps) {
   const { locale } = await params;
+  const marketHint = getMarketHintFromSearchParams(await searchParams);
   const dictionary = await getDictionary(locale as Locale);
   const isRTL = locale === "ar";
   const [market, frontendHost] = await Promise.all([
-    getRequestMarket(),
-    getRequestFrontendHost(),
+    getRequestMarket(marketHint),
+    getRequestFrontendHost(marketHint),
   ]);
   const pathPrefix = getMarketPathPrefix(market.code);
 

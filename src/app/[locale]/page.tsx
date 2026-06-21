@@ -9,7 +9,7 @@ import {
   getFeaturedProducts,
 } from "@/lib/api/woocommerce";
 import { getHomePageSettings, getSeoSettings, getHomeSections, getSiteSettings } from "@/lib/api/wordpress";
-import { getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
+import { getMarketHintFromSearchParams, getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
 import {
   HeroSlider,
   ProductSection,
@@ -27,16 +27,19 @@ const HOME_PRODUCT_COUNT = 5;
 
 interface HomePageProps {
   params: Promise<{ locale: string }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: HomePageProps): Promise<Metadata> {
   const { locale } = await params;
+  const marketHint = getMarketHintFromSearchParams(await searchParams);
   const validLocale = locale as Locale;
   const isArabic = validLocale === "ar";
 
-  const frontendHost = await getRequestFrontendHost();
+  const frontendHost = await getRequestFrontendHost(marketHint);
   const seoSettings = await getSeoSettings(validLocale, frontendHost);
 
   const seoTitle = (isArabic ? seoSettings.titleAr : seoSettings.title) || siteConfig.name;
@@ -293,13 +296,14 @@ async function FeaturedProductsSection({ locale, isRTL, dictionary, homeSettings
   );
 }
 
-export default async function HomePage({ params }: HomePageProps) {
+export default async function HomePage({ params, searchParams }: HomePageProps) {
   const { locale } = await params;
+  const marketHint = getMarketHintFromSearchParams(await searchParams);
   const validLocale = locale as Locale;
   const isRTL = locale === "ar";
   const [market, frontendHost] = await Promise.all([
-    getRequestMarket(),
-    getRequestFrontendHost(),
+    getRequestMarket(marketHint),
+    getRequestFrontendHost(marketHint),
   ]);
 
   const [dictionary, homeSettings, homeSections, siteSettings] = await Promise.all([
