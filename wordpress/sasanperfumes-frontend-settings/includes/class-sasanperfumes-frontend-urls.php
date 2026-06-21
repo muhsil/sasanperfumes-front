@@ -90,6 +90,72 @@ class sasanperfumes_Frontend_Urls {
         <?php
     }
 
+    private function get_known_market_slugs() {
+        return array('qa', 'om', 'sa');
+    }
+
+    private function normalize_request_path($path) {
+        $path = '/' . ltrim((string) $path, '/');
+        $path = preg_replace('#/+#', '/', $path);
+        return $path ?: '/';
+    }
+
+    private function strip_market_prefix_from_path($path) {
+        $path = $this->normalize_request_path($path);
+        $segments = array_values(array_filter(explode('/', trim($path, '/')), 'strlen'));
+
+        if (!empty($segments) && in_array(strtolower($segments[0]), $this->get_known_market_slugs(), true)) {
+            array_shift($segments);
+            return empty($segments) ? '/' : '/' . implode('/', $segments);
+        }
+
+        return $path;
+    }
+
+    private function is_backend_request_uri($request_uri) {
+        if (strpos((string) $request_uri, 'rest_route=') !== false) {
+            return true;
+        }
+
+        $path = parse_url((string) $request_uri, PHP_URL_PATH);
+        $path = $this->strip_market_prefix_from_path($path ? $path : '/');
+
+        $backend_prefixes = array(
+            '/wp-json',
+            '/wp-admin',
+            '/wp-login.php',
+            '/xmlrpc.php',
+            '/wp-content',
+            '/wp-includes',
+            '/wp-cron.php',
+            '/favicon.ico',
+            '/robots.txt',
+            '/sitemap.xml',
+        );
+
+        foreach ($backend_prefixes as $prefix) {
+            if ($path === $prefix || strpos($path, $prefix . '/') === 0) {
+                return true;
+            }
+        }
+
+        return (bool) preg_match('/\.(?:css|js|json|png|jpe?g|gif|svg|webp|ico|txt|xml|map|woff2?|ttf|eot|otf|pdf)$/i', $path);
+    }
+
+    private function get_headless_redirect_path($request_path) {
+        $target_path = $this->strip_market_prefix_from_path($request_path);
+
+        if ($target_path === '/' || $target_path === '') {
+            return '/en';
+        }
+
+        if (strpos($target_path, '/en') !== 0 && strpos($target_path, '/ar') !== 0) {
+            return '/en' . (strpos($target_path, '/') === 0 ? $target_path : '/' . $target_path);
+        }
+
+        return $target_path;
+    }
+
     private function get_frontend_path_for_post($post) {
         if (!$post) return '';
 
@@ -149,30 +215,12 @@ class sasanperfumes_Frontend_Urls {
         }
 
         $request_uri = isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : '/';
-        $path = parse_url($request_uri, PHP_URL_PATH);
-        $path = $path ? $path : '/';
-
-        if (
-            $path === '/wp-json' ||
-            strpos($path, '/wp-json/') === 0 ||
-            $path === '/wp-admin' ||
-            strpos($path, '/wp-admin/') === 0 ||
-            strpos($path, '/wp-login.php') === 0 ||
-            strpos($path, '/xmlrpc.php') === 0 ||
-            strpos($path, '/wp-content/') === 0 ||
-            strpos($path, '/wp-includes/') === 0 ||
-            strpos($path, '/wp-cron.php') === 0
-        ) {
+        if ($this->is_backend_request_uri($request_uri)) {
             return;
         }
 
-        $target_path = '/en';
-        if ($path !== '/' && $path !== '') {
-            $target_path = $path;
-            if (strpos($target_path, '/en') !== 0 && strpos($target_path, '/ar') !== 0) {
-                $target_path = '/en' . (strpos($target_path, '/') === 0 ? $target_path : '/' . $target_path);
-            }
-        }
+        $path = parse_url($request_uri, PHP_URL_PATH);
+        $target_path = $this->get_headless_redirect_path($path ? $path : '/');
 
         wp_safe_redirect(trailingslashit($this->frontend_url) . ltrim($target_path, '/'), 301);
         exit;
@@ -184,16 +232,7 @@ class sasanperfumes_Frontend_Urls {
         }
 
         $request_uri = isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : '/';
-        $request_path = parse_url($request_uri, PHP_URL_PATH);
-        $request_path = $request_path ? $request_path : '/';
-        if (
-            $request_path === '/wp-json' ||
-            strpos($request_path, '/wp-json/') === 0 ||
-            $request_path === '/wp-admin' ||
-            strpos($request_path, '/wp-admin/') === 0 ||
-            strpos($request_path, '/wp-login.php') === 0 ||
-            strpos($request_path, '/xmlrpc.php') === 0
-        ) {
+        if ($this->is_backend_request_uri($request_uri)) {
             return;
         }
 
