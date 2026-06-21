@@ -1,6 +1,7 @@
 import { siteConfig } from "@/config/site";
 
 const API_BASE = siteConfig.apiUrl;
+const MARKET_CODES = new Set(["qa", "om", "sa"]);
 const BACKEND_USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36";
 const LEGACY_MEDIA_HOSTS = [["cms", ["fragrance", "network"].join(""), "ae"].join(".")];
@@ -30,6 +31,74 @@ export function backendHeaders(extra?: HeadersInit): HeadersInit {
     ...(isBrowser ? {} : { "User-Agent": BACKEND_USER_AGENT }),
     ...extra,
   });
+}
+
+export function extractMarketCode(value?: string | null): string {
+  if (!value) return "";
+
+  const raw = value.trim().toLowerCase();
+  if (!raw) return "";
+
+  if (MARKET_CODES.has(raw)) {
+    return raw;
+  }
+
+  try {
+    const parsed = new URL(raw.includes("://") ? raw : `https://${raw}`);
+    const firstPath = parsed.pathname.split("/").filter(Boolean)[0] || "";
+    return MARKET_CODES.has(firstPath) ? firstPath : "";
+  } catch {
+    const withoutProtocol = raw.replace(/^https?:\/\//, "");
+    const firstPath = withoutProtocol.split("/").filter(Boolean)[1] || "";
+    return MARKET_CODES.has(firstPath) ? firstPath : "";
+  }
+}
+
+export function backendBaseForMarket(market?: string | null): string {
+  const cleanMarket = extractMarketCode(market);
+  const base = API_BASE.replace(/\/+$/, "");
+
+  if (!cleanMarket) {
+    return base;
+  }
+
+  try {
+    const parsed = new URL(base);
+    const segments = parsed.pathname.split("/").filter(Boolean);
+    if (segments[0] !== cleanMarket) {
+      parsed.pathname = `/${[cleanMarket, ...segments].join("/")}`;
+    }
+    return parsed.toString().replace(/\/+$/, "");
+  } catch {
+    return `${base}/${cleanMarket}`;
+  }
+}
+
+export function wpJsonBaseForMarket(market?: string | null): string {
+  return `${backendBaseForMarket(market)}/wp-json`;
+}
+
+export function rewriteBackendUrlForMarket(url: string, market?: string | null): string {
+  const cleanMarket = extractMarketCode(market);
+  if (!cleanMarket) return url;
+
+  try {
+    const parsed = new URL(url);
+    const apiHost = new URL(API_BASE).hostname.toLowerCase();
+    if (parsed.hostname.toLowerCase() !== apiHost) {
+      return url;
+    }
+
+    const segments = parsed.pathname.split("/").filter(Boolean);
+    if (segments[0] === cleanMarket) {
+      return parsed.toString();
+    }
+
+    parsed.pathname = `/${[cleanMarket, ...segments].join("/")}`;
+    return parsed.toString();
+  } catch {
+    return url;
+  }
 }
 
 export function backendPostHeaders(extra?: HeadersInit): HeadersInit {

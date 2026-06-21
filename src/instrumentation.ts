@@ -3,14 +3,56 @@ export async function register() {
     return;
   }
 
+  const marketCodes = new Set(["qa", "om", "sa"]);
+
   const normalizeFrontendHost = (value: string): string => {
-    return value
-      .trim()
-      .toLowerCase()
-      .replace(/^https?:\/\//, "")
-      .split("/")[0]
-      .split(":")[0]
-      .replace(/^www\./, "");
+    const raw = value.trim().toLowerCase();
+    if (!raw) return "";
+
+    try {
+      const parsed = new URL(raw.includes("://") ? raw : `https://${raw}`);
+      const host = parsed.hostname.replace(/^www\./, "");
+      const firstPath = parsed.pathname.split("/").filter(Boolean)[0] || "";
+      return marketCodes.has(firstPath) ? `${host}/${firstPath}` : host;
+    } catch {
+      const withoutProtocol = raw.replace(/^https?:\/\//, "");
+      const segments = withoutProtocol.split("/").filter(Boolean);
+      if (segments.length === 0) return "";
+      const host = segments[0].split(":")[0].replace(/^www\./, "");
+      const firstPath = segments[1] || "";
+      return marketCodes.has(firstPath) ? `${host}/${firstPath}` : host;
+    }
+  };
+
+  const extractMarket = (value: string): string => {
+    const normalized = normalizeFrontendHost(value);
+    const market = normalized.split("/")[1] || "";
+    return marketCodes.has(market) ? market : "";
+  };
+
+  const rewriteCmsUrlForMarket = (urlText: string, cmsHost: string, market: string): string => {
+    if (!marketCodes.has(market)) return urlText;
+
+    try {
+      const parsed = new URL(urlText);
+      if (parsed.hostname.toLowerCase() !== cmsHost) {
+        return urlText;
+      }
+
+      const segments = parsed.pathname.split("/").filter(Boolean);
+      if (segments[0] === market) {
+        return parsed.toString();
+      }
+
+      if (segments[0] === "wp-json" || segments[0] === "graphql") {
+        parsed.pathname = `/${[market, ...segments].join("/")}`;
+        return parsed.toString();
+      }
+    } catch {
+      return urlText;
+    }
+
+    return urlText;
   };
 
   const headersToRecord = (headers?: HeadersInit): Record<string, string> => {
@@ -95,6 +137,7 @@ export async function register() {
         const parsed = new URL(urlText);
         if (parsed.hostname.toLowerCase() === cmsHost) {
           const frontendHost = await getIncomingFrontendHost();
+          const market = extractMarket(frontendHost);
           const outputHeaders = headersToRecord(init?.headers);
           const hasFrontendHost = Object.keys(outputHeaders).some(
             (key) => key.toLowerCase() === "x-frontend-host"
@@ -102,7 +145,12 @@ export async function register() {
           if (frontendHost && !hasFrontendHost) {
             outputHeaders["X-Frontend-Host"] = frontendHost;
           }
-          return originalFetch(input, { ...init, headers: backendHeaders(outputHeaders) });
+          if (market && !Object.keys(outputHeaders).some((key) => key.toLowerCase() === "x-market")) {
+            outputHeaders["X-Market"] = market;
+          }
+          const rewrittenUrl = market ? rewriteCmsUrlForMarket(urlText, cmsHost, market) : urlText;
+          const rewrittenInput = typeof input === "string" || input instanceof URL ? rewrittenUrl : input;
+          return originalFetch(rewrittenInput, { ...init, headers: backendHeaders(outputHeaders) });
         }
       } catch {
         // keep existing fetch behavior if URL parsing fails

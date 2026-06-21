@@ -39,7 +39,7 @@
     "tailwindcss": "^4",
     "typescript": "^5"
   },
-  "description": "A modern, bilingual (English/Arabic) headless e-commerce frontend built with Next.js 15, Tailwind CSS, and WordPress/WooCommerce REST API.",
+  "description": "A modern, bilingual (English/Arabic) headless e-commerce frontend built with Next.js 16, Tailwind CSS, and WordPress/WooCommerce REST API.",
   "main": "screenshot.js",
   "repository": {
     "type": "git",

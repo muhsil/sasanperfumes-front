@@ -1,10 +1,10 @@
 # Sasan Perfumes - Headless E-commerce Frontend
 
-A modern, bilingual (English/Arabic) headless e-commerce frontend built with Next.js 15, Tailwind CSS, and WordPress/WooCommerce REST API.
+A modern, bilingual (English/Arabic) headless e-commerce frontend built with Next.js 16, Tailwind CSS, and WordPress/WooCommerce REST API.
 
 ## Features
 
-- **Next.js 15 App Router** - Server-side rendering and ISR for SEO and performance
+- **Next.js 16 App Router** - Server-side rendering and ISR for SEO and performance
 - **Bilingual Support** - English and Arabic (RTL) with seamless language switching
 - **Multi-Currency** - Support for AED, BHD, KWD, OMR, QAR, SAR, USD with persistent selection
 - **WordPress/WooCommerce Backend** - Headless CMS via REST API, Store API, and CoCart

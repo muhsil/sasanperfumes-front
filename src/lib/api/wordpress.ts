@@ -1,7 +1,12 @@
 import { disableRuntimeCache, siteConfig, type Locale } from "@/config/site";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { translateToArabic } from "@/config/menu";
-import { backendHeaders, parseBackendJson } from "@/lib/utils/backendFetch";
+import {
+  backendHeaders,
+  extractMarketCode,
+  parseBackendJson,
+  wpJsonBaseForMarket,
+} from "@/lib/utils/backendFetch";
 import type {
   HomePageACF,
   SiteSettings,
@@ -67,9 +72,9 @@ function isExpectedNextDynamicServerError(error: unknown): boolean {
   );
 }
 
-function buildWPAPIUrls(endpoint: string, locale?: Locale): string[] {
+function buildWPAPIUrls(endpoint: string, locale?: Locale, apiBase: string = WP_API_BASE): string[] {
   const withLocale = (baseEndpoint: string): string => {
-    let url = `${WP_API_BASE}${baseEndpoint}`;
+    let url = `${apiBase}${baseEndpoint}`;
     if (locale) {
       const separator = baseEndpoint.includes("?") ? "&" : "?";
       url = `${url}${separator}lang=${locale}`;
@@ -86,6 +91,10 @@ function buildWPAPIUrls(endpoint: string, locale?: Locale): string[] {
   }
 
   return urls;
+}
+
+function uniqueUrls(urls: string[]): string[] {
+  return Array.from(new Set(urls));
 }
 
 function appendQueryParam(url: string, key: string, value: string): string {
@@ -630,14 +639,8 @@ interface FetchOptions {
 const WP_KNOWN_MARKETS = new Set(["qa", "om", "sa"]);
 
 function extractWPMarketFromHost(frontendHost?: string): string | undefined {
-  if (!frontendHost) return undefined;
-  const lower = frontendHost.toLowerCase();
-  for (const m of WP_KNOWN_MARKETS) {
-    if (lower.endsWith(`/${m}`) || lower.includes(`/${m}/`) || lower.startsWith(`${m}.`)) {
-      return m;
-    }
-  }
-  return undefined;
+  const market = extractMarketCode(frontendHost);
+  return market && WP_KNOWN_MARKETS.has(market) ? market : undefined;
 }
 
 async function detectMarketFromRequest(): Promise<string | undefined> {
@@ -665,11 +668,14 @@ async function fetchWPAPI<T>(
   options: FetchOptions = {}
 ): Promise<T | null> {
   const { revalidate = 300, tags, locale, noCache = false, frontendHost } = options;
-  const urls = buildWPAPIUrls(endpoint, locale).map((url) =>
-    frontendHost ? appendQueryParam(url, "frontend_host", frontendHost) : url
+  const market = extractWPMarketFromHost(frontendHost) || await detectMarketFromRequest();
+  const apiBases = market ? [wpJsonBaseForMarket(market), WP_API_BASE] : [WP_API_BASE];
+  const urls = uniqueUrls(
+    apiBases.flatMap((apiBase) => buildWPAPIUrls(endpoint, locale, apiBase)).map((url) =>
+      frontendHost ? appendQueryParam(url, "frontend_host", frontendHost) : url
+    )
   );
 
-  const market = extractWPMarketFromHost(frontendHost) || await detectMarketFromRequest();
   const apiHeaders = market
     ? backendHeaders({ ...WP_API_HEADERS, "x-market": market })
     : backendHeaders(WP_API_HEADERS);
@@ -710,7 +716,7 @@ async function fetchWPAPI<T>(
         return parseBackendJson<T>(text);
       } catch {
         console.warn(`WordPress API returned invalid JSON (${url})`);
-        return null;
+        continue;
       }
     }
 
@@ -2150,26 +2156,76 @@ export interface BlogPost {
   categories: { id: number; name: string; slug: string }[];
 }
 
-export async function getBlogPosts(page = 1, perPage = 12): Promise<{ posts: BlogPost[]; total: number; totalPages: number }> {
-  const url = `/wp/v2/posts?per_page=${perPage}&page=${page}&_embed=true`;
-  const response = await fetch(
-    `${WP_API_BASE}${url}`,
-    {
-      ...(disableRuntimeCache ? { cache: "no-store" } : { next: { revalidate: 300, tags: ["blog"] } }),
-      headers: backendHeaders(),
-    }
+interface RawBlogPost {
+  id?: number;
+  slug?: string;
+  title?: { rendered?: string };
+  excerpt?: { rendered?: string };
+  content?: { rendered?: string };
+  date?: string;
+  _embedded?: {
+    "wp:featuredmedia"?: { source_url?: string }[];
+    author?: { name?: string }[];
+    "wp:term"?: { id?: number; name?: string; slug?: string }[][];
+  };
+}
+
+async function fetchBlogAPI(
+  endpoint: string,
+  market: string | undefined,
+  frontendHost: string | undefined,
+  tags: string[]
+): Promise<{ response: Response; raw: RawBlogPost[] } | null> {
+  const apiBases = market ? [wpJsonBaseForMarket(market), WP_API_BASE] : [WP_API_BASE];
+  const urls = uniqueUrls(
+    apiBases.map((apiBase) => {
+      const url = `${apiBase}${endpoint}`;
+      return frontendHost ? appendQueryParam(url, "frontend_host", frontendHost) : url;
+    })
   );
+  const headers = market ? backendHeaders({ "x-market": market }) : backendHeaders();
+  const fetchOptions: RequestInit = {
+    ...(disableRuntimeCache ? { cache: "no-store" } : { next: { revalidate: 300, tags } }),
+    headers,
+  };
 
-  if (!response.ok) return { posts: [], total: 0, totalPages: 0 };
+  for (const apiUrl of urls) {
+    const response = await fetch(apiUrl, fetchOptions);
+    if (!response.ok) {
+      continue;
+    }
 
+    try {
+      const raw = await response.json();
+      if (Array.isArray(raw)) {
+        return { response, raw: raw as RawBlogPost[] };
+      }
+      console.warn(`WordPress blog API returned non-array JSON (${apiUrl})`);
+    } catch {
+      console.warn(`WordPress blog API returned invalid JSON (${apiUrl})`);
+    }
+  }
+
+  return null;
+}
+
+export async function getBlogPosts(
+  page = 1,
+  perPage = 12,
+  frontendHost?: string
+): Promise<{ posts: BlogPost[]; total: number; totalPages: number }> {
+  const url = `/wp/v2/posts?per_page=${perPage}&page=${page}&_embed=true`;
+  const market = extractWPMarketFromHost(frontendHost) || await detectMarketFromRequest();
+  const result = await fetchBlogAPI(url, market, frontendHost, ["blog"]);
+  if (!result) return { posts: [], total: 0, totalPages: 0 };
+
+  const { response, raw } = result;
   const total = parseInt(response.headers.get("x-wp-total") || "0", 10);
   const totalPages = parseInt(response.headers.get("x-wp-totalpages") || "0", 10);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const raw: any[] = await response.json();
 
   const posts: BlogPost[] = raw.map((p) => ({
-    id: p.id,
-    slug: p.slug,
+    id: p.id || 0,
+    slug: p.slug || "",
     title: p.title?.rendered || "",
     excerpt: p.excerpt?.rendered || "",
     content: p.content?.rendered || "",
@@ -2185,25 +2241,19 @@ export async function getBlogPosts(page = 1, perPage = 12): Promise<{ posts: Blo
   return { posts: rebrandApiContent(posts), total, totalPages };
 }
 
-export async function getBlogPost(slug: string): Promise<BlogPost | null> {
+export async function getBlogPost(slug: string, frontendHost?: string): Promise<BlogPost | null> {
   const url = `/wp/v2/posts?slug=${encodeURIComponent(slug)}&_embed=true`;
-  const response = await fetch(
-    `${WP_API_BASE}${url}`,
-    {
-      ...(disableRuntimeCache ? { cache: "no-store" } : { next: { revalidate: 300, tags: ["blog", `blog-${slug}`] } }),
-      headers: backendHeaders(),
-    }
-  );
+  const market = extractWPMarketFromHost(frontendHost) || await detectMarketFromRequest();
+  const result = await fetchBlogAPI(url, market, frontendHost, ["blog", `blog-${slug}`]);
+  if (!result) return null;
 
-  if (!response.ok) return null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const raw: any[] = await response.json();
+  const { raw } = result;
   if (!raw.length) return null;
 
   const p = raw[0];
   return rebrandApiContent({
-    id: p.id,
-    slug: p.slug,
+    id: p.id || 0,
+    slug: p.slug || "",
     title: p.title?.rendered || "",
     excerpt: p.excerpt?.rendered || "",
     content: p.content?.rendered || "",

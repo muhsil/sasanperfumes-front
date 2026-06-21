@@ -8,7 +8,7 @@ import { getBlogPosts, getFeatureToggles } from "@/lib/api/wordpress";
 import { shouldUseUnoptimizedImage } from "@/lib/utils/image";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
-import { getRequestMarket } from "@/lib/market/server";
+import { getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
 import { getMarketPathPrefix } from "@/config/market";
 
 export const revalidate = 300;
@@ -20,7 +20,8 @@ interface BlogPageProps {
 export async function generateMetadata({ params }: BlogPageProps): Promise<Metadata> {
   const { locale } = await params;
   const lang = locale as Locale;
-  const toggles = await getFeatureToggles();
+  const frontendHost = await getRequestFrontendHost();
+  const toggles = await getFeatureToggles(frontendHost);
   if (!toggles.sasanperfumes_blog_enabled) return {};
   return generateSeoMetadata({
     title: lang === "ar" ? "المدونة" : "Blog",
@@ -50,14 +51,15 @@ function formatDate(dateStr: string, locale: string): string {
 
 export default async function BlogPage({ params }: BlogPageProps) {
   const market = await getRequestMarket();
+  const frontendHost = await getRequestFrontendHost();
   const pathPrefix = getMarketPathPrefix(market.code);
   const { locale } = await params;
   const isRTL = locale === "ar";
 
-  const toggles = await getFeatureToggles();
+  const toggles = await getFeatureToggles(frontendHost);
   if (!toggles.sasanperfumes_blog_enabled) notFound();
 
-  const { posts } = await getBlogPosts(1, 20);
+  const { posts } = await getBlogPosts(1, 20, frontendHost);
 
   const breadcrumbItems = [
     { name: isRTL ? "المدونة" : "Blog", href: `${pathPrefix}/${locale}/blog` },

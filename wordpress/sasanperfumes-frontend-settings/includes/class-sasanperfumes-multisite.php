@@ -229,9 +229,9 @@ function sasanperfumes_get_frontend_url_map(): array {
 function sasanperfumes_get_frontend_url_map_example(): array {
     return array(
         'cms.shapehive.com' => 'https://shapehive.com',
-        'qa.cms.shapehive.com' => 'https://shapehive.com/qa',
-        'om.cms.shapehive.com' => 'https://shapehive.com/om',
-        'sa.cms.shapehive.com' => 'https://shapehive.com/sa',
+        'cms.shapehive.com/qa' => 'https://shapehive.com/qa',
+        'cms.shapehive.com/om' => 'https://shapehive.com/om',
+        'cms.shapehive.com/sa' => 'https://shapehive.com/sa',
         'shapehive.com/qa' => 'https://shapehive.com/qa',
         'shapehive.com/om' => 'https://shapehive.com/om',
         'shapehive.com/sa' => 'https://shapehive.com/sa',
@@ -255,8 +255,8 @@ function sasanperfumes_render_multisite_frontend_settings_page() {
     ?>
     <div class="wrap">
         <h1>Frontend URL Mapping (Network)</h1>
-        <p>Map each backend CMS content site to its public frontend path. Keep market CMS sites for separate content, products, pages, and SEO; public storefronts use path URLs.</p>
-        <p><strong>Backend content sites:</strong> <code>qa.cms.shapehive.com</code>, <code>om.cms.shapehive.com</code>, <code>sa.cms.shapehive.com</code>. <strong>Public frontend paths:</strong> <code>/qa</code>, <code>/om</code>, <code>/sa</code>.</p>
+        <p>Map each backend CMS content site to its public frontend path. Keep market CMS sites for separate content, products, pages, and SEO; all market routing uses path URLs.</p>
+        <p><strong>Backend content sites:</strong> <code>cms.shapehive.com/qa</code>, <code>cms.shapehive.com/om</code>, <code>cms.shapehive.com/sa</code>. <strong>Public frontend paths:</strong> <code>/qa</code>, <code>/om</code>, <code>/sa</code>.</p>
         <form method="post" action="<?php echo esc_url(network_admin_url('admin-post.php')); ?>">
             <table class="form-table">
                 <tr>
@@ -288,9 +288,9 @@ function sasanperfumes_render_multisite_frontend_settings_page() {
                         </p>
                         <pre><code>{
   "cms.shapehive.com": "https://shapehive.com",
-  "qa.cms.shapehive.com": "https://shapehive.com/qa",
-  "om.cms.shapehive.com": "https://shapehive.com/om",
-  "sa.cms.shapehive.com": "https://shapehive.com/sa",
+  "cms.shapehive.com/qa": "https://shapehive.com/qa",
+  "cms.shapehive.com/om": "https://shapehive.com/om",
+  "cms.shapehive.com/sa": "https://shapehive.com/sa",
   "shapehive.com/qa": "https://shapehive.com/qa",
   "shapehive.com/om": "https://shapehive.com/om",
   "shapehive.com/sa": "https://shapehive.com/sa"
@@ -528,10 +528,11 @@ function sasanperfumes_find_blog_id_for_frontend_host(string $frontend_host): in
         }
 
         $mapped_frontend_url = '';
-        if ($site_domain !== '' && isset($network_map[$site_domain])) {
+        $site_domain_path = $site_path !== '' ? $site_domain . '/' . $site_path : $site_domain;
+        if ($site_domain !== '' && $site_path !== '' && isset($network_map[$site_domain_path])) {
+            $mapped_frontend_url = (string) $network_map[$site_domain_path];
+        } elseif ($site_domain !== '' && isset($network_map[$site_domain])) {
             $mapped_frontend_url = (string) $network_map[$site_domain];
-        } elseif ($site_domain !== '' && $site_path !== '' && isset($network_map[$site_domain . '/' . $site_path])) {
-            $mapped_frontend_url = (string) $network_map[$site_domain . '/' . $site_path];
         }
 
         if (

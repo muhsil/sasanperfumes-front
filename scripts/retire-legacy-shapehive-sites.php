@@ -2,8 +2,8 @@
 /**
  * Retire deprecated public ShapeHive market storefront subdomains from the multisite network.
  *
- * Backend-only CMS market sites such as qa.cms.shapehive.com, om.cms.shapehive.com,
- * and sa.cms.shapehive.com are still required for separate content management.
+ * Active market CMS content sites use subdirectories on cms.shapehive.com:
+ * /qa, /om, and /sa.
  *
  * Usage examples (WP-CLI):
  *   wp eval-file scripts/retire-legacy-shapehive-sites.php -- --archive

@@ -1,14 +1,17 @@
 import { cache } from "react";
 import { disableRuntimeCache, siteConfig, API_BASE_CURRENCY, type Locale, type Currency } from "@/config/site";
-import { backendHeaders } from "@/lib/utils/backendFetch";
+import {
+  backendHeaders,
+  extractMarketCode,
+  rewriteBackendUrlForMarket,
+  wpJsonBaseForMarket,
+} from "@/lib/utils/backendFetch";
 import type {
   WCProduct,
   WCCategory,
   WCProductsResponse,
 } from "@/types/woocommerce";
 import type { BundlePricing } from "@/types/bundle";
-
-const API_BASE = `${siteConfig.apiUrl}/wp-json/wc/store/v1`;
 
 function rebrandText(value: string): string {
   return value;
@@ -36,6 +39,15 @@ function stripJsonPrefix(value: string): string {
   return value.replace(/^[\uFEFF\u200B\u200C\u200D\s]+/, "");
 }
 
+function appendQueryParam(url: string, key: string, value: string): string {
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}${key}=${encodeURIComponent(value)}`;
+}
+
+function uniqueUrls(urls: string[]): string[] {
+  return Array.from(new Set(urls));
+}
+
 async function parseJsonResponse<T>(response: Response): Promise<T> {
   const text = await response.text();
   return JSON.parse(stripJsonPrefix(text)) as T;
@@ -61,23 +73,18 @@ function formatFetchError(error: unknown): string {
 }
 
 function withFrontendHostParam(url: string, frontendHost?: string): string {
-  if (!frontendHost) return url;
+  const marketAwareUrl = rewriteBackendUrlForMarket(url, extractMarketFromHost(frontendHost));
+  if (!frontendHost) return marketAwareUrl;
 
-  const separator = url.includes("?") ? "&" : "?";
-  return `${url}${separator}frontend_host=${encodeURIComponent(frontendHost)}`;
+  const separator = marketAwareUrl.includes("?") ? "&" : "?";
+  return `${marketAwareUrl}${separator}frontend_host=${encodeURIComponent(frontendHost)}`;
 }
 
 const KNOWN_MARKETS = new Set(["qa", "om", "sa"]);
 
 function extractMarketFromHost(frontendHost?: string): string | undefined {
-  if (!frontendHost) return undefined;
-  const lower = frontendHost.toLowerCase();
-  for (const m of KNOWN_MARKETS) {
-    if (lower.endsWith(`/${m}`) || lower.includes(`/${m}/`) || lower.startsWith(`${m}.`)) {
-      return m;
-    }
-  }
-  return undefined;
+  const market = extractMarketCode(frontendHost);
+  return market && KNOWN_MARKETS.has(market) ? market : undefined;
 }
 
 async function detectMarketFromRequest(): Promise<string | undefined> {
@@ -125,6 +132,34 @@ interface FetchAPIResponse<T> {
   totalPages: number;
 }
 
+interface StoreFetchResult<T> {
+  data: T;
+  response: Response;
+}
+
+function buildStoreAPIUrls(
+  endpoint: string,
+  market: string | undefined,
+  options: Pick<FetchOptions, "locale" | "currency" | "frontendHost">
+): string[] {
+  const rootStoreApi = `${siteConfig.apiUrl.replace(/\/+$/, "")}/wp-json/wc/store/v1`;
+  const apiBases = market
+    ? [`${wpJsonBaseForMarket(market)}/wc/store/v1`, rootStoreApi]
+    : [rootStoreApi];
+  const currencyToUse = options.currency || DEFAULT_API_CURRENCY;
+
+  return uniqueUrls(apiBases.map((apiBase) => {
+    let url = `${apiBase}${endpoint}`;
+    if (options.frontendHost) {
+      url = appendQueryParam(url, "frontend_host", options.frontendHost);
+    }
+    if (options.locale) {
+      url = appendQueryParam(url, "lang", options.locale);
+    }
+    return appendQueryParam(url, "currency", currencyToUse);
+  }));
+}
+
 function getProductUILabels(locale?: Locale) {
   const isArabic = locale === "ar";
   return {
@@ -140,44 +175,16 @@ async function fetchAPI<T>(
 ): Promise<T> {
   const { revalidate = 60, tags, locale, currency, frontendHost } = options;
 
-  let url = `${API_BASE}${endpoint}`;
-  if (frontendHost) {
-    const separator = url.includes("?") ? "&" : "?";
-    url = `${url}${separator}frontend_host=${encodeURIComponent(frontendHost)}`;
-  }
-  
-  // Add locale parameter for WPML language support
-  if (locale) {
-    const separator = url.includes("?") ? "&" : "?";
-    url = `${url}${separator}lang=${locale}`;
-  }
-  
-  // Add currency parameter for WPML multicurrency support
-  // Use default API currency (AED) if not specified to ensure consistent pricing
-  const currencyToUse = currency || DEFAULT_API_CURRENCY;
-  const separator = url.includes("?") ? "&" : "?";
-  url = `${url}${separator}currency=${currencyToUse}`;
-
   const market = extractMarketFromHost(frontendHost) || await detectMarketFromRequest();
-  const hdrs = market
-    ? backendHeaders({ "x-market": market })
-    : backendHeaders();
+  const result = await fetchStoreAPI<T>(endpoint, {
+    revalidate,
+    tags,
+    locale,
+    currency,
+    frontendHost,
+  }, market);
 
-  const response = await fetch(url, disableRuntimeCache
-    ? { cache: "no-store", headers: hdrs }
-    : {
-        next: {
-          revalidate,
-          tags,
-        },
-        headers: hdrs,
-      });
-
-  if (!response.ok) {
-    throw new Error(`API Error: ${response.status} ${response.statusText}`);
-  }
-
-  return rebrandApiContent(await parseJsonResponse<T>(response));
+  return rebrandApiContent(result.data);
 }
 
 async function fetchAPIWithPagination<T>(
@@ -186,30 +193,33 @@ async function fetchAPIWithPagination<T>(
 ): Promise<FetchAPIResponse<T>> {
   const { revalidate = 60, tags, locale, currency, frontendHost } = options;
 
-  let url = `${API_BASE}${endpoint}`;
-  if (frontendHost) {
-    const separator = url.includes("?") ? "&" : "?";
-    url = `${url}${separator}frontend_host=${encodeURIComponent(frontendHost)}`;
-  }
-  
-  // Add locale parameter for WPML language support
-  if (locale) {
-    const separator = url.includes("?") ? "&" : "?";
-    url = `${url}${separator}lang=${locale}`;
-  }
-  
-  // Add currency parameter for WPML multicurrency support
-  // Use default API currency (AED) if not specified to ensure consistent pricing
-  const currencyToUse = currency || DEFAULT_API_CURRENCY;
-  const separator = url.includes("?") ? "&" : "?";
-  url = `${url}${separator}currency=${currencyToUse}`;
-
   const market = extractMarketFromHost(frontendHost) || await detectMarketFromRequest();
+  const result = await fetchStoreAPI<T>(endpoint, {
+    revalidate,
+    tags,
+    locale,
+    currency,
+    frontendHost,
+  }, market);
+  const { response } = result;
+  const data = rebrandApiContent(result.data);
+  const total = parseInt(response.headers.get("X-WP-Total") || "0", 10);
+  const totalPages = parseInt(response.headers.get("X-WP-TotalPages") || "1", 10);
+
+  return { data, total, totalPages };
+}
+
+async function fetchStoreAPI<T>(
+  endpoint: string,
+  options: FetchOptions,
+  market?: string
+): Promise<StoreFetchResult<T>> {
+  const { revalidate = 60, tags } = options;
+  const urls = buildStoreAPIUrls(endpoint, market, options);
   const hdrs = market
     ? backendHeaders({ "x-market": market })
     : backendHeaders();
-
-  const response = await fetch(url, disableRuntimeCache
+  const fetchOptions: RequestInit = disableRuntimeCache
     ? { cache: "no-store", headers: hdrs }
     : {
         next: {
@@ -217,17 +227,30 @@ async function fetchAPIWithPagination<T>(
           tags,
         },
         headers: hdrs,
-      });
+      };
+  let lastError = "";
 
-  if (!response.ok) {
-    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+  for (const url of urls) {
+    const response = await fetch(url, fetchOptions);
+
+    if (!response.ok) {
+      lastError = `${response.status} ${response.statusText}`;
+      if (response.status === 403 || response.status === 404) {
+        continue;
+      }
+      throw new Error(`API Error: ${lastError}`);
+    }
+
+    try {
+      const data = await parseJsonResponse<T>(response);
+      return { data, response };
+    } catch (error) {
+      lastError = formatFetchError(error);
+      console.warn(`WooCommerce Store API returned invalid JSON (${url})`);
+    }
   }
 
-  const data = rebrandApiContent(await parseJsonResponse<T>(response));
-  const total = parseInt(response.headers.get("X-WP-Total") || "0", 10);
-  const totalPages = parseInt(response.headers.get("X-WP-TotalPages") || "1", 10);
-
-  return { data, total, totalPages };
+  throw new Error(`API Error: unable to read JSON response${lastError ? ` (${lastError})` : ""}`);
 }
 
 // Products API

@@ -7,7 +7,7 @@ import { getBlogPost, getBlogPosts, getFeatureToggles } from "@/lib/api/wordpres
 import { shouldUseUnoptimizedImage } from "@/lib/utils/image";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
-import { getRequestMarket } from "@/lib/market/server";
+import { getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
 import { getMarketPathPrefix } from "@/config/market";
 
 export const revalidate = 300;
@@ -35,9 +35,10 @@ function formatDate(dateStr: string, locale: string): string {
 export async function generateMetadata({ params }: BlogDetailPageProps): Promise<Metadata> {
   const { locale, slug } = await params;
   const lang = locale as Locale;
-  const toggles = await getFeatureToggles();
+  const frontendHost = await getRequestFrontendHost();
+  const toggles = await getFeatureToggles(frontendHost);
   if (!toggles.sasanperfumes_blog_enabled) return {};
-  const post = await getBlogPost(slug);
+  const post = await getBlogPost(slug, frontendHost);
   if (!post) return {};
 
   return generateSeoMetadata({
@@ -51,17 +52,18 @@ export async function generateMetadata({ params }: BlogDetailPageProps): Promise
 
 export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
   const market = await getRequestMarket();
+  const frontendHost = await getRequestFrontendHost();
   const pathPrefix = getMarketPathPrefix(market.code);
   const { locale, slug } = await params;
-  const toggles = await getFeatureToggles();
+  const toggles = await getFeatureToggles(frontendHost);
   if (!toggles.sasanperfumes_blog_enabled) notFound();
-  const post = await getBlogPost(slug);
+  const post = await getBlogPost(slug, frontendHost);
   if (!post) notFound();
 
   const isRTL = locale === "ar";
 
   // Fetch related posts for "Read More" section
-  const { posts: allPosts } = await getBlogPosts(1, 4);
+  const { posts: allPosts } = await getBlogPosts(1, 4, frontendHost);
   const relatedPosts = allPosts.filter((p) => p.id !== post.id).slice(0, 3);
 
   const breadcrumbItems = [

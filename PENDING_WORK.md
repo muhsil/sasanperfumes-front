@@ -1,7 +1,7 @@
 # ShapeHive Live Status And Pending Work
 
-**Last updated:** 2026-06-19, Asia/Dubai  
-**Overall status:** Public frontend path routing is live and working. The main remaining blocker is backend market admin access for separate QA, OM, and SA content management.
+**Last updated:** 2026-06-21, Asia/Dubai
+**Overall status:** Public frontend path routing and market dashboard access are live. The repo now contains fixes for path-based CMS market switching, per-market content/product seeding, plugin activation on market sites, and the 1-7 verification workflow. Deploy the plugin/source changes, then run the WP-CLI scripts below on live CMS.
 
 ## What Is Live Now
 
@@ -33,10 +33,7 @@ The frontend API check is also healthy:
   - Qatar: `/qa/en`, `/qa/ar`
   - Oman: `/om/en`, `/om/ar`
   - Saudi Arabia: `/sa/en`, `/sa/ar`
-- Public legacy subdomains are removed from frontend canonical and allowed-host logic:
-  - `qa.shapehive.com`
-  - `om.shapehive.com`
-  - `sa.shapehive.com`
+- Public legacy market subdomains are removed from frontend canonical and allowed-host logic.
 - Market routes internally resolve to the existing locale pages while preserving market context through request headers.
 - `x-market` and `x-frontend-host` are propagated to backend/API calls.
 - Backend JSON parsing now strips hidden WordPress BOM/zero-width characters before parsing, preventing frontend crashes from malformed response prefixes.
@@ -88,45 +85,45 @@ Key files:
 
 Note: one basic headless screenshot of `/en` briefly captured the global error screen, but a clean DevTools-controlled anonymous browser session and the user Chrome profile both rendered `/en` correctly afterward. Keep monitoring this route after cache clears.
 
-## Still Pending
+## Fix And Verification Workflow
 
-### 1. Fix backend market dashboard access
+### 1. ShapeHive plugin settings admin access
 
-This is the main remaining blocker.
+Checked on 2026-06-21 with the provided WordPress admin credentials:
 
-Current live checks show the market admin paths redirect instead of opening cleanly:
+- `https://cms.shapehive.com/wp-admin/` logs in successfully.
+- `https://cms.shapehive.com/qa/wp-admin/`, `/om/wp-admin/`, and `/sa/wp-admin/` open dashboards after login.
+- The root dashboard does not expose `sasanperfumes` admin links.
+- Direct plugin settings pages return `403 Forbidden`, including:
+  - `https://cms.shapehive.com/wp-admin/admin.php?page=sasanperfumes-settings`
+  - `https://cms.shapehive.com/wp-admin/admin.php?page=sasanperfumes-feature-toggles`
+  - `https://cms.shapehive.com/qa/wp-admin/admin.php?page=sasanperfumes-settings`
 
-- `https://cms.shapehive.com/qa/wp-admin/` ends in repeated `301`
-- `https://cms.shapehive.com/om/wp-admin/` ends in repeated `301`
-- `https://cms.shapehive.com/sa/wp-admin/` ends in repeated `301`
+Repo fix:
 
-Until this is fixed, separate market content exists conceptually but is not comfortably manageable from direct market dashboard URLs.
+- `scripts/setup-multisite-network.php` now ensures the ShapeHive plugin is active on each path-based market site unless it is already network-active.
+- `scripts/sync-market-content.php` also activates the plugin on market sites before syncing content.
 
-Choose and complete one backend access strategy:
+Run after deployment:
 
-1. Path-based CMS dashboards:
-   - Configure Hostinger/web-server/WordPress routing so these work:
-     - `https://cms.shapehive.com/qa/wp-admin/`
-     - `https://cms.shapehive.com/om/wp-admin/`
-     - `https://cms.shapehive.com/sa/wp-admin/`
+```bash
+wp eval-file scripts/setup-multisite-network.php
+```
 
-2. Backend-only CMS subdomains:
-   - Revert backend market sites to:
-     - `qa.cms.shapehive.com`
-     - `om.cms.shapehive.com`
-     - `sa.cms.shapehive.com`
-   - Configure DNS and SSL for those CMS-only subdomains.
-   - Keep public frontend traffic on path routes only.
+Then re-check:
 
-Recommended direction: use path-based CMS dashboards if Hostinger can be configured cleanly. If Hostinger blocks WordPress multisite subdirectory admin paths, use backend-only CMS subdomains for admin/content management while keeping public site paths unchanged.
+- `https://cms.shapehive.com/wp-admin/admin.php?page=sasanperfumes-settings`
+- `https://cms.shapehive.com/qa/wp-admin/admin.php?page=sasanperfumes-settings`
+- `https://cms.shapehive.com/om/wp-admin/admin.php?page=sasanperfumes-settings`
+- `https://cms.shapehive.com/sa/wp-admin/admin.php?page=sasanperfumes-settings`
 
-### 2. Re-check WordPress network settings after plugin deployment
+### 2. WordPress network settings
 
 Open:
 
 `https://cms.shapehive.com/wp-admin/network/admin.php?page=sasanperfumes-frontend-network`
 
-Confirm the live map supports path keys and is saved as intended:
+Checked on 2026-06-21: the network page loaded successfully and contained the expected path-based map values:
 
 - `cms.shapehive.com` -> `https://shapehive.com`
 - `cms.shapehive.com/qa` -> `https://shapehive.com/qa`
@@ -136,21 +133,37 @@ Confirm the live map supports path keys and is saved as intended:
 - `shapehive.com/om` -> `https://shapehive.com/om`
 - `shapehive.com/sa` -> `https://shapehive.com/sa`
 
-Important: an older live plugin build normalized mappings by host only, which could collapse `shapehive.com/qa`, `shapehive.com/om`, and `shapehive.com/sa` into one `shapehive.com` row. The repo code now supports path-aware keys, but the live WordPress plugin must be confirmed or redeployed.
+Repo fix:
 
-### 3. Remove old public frontend subdomain leftovers from hosting/DNS
+- `wordpress/sasanperfumes-frontend-settings/includes/class-sasanperfumes-multisite.php` now uses path-based CMS examples only.
+- `scripts/setup-multisite-network.php` creates/updates `cms.shapehive.com/qa`, `/om`, and `/sa`.
+- Frontend CMS requests now use market-aware paths such as `https://cms.shapehive.com/qa/wp-json`.
+- Frontend content/product fetchers prefer market CMS paths first and fall back to the root CMS API with market headers if a market path temporarily returns HTML instead of JSON.
 
-The frontend code no longer uses:
+Live REST probe on 2026-06-21: `https://cms.shapehive.com/qa/wp-json/...`, `/om/wp-json/...`, and `/sa/wp-json/...` returned HTML, not JSON. After deploying the plugin/scripts, verify server rewrites, permalink flushes, and cache/CDN rules until these paths return JSON. The fallback prevents hard page breaks, but fully separate products/content require the market CMS REST paths to work.
 
-- `qa.shapehive.com`
-- `om.shapehive.com`
-- `sa.shapehive.com`
+Important: an older live plugin build normalized mappings by host only, which could collapse path rows. The current code preserves path-aware keys; keep this on the deployment verification list after future plugin updates.
 
-Still confirm in Hostinger/DNS/CDN that these are removed, disabled, or redirected intentionally. They should not be active public storefronts.
+### 3. Old public market subdomain leftovers
+
+The frontend code no longer uses public market subdomains.
+
+Repo fix:
+
+- Active setup code and docs no longer use public market subdomains.
+- `scripts/retire-legacy-shapehive-sites.php` keeps old hosts only as cleanup targets.
+
+Run if old network sites still exist:
+
+```bash
+wp eval-file scripts/retire-legacy-shapehive-sites.php -- --archive
+```
+
+Still confirm in Hostinger/DNS/CDN that old market subdomains are removed, disabled, or redirected intentionally. They should not be active public storefronts.
 
 ### 4. UI consistency sweep
 
-Run a visual pass on live pages after backend access is resolved:
+Run a visual pass on live pages after deploying the market-content fixes:
 
 - Home pages for all markets and languages
 - Category listing pages
@@ -174,7 +187,7 @@ Validate each route has correct SEO output:
 
 ### 6. Commerce flow testing
 
-After cache clears and backend admin access is fixed, test:
+After cache clears and market products are synced, test:
 
 - Homepage -> category -> product
 - Product add to cart
@@ -186,7 +199,7 @@ After cache clears and backend admin access is fixed, test:
 - Currency selector
 - Contact/private-label forms
 
-### 7. Monitor category prefetch warnings
+### 7. Category route warnings
 
 During one clean browser diagnostic run, background RSC prefetch requests for a few category links logged `500` responses. Direct category loads and a real menu click to `/en/category/perfumes` both returned working pages with no visible error.
 
@@ -197,7 +210,22 @@ Keep this on the watch list:
 - `/en/category/sasan-hair-mist`
 - `/en/category/oud-perfumes`
 
+Repo fix:
+
+- Product/category API calls now use market-aware CMS paths and preserve `x-market`/`x-frontend-host`, reducing mismatches that can trigger RSC prefetch failures.
+
 If these warnings repeat in live browser logs, inspect server logs and cache behavior for RSC requests.
+
+## Market Content/Product Sync
+
+Each market must have its own WordPress site, settings, pages, products, taxonomies, and WooCommerce options. Use the new sync script to seed or refresh the market sites from the main CMS:
+
+```bash
+wp eval-file scripts/sync-market-content.php -- --dry-run
+wp eval-file scripts/sync-market-content.php -- --markets=qa,om,sa
+```
+
+Default mode creates missing records only so market teams can manage content separately afterward. Use `--overwrite` only when you intentionally want to refresh existing market records from the main site.
 
 ## Deployment And Access Notes
 

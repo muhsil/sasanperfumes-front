@@ -176,6 +176,17 @@ https://shapehive.com/om
 https://shapehive.com/sa
 ```
 
+CMS content/admin market sites:
+
+```text
+https://cms.shapehive.com/wp-admin
+https://cms.shapehive.com/qa/wp-admin
+https://cms.shapehive.com/om/wp-admin
+https://cms.shapehive.com/sa/wp-admin
+```
+
+The frontend keeps public markets on path URLs and reads CMS data from matching CMS paths, for example `https://cms.shapehive.com/qa/wp-json` for Qatar.
+
 Private server-side credentials:
 
 ```env
@@ -230,11 +241,11 @@ npx next build --webpack
 
 Market routing:
 
- - Legacy subdomain hosts are retired (`qa.shapehive.com`, `om.shapehive.com`, `sa.shapehive.com`).
+ - Legacy market subdomain hosts are retired.
  - Market prefixes are optional; supported prefixes: `qa`, `om`, `sa`.
 - URL pattern is `/{market}/{locale}/...` (for market routes) or `/{locale}/...` for default intl.
 - Market is resolved by the first path segment (`/qa`, `/om`, `/sa`) under `shapehive.com`.
-- Example: `https://shapehive.com/qa/en/product/mimosa-glow`.
+- Example: `https://shapehive.com/qa/en/product/{market-product-slug}`.
 
 Locale routing:
 
@@ -497,9 +508,9 @@ Known observations:
 
 | Endpoint/route | Status | Note |
 |---|---|---|
-| `/wp-json/sasanperfumes/v1/mobile-bar` | 404 on live before local fix | Local backend source now registers this route; upload plugin changes to apply |
-| `/wp-json/sasanperfumes/v1/referral/settings` | 404 on live before local fix | Local backend source now loads the referral module; upload plugin changes to apply |
-| `/wp-json/sasanperfumes/v1/currencies` | 404 on live | Local backend source now adds `/wp-json/sasanperfumes/v1/currencies`; `/api/currencies` also has defaults |
+| `/wp-json/sasanperfumes/v1/mobile-bar` | 200 JSON on 2026-06-21 | Previously 404 before the live backend picked up the route |
+| `/wp-json/sasanperfumes/v1/referral/settings` | 200 JSON on 2026-06-21 | Previously 404 before the live backend loaded the referral module |
+| `/wp-json/sasanperfumes/v1/currencies` | 200 JSON on 2026-06-21 | Previously 404 before the live backend exposed the ShapeHive currency alias |
 | `/api/bundles` POST/PUT empty body | 500 JSON | Should be improved to 400 validation |
 | `/api/orders` POST empty body | 500 JSON | Should validate body before reading billing fields |
 | `/api/upload` JSON body | 500 JSON | Should return 400 unsupported content type |
@@ -661,6 +672,27 @@ Backend plugin deployment:
 5. Verify REST endpoint.
 6. Rebuild frontend if pages are statically cached.
 
+Market setup and content/product separation:
+
+```bash
+wp eval-file scripts/setup-multisite-network.php
+wp eval-file scripts/sync-market-content.php -- --dry-run
+wp eval-file scripts/sync-market-content.php -- --markets=qa,om,sa
+wp eval-file scripts/retire-legacy-shapehive-sites.php -- --archive
+```
+
+Run the sync without `--overwrite` for the first production pass. It creates missing records in each market site while keeping future QA, Oman, and Saudi content/product management separate. Use `--overwrite` only when intentionally refreshing market records from the main CMS.
+
+Market REST verification:
+
+```powershell
+Invoke-WebRequest -Uri "https://cms.shapehive.com/qa/wp-json/sasanperfumes/v1/home-settings" -UseBasicParsing
+Invoke-WebRequest -Uri "https://cms.shapehive.com/om/wp-json/wc/store/v1/products?per_page=1" -UseBasicParsing
+Invoke-WebRequest -Uri "https://cms.shapehive.com/sa/wp-json/wc/store/v1/products?per_page=1" -UseBasicParsing
+```
+
+These must return JSON, not an HTML/default page. If they return HTML, flush WordPress permalinks, clear cache/CDN, and confirm the server routes `/qa`, `/om`, and `/sa` to WordPress before relying on separate market content/products.
+
 ## Testing
 
 Health:
@@ -687,7 +719,7 @@ Recommended page checks:
 |---|---|
 | Homepage | `/en` |
 | Shop | `/en/shop` |
-| Product | `/en/product/mimosa-glow` |
+| Product | `/en/product/misk-al-shioukhsa` |
 | Category | `/en/category/perfumes` |
 | Brands | `/en/brands` |
 | Services | `/en/services` |
@@ -695,8 +727,10 @@ Recommended page checks:
 | Contact | `/en/contact` |
 | Arabic homepage | `/ar` |
 | Qatar homepage | `/qa/en` |
-| Oman product | `/om/en/product/mimosa-glow` |
+| Oman shop | `/om/en/shop` |
 | Saudi shop | `/sa/en/shop` |
+
+Product availability is market-specific. Do not reuse a base-market product slug as a cross-market fixture unless the Store API confirms that product exists for the target market.
 
 ## Operational Notes
 

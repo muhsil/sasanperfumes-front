@@ -38,13 +38,14 @@ When backend changes are needed:
 
 ### WordPress Multisite Mapping (shapehive network)
 
-The plugin uses one CMS backend (`cms.shapehive.com`) with a shared dataset and separate market frontends:
+The plugin uses one CMS backend (`cms.shapehive.com`) with separate content/product sites for each market and separate market frontends:
 
 - Path-based markets on the same domain: `/qa`, `/om`, `/sa`
+- CMS market content sites: `cms.shapehive.com/qa`, `cms.shapehive.com/om`, `cms.shapehive.com/sa`
 - Base intl host: `shapehive.com`
 - Route rule used by the frontend links: `/{market(optional)}/{locale}/{slug}` (locale is `en` or `ar`)
 - Keep URL order as market-first (`/qa/en`, `/om/ar`, `/sa/en`). Any `/en/qa` style request is normalized to market-first by the frontend middleware, but keep canonical content links as market-first.
-- Legacy subdomain hosts are retired (`qa.shapehive.com`, `om.shapehive.com`, `sa.shapehive.com`) and are not part of the live routing plan.
+- Legacy market subdomain hosts are retired and are not part of the live routing plan.
 
 Network mapping is handled by the WordPress multisite helper in:
 
@@ -56,6 +57,16 @@ To bootstrap all domain mappings in one pass, run on live CMS after plugin deplo
 wp eval-file scripts/setup-multisite-network.php
 ```
 
+After setup, confirm market REST paths return JSON instead of an HTML/default page:
+
+```bash
+curl -I https://cms.shapehive.com/qa/wp-json/sasanperfumes/v1/home-settings
+curl -I https://cms.shapehive.com/om/wp-json/wc/store/v1/products?per_page=1
+curl -I https://cms.shapehive.com/sa/wp-json/wc/store/v1/products?per_page=1
+```
+
+If these paths return HTML, flush WordPress permalinks, clear cache/CDN, and confirm the web server routes `/qa`, `/om`, and `/sa` into WordPress. The frontend has a temporary root-API fallback, but fully separate market content/products require these market REST paths to return JSON.
+
 You can also configure it manually from Network Admin:
 
 1. Log in as super admin at `https://cms.shapehive.com/wp-admin/network/admin.php?page=sasanperfumes-frontend-network`
@@ -66,6 +77,9 @@ You can also configure it manually from Network Admin:
 ```json
 {
   "cms.shapehive.com": "https://shapehive.com",
+  "cms.shapehive.com/qa": "https://shapehive.com/qa",
+  "cms.shapehive.com/om": "https://shapehive.com/om",
+  "cms.shapehive.com/sa": "https://shapehive.com/sa",
   "shapehive.com/qa": "https://shapehive.com/qa",
   "shapehive.com/om": "https://shapehive.com/om",
   "shapehive.com/sa": "https://shapehive.com/sa"
@@ -98,6 +112,9 @@ After setup, test from each entry point:
 Primary CMS admin entry points:
 
 - WordPress Admin: `https://cms.shapehive.com/wp-admin`
+- Qatar content/product admin: `https://cms.shapehive.com/qa/wp-admin`
+- Oman content/product admin: `https://cms.shapehive.com/om/wp-admin`
+- Saudi content/product admin: `https://cms.shapehive.com/sa/wp-admin`
 - Network frontend mapping settings: `https://cms.shapehive.com/wp-admin/network/admin.php?page=sasanperfumes-frontend-network`
 
 ### Arabic Content Sync (Products + Pages + CMS)
@@ -126,6 +143,23 @@ wp eval-file scripts/fix-arabic-content.php --taxonomies=product_cat,product_bra
 ```
 
 Do not edit `fnf_wp_contents/` as the source of truth. It is a reference mirror only.
+
+### Market Content Sync (QA + OM + SA)
+
+Each market must be managed separately after it is seeded. Run this only on the live CMS server after plugin deployment and network setup:
+
+```bash
+wp eval-file scripts/sync-market-content.php -- --dry-run
+wp eval-file scripts/sync-market-content.php -- --markets=qa,om,sa
+```
+
+Default mode creates missing records only. It copies the main CMS products, product categories/tags/attributes, media, pages, posts, custom content, plugin settings, and selected WooCommerce options into each market site so each market can then be edited independently.
+
+Use `--overwrite` only when intentionally refreshing existing market records from the main CMS:
+
+```bash
+wp eval-file scripts/sync-market-content.php -- --markets=qa,om,sa --overwrite
+```
 
 ## Plugin Installation
 
@@ -394,16 +428,19 @@ Working `200 JSON` endpoints included:
 /sasanperfumes/v1/feature-toggles
 /sasanperfumes/v1/private-labeling
 /sasanperfumes/v1/whatsapp
+/sasanperfumes/v1/mobile-bar
+/sasanperfumes/v1/referral/settings
+/sasanperfumes/v1/currencies
 /wp/v2/posts
 ```
 
-Issues observed during the latest check:
+Previously observed issues and fixture caveats:
 
 | Endpoint | Result | Note |
 |---|---|---|
-| `/sasanperfumes/v1/mobile-bar` | 404 on live before local fix | Local plugin source now registers this route in `class-sasanperfumes-settings.php`; upload plugin changes to apply |
-| `/sasanperfumes/v1/referral/settings` | 404 on live before local fix | Local plugin source now loads `class-sasanperfumes-referral.php`; upload plugin changes to apply |
-| `/wp-json/sasanperfumes/v1/currencies` | 404 on live | Local plugin source now provides `/sasanperfumes/v1/currencies` as the ShapeHive alias for legacy `asl_currencies_data` |
+| `/sasanperfumes/v1/mobile-bar` | 200 JSON on 2026-06-21 | Previously 404 before the live backend picked up the route |
+| `/sasanperfumes/v1/referral/settings` | 200 JSON on 2026-06-21 | Previously 404 before the live backend loaded the referral module |
+| `/wp-json/sasanperfumes/v1/currencies` | 200 JSON on 2026-06-21 | Previously 404 before the live backend exposed the ShapeHive currency alias |
 | `/sasanperfumes/v1/product-pages/mimosa-glow` | 404 | Product page CPT record not found for that slug |
 | `/sasanperfumes/v1/guides/art-of-perfumery-crafting-memorable-scent-experiences` | 404 | That slug is a blog slug, not a guide slug |
 
