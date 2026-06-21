@@ -53,6 +53,10 @@ function wpJsonBaseForRouteMarket(market: string): string {
   return `${parsed.toString().replace(/\/+$/, "")}/wp-json`;
 }
 
+function cmsFrontendHostForMarket(market?: string): string {
+  return market && MARKET_CODES.has(market) ? `${market}.shapehive.com` : "";
+}
+
 function responseHeaders(market?: string) {
   return {
     "Cache-Control": "no-store, max-age=0",
@@ -86,11 +90,16 @@ export async function GET(request: NextRequest) {
   const withLocale = (endpoint: string) => locale
     ? `${endpoint}${endpoint.includes("?") ? "&" : "?"}lang=${encodeURIComponent(locale)}`
     : endpoint;
+  const cmsFrontendHost = cmsFrontendHostForMarket(market);
+  const marketFallbackEndpoint = withLocale(
+    `${API_BASE}/wp-json/sasanperfumes/v1/home-settings?frontend_host=${encodeURIComponent(cmsFrontendHost)}`
+  );
   const fallbackEndpoint = withLocale(
     `${API_BASE}/wp-json/sasanperfumes/v1/home-settings${frontendHost ? `?frontend_host=${encodeURIComponent(frontendHost)}` : ""}`
   );
   const homeSettingsEndpoints = market
     ? [
+        withParam(marketFallbackEndpoint, "_market_cache_bust", `${market}-${Date.now()}`),
         withLocale(
           withParam(
             `${wpJsonBaseForRouteMarket(market)}/sasanperfumes/v1/home-settings`,

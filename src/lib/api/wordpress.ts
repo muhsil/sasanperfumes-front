@@ -643,6 +643,10 @@ function extractWPMarketFromHost(frontendHost?: string): string | undefined {
   return market && WP_KNOWN_MARKETS.has(market) ? market : undefined;
 }
 
+function cmsFrontendHostForMarket(market?: string, frontendHost?: string): string | undefined {
+  return market && WP_KNOWN_MARKETS.has(market) ? `${market}.shapehive.com` : frontendHost;
+}
+
 async function detectMarketFromRequest(): Promise<string | undefined> {
   try {
     const { headers: getHeaders } = await import("next/headers");
@@ -669,15 +673,16 @@ async function fetchWPAPI<T>(
 ): Promise<T | null> {
   const { revalidate = 300, tags, locale, noCache = false, frontendHost } = options;
   const market = extractWPMarketFromHost(frontendHost) || await detectMarketFromRequest();
-  const apiBases = market ? [wpJsonBaseForMarket(market), WP_API_BASE] : [WP_API_BASE];
+  const apiBases = market ? [WP_API_BASE, wpJsonBaseForMarket(market)] : [WP_API_BASE];
   const marketApiBase = market ? wpJsonBaseForMarket(market) : "";
   const marketCacheBust = market ? `${market}-${Date.now()}` : "";
+  const cmsFrontendHost = cmsFrontendHostForMarket(market, frontendHost);
   const urls = uniqueUrls(
     apiBases.flatMap((apiBase) =>
       buildWPAPIUrls(endpoint, locale, apiBase).map((url) =>
         apiBase === marketApiBase
           ? appendQueryParam(url, "_market_cache_bust", marketCacheBust)
-          : frontendHost ? appendQueryParam(url, "frontend_host", frontendHost) : url
+          : cmsFrontendHost ? appendQueryParam(url, "frontend_host", cmsFrontendHost) : url
       )
     )
   );
