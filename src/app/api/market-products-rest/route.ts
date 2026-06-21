@@ -50,7 +50,53 @@ export async function GET(request: NextRequest) {
   const timeout = setTimeout(() => controller.abort(), 15000);
   let response: Response;
   try {
-    response = await fetch(`${wpJsonBaseForMarket(market)}/wc/v3/products?${restParams.toString()}`, {
+    const wpJsonBase = wpJsonBaseForMarket(market);
+    const slug = params.get("slug");
+    const search = params.get("search");
+
+    if (slug || search) {
+      const wpParams = new URLSearchParams();
+      if (slug) wpParams.set("slug", slug);
+      if (search) wpParams.set("search", search);
+      wpParams.set("per_page", params.get("per_page") || "12");
+      wpParams.set("_market_cache_bust", `${market}-${Date.now()}`);
+
+      const wpResponse = await fetch(`${wpJsonBase}/wp/v2/product?${wpParams.toString()}`, {
+        cache: "no-store",
+        signal: controller.signal,
+        headers: backendHeaders({ "Cache-Control": "no-cache", "Pragma": "no-cache" }),
+      });
+      const wpProducts = await wpResponse.json().catch(() => []);
+
+      if (Array.isArray(wpProducts) && wpProducts.length > 0) {
+        const products = [];
+        for (const post of wpProducts) {
+          const id = Number((post as Record<string, unknown>).id);
+          if (!id) continue;
+          const productResponse = await fetch(`${wpJsonBase}/wc/v3/products/${id}?${restParams.toString()}`, {
+            cache: "no-store",
+            signal: controller.signal,
+            headers: backendHeaders({ "x-market": market, "Cache-Control": "no-cache", "Pragma": "no-cache" }),
+          });
+          if (productResponse.ok) {
+            const product = await productResponse.json().catch(() => null);
+            if (product) products.push(product);
+          }
+        }
+
+        return NextResponse.json(
+          { products, total: products.length, totalPages: 1 },
+          {
+            headers: {
+              "Cache-Control": "no-store, no-cache, max-age=0, must-revalidate",
+              "Pragma": "no-cache",
+            },
+          }
+        );
+      }
+    }
+
+    response = await fetch(`${wpJsonBase}/wc/v3/products?${restParams.toString()}`, {
       cache: "no-store",
       signal: controller.signal,
       headers: backendHeaders({ "x-market": market, "Cache-Control": "no-cache", "Pragma": "no-cache" }),
