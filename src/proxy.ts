@@ -79,6 +79,14 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
   return response;
 }
 
+function addNoStoreHeaders(response: NextResponse): NextResponse {
+  response.headers.set("Cache-Control", "no-store, no-cache, max-age=0, must-revalidate");
+  response.headers.set("CDN-Cache-Control", "no-store");
+  response.headers.set("Pragma", "no-cache");
+  response.headers.set("Expires", "0");
+  return response;
+}
+
 function normalizeHostHeader(value: string | null): string {
   if (!value) return "";
   const host = value.split(",")[0].trim();
@@ -192,10 +200,10 @@ export function proxy(request: NextRequest) {
       const rewriteUrl = request.nextUrl.clone();
       rewriteUrl.searchParams.set("__market", market);
       const response = NextResponse.rewrite(rewriteUrl, { request: { headers: requestHeaders } });
-      return addSecurityHeaders(response);
+      return addNoStoreHeaders(addSecurityHeaders(response));
     }
     const response = NextResponse.next({ request: { headers: requestHeaders } });
-    return addSecurityHeaders(response);
+    return addNoStoreHeaders(addSecurityHeaders(response));
   }
 
   // Fix duplicated locale prefix: /en/en/... -> /en/... or /ar/ar/... -> /ar/...

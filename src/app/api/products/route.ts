@@ -5,6 +5,7 @@ import type { Locale } from "@/config/site";
 import type { WCProduct, WCProductLightweight } from "@/types/woocommerce";
 
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 export const revalidate = 0;
 
 const PRODUCTS_CACHE_TTL = 60 * 1000;
