@@ -81,82 +81,6 @@ function withFrontendHostParam(url: string, frontendHost?: string): string {
 }
 
 const KNOWN_MARKETS = new Set(["qa", "om", "sa"]);
-let hostingerEnvLoaded = false;
-
-async function loadHostingerEnvInline(): Promise<void> {
-  if (hostingerEnvLoaded || typeof window !== "undefined") return;
-
-  try {
-    const runtimeImport = new Function("specifier", "return import(specifier)") as (specifier: string) => Promise<unknown>;
-    const fs = await runtimeImport("node:fs") as typeof import("fs");
-    const path = await runtimeImport("node:path") as typeof import("path");
-    const possiblePaths = [
-      path.join(process.cwd(), ".builds", "config", ".env"),
-      path.join(process.cwd(), "..", ".builds", "config", ".env"),
-      path.join(process.cwd(), ".env"),
-      path.join(process.cwd(), ".env.local"),
-    ];
-
-    for (const envPath of possiblePaths) {
-      if (!fs.existsSync(envPath)) continue;
-      const envContent = fs.readFileSync(envPath, "utf-8");
-      for (const line of envContent.split("\n")) {
-        const trimmedLine = line.trim();
-        if (!trimmedLine || trimmedLine.startsWith("#")) continue;
-        const match = trimmedLine.match(/^([^=]+)=(.*)$/);
-        if (!match) continue;
-        const key = match[1].trim();
-        let value = match[2].trim();
-        if (
-          (value.startsWith("'") && value.endsWith("'")) ||
-          (value.startsWith('"') && value.endsWith('"'))
-        ) {
-          value = value.slice(1, -1);
-        }
-        if (!process.env[key]) {
-          process.env[key] = value;
-        }
-      }
-      hostingerEnvLoaded = true;
-      return;
-    }
-  } catch {
-    // Client bundles and non-Node runtimes fall back to existing process.env values.
-  }
-
-  hostingerEnvLoaded = true;
-}
-
-async function getRuntimeEnvVar(key: string): Promise<string | undefined> {
-  if (process.env[key]) return process.env[key];
-  await loadHostingerEnvInline();
-  return process.env[key];
-}
-
-async function getRestCredentialsForMarket(market?: string | null): Promise<{ consumerKey: string; consumerSecret: string }> {
-  switch (market?.toLowerCase()) {
-    case "qa":
-      return {
-        consumerKey: process.env.WC_CONSUMER_KEY_QA || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY_QA || await getRuntimeEnvVar("WC_CONSUMER_KEY_QA") || await getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_KEY_QA") || await getRuntimeEnvVar("WC_CONSUMER_KEY") || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || "",
-        consumerSecret: process.env.WC_CONSUMER_SECRET_QA || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET_QA || await getRuntimeEnvVar("WC_CONSUMER_SECRET_QA") || await getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_SECRET_QA") || await getRuntimeEnvVar("WC_CONSUMER_SECRET") || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET || "",
-      };
-    case "om":
-      return {
-        consumerKey: process.env.WC_CONSUMER_KEY_OM || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY_OM || await getRuntimeEnvVar("WC_CONSUMER_KEY_OM") || await getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_KEY_OM") || await getRuntimeEnvVar("WC_CONSUMER_KEY") || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || "",
-        consumerSecret: process.env.WC_CONSUMER_SECRET_OM || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET_OM || await getRuntimeEnvVar("WC_CONSUMER_SECRET_OM") || await getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_SECRET_OM") || await getRuntimeEnvVar("WC_CONSUMER_SECRET") || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET || "",
-      };
-    case "sa":
-      return {
-        consumerKey: process.env.WC_CONSUMER_KEY_SA || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY_SA || await getRuntimeEnvVar("WC_CONSUMER_KEY_SA") || await getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_KEY_SA") || await getRuntimeEnvVar("WC_CONSUMER_KEY") || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || "",
-        consumerSecret: process.env.WC_CONSUMER_SECRET_SA || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET_SA || await getRuntimeEnvVar("WC_CONSUMER_SECRET_SA") || await getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_SECRET_SA") || await getRuntimeEnvVar("WC_CONSUMER_SECRET") || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET || "",
-      };
-    default:
-      return {
-        consumerKey: process.env.WC_CONSUMER_KEY || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || await getRuntimeEnvVar("WC_CONSUMER_KEY") || await getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_KEY") || "",
-        consumerSecret: process.env.WC_CONSUMER_SECRET || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET || await getRuntimeEnvVar("WC_CONSUMER_SECRET") || await getRuntimeEnvVar("NEXT_PUBLIC_WC_CONSUMER_SECRET") || "",
-      };
-  }
-}
 
 function extractMarketFromHost(frontendHost?: string): string | undefined {
   const market = extractMarketCode(frontendHost);
@@ -364,14 +288,9 @@ async function fetchRestProductsForMarket(
   },
   market: string
 ): Promise<WCProductsResponse> {
-  const credentials = await getRestCredentialsForMarket(market);
-  if (!credentials.consumerKey || !credentials.consumerSecret) {
-    return { products: [], total: 0, totalPages: 0 };
-  }
-
   const currencyCode = params.currency || DEFAULT_API_CURRENCY;
   const searchParams = new URLSearchParams();
-  searchParams.set("status", "publish");
+  searchParams.set("market", market);
   searchParams.set("per_page", String(params.per_page || 12));
   if (params.page) searchParams.set("page", String(params.page));
   if (params.search) searchParams.set("search", params.search);
@@ -382,19 +301,17 @@ async function fetchRestProductsForMarket(
   if (params.locale) searchParams.set("lang", params.locale);
   searchParams.set("_market_cache_bust", `${market}-${Date.now()}`);
 
-  const response = await fetch(`${wpJsonBaseForMarket(market)}/wc/v3/products?${searchParams.toString()}`, {
+  const response = await fetch(`${siteConfig.url}/api/market-products-rest?${searchParams.toString()}`, {
     cache: "no-store",
-    headers: {
-      ...(backendHeaders({ "x-market": market, "Cache-Control": "no-cache", "Pragma": "no-cache" }) as Record<string, string>),
-      Authorization: `Basic ${Buffer.from(`${credentials.consumerKey}:${credentials.consumerSecret}`).toString("base64")}`,
-    },
+    headers: backendHeaders({ "Cache-Control": "no-cache", "Pragma": "no-cache" }),
   });
 
   if (!response.ok) {
     return { products: [], total: 0, totalPages: 0 };
   }
 
-  const products = await response.json();
+  const payload = await response.json();
+  const products = Array.isArray(payload?.products) ? payload.products : [];
   if (!Array.isArray(products)) {
     return { products: [], total: 0, totalPages: 0 };
   }
@@ -413,8 +330,8 @@ async function fetchRestProductsForMarket(
 
   return {
     products: visibleProducts,
-    total: parseInt(response.headers.get("X-WP-Total") || `${visibleProducts.length}`, 10),
-    totalPages: parseInt(response.headers.get("X-WP-TotalPages") || "1", 10),
+    total: Number(payload?.total) || visibleProducts.length,
+    totalPages: Number(payload?.totalPages) || 1,
   };
 }
 
