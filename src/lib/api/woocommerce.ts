@@ -166,6 +166,9 @@ function buildStoreAPIUrls(
     if (options.locale) {
       url = appendQueryParam(url, "lang", options.locale);
     }
+    if (market) {
+      url = appendQueryParam(url, "_market_cache_bust", `${market}-${Date.now()}`);
+    }
     return appendQueryParam(url, "currency", currencyToUse);
   }));
 }
@@ -227,7 +230,7 @@ async function fetchStoreAPI<T>(
   const { revalidate = 60, tags } = options;
   const urls = buildStoreAPIUrls(endpoint, market, options);
   const hdrs = market
-    ? backendHeaders({ "x-market": market })
+    ? backendHeaders({ "x-market": market, "Cache-Control": "no-cache", "Pragma": "no-cache" })
     : backendHeaders();
   const fetchOptions: RequestInit = disableRuntimeCache
     ? { cache: "no-store", headers: hdrs }

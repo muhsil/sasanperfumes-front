@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getFeaturedProducts, getProducts } from "@/lib/api/woocommerce";
 import { getMarketByHost, normalizeMarketHost } from "@/config/market";
-import { backendHeaders, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
 import type { Locale } from "@/config/site";
 import type { WCProduct, WCProductLightweight } from "@/types/woocommerce";
 
@@ -119,53 +118,6 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const frontendHost = getFrontendHost(request);
   const market = getMarketByHost(frontendHost);
-
-  if (searchParams.get("_debug_market") === "1") {
-    const backendUrl = `${wpJsonBaseForMarket(market.code)}/wc/store/v1/products?search=${encodeURIComponent(searchParams.get("search") || "test")}&per_page=5&currency=${encodeURIComponent(market.defaultCurrency)}`;
-    const backendResponse = await fetch(backendUrl, {
-      cache: "no-store",
-      headers: backendHeaders(market.code === "intl" ? undefined : { "x-market": market.code }),
-    });
-    const backendData = await backendResponse.json().catch(() => null);
-    const apiProducts = await getProducts({
-      per_page: 5,
-      search: searchParams.get("search") || "test",
-      currency: market.defaultCurrency,
-      frontendHost,
-    });
-
-    return NextResponse.json(
-      {
-        frontendHost,
-        market: market.code,
-        currency: market.defaultCurrency,
-        queryMarket: searchParams.get("__market"),
-        request: {
-          host: request.headers.get("host"),
-          forwardedHost: request.headers.get("x-forwarded-host"),
-          frontendHost: request.headers.get("x-frontend-host"),
-          market: request.headers.get("x-market"),
-          referer: request.headers.get("referer"),
-        },
-        backend: {
-          url: backendUrl,
-          status: backendResponse.status,
-          count: Array.isArray(backendData) ? backendData.length : null,
-          first: Array.isArray(backendData) ? backendData[0]?.slug : null,
-        },
-        api: {
-          count: apiProducts.products.length,
-          first: apiProducts.products[0]?.slug || null,
-        },
-      },
-      {
-        headers: {
-          "Cache-Control": "no-store, no-cache, max-age=0, must-revalidate",
-          "Pragma": "no-cache",
-        },
-      }
-    );
-  }
   
   const page = parseInt(searchParams.get("page") || "1", 10);
   const per_page = parseInt(searchParams.get("per_page") || "12", 10);
