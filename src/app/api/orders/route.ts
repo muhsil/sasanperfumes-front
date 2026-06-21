@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import dns from "dns";
+import https from "https";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { verifyAuth, unauthorizedResponse, forbiddenResponse } from "@/lib/security";
 import { backendHeaders, backendPostHeaders, noCacheUrl, parseBackendJson, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
@@ -11,6 +13,89 @@ function getOrdersApiBase(marketCode?: string | null): string {
 function getBasicAuthParams(marketCode?: string): string {
   const { consumerKey, consumerSecret } = getWcCredentials(marketCode);
   return `consumer_key=${consumerKey}&consumer_secret=${consumerSecret}`;
+}
+
+const MARKET_CODES = new Set(["qa", "om", "sa"]);
+
+function responseHeadersFromNode(headers: Record<string, string | string[] | undefined>): Headers {
+  const responseHeaders = new Headers();
+  Object.entries(headers).forEach(([key, value]) => {
+    if (Array.isArray(value)) {
+      value.forEach((entry) => responseHeaders.append(key, entry));
+    } else if (value !== undefined) {
+      responseHeaders.set(key, value);
+    }
+  });
+  return responseHeaders;
+}
+
+function fetchWithPublicDns(url: string, init: RequestInit = {}): Promise<Response> {
+  const parsed = new URL(url);
+  const body = typeof init.body === "string" || Buffer.isBuffer(init.body) ? init.body : undefined;
+  const headers = init.headers instanceof Headers
+    ? Object.fromEntries(init.headers.entries())
+    : Array.isArray(init.headers)
+      ? Object.fromEntries(init.headers.map(([key, value]) => [key, String(value)]))
+      : Object.fromEntries(Object.entries(init.headers || {}).map(([key, value]) => [key, String(value)]));
+
+  return new Promise<Response>((resolve, reject) => {
+    const request = https.request(
+      parsed,
+      {
+        method: init.method || "GET",
+        headers,
+        lookup: (hostname, options, callback) => {
+          dns.resolve4(hostname, (error, addresses) => {
+            if (error || addresses.length === 0) {
+              callback(error || new Error(`No public DNS A record for ${hostname}`), undefined as never, undefined as never);
+              return;
+            }
+            if (typeof options === "object" && options.all) {
+              (callback as (err: NodeJS.ErrnoException | null, addresses: dns.LookupAddress[]) => void)(
+                null,
+                addresses.map((address) => ({ address, family: 4 }))
+              );
+              return;
+            }
+            callback(null, addresses[0], 4);
+          });
+        },
+      },
+      (incoming) => {
+        const chunks: Buffer[] = [];
+        incoming.on("data", (chunk: Buffer) => chunks.push(chunk));
+        incoming.on("end", () => {
+          resolve(new Response(Buffer.concat(chunks), {
+            status: incoming.statusCode || 200,
+            statusText: incoming.statusMessage || "",
+            headers: responseHeadersFromNode(incoming.headers),
+          }));
+        });
+      }
+    );
+
+    request.on("error", reject);
+    if (body) request.write(body);
+    request.end();
+  });
+}
+
+function fetchOrdersBackend(url: string, init: RequestInit, marketCode?: string | null): Promise<Response> {
+  const code = marketCode?.toLowerCase() || "";
+  if (!MARKET_CODES.has(code)) {
+    return fetch(noCacheUrl(url), init);
+  }
+
+  const headers = {
+    ...((init.headers || {}) as Record<string, string>),
+    Origin: "https://cms.shapehive.com",
+    "X-Market": code,
+  };
+
+  return fetchWithPublicDns(noCacheUrl(url), {
+    ...init,
+    headers,
+  });
 }
 
 interface OrderLineItemMeta {
@@ -127,10 +212,10 @@ export async function GET(request: NextRequest) {
     if (orderId) {
       // First fetch the order
       const orderUrl = `${getOrdersApiBase(market.code)}/orders/${orderId}?${getBasicAuthParams(market.code)}`;
-      const orderResponse = await fetch(noCacheUrl(orderUrl), {
+      const orderResponse = await fetchOrdersBackend(orderUrl, {
         method: "GET",
         headers: backendHeaders(),
-      });
+      }, market.code);
       
       if (!orderResponse.ok) {
         const errorData = await orderResponse.json();
@@ -235,10 +320,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const response = await fetch(noCacheUrl(url), {
+    const response = await fetchOrdersBackend(url, {
       method: "GET",
       headers: backendHeaders(),
-    });
+    }, market.code);
 
     let data: { code?: string; message?: string } | unknown[];
     const responseText = await response.text();
@@ -346,11 +431,11 @@ export async function POST(request: NextRequest) {
 
     const url = `${getOrdersApiBase(market.code)}/orders?${getBasicAuthParams(market.code)}`;
     
-    const response = await fetch(noCacheUrl(url), {
+    const response = await fetchOrdersBackend(url, {
       method: "POST",
       headers: backendPostHeaders(),
       body: JSON.stringify(orderData),
-    });
+    }, market.code);
 
     const data = await response.json();
 
@@ -590,11 +675,11 @@ export async function PUT(request: NextRequest) {
 
     const url = `${getOrdersApiBase(market.code)}/orders/${body.order_id}?${getBasicAuthParams(market.code)}`;
     
-    const response = await fetch(noCacheUrl(url), {
+    const response = await fetchOrdersBackend(url, {
       method: "PUT",
       headers: backendPostHeaders(),
       body: JSON.stringify(updateData),
-    });
+    }, market.code);
 
     const data = await response.json();
 
