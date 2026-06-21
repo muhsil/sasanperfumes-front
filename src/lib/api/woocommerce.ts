@@ -82,6 +82,31 @@ function withFrontendHostParam(url: string, frontendHost?: string): string {
 
 const KNOWN_MARKETS = new Set(["qa", "om", "sa"]);
 
+function getRestCredentialsForMarket(market?: string | null): { consumerKey: string; consumerSecret: string } {
+  switch (market?.toLowerCase()) {
+    case "qa":
+      return {
+        consumerKey: process.env.WC_CONSUMER_KEY_QA || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY_QA || process.env.WC_CONSUMER_KEY || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || "",
+        consumerSecret: process.env.WC_CONSUMER_SECRET_QA || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET_QA || process.env.WC_CONSUMER_SECRET || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET || "",
+      };
+    case "om":
+      return {
+        consumerKey: process.env.WC_CONSUMER_KEY_OM || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY_OM || process.env.WC_CONSUMER_KEY || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || "",
+        consumerSecret: process.env.WC_CONSUMER_SECRET_OM || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET_OM || process.env.WC_CONSUMER_SECRET || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET || "",
+      };
+    case "sa":
+      return {
+        consumerKey: process.env.WC_CONSUMER_KEY_SA || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY_SA || process.env.WC_CONSUMER_KEY || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || "",
+        consumerSecret: process.env.WC_CONSUMER_SECRET_SA || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET_SA || process.env.WC_CONSUMER_SECRET || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET || "",
+      };
+    default:
+      return {
+        consumerKey: process.env.WC_CONSUMER_KEY || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || "",
+        consumerSecret: process.env.WC_CONSUMER_SECRET || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET || "",
+      };
+  }
+}
+
 function extractMarketFromHost(frontendHost?: string): string | undefined {
   const market = extractMarketCode(frontendHost);
   return market && KNOWN_MARKETS.has(market) ? market : undefined;
@@ -179,6 +204,166 @@ function getProductUILabels(locale?: Locale) {
     inStockText: isArabic ? "متوفر" : "In Stock",
     outOfStockText: isArabic ? "غير متوفر" : "Out of Stock",
     addToCartText: isArabic ? "أضف للسلة" : "Add to Cart",
+  };
+}
+
+function transformRestProductToStoreProduct(
+  product: Record<string, unknown>,
+  currencyCode: Currency,
+  locale?: Locale
+): WCProduct {
+  const labels = getProductUILabels(locale);
+  const minorUnit = getCurrencyMinorUnit(currencyCode);
+  const productType = String(product.type || "simple") as WCProduct["type"];
+  const stockStatus = String(product.stock_status || "");
+
+  return {
+    id: Number(product.id) || 0,
+    name: String(product.name || ""),
+    slug: String(product.slug || ""),
+    parent: Number(product.parent_id) || 0,
+    type: productType,
+    variation: "",
+    permalink: String(product.permalink || ""),
+    sku: String(product.sku || ""),
+    short_description: String(product.short_description || ""),
+    description: String(product.description || ""),
+    on_sale: Boolean(product.on_sale),
+    prices: {
+      price: toMinorUnitPrice(product.price, minorUnit),
+      regular_price: toMinorUnitPrice(product.regular_price || product.price, minorUnit),
+      sale_price: product.sale_price ? toMinorUnitPrice(product.sale_price, minorUnit) : "",
+      price_range: null,
+      currency_code: currencyCode,
+      currency_symbol: currencyCode,
+      currency_minor_unit: minorUnit,
+      currency_decimal_separator: ".",
+      currency_thousand_separator: ",",
+      currency_prefix: "",
+      currency_suffix: ` ${currencyCode}`,
+    },
+    price_html: String(product.price_html || ""),
+    average_rating: String(product.average_rating || "0"),
+    review_count: Number(product.rating_count) || 0,
+    images: Array.isArray(product.images) ? (product.images as Array<Record<string, unknown>>).map((img) => ({
+      id: Number(img.id) || 0,
+      src: String(img.src || ""),
+      thumbnail: String(img.src || ""),
+      srcset: "",
+      sizes: "",
+      name: String(img.name || ""),
+      alt: String(img.alt || ""),
+    })) : [],
+    categories: Array.isArray(product.categories) ? (product.categories as Array<Record<string, unknown>>).map((cat) => ({
+      id: Number(cat.id) || 0,
+      name: String(cat.name || ""),
+      slug: String(cat.slug || ""),
+      link: "",
+    })) : [],
+    tags: Array.isArray(product.tags) ? (product.tags as Array<Record<string, unknown>>).map((tag) => ({
+      id: Number(tag.id) || 0,
+      name: String(tag.name || ""),
+      slug: String(tag.slug || ""),
+    })) : [],
+    brands: Array.isArray(product.brands)
+      ? (product.brands as Array<Record<string, unknown>>).map((brand) => ({
+          id: Number(brand.id) || 0,
+          name: String(brand.name || ""),
+          slug: String(brand.slug || ""),
+        }))
+      : [],
+    attributes: [],
+    variations: [],
+    grouped_products: [],
+    has_options: productType === "variable",
+    is_purchasable: product.purchasable !== false && product.status === "publish",
+    is_in_stock: stockStatus === "instock",
+    catalog_visibility: (product.catalog_visibility as WCProduct["catalog_visibility"]) || "visible",
+    is_on_backorder: stockStatus === "onbackorder",
+    low_stock_remaining: null,
+    stock_availability: {
+      text: stockStatus === "instock" ? labels.inStockText : labels.outOfStockText,
+      class: stockStatus === "instock" ? "in-stock" : "out-of-stock",
+    },
+    sold_individually: Boolean(product.sold_individually),
+    add_to_cart: {
+      text: labels.addToCartText,
+      description: "",
+      url: "",
+      single_text: labels.addToCartText,
+      minimum: 1,
+      maximum: 9999,
+      multiple_of: 1,
+    },
+    extensions: {},
+  };
+}
+
+async function fetchRestProductsForMarket(
+  params: {
+    page?: number;
+    per_page?: number;
+    search?: string;
+    slug?: string;
+    orderby?: string;
+    order?: "asc" | "desc";
+    include?: number[];
+    locale?: Locale;
+    currency?: Currency;
+  },
+  market: string
+): Promise<WCProductsResponse> {
+  const credentials = getRestCredentialsForMarket(market);
+  if (!credentials.consumerKey || !credentials.consumerSecret) {
+    return { products: [], total: 0, totalPages: 0 };
+  }
+
+  const currencyCode = params.currency || DEFAULT_API_CURRENCY;
+  const searchParams = new URLSearchParams();
+  searchParams.set("status", "publish");
+  searchParams.set("per_page", String(params.per_page || 12));
+  if (params.page) searchParams.set("page", String(params.page));
+  if (params.search) searchParams.set("search", params.search);
+  if (params.slug) searchParams.set("slug", params.slug);
+  if (params.orderby) searchParams.set("orderby", params.orderby);
+  if (params.order) searchParams.set("order", params.order);
+  if (params.include?.length) searchParams.set("include", params.include.join(","));
+  if (params.locale) searchParams.set("lang", params.locale);
+  searchParams.set("_market_cache_bust", `${market}-${Date.now()}`);
+
+  const response = await fetch(`${wpJsonBaseForMarket(market)}/wc/v3/products?${searchParams.toString()}`, {
+    cache: "no-store",
+    headers: {
+      ...(backendHeaders({ "x-market": market, "Cache-Control": "no-cache", "Pragma": "no-cache" }) as Record<string, string>),
+      Authorization: `Basic ${Buffer.from(`${credentials.consumerKey}:${credentials.consumerSecret}`).toString("base64")}`,
+    },
+  });
+
+  if (!response.ok) {
+    return { products: [], total: 0, totalPages: 0 };
+  }
+
+  const products = await response.json();
+  if (!Array.isArray(products)) {
+    return { products: [], total: 0, totalPages: 0 };
+  }
+  if (products.length === 0 && params.locale) {
+    return fetchRestProductsForMarket({ ...params, locale: undefined }, market);
+  }
+
+  const transformedProducts = products.map((product) =>
+    transformRestProductToStoreProduct(product, currencyCode, params.locale)
+  );
+  const visibleProducts = transformedProducts.filter(
+    (product) =>
+      product.is_purchasable !== false &&
+      (!product.catalog_visibility || product.catalog_visibility === "visible" || product.catalog_visibility === "catalog")
+  );
+
+  return {
+    products: visibleProducts,
+    total: parseInt(response.headers.get("X-WP-Total") || `${visibleProducts.length}`, 10),
+    totalPages: parseInt(response.headers.get("X-WP-TotalPages") || "1", 10),
   };
 }
 
@@ -331,6 +516,25 @@ export async function getProducts(params?: {
         product.catalog_visibility === "catalog"
     );
 
+    if (visibleProducts.length === 0) {
+      const market = extractMarketFromHost(params?.frontendHost);
+      if (market) {
+        const restFallback = await fetchRestProductsForMarket({
+          page: params?.page,
+          per_page: params?.per_page,
+          search: params?.search,
+          orderby: params?.orderby,
+          order: params?.order,
+          include: params?.include,
+          locale: params?.locale,
+          currency: params?.currency,
+        }, market);
+        if (restFallback.products.length > 0) {
+          return restFallback;
+        }
+      }
+    }
+
     return {
       products: visibleProducts,
       total: total - (products.length - visibleProducts.length),
@@ -385,6 +589,16 @@ export const getProductBySlug = cache(async function getProductBySlug(
     });
 
     if (products.length === 0) {
+      const market = extractMarketFromHost(frontendHost);
+      if (market) {
+        const restFallback = await fetchRestProductsForMarket({
+          per_page: 1,
+          slug,
+          locale,
+          currency,
+        }, market);
+        return restFallback.products[0] || null;
+      }
       return null;
     }
     
