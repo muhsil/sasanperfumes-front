@@ -163,9 +163,6 @@ function buildStoreAPIUrls(
 
   return uniqueUrls(apiBases.map((apiBase) => {
     let url = `${apiBase}${endpoint}`;
-    if (options.frontendHost) {
-      url = appendQueryParam(url, "frontend_host", options.frontendHost);
-    }
     if (options.locale) {
       url = appendQueryParam(url, "lang", options.locale);
     }
