@@ -17,6 +17,7 @@ import { EmptyCart } from "./EmptyCart";
 import { GiftSection } from "./GiftSection";
 import { CartItem } from "./CartItem";
 import { useProductCategories } from "@/hooks/useProductCategories";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 import type { MiniCartDrawerProps } from "./types";
 
 export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
@@ -36,6 +37,7 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
     const { isFreeGiftItem, activeGifts, getGiftProgress } = useFreeGift();
     const { currency } = useCurrency();
     const giftProgress = getGiftProgress();
+    const marketPrefix = useMarketPrefix();
 
     const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
     const [newlyAddedGiftId, setNewlyAddedGiftId] = useState<number | null>(null);
@@ -126,12 +128,12 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
 
             <div className="flex flex-col gap-3">
               <Button asChild variant="outline" size="lg" className="w-full">
-                <Link href={`/${locale}/cart`} onClick={handleClose}>
+                <Link href={`${marketPrefix}/${locale}/cart`} onClick={handleClose}>
                   {dictionary.viewCart}
                 </Link>
               </Button>
               <Button asChild variant="primary" size="lg" className="w-full">
-                <Link href={`/${locale}/checkout`} onClick={handleClose}>
+                <Link href={`${marketPrefix}/${locale}/checkout`} onClick={handleClose}>
                   {dictionary.checkout}
                 </Link>
               </Button>

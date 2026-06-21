@@ -18,12 +18,21 @@ interface BreadcrumbsProps {
   pathPrefix?: string;
 }
 
+function inferMarketPathPrefix(items: BreadcrumbItem[], pathPrefix: string): string {
+  if (pathPrefix) return pathPrefix;
+
+  const marketHref = items.find((item) => /^\/(qa|om|sa)(\/|$)/.test(item.href))?.href;
+  const match = marketHref?.match(/^\/(qa|om|sa)(\/|$)/);
+  return match ? `/${match[1]}` : "";
+}
+
 export function Breadcrumbs({ items, locale, className, contained = true, pathPrefix = "" }: BreadcrumbsProps) {
   const isRTL = locale === "ar";
   const isVisuallyHidden = typeof className === "string" && className.split(/\s+/).includes("sr-only");
+  const resolvedPathPrefix = inferMarketPathPrefix(items, pathPrefix);
 
   const allItems = [
-    { name: isRTL ? "الرئيسية" : "Home", href: `${pathPrefix}/${locale}` },
+    { name: isRTL ? "الرئيسية" : "Home", href: `${resolvedPathPrefix}/${locale}` },
     ...items,
   ];
 
