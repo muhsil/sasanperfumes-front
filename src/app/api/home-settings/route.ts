@@ -58,11 +58,13 @@ function cmsFrontendHostForMarket(market?: string): string {
 }
 
 function responseHeaders(market?: string) {
+  const cmsFrontendHost = cmsFrontendHostForMarket(market);
   return {
     "Cache-Control": "no-store, max-age=0",
     "Vary": "Host, X-Frontend-Host, X-Market",
-    "X-ShapeHive-Market-Routing": "v2",
+    "X-ShapeHive-Market-Routing": "v3",
     "X-ShapeHive-Market": market || "intl",
+    ...(cmsFrontendHost ? { "X-ShapeHive-Cms-Frontend-Host": cmsFrontendHost } : {}),
   };
 }
 
