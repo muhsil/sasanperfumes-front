@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
     : endpoint;
   const cmsFrontendHost = cmsFrontendHostForMarket(market);
   const marketFallbackEndpoint = withLocale(
-    `${API_BASE}/wp-json/sasanperfumes/v1/home-settings?frontend_host=${encodeURIComponent(cmsFrontendHost)}`
+    `${API_BASE}/wp-json/sasanperfumes/v1/home-settings`
   );
   const fallbackEndpoint = withLocale(
     `${API_BASE}/wp-json/sasanperfumes/v1/home-settings${frontendHost ? `?frontend_host=${encodeURIComponent(frontendHost)}` : ""}`
@@ -112,7 +112,11 @@ export async function GET(request: NextRequest) {
         fallbackEndpoint,
       ]
     : [fallbackEndpoint];
-  const headers = backendHeaders({ "Cache-Control": "no-cache", "Pragma": "no-cache" });
+  const headers = backendHeaders({
+    "Cache-Control": "no-cache",
+    "Pragma": "no-cache",
+    ...(market && cmsFrontendHost ? { "X-Frontend-Host": cmsFrontendHost, "X-Market": market } : {}),
+  });
 
   try {
     for (const endpoint of homeSettingsEndpoints) {

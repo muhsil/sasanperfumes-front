@@ -682,12 +682,15 @@ async function fetchWPAPI<T>(
       buildWPAPIUrls(endpoint, locale, apiBase).map((url) =>
         apiBase === marketApiBase
           ? appendQueryParam(url, "_market_cache_bust", marketCacheBust)
-          : cmsFrontendHost ? appendQueryParam(url, "frontend_host", cmsFrontendHost) : url
+          : market ? appendQueryParam(url, "_market_cache_bust", marketCacheBust)
+            : cmsFrontendHost ? appendQueryParam(url, "frontend_host", cmsFrontendHost) : url
       )
     )
   );
 
-  const apiHeaders = backendHeaders(WP_API_HEADERS);
+  const apiHeaders = market && cmsFrontendHost
+    ? backendHeaders({ "X-Frontend-Host": cmsFrontendHost, "X-Market": market })
+    : backendHeaders(WP_API_HEADERS);
 
   try {
       const shouldBypassCache = disableRuntimeCache || noCache || CMS_FORCE_DYNAMIC_CACHE || isCmsContentEndpoint(endpoint);
