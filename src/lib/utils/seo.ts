@@ -17,10 +17,12 @@ interface GenerateMetadataParams {
   keywords?: string[];
 }
 
-export const INDEX_NOFOLLOW_ROBOTS = {
+export const INDEX_FOLLOW_ROBOTS = {
   index: true,
-  follow: false,
+  follow: true,
 } satisfies Metadata["robots"];
+
+export const INDEX_NOFOLLOW_ROBOTS = INDEX_FOLLOW_ROBOTS;
 
 export const NOINDEX_NOFOLLOW_ROBOTS = {
   index: false,

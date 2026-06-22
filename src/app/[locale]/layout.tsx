@@ -14,7 +14,7 @@ import { FreeGiftProvider } from "@/contexts/FreeGiftContext";
 import { ComparisonProvider } from "@/contexts/ComparisonContext";
 import { getDictionary } from "@/i18n";
 import { siteConfig, localeConfig, type Locale } from "@/config/site";
-import { INDEX_NOFOLLOW_ROBOTS, generateOrganizationJsonLd, generateWebSiteJsonLd, generateLocalBusinessJsonLd } from "@/lib/utils/seo";
+import { INDEX_FOLLOW_ROBOTS, generateOrganizationJsonLd, generateWebSiteJsonLd, generateLocalBusinessJsonLd } from "@/lib/utils/seo";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getSiteSettings, getHeaderSettings, getPrimaryMenu, getMobileHeaderMenu, getMobileBottomBarMenu, getMobileBarSettings, getCategoriesDrawerMenu, getTopbarSettings, getSeoSettings, getFooterSettings, getWhatsAppSettings, getFeatureToggles, getStaticPageContent, mapRepeater, pickLocale } from "@/lib/api/wordpress";
 import { getRequestMarket, getRequestFrontendHost } from "@/lib/market/server";
@@ -75,7 +75,7 @@ export async function generateMetadata({
     },
     description: metadataDescription,
     metadataBase: new URL(siteConfig.url),
-    robots: INDEX_NOFOLLOW_ROBOTS,
+    robots: INDEX_FOLLOW_ROBOTS,
     icons: faviconWithCacheBust ? {
       icon: faviconWithCacheBust,
       shortcut: faviconWithCacheBust,

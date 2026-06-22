@@ -3,7 +3,7 @@ import { Noto_Sans_Arabic, Poppins } from "next/font/google";
 import { headers } from "next/headers";
 import { siteConfig } from "@/config/site";
 import { themeConfig } from "@/config/theme";
-import { INDEX_NOFOLLOW_ROBOTS } from "@/lib/utils/seo";
+import { INDEX_FOLLOW_ROBOTS } from "@/lib/utils/seo";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   title: `${siteConfig.name} | Premium Perfumes & Fragrances in UAE`,
   description: siteConfig.description,
   metadataBase: new URL(siteConfig.url),
-  robots: INDEX_NOFOLLOW_ROBOTS,
+  robots: INDEX_FOLLOW_ROBOTS,
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
