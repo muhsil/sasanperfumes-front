@@ -25,6 +25,7 @@ const cmsApiHost = (() => {
   }
 })();
 const mediaHostnames = Array.from(new Set([cmsApiHost, ...imageHostFallbacks, ...extraImageHosts]));
+const marketUploadPathnames = ["", "/qa", "/om", "/sa"].map((prefix) => `${prefix}/wp-content/uploads/**`);
 
 type ImageRemotePattern = {
   protocol: "http" | "https";
@@ -32,18 +33,20 @@ type ImageRemotePattern = {
   pathname: string;
 };
 
-const mediaRemotePatterns: ImageRemotePattern[] = mediaHostnames.flatMap((hostname) => [
-  {
-    protocol: "https",
-    hostname,
-    pathname: "/wp-content/uploads/**",
-  },
-  {
-    protocol: "http",
-    hostname,
-    pathname: "/wp-content/uploads/**",
-  },
-]);
+const mediaRemotePatterns: ImageRemotePattern[] = mediaHostnames.flatMap((hostname) =>
+  marketUploadPathnames.flatMap((pathname) => [
+    {
+      protocol: "https",
+      hostname,
+      pathname,
+    },
+    {
+      protocol: "http",
+      hostname,
+      pathname,
+    },
+  ])
+);
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
