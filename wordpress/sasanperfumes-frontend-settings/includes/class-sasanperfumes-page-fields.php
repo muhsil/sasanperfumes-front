@@ -734,6 +734,9 @@ function sasanperfumes_pf_rest_page($request) {
 
     $page_id = sasanperfumes_pf_find_page($type);
     if (!$page_id) {
+        if (function_exists('sasanperfumes_sp_get_page')) {
+            return sasanperfumes_sp_get_page($request);
+        }
         return new WP_REST_Response(['error' => 'Page not configured'], 404);
     }
 

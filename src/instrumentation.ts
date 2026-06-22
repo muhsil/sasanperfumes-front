@@ -44,6 +44,11 @@ export async function register() {
         return parsed.toString();
       }
 
+      // Do not rewrite CoCart requests to a market-prefixed path; this returns `rest_no_route`.
+      if (segments[0] === "wp-json" && segments[1] === "cocart" && segments[2] === "v2") {
+        return urlText;
+      }
+
       if (segments[0] === "wp-json" || segments[0] === "graphql") {
         parsed.pathname = `/${[market, ...segments].join("/")}`;
         return parsed.toString();

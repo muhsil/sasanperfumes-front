@@ -439,6 +439,10 @@ function sasanperfumes_sp_save($page_slug, $cfg) {
 
 // --- REST API ---
 function sasanperfumes_sp_rest_init() {
+    sasanperfumes_register_rest_route( '/pages/(?P<slug>[a-zA-Z0-9_-]+)', [
+        'methods' => 'GET', 'callback' => 'sasanperfumes_sp_get_page', 'permission_callback' => '__return_true',
+        'args' => ['slug' => ['required' => true, 'sanitize_callback' => 'sanitize_text_field']],
+    ]);
     sasanperfumes_register_rest_route( '/notes-seo/(?P<slug>[a-zA-Z0-9_-]+)', [
         'methods' => 'GET', 'callback' => 'sasanperfumes_sp_get_note_seo', 'permission_callback' => '__return_true',
         'args' => ['slug' => ['required' => true, 'sanitize_callback' => 'sanitize_text_field']],

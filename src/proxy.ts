@@ -164,8 +164,9 @@ function rewriteMarketPathToLocaleRoute(
   segments: string[]
 ) {
   const rest = segments.slice(2);
+  const isApiRoute = rest[0] === "api";
   const rewriteUrl = request.nextUrl.clone();
-  rewriteUrl.pathname = `/${locale}${rest.length ? `/${rest.join("/")}` : ""}`;
+  rewriteUrl.pathname = isApiRoute ? `/${rest.join("/")}` : `/${locale}${rest.length ? `/${rest.join("/")}` : ""}`;
   rewriteUrl.searchParams.set("__market", market);
   const requestHeaders = applyRequestRoutingHeaders(request, locale, market);
   const response = NextResponse.rewrite(rewriteUrl, { request: { headers: requestHeaders } });

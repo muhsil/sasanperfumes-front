@@ -41,6 +41,7 @@ export const internationalMarket = marketConfigs.find((market) => market.code ==
 export function normalizeMarketHost(value?: string | null): string {
   if (!value) return "";
 
+  const marketCodes = new Set(["qa", "om", "sa"]);
   const first = value.split(",")[0]?.trim() || "";
   if (!first) return "";
 
@@ -53,9 +54,15 @@ export function normalizeMarketHost(value?: string | null): string {
     .replace(/^www\./, "")
     .toLowerCase();
 
+  const hostParts = host.split(".");
+  const subdomainMarket = hostParts[0];
+  if (hostParts.length > 2 && marketCodes.has(subdomainMarket)) {
+    return `${hostParts.slice(1).join(".")}/${subdomainMarket}`;
+  }
+
   if (segments.length > 1) {
     const firstPath = segments[1].toLowerCase();
-    if (["qa", "om", "sa"].includes(firstPath)) {
+    if (marketCodes.has(firstPath)) {
       return `${host}/${firstPath}`;
     }
   }

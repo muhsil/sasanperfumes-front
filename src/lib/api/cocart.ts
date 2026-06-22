@@ -128,11 +128,35 @@ function getHeaders(): HeadersInit {
   return headers;
 }
 
+function getMarketAwareHeaders(): HeadersInit {
+  const headers = getHeaders() as Record<string, string>;
+  const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+  const segments = pathname.split("/").filter(Boolean);
+  const first = segments[0]?.toLowerCase();
+  const second = segments[1]?.toLowerCase();
+  const marketHint = ["qa", "om", "sa"].includes(first || "")
+    ? first
+    : ["en", "ar"].includes(first || "") && ["qa", "om", "sa"].includes(second || "")
+      ? second
+      : "";
+
+  if (marketHint) {
+    headers["X-Market"] = marketHint;
+  }
+
+  const host = typeof window !== "undefined" ? window.location.hostname.replace(/^www\./, "") : "";
+  if (host) {
+    headers["X-Frontend-Host"] = marketHint ? `${host}/${marketHint}` : host;
+  }
+
+  return headers;
+}
+
 export async function getCart(): Promise<CartOperationResponse> {
   try {
     const response = await fetch("/api/cart", {
       method: "GET",
-      headers: getHeaders(),
+      headers: getMarketAwareHeaders(),
     });
 
     const data = await response.json();
@@ -185,7 +209,7 @@ export async function addToCart(
 
     const response = await fetch("/api/cart?action=add", {
       method: "POST",
-      headers: getHeaders(),
+      headers: getMarketAwareHeaders(),
       body: JSON.stringify(body),
     });
 
@@ -224,7 +248,7 @@ export async function updateCartItem(
   try {
     const response = await fetch(`/api/cart?action=update&item_key=${encodeURIComponent(itemKey)}`, {
       method: "POST",
-      headers: getHeaders(),
+      headers: getMarketAwareHeaders(),
       body: JSON.stringify({ quantity: String(quantity) }),
     });
 
@@ -260,7 +284,7 @@ export async function removeCartItem(itemKey: string): Promise<CartOperationResp
   try {
     const response = await fetch(`/api/cart?action=remove&item_key=${encodeURIComponent(itemKey)}`, {
       method: "POST",
-      headers: getHeaders(),
+      headers: getMarketAwareHeaders(),
     });
 
     const data = await response.json();
@@ -295,7 +319,7 @@ export async function clearCart(): Promise<CartOperationResponse> {
   try {
     const response = await fetch("/api/cart?action=clear", {
       method: "POST",
-      headers: getHeaders(),
+      headers: getMarketAwareHeaders(),
     });
 
     const data = await response.json();
@@ -330,7 +354,7 @@ export async function applyCoupon(couponCode: string): Promise<CartOperationResp
   try {
     const response = await fetch("/api/cart?action=apply-coupon", {
       method: "POST",
-      headers: getHeaders(),
+      headers: getMarketAwareHeaders(),
       body: JSON.stringify({ code: couponCode }),
     });
 
@@ -366,7 +390,7 @@ export async function removeCoupon(couponCode: string): Promise<CartOperationRes
   try {
     const response = await fetch("/api/cart?action=remove-coupon", {
       method: "POST",
-      headers: getHeaders(),
+      headers: getMarketAwareHeaders(),
       body: JSON.stringify({ code: couponCode }),
     });
 

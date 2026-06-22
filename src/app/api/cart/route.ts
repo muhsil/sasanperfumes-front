@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { API_BASE, backendHeaders, backendPostHeaders, backendAuthHeaders, noCacheUrl, safeJsonResponse } from "@/lib/utils/backendFetch";
+import { API_BASE, backendHeaders, backendPostHeaders, backendAuthHeaders, noCacheUrl, safeJsonResponse, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
+import { getRequestMarket } from "@/lib/market/server";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -10,6 +11,23 @@ const AUTH_TOKEN_COOKIE = "sasanperfumes_auth_token";
 const AUTH_REFRESH_TOKEN_COOKIE = "sasanperfumes_refresh_token";
 const CURRENCY_COOKIE = "wcml_currency";
 const LOCALE_COOKIE = "NEXT_LOCALE";
+const MARKETS_WITH_SEPARATE_APIS = new Set(["qa", "om", "sa"]);
+const COCART_WPJSON_BASE = `${API_BASE.replace(/\/+$/, "")}/wp-json`;
+
+type MarketConfig = Awaited<ReturnType<typeof getRequestMarket>>;
+
+function normalizeHostWithMarketFallback(rawHost: string | null, marketCode: string): string {
+  const hostWithMaybePath = (rawHost || "").split(",")[0].trim().replace(/^https?:\/\//i, "").replace(/:\d+$/, "");
+  const host = hostWithMaybePath.split("/")[0].trim();
+  if (!host) return host;
+  if (hostWithMaybePath.includes(`/${marketCode}`)) {
+    return `${host}/${marketCode}`;
+  }
+  if (host.toLowerCase().startsWith(`${marketCode}.`)) {
+    return `${host.substring(marketCode.length + 1)}/${marketCode}`;
+  }
+  return `${host}/${marketCode}`;
+}
 
 function createEmptyCart() {
   return {
@@ -71,15 +89,57 @@ async function getRefreshToken(): Promise<string | null> {
   return cookieStore.get(AUTH_REFRESH_TOKEN_COOKIE)?.value || null;
 }
 
+function toHeadersRecord(headers?: HeadersInit): Record<string, string> {
+  if (!headers) return {};
+  if (typeof Headers !== "undefined" && headers instanceof Headers) {
+    const result: Record<string, string> = {};
+    headers.forEach((value, key) => {
+      result[key] = value;
+    });
+    return result;
+  }
+  if (Array.isArray(headers)) {
+    return Object.fromEntries(headers);
+  }
+  return { ...(headers as Record<string, string>) };
+}
+
+function toMarketAwareHeaders(
+  request: NextRequest,
+  marketCode: string,
+  headers: HeadersInit
+): HeadersInit {
+  const result = toHeadersRecord(headers);
+  const market = marketCode.toLowerCase();
+
+  if (!MARKETS_WITH_SEPARATE_APIS.has(market)) {
+    return result;
+  }
+
+  const frontendHost = normalizeHostWithMarketFallback(
+    request.headers.get("x-frontend-host")
+      || request.headers.get("x-forwarded-host")
+      || request.headers.get("host")
+      || "",
+    market
+  );
+
+  if (frontendHost) {
+    result["X-Frontend-Host"] = frontendHost;
+  }
+  result["X-Market"] = market;
+  return result;
+}
+
 // Attempt to refresh the JWT token using the refresh token
-async function tryRefreshToken(): Promise<string | null> {
+async function tryRefreshToken(request: NextRequest, market: MarketConfig, wpJsonBase: string): Promise<string | null> {
   const refreshTokenValue = await getRefreshToken();
   if (!refreshTokenValue) return null;
 
   try {
-    const response = await fetch(noCacheUrl(`${API_BASE}/wp-json/cocart/jwt/refresh-token`), {
+    const response = await fetch(noCacheUrl(`${wpJsonBase}/cocart/jwt/refresh-token`), {
       method: "POST",
-      headers: backendPostHeaders(),
+      headers: toMarketAwareHeaders(request, market.code, backendPostHeaders()),
       body: JSON.stringify({ refresh_token: refreshTokenValue }),
     });
 
@@ -133,18 +193,22 @@ function appendParamsToUrl(url: string, currency: string | null, lang: string | 
   return result;
 }
 
-function getAuthHeaders(request: NextRequest, authToken: string | null): HeadersInit {
+function getAuthHeaders(
+  request: NextRequest,
+  market: MarketConfig,
+  authToken: string | null
+): HeadersInit {
   const authHeader = request.headers.get("Authorization");
   if (authHeader) {
-    return backendHeaders({ "Authorization": authHeader });
+    return toMarketAwareHeaders(request, market.code, backendHeaders({ "Authorization": authHeader }));
   } else if (authToken) {
-    return backendAuthHeaders(authToken);
+    return toMarketAwareHeaders(request, market.code, backendAuthHeaders(authToken));
   }
-  return backendHeaders();
+  return getGuestHeaders(request, market);
 }
 
-function getGuestHeaders(): HeadersInit {
-  return backendHeaders();
+function getGuestHeaders(request: NextRequest, market: MarketConfig): HeadersInit {
+  return toMarketAwareHeaders(request, market.code, backendHeaders());
 }
 
 function isAuthError(status: number, data: Record<string, unknown>): boolean {
@@ -174,11 +238,11 @@ function isAuthError(status: number, data: Record<string, unknown>): boolean {
 }
 
 // Get Store API authentication tokens (cart-token and nonce) for coupon operations
-async function getStoreApiAuth(): Promise<{ cartToken: string | null; nonce: string | null }> {
+async function getStoreApiAuth(request: NextRequest, market: MarketConfig, wpJsonBase: string): Promise<{ cartToken: string | null; nonce: string | null }> {
   try {
-    const response = await fetch(noCacheUrl(`${API_BASE}/wp-json/wc/store/v1/cart`), {
+    const response = await fetch(noCacheUrl(`${wpJsonBase}/wc/store/v1/cart`), {
       method: "GET",
-      headers: backendHeaders(),
+      headers: toMarketAwareHeaders(request, market.code, backendHeaders()),
     });
     
     const cartToken = response.headers.get("cart-token");
@@ -224,6 +288,8 @@ function createResponseWithCartKey(
 
 export async function GET(request: NextRequest) {
   try {
+    const market = await getRequestMarket(request.nextUrl.searchParams.get("__market") || request.nextUrl.searchParams.get("market"));
+    const coCartBase = COCART_WPJSON_BASE;
     const cartKey = await getCartKey();
     const authToken = await getAuthToken();
     const currency = await getCurrency();
@@ -231,16 +297,16 @@ export async function GET(request: NextRequest) {
     
     // For authenticated users, don't use cart_key (use JWT identity)
     // Append currency and lang parameters for WPML multicurrency and multilingual support
-    const authUrl = appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart`, currency, locale);
+    const authUrl = appendParamsToUrl(`${coCartBase}/cocart/v2/cart`, currency, locale);
     const guestUrl = cartKey
-      ? appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart?cart_key=${cartKey}`, currency, locale)
-      : appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart`, currency, locale);
+      ? appendParamsToUrl(`${coCartBase}/cocart/v2/cart?cart_key=${cartKey}`, currency, locale)
+      : appendParamsToUrl(`${coCartBase}/cocart/v2/cart`, currency, locale);
 
     // First attempt: try with auth if token exists
     const url = authToken ? authUrl : guestUrl;
     let response = await fetch(noCacheUrl(url), {
       method: "GET",
-      headers: authToken ? getAuthHeaders(request, authToken) : getGuestHeaders(),
+      headers: authToken ? getAuthHeaders(request, market, authToken) : getGuestHeaders(request, market),
     });
 
     let data = await safeJsonResponse(response);
@@ -252,12 +318,12 @@ export async function GET(request: NextRequest) {
     }
 
     if (!response.ok && authToken && isAuthError(response.status, data)) {
-      refreshedToken = await tryRefreshToken();
+      refreshedToken = await tryRefreshToken(request, market, coCartBase);
       
       if (refreshedToken) {
         response = await fetch(noCacheUrl(authUrl), {
           method: "GET",
-          headers: backendAuthHeaders(refreshedToken),
+          headers: toMarketAwareHeaders(request, market.code, backendAuthHeaders(refreshedToken)),
         });
         data = await safeJsonResponse(response);
       }
@@ -266,17 +332,17 @@ export async function GET(request: NextRequest) {
         refreshedToken = null;
         response = await fetch(noCacheUrl(guestUrl), {
           method: "GET",
-          headers: getGuestHeaders(),
+          headers: getGuestHeaders(request, market),
         });
         data = await safeJsonResponse(response);
       }
     }
 
     if (!response.ok && !authToken && response.status === 403 && cartKey) {
-      const freshGuestUrl = appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart`, currency, locale);
+      const freshGuestUrl = appendParamsToUrl(`${coCartBase}/cocart/v2/cart`, currency, locale);
       response = await fetch(noCacheUrl(freshGuestUrl), {
         method: "GET",
-        headers: getGuestHeaders(),
+        headers: getGuestHeaders(request, market),
       });
       data = await safeJsonResponse(response);
     }
@@ -308,6 +374,9 @@ export async function POST(request: NextRequest) {
   const action = searchParams.get("action");
 
   try {
+    const market = await getRequestMarket(request.nextUrl.searchParams.get("__market") || request.nextUrl.searchParams.get("market"));
+    const wpJsonBase = wpJsonBaseForMarket(market.code);
+    const coCartBase = COCART_WPJSON_BASE;
     const cartKey = await getCartKey();
     const authToken = await getAuthToken();
     const currency = await getCurrency();
@@ -318,7 +387,7 @@ export async function POST(request: NextRequest) {
 
     switch (action) {
       case "add":
-        baseUrl = appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart/add-item`, currency, locale);
+        baseUrl = appendParamsToUrl(`${coCartBase}/cocart/v2/cart/add-item`, currency, locale);
         break;
       case "update": {
         const itemKey = searchParams.get("item_key");
@@ -328,7 +397,7 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           );
         }
-        baseUrl = appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart/item/${itemKey}`, currency, locale);
+        baseUrl = appendParamsToUrl(`${coCartBase}/cocart/v2/cart/item/${itemKey}`, currency, locale);
         break;
       }
       case "remove": {
@@ -339,12 +408,12 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           );
         }
-        baseUrl = appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart/item/${removeKey}`, currency, locale);
+        baseUrl = appendParamsToUrl(`${coCartBase}/cocart/v2/cart/item/${removeKey}`, currency, locale);
         method = "DELETE";
         break;
       }
       case "clear":
-        baseUrl = appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart/clear`, currency, locale);
+        baseUrl = appendParamsToUrl(`${coCartBase}/cocart/v2/cart/clear`, currency, locale);
         break;
       // "update-customer" case removed — customs fees are now calculated client-side
       // because CoCart v2 and WC Store API use separate sessions, making server-side
@@ -353,7 +422,7 @@ export async function POST(request: NextRequest) {
       case "remove-coupon": {
         // Use WooCommerce Store API for coupons (CoCart v2 doesn't have coupon endpoints on this backend)
         // Store API requires Cart-Token and X-WP-Nonce headers for authentication
-        const { cartToken, nonce } = await getStoreApiAuth();
+        const { cartToken, nonce } = await getStoreApiAuth(request, market, wpJsonBase);
         
         if (!cartToken || !nonce) {
           return NextResponse.json(
@@ -363,15 +432,15 @@ export async function POST(request: NextRequest) {
         }
         
         const storeApiUrl = action === "apply-coupon" 
-          ? `${API_BASE}/wp-json/wc/store/v1/cart/apply-coupon`
-          : `${API_BASE}/wp-json/wc/store/v1/cart/remove-coupon`;
+          ? `${wpJsonBase}/wc/store/v1/cart/apply-coupon`
+          : `${wpJsonBase}/wc/store/v1/cart/remove-coupon`;
         
         const storeApiResponse = await fetch(noCacheUrl(storeApiUrl), {
           method: "POST",
-          headers: backendPostHeaders({
+          headers: toMarketAwareHeaders(request, market.code, backendPostHeaders({
             "Cart-Token": cartToken,
             "X-WP-Nonce": nonce,
-          }),
+          })),
           body: JSON.stringify(body),
         });
         
@@ -391,12 +460,12 @@ export async function POST(request: NextRequest) {
         }
         
         const coCartUrl = cartKey
-          ? appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart?cart_key=${cartKey}`, currency, locale)
-          : appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart`, currency, locale);
+          ? appendParamsToUrl(`${coCartBase}/cocart/v2/cart?cart_key=${cartKey}`, currency, locale)
+          : appendParamsToUrl(`${coCartBase}/cocart/v2/cart`, currency, locale);
         
         const coCartResponse = await fetch(noCacheUrl(coCartUrl), {
           method: "GET",
-          headers: authToken ? getAuthHeaders(request, authToken) : getGuestHeaders(),
+          headers: authToken ? getAuthHeaders(request, market, authToken) : getGuestHeaders(request, market),
         });
         
         const coCartData = await safeJsonResponse(coCartResponse);
@@ -427,7 +496,7 @@ export async function POST(request: NextRequest) {
 
     const fetchOptions: RequestInit = {
       method,
-      headers: authToken ? getAuthHeaders(request, authToken) : getGuestHeaders(),
+      headers: authToken ? getAuthHeaders(request, market, authToken) : getGuestHeaders(request, market),
     };
 
     if (method !== "DELETE" && Object.keys(body).length > 0) {
@@ -440,12 +509,12 @@ export async function POST(request: NextRequest) {
     let refreshedToken: string | null = null;
 
     if (!response.ok && authToken && isAuthError(response.status, data)) {
-      refreshedToken = await tryRefreshToken();
+      refreshedToken = await tryRefreshToken(request, market, coCartBase);
       
       if (refreshedToken) {
         const refreshedFetchOptions: RequestInit = {
           method,
-          headers: backendAuthHeaders(refreshedToken),
+          headers: toMarketAwareHeaders(request, market.code, backendAuthHeaders(refreshedToken)),
         };
         if (method !== "DELETE" && Object.keys(body).length > 0) {
           refreshedFetchOptions.body = JSON.stringify(body);
@@ -459,7 +528,7 @@ export async function POST(request: NextRequest) {
         refreshedToken = null;
         const guestFetchOptions: RequestInit = {
           method,
-          headers: getGuestHeaders(),
+          headers: getGuestHeaders(request, market),
         };
         if (method !== "DELETE" && Object.keys(body).length > 0) {
           guestFetchOptions.body = JSON.stringify(body);
@@ -474,7 +543,7 @@ export async function POST(request: NextRequest) {
       const freshGuestUrl = baseUrl;
       const freshGuestFetchOptions: RequestInit = {
         method,
-        headers: getGuestHeaders(),
+        headers: getGuestHeaders(request, market),
       };
       if (method !== "DELETE" && Object.keys(body).length > 0) {
         freshGuestFetchOptions.body = JSON.stringify(body);
