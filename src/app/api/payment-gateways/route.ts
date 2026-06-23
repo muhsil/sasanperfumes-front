@@ -194,6 +194,46 @@ function mergeGatewayOverrides(
   return Array.from(gatewayMap.values()).sort((a, b) => a.order - b.order || a.title.localeCompare(b.title));
 }
 
+function addStripeFallbackGateway(
+  gateways: PaymentGatewayResponseItem[],
+  filters: { allowed: string[]; blocked: string[] }
+): PaymentGatewayResponseItem[] {
+  const allowedSet = expandPaymentGatewayIdAliases(filters.allowed);
+  const blockedSet = new Set(filters.blocked.map((id) => id.toLowerCase()));
+
+  if (allowedSet.size === 0) {
+    return gateways;
+  }
+
+  const allowStripe = allowedSet.has("stripe") || allowedSet.has("woocommerce_payments");
+  const blockStripe = blockedSet.has("stripe") || blockedSet.has("woocommerce_payments");
+
+  if (!allowStripe || blockStripe) {
+    return gateways;
+  }
+
+  const hasStripeGateway = gateways.some((gateway) => {
+    const id = gateway.id.toLowerCase();
+    return id === "stripe" || id === "woocommerce_payments";
+  });
+
+  if (hasStripeGateway) {
+    return gateways;
+  }
+
+  const fallbackOrder = gateways.length + 1;
+  const fallbackGateway: PaymentGatewayResponseItem = {
+    id: "woocommerce_payments",
+    title: PAYMENT_METHOD_DETAILS.woocommerce_payments.title,
+    description: PAYMENT_METHOD_DETAILS.woocommerce_payments.description,
+    method_title: PAYMENT_METHOD_DETAILS.woocommerce_payments.title,
+    order: fallbackOrder,
+    enabled: true,
+  };
+
+  return [...gateways, fallbackGateway].sort((a, b) => a.order - b.order || a.title.localeCompare(b.title));
+}
+
 export async function GET() {
   try {
     const market = await getRequestMarket();
@@ -250,8 +290,11 @@ export async function GET() {
               };
             });
 
-          const mergedGateways = applyPaymentGatewayFilters(
-            mergeGatewayOverrides(enabledGateways, gatewayOverrides),
+          const mergedGateways = addStripeFallbackGateway(
+            applyPaymentGatewayFilters(
+              mergeGatewayOverrides(enabledGateways, gatewayOverrides),
+              gatewayFilters
+            ),
             gatewayFilters
           );
 
@@ -304,7 +347,8 @@ export async function GET() {
     
     const fallbackPaymentMethodIds = Array.from(new Set([...paymentMethodIds, "cod"]));
 
-    const gateways = applyPaymentGatewayFilters(
+    const gateways = addStripeFallbackGateway(
+      applyPaymentGatewayFilters(
       mergeGatewayOverrides(
       fallbackPaymentMethodIds
       .filter((id: string) => !excludedFromFallback.includes(id))
@@ -325,6 +369,7 @@ export async function GET() {
       gatewayOverrides
       ),
       gatewayFilters
+      ),
     );
 
     // Check if MyFatoorah test mode is enabled
