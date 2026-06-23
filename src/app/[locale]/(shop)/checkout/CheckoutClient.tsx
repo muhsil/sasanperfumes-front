@@ -26,6 +26,7 @@ import { fbTrackInitiateCheckout } from "@/lib/utils/fbpixel";
 import { trackAnalyticsEvent } from "@/lib/utils/analytics";
 import type { CoCartItem } from "@/lib/api/cocart";
 import { decodeHtmlEntities } from "@/lib/utils";
+import { normalizeFrontendPaymentUrl } from "@/lib/utils/payment";
 import { GiftWrapOption } from "@/components/checkout/GiftWrapOption";
 import { CheckoutLoyaltyPoints } from "@/components/checkout/CheckoutLoyaltyPoints";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
@@ -1366,16 +1367,21 @@ export default function CheckoutClient() {
               } else {
                 throw new Error(tamaraData.error?.message || "Failed to initiate Tamara payment");
               }
-            } else if (isWooPayments) {
+              } else if (isWooPayments) {
               const paymentUrl = data.order?.payment_url || data.payment_url;
+              const normalizedPaymentUrl = normalizeFrontendPaymentUrl(paymentUrl, {
+                origin: window.location.origin,
+                locale: locale as string,
+                marketPrefix,
+              });
 
-              if (!paymentUrl) {
+              if (!normalizedPaymentUrl) {
                 const orderPayUrl = `${baseUrl}${marketPrefix}/${locale}/order-pay/${data.order_id}?pay_for_order=true&key=${data.order_key}`;
                 window.location.href = orderPayUrl;
                 return;
               }
 
-              window.location.href = paymentUrl;
+              window.location.href = normalizedPaymentUrl;
             } else {
               router.push(`${marketPrefix}/${locale}/order-confirmation?order_id=${data.order_id}&order_key=${data.order_key}`);
             }

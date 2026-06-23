@@ -10,6 +10,7 @@ import { OrderBundleItemsList, isOrderBundleProduct, isOrderFreeGift } from "@/c
 import { fbTrackPurchase } from "@/lib/utils/fbpixel";
 import type { OrderLineItem } from "@/lib/api/customer";
 import { decodeHtmlEntities } from "@/lib/utils";
+import { normalizeFrontendPaymentUrl } from "@/lib/utils/payment";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface OrderMetaData {
@@ -308,8 +309,16 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
         }
       } else if (isWooPaymentsPayment) {
         if (order.payment_url) {
-          window.location.href = order.payment_url;
-          return;
+          const normalizedPaymentUrl = normalizeFrontendPaymentUrl(order.payment_url, {
+            origin: window.location.origin,
+            locale,
+            marketPrefix,
+          });
+          if (normalizedPaymentUrl) {
+            window.location.href = normalizedPaymentUrl;
+            return;
+          }
+          throw new Error("Payment URL is invalid for WooPayments");
         }
         if (isLikelyCardCheckout && order.id && order.order_key) {
           window.location.href = buildOrderPayUrl(marketPrefix, locale, `${order.id}`, order.order_key);
@@ -479,7 +488,17 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
           const alreadyRedirected = window.sessionStorage.getItem(gatewayRedirectKey);
           if (!alreadyRedirected) {
             window.sessionStorage.setItem(gatewayRedirectKey, "1");
-            window.location.href = fetchedOrder.payment_url;
+            const normalizedPaymentUrl = normalizeFrontendPaymentUrl(fetchedOrder.payment_url, {
+              origin: window.location.origin,
+              locale,
+              marketPrefix,
+            });
+
+            if (normalizedPaymentUrl) {
+              window.location.href = normalizedPaymentUrl;
+            } else {
+              window.location.href = buildOrderPayUrl(marketPrefix, locale, resolvedOrderId, fetchedOrder.order_key);
+            }
             return;
           }
         } else if (

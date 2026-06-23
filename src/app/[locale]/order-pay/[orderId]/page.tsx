@@ -1,4 +1,8 @@
 import { redirect, notFound } from "next/navigation";
+import { normalizeFrontendPaymentUrl } from "@/lib/utils/payment";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 interface PageProps {
   params: Promise<{
@@ -38,9 +42,20 @@ export default async function OrderPayPage({ params, searchParams }: PageProps) 
     if (orderResponse.ok) {
       const orderData = await orderResponse.json();
       const paymentUrl = orderData?.data?.payment_url as string | undefined;
+      const isInternalOrderPayUrl =
+        typeof paymentUrl === "string" &&
+        (paymentUrl.startsWith("/order-pay/") || paymentUrl.startsWith("/checkout/order-pay/"));
 
-      if (paymentUrl) {
-        redirect(paymentUrl);
+      if (paymentUrl && !isInternalOrderPayUrl) {
+        const normalizedPaymentUrl = normalizeFrontendPaymentUrl(paymentUrl, {
+        origin: publicSiteUrl,
+        locale,
+        marketPrefix: "",
+        });
+
+        if (normalizedPaymentUrl) {
+          redirect(normalizedPaymentUrl);
+        }
       }
     }
   } catch (error) {
@@ -48,15 +63,22 @@ export default async function OrderPayPage({ params, searchParams }: PageProps) 
   }
 
   if (key) {
-    try {
-      const backendBase = new URL(wcApiUrl).origin;
+    const backendBase = (() => {
+      try {
+        return new URL(wcApiUrl).origin;
+      } catch {
+        return null;
+      }
+    })();
+
+    if (backendBase) {
       const fallbackOrderPayUrl = new URL(`/checkout/order-pay/${orderId}`, backendBase);
       fallbackOrderPayUrl.searchParams.set("pay_for_order", "true");
       fallbackOrderPayUrl.searchParams.set("key", key);
       redirect(fallbackOrderPayUrl.toString());
-    } catch (error) {
-      console.warn("Failed to build backend order-pay fallback URL:", error);
     }
+
+    console.warn("Failed to build backend order-pay fallback URL because NEXT_PUBLIC_WC_API_URL is invalid:", wcApiUrl);
   }
 
   const query = new URLSearchParams({ order_id: orderId });
