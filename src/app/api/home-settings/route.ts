@@ -58,12 +58,12 @@ function publicFrontendHostName(): string {
   try {
     return new URL(siteConfig.url).hostname;
   } catch {
-    return "sasanperfumes.com";
+    return "store.sasanperfumes.com";
   }
 }
 
 function cmsFrontendHostForMarket(market?: string): string {
-  return market && MARKET_CODES.has(market) ? `${market}.${publicFrontendHostName()}` : "";
+  return market && MARKET_CODES.has(market) ? `${publicFrontendHostName()}/${market}` : "";
 }
 
 function responseHeaders(market?: string) {

@@ -666,12 +666,12 @@ function publicFrontendHostName(): string {
   try {
     return new URL(siteConfig.url).hostname;
   } catch {
-    return "sasanperfumes.com";
+    return "store.sasanperfumes.com";
   }
 }
 
 function cmsFrontendHostForMarket(market?: string, frontendHost?: string): string | undefined {
-  return market && WP_KNOWN_MARKETS.has(market) ? `${market}.${publicFrontendHostName()}` : frontendHost;
+  return market && WP_KNOWN_MARKETS.has(market) ? `${publicFrontendHostName()}/${market}` : frontendHost;
 }
 
 async function detectMarketFromRequest(): Promise<string | undefined> {
@@ -1922,7 +1922,7 @@ export async function getCategorySubtitle(slug: string): Promise<{ en: string; a
 // ─── Home Sections (Why Choose Us, Our Story, FAQ, SEO) ──────────
 
 const SASAN_HOME_SECTION_FALLBACK_IMAGE =
-  "https://cms.shapehive.com/wp-content/uploads/2026/05/Sasan4321-scaled-e1755807551258.jpg";
+  "https://cms.sasanperfumes.com/wp-content/uploads/2026/05/Sasan4321-scaled-e1755807551258.jpg";
 
 const defaultHomeSections: HomeSections = {
   whyChooseUs: { enabled: true, eyebrow: { en: 'Our Promise', ar: 'تميزنا' }, title: { en: '', ar: '' }, subtitle: { en: '', ar: '' }, items: [] },

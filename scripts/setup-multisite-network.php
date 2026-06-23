@@ -33,15 +33,15 @@ function shapehive_flag_present(array $args, string $flag): bool {
     return false;
 }
 
-$network_default = 'https://shapehive.com';
+$network_default = 'https://store.sasanperfumes.com';
 $host_map = [
-    'cms.shapehive.com' => 'https://shapehive.com',
-    'cms.shapehive.com/qa' => 'https://shapehive.com/qa',
-    'cms.shapehive.com/om' => 'https://shapehive.com/om',
-    'cms.shapehive.com/sa' => 'https://shapehive.com/sa',
-    'shapehive.com/qa' => 'https://shapehive.com/qa',
-    'shapehive.com/om' => 'https://shapehive.com/om',
-    'shapehive.com/sa' => 'https://shapehive.com/sa',
+    'cms.shapehive.com' => 'https://store.sasanperfumes.com',
+    'cms.shapehive.com/qa' => 'https://store.sasanperfumes.com/qa',
+    'cms.shapehive.com/om' => 'https://store.sasanperfumes.com/om',
+    'cms.shapehive.com/sa' => 'https://store.sasanperfumes.com/sa',
+    'shapehive.com/qa' => 'https://store.sasanperfumes.com/qa',
+    'shapehive.com/om' => 'https://store.sasanperfumes.com/om',
+    'shapehive.com/sa' => 'https://store.sasanperfumes.com/sa',
 ];
 
 update_site_option('sasanperfumes_frontend_url', untrailingslashit($network_default));
@@ -52,19 +52,19 @@ $market_sites = [
         'domain' => 'cms.shapehive.com',
         'path' => '/qa/',
         'title' => 'ShapeHive Qatar',
-        'frontend_url' => 'https://shapehive.com/qa',
+        'frontend_url' => 'https://store.sasanperfumes.com/qa',
     ],
     'om' => [
         'domain' => 'cms.shapehive.com',
         'path' => '/om/',
         'title' => 'ShapeHive Oman',
-        'frontend_url' => 'https://shapehive.com/om',
+        'frontend_url' => 'https://store.sasanperfumes.com/om',
     ],
     'sa' => [
         'domain' => 'cms.shapehive.com',
         'path' => '/sa/',
         'title' => 'ShapeHive Saudi Arabia',
-        'frontend_url' => 'https://shapehive.com/sa',
+        'frontend_url' => 'https://store.sasanperfumes.com/sa',
     ],
 ];
 

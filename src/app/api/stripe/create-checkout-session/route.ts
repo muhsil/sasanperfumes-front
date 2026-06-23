@@ -27,7 +27,7 @@ function getRequestOrigin(request: NextRequest): string {
   if (origin) return origin;
   const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
   const proto = request.headers.get("x-forwarded-proto") || "https";
-  return host ? `${proto}://${host}` : "https://shapehive.com";
+  return host ? `${proto}://${host}` : "https://store.sasanperfumes.com";
 }
 
 export async function POST(request: NextRequest) {
