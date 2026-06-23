@@ -14,6 +14,20 @@ const LOCALE_COOKIE = "NEXT_LOCALE";
 const MARKETS_WITH_SEPARATE_APIS = new Set(["qa", "om", "sa"]);
 const COCART_WPJSON_BASE = `${API_BASE.replace(/\/+$/, "")}/wp-json`;
 
+function isInvalidBackendResponse(data: Record<string, unknown>): boolean {
+  return data?.code === "invalid_response";
+}
+
+function blockedBackendError(data: Record<string, unknown>) {
+  return {
+    code: "backend_blocked",
+    message: String(
+      (data.message as string | undefined) ??
+      "Backend returned an HTML page instead of JSON. The server may be blocking API requests. Please check firewall/WAF settings and ensure /wp-json/* paths are not blocked or cached."
+    ),
+  };
+}
+
 type MarketConfig = Awaited<ReturnType<typeof getRequestMarket>>;
 
 function normalizeHostWithMarketFallback(rawHost: string | null, marketCode: string): string {
@@ -317,6 +331,13 @@ export async function GET(request: NextRequest) {
       data = await safeJsonResponse(response);
     }
 
+    if (isInvalidBackendResponse(data)) {
+      return createResponseWithCartKey({
+        success: false,
+        error: blockedBackendError(data),
+      }, null, null, 503);
+    }
+
     if (!response.ok && authToken && isAuthError(response.status, data)) {
       refreshedToken = await tryRefreshToken(request, market, coCartBase);
       
@@ -445,6 +466,15 @@ export async function POST(request: NextRequest) {
         });
         
         const storeApiData = await safeJsonResponse(storeApiResponse);
+        if (isInvalidBackendResponse(storeApiData)) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: blockedBackendError(storeApiData),
+            },
+            { status: 503 }
+          );
+        }
         
         if (!storeApiResponse.ok) {
           return NextResponse.json(
@@ -469,6 +499,15 @@ export async function POST(request: NextRequest) {
         });
         
         const coCartData = await safeJsonResponse(coCartResponse);
+        if (isInvalidBackendResponse(coCartData)) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: blockedBackendError(coCartData),
+            },
+            { status: 503 }
+          );
+        }
         
         if (!coCartResponse.ok) {
           return NextResponse.json({ 
@@ -508,6 +547,16 @@ export async function POST(request: NextRequest) {
     let data = await safeJsonResponse(response);
     let refreshedToken: string | null = null;
 
+    if (isInvalidBackendResponse(data)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: blockedBackendError(data),
+        },
+        { status: 503 }
+      );
+    }
+
     if (!response.ok && authToken && isAuthError(response.status, data)) {
       refreshedToken = await tryRefreshToken(request, market, coCartBase);
       
@@ -522,6 +571,15 @@ export async function POST(request: NextRequest) {
         }
         response = await fetch(noCacheUrl(baseUrl), refreshedFetchOptions);
         data = await safeJsonResponse(response);
+        if (isInvalidBackendResponse(data)) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: blockedBackendError(data),
+            },
+            { status: 503 }
+          );
+        }
       }
       
       if (!refreshedToken || !response.ok) {
@@ -536,6 +594,15 @@ export async function POST(request: NextRequest) {
         }
         response = await fetch(noCacheUrl(guestUrl), guestFetchOptions);
         data = await safeJsonResponse(response);
+        if (isInvalidBackendResponse(data)) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: blockedBackendError(data),
+            },
+            { status: 503 }
+          );
+        }
       }
     }
 
@@ -551,6 +618,15 @@ export async function POST(request: NextRequest) {
       }
       response = await fetch(noCacheUrl(freshGuestUrl), freshGuestFetchOptions);
       data = await safeJsonResponse(response);
+      if (isInvalidBackendResponse(data)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: blockedBackendError(data),
+          },
+          { status: 503 }
+        );
+      }
     }
 
     if (!response.ok) {
