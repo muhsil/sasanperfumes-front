@@ -1921,6 +1921,9 @@ export async function getCategorySubtitle(slug: string): Promise<{ en: string; a
 
 // ─── Home Sections (Why Choose Us, Our Story, FAQ, SEO) ──────────
 
+const SASAN_HOME_SECTION_FALLBACK_IMAGE =
+  "https://cms.shapehive.com/wp-content/uploads/2026/05/Sasan4321-scaled-e1755807551258.jpg";
+
 const defaultHomeSections: HomeSections = {
   whyChooseUs: { enabled: true, eyebrow: { en: 'Our Promise', ar: 'تميزنا' }, title: { en: '', ar: '' }, subtitle: { en: '', ar: '' }, items: [] },
   ourStory: { enabled: true, eyebrow: { en: 'Discover Our Journey', ar: 'اكتشف قصتنا' }, title: { en: '', ar: '' }, description1: { en: '', ar: '' }, description2: { en: '', ar: '' }, image: '', stats: [] },
@@ -1964,7 +1967,7 @@ const sasanFallbackHomeSections: HomeSections = {
       en: "From fresh daily wear to rich evening blends, the collection helps every customer find a fragrance that suits their style and occasion.",
       ar: "من العطور اليومية المنعشة إلى الخلطات الغنية للمناسبات، تساعد المجموعة كل عميل على إيجاد العطر المناسب لذوقه ومناسبته.",
     },
-    image: "",
+    image: SASAN_HOME_SECTION_FALLBACK_IMAGE,
     stats: [
       { value: "2", label: { en: "Languages", ar: "لغتان" } },
       { value: "4", label: { en: "Regional stores", ar: "متاجر إقليمية" } },
@@ -1994,6 +1997,7 @@ const sasanFallbackHomeSections: HomeSections = {
   seoContent: {
     enabled: true,
     title: { en: "Shop premium perfumes online with Sasan Perfumes", ar: "تسوق العطور الفاخرة أونلاين مع ساسان للعطور" },
+    backgroundImage: SASAN_HOME_SECTION_FALLBACK_IMAGE,
     paragraphs: [
       {
         en: "Explore curated perfumes with clear product pages, regional pricing, and a checkout flow designed for customers across the Gulf.",
@@ -2040,6 +2044,7 @@ function normalizeHomeSections(data?: HomeSections | null): HomeSections {
       title: mergeBilingualContent(source.ourStory?.title, sasanFallbackHomeSections.ourStory.title),
       description1: mergeBilingualContent(source.ourStory?.description1, sasanFallbackHomeSections.ourStory.description1),
       description2: mergeBilingualContent(source.ourStory?.description2, sasanFallbackHomeSections.ourStory.description2),
+      image: source.ourStory?.image || sasanFallbackHomeSections.ourStory.image,
       stats: source.ourStory?.stats?.some((stat) => stat.value || hasBilingualContent(stat.label))
         ? source.ourStory.stats
         : sasanFallbackHomeSections.ourStory.stats,
@@ -2060,6 +2065,7 @@ function normalizeHomeSections(data?: HomeSections | null): HomeSections {
       ...(source.seoContent || {}),
       enabled: source.seoContent?.enabled !== false,
       title: mergeBilingualContent(source.seoContent?.title, sasanFallbackHomeSections.seoContent.title),
+      backgroundImage: source.seoContent?.backgroundImage || sasanFallbackHomeSections.seoContent.backgroundImage,
       paragraphs: source.seoContent?.paragraphs?.some(hasBilingualContent)
         ? source.seoContent.paragraphs
         : sasanFallbackHomeSections.seoContent.paragraphs,
