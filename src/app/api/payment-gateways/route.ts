@@ -285,12 +285,17 @@ export async function GET() {
             })
             .sort((a, b) => a.order - b.order)
             .map((gateway) => {
-              const details = PAYMENT_METHOD_DETAILS[gateway.id];
+              const rawGatewayId = gateway.id.toLowerCase();
+              const gatewayId =
+                isStripeConfigured() && (rawGatewayId === "woocommerce_payments" || rawGatewayId === "stripe")
+                  ? "stripe"
+                  : gateway.id;
+              const details = PAYMENT_METHOD_DETAILS[gatewayId];
               return {
-                id: gateway.id,
+                id: gatewayId,
                 title: details?.title || gateway.title,
                 description: details?.description || gateway.description || "",
-                method_title: gateway.method_title,
+                method_title: details?.title || gateway.method_title,
                 order: gateway.order,
                 enabled: true,
               };
