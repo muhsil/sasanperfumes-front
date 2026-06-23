@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { type Locale } from "@/config/site";
 
@@ -18,12 +18,12 @@ export async function generateMetadata({
   return generateSeoMetadata({
     title: isRTL ? "ساسان للعطور | مواقعنا" : "Sasan Perfumes | Our Stores",
     description: isRTL
-      ? "تفضل بزيارة مواقع شيب هايف في الإمارات لمعرفة أقرب فرع والحصول على تفاصيل الاتصال."
+      ? "تفضل بزيارة مواقع Sasan Perfumes في الإمارات لمعرفة أقرب فرع والحصول على تفاصيل الاتصال."
       : "Find Sasan Perfumes store locations across the UAE and reach us for store details, directions, and contact information.",
     locale: locale as Locale,
     pathname: "/store-listing",
     keywords: isRTL
-      ? ["شيب هايف", "مواقعنا", "الفروع", "الإمارات", "عطور", "معطر الشعر", "بخاخ الجسم", "أطقم هدايا", "تواصل معنا"]
+      ? ["Sasan Perfumes", "مواقعنا", "الفروع", "الإمارات", "عطور", "معطر الشعر", "بخاخ الجسم", "أطقم هدايا", "تواصل معنا"]
       : ["Sasan Perfumes", "Our Stores", "store listing", "store locations", "UAE perfume store", "hair mist", "all over spray", "gift sets"],
   });
 }
@@ -31,3 +31,4 @@ export async function generateMetadata({
 export default function StoreLocatorLayout({ children }: StoreLocatorLayoutProps) {
   return <>{children}</>;
 }
+

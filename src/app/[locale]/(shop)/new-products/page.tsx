@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+﻿import { Suspense } from "react";
 import { ProductGridSkeleton } from "@/components/common/Skeleton";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { getDictionary } from "@/i18n";
@@ -24,7 +24,7 @@ const defaultSeo = {
   title: { en: "New Arrivals | Latest Luxury Perfumes & Oud Fragrances", ar: "منتجات جديدة | أحدث العطور والإصدارات الفاخرة" },
   description: {
     en: "Discover our newest luxury perfumes, Arabian oud & aromatic oils from Sasan Perfumes. Handcrafted in the UAE. Free delivery on orders over 500 AED.",
-    ar: "اكتشف أحدث إصداراتنا من العطور الفاخرة والعود العربي والزيوت العطرية من شيب هايف. منتجات يدوية فاخرة من الإمارات. توصيل مجاني للطلبات فوق 500 درهم.",
+    ar: "اكتشف أحدث إصداراتنا من العطور الفاخرة والعود العربي والزيوت العطرية من Sasan Perfumes. منتجات يدوية فاخرة من الإمارات. توصيل مجاني للطلبات فوق 500 درهم.",
   },
   keywords: {
     en: ["new perfumes", "latest fragrances", "new arrivals perfume", "premium fragrance", "aromatic products", "UAE perfume", "new oud perfume", "latest Dubai perfume", "new women perfume", "new men cologne", "luxury perfume new arrival", "new musk perfume", "new amber fragrance", "latest Arabian perfume", "new vanilla perfume", "new perfume online", "new home fragrance", "new aromatic perfumes", "latest aromatic scents", "aromatic new arrivals", "new fragrance launch aromatic UAE"],
@@ -111,3 +111,4 @@ export default async function NewProductsPage({ params, searchParams }: NewProdu
     </div>
   );
 }
+

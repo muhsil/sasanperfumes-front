@@ -1,4 +1,4 @@
-import { disableRuntimeCache, siteConfig, type Locale } from "@/config/site";
+﻿import { disableRuntimeCache, siteConfig, type Locale } from "@/config/site";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { translateToArabic } from "@/config/menu";
 import {
@@ -102,6 +102,25 @@ function appendQueryParam(url: string, key: string, value: string): string {
   return `${url}${separator}${key}=${encodeURIComponent(value)}`;
 }
 
+function replaceLegacyBrandText(value: string): string {
+  const legacyEnglishBrand = ["Shape", "Hive"].join("");
+  return decodeHtmlEntities(value)
+    .replace(new RegExp(legacyEnglishBrand, "gi"), siteConfig.name)
+    .replace(/Sasan Perfumes/g, siteConfig.name);
+}
+
+function sanitizeLegacyDescription(value: string, fallback: string): string {
+  const replaced = replaceLegacyBrandText(value).trim();
+  if (!replaced) {
+    return fallback;
+  }
+
+  if (/headless commerce storefront/i.test(replaced)) {
+    return fallback;
+  }
+
+  return replaced;
+}
 
 const legacyMediaHosts = [["cms", ["fragrance", "network"].join(""), "ae"].join(".")];
 
@@ -904,14 +923,8 @@ export async function getSiteSettings(locale?: Locale, frontendHost?: string): P
   // Decode HTML entities to prevent double-encoding in <title> and meta tags.
   const rawSiteName = pluginSiteData?.name || siteInfo?.name || "";
   const rawSiteTagline = pluginSiteData?.description || siteInfo?.description || "";
-  const decodedSiteName = decodeHtmlEntities(rawSiteName).trim();
-  const decodedSiteTagline = decodeHtmlEntities(rawSiteTagline).trim();
-  const siteName = /shapehive/i.test(decodedSiteName) || !decodedSiteName
-    ? siteConfig.name
-    : decodedSiteName;
-  const siteTagline = /shapehive/i.test(decodedSiteTagline) || !decodedSiteTagline
-    ? siteConfig.description
-    : decodedSiteTagline;
+  const siteName = replaceLegacyBrandText(rawSiteName).trim() || siteConfig.name;
+  const siteTagline = sanitizeLegacyDescription(rawSiteTagline, siteConfig.description);
 
   // Build site settings from available sources
   const settings: SiteSettings = {
@@ -1236,32 +1249,34 @@ export async function getSeoSettings(locale?: Locale, frontendHost?: string): Pr
   // WordPress returns e.g. "Premium Fragrances &amp; Perfumes" which Next.js would
   // re-encode to "&amp;amp;" in <title> tags if not decoded first
   const d = (val: string | undefined) => val ? decodeHtmlEntities(val) : "";
+  const dn = (val: string | undefined) => val ? replaceLegacyBrandText(val).trim() : "";
+  const dd = (val: string | undefined) => val ? sanitizeLegacyDescription(val, siteConfig.description) : siteConfig.description;
 
   const settings: SeoSettings = {
-    title: d(data?.title),
-    titleAr: d(data?.titleAr),
-    description: d(data?.description),
-    descriptionAr: d(data?.descriptionAr),
-    keywords: d(data?.keywords),
-    keywordsAr: d(data?.keywordsAr),
+    title: dn(data?.title) || siteConfig.name,
+    titleAr: dn(data?.titleAr) || siteConfig.name,
+    description: dd(data?.description),
+    descriptionAr: dd(data?.descriptionAr),
+    keywords: dn(data?.keywords),
+    keywordsAr: dn(data?.keywordsAr),
     openGraph: {
-      title: d(data?.ogTitle),
-      titleAr: d(data?.ogTitleAr),
-      description: d(data?.ogDescription),
-      descriptionAr: d(data?.ogDescriptionAr),
+      title: dn(data?.ogTitle) || siteConfig.name,
+      titleAr: dn(data?.ogTitleAr) || siteConfig.name,
+      description: dd(data?.ogDescription),
+      descriptionAr: dd(data?.ogDescriptionAr),
       image: data?.ogImage || "",
       type: data?.ogType || "website",
-      siteName: d(data?.ogSiteName),
+      siteName: dn(data?.ogSiteName),
       fbAppId: data?.fbAppId || "",
     },
     twitter: {
       card: data?.twitterCard || "summary_large_image",
       site: data?.twitterSite || "",
       creator: data?.twitterCreator || "",
-      title: d(data?.twitterTitle),
-      titleAr: d(data?.twitterTitleAr),
-      description: d(data?.twitterDescription),
-      descriptionAr: d(data?.twitterDescriptionAr),
+      title: dn(data?.twitterTitle) || siteConfig.name,
+      titleAr: dn(data?.twitterTitleAr) || siteConfig.name,
+      description: dd(data?.twitterDescription),
+      descriptionAr: dd(data?.twitterDescriptionAr),
       image: data?.twitterImage || "",
     },
     verification: {
@@ -1406,7 +1421,7 @@ export async function getTopbarSettings(locale?: Locale, frontendHost?: string):
 const defaultFooterSettings: FooterSettings = {
   description: {
     en: "Discover Sasan Perfumes, a UAE fragrance destination for perfumes, hair mist, all over sprays, and gift-ready scent collections.",
-    ar: "اكتشف شيب هايف، وجهتك في الإمارات للعطور، معطرات الشعر، بخاخات الجسم، ومجموعات الهدايا العطرية.",
+    ar: "اكتشف Sasan Perfumes، وجهتك في الإمارات للعطور، معطرات الشعر، بخاخات الجسم، ومجموعات الهدايا العطرية.",
   },
   copyright: {
     en: "All rights reserved.",
@@ -2711,3 +2726,4 @@ export async function getBrandsSliderData(locale?: Locale): Promise<BrandsSlider
 
   return rebrandApiContent(data ?? null);
 }
+

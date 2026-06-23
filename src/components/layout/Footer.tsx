@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import Image from "next/image";
 import { siteConfig, type Locale } from "@/config/site";
 import type { Dictionary } from "@/i18n";
@@ -98,7 +98,7 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
   const description = footerSettings?.description
     ? t(footerSettings.description)
     : locale === "ar"
-      ? "اكتشف العطور الفاخرة ومنتجات العناية العطرية المصنوعة بعناية في شيب هايف."
+      ? "اكتشف العطور الفاخرة ومنتجات العناية العطرية المصنوعة بعناية في Sasan Perfumes."
       : (siteSettings?.tagline || "Premium fragrances and aromatic products crafted with care.");
 
   const social = footerSettings?.social;
@@ -276,3 +276,4 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
     </>
   );
 }
+

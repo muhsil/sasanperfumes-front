@@ -1,4 +1,4 @@
-import { notFound, redirect } from "next/navigation";
+﻿import { notFound, redirect } from "next/navigation";
 import { getProductBySlug, getRelatedProducts, getProducts, getEnglishSlugForProduct, getBundleConfig, getFreeGiftProductIds, getHiddenProductIds, getCategoryBySlug, getEnglishSlugForCategory, getProductUpsellIds, getProductsByIds } from "@/lib/api/woocommerce";
 import { getProductAddons } from "@/lib/api/wcpa";
 import { generateMetadata as generateSeoMetadata, generateProductJsonLd, generateBreadcrumbJsonLd } from "@/lib/utils/seo";
@@ -217,7 +217,7 @@ export async function generateMetadata({
       ...olfactoryKeywords,
       ...noteKeywords,
       ...(locale === "ar"
-        ? ["عطور", "شراء عطور", "عطور فاخرة", "عطور الإمارات", "عطور دبي", "عود عربي", "هدايا عطرية", "شيب هايف", "عطور فخمة", "شراء عطر أون لاين", "عطور مسك", "عطور عنبر", "عطور فانيلا", "عطور عود", "أفضل عطور الإمارات"]
+        ? ["عطور", "شراء عطور", "عطور فاخرة", "عطور الإمارات", "عطور دبي", "عود عربي", "هدايا عطرية", "Sasan Perfumes", "عطور فخمة", "شراء عطر أون لاين", "عطور مسك", "عطور عنبر", "عطور فانيلا", "عطور عود", "أفضل عطور الإمارات"]
         : ["perfume", "buy fragrance", "luxury perfume UAE", "Dubai perfume", "Arabian oud", "fragrance gift", "premium scent", siteName, "niche perfume", "buy perfume online", "musk perfume", "amber fragrance", "vanilla perfume", "oud fragrance", "best perfume UAE"]),
     ],
   });
@@ -394,3 +394,4 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
     </>
   );
 }
+

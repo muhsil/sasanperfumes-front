@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: BlogPageProps): Promise<Metad
   return generateSeoMetadata({
     title: lang === "ar" ? "المدونة" : "Blog",
     description: lang === "ar"
-      ? "أحدث المقالات والأخبار من شيب هايف"
+      ? "أحدث المقالات والأخبار من Sasan Perfumes"
       : "Latest articles and news from Sasan Perfumes",
     locale: lang,
     pathname: "/blog",
@@ -139,3 +139,4 @@ export default async function BlogPage({ params }: BlogPageProps) {
     </main>
   );
 }
+

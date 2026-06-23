@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useMemo } from "react";
 import Image from "next/image";
@@ -552,7 +552,7 @@ export function BuildYourOwnSetClient({
             ar:{
       title: "اصنع مجموعتك الخاصة",
       description:
-        "سواء كنت تدلل نفسك أو تفاجئ شخصًا مميزًا، فإن صناديق شيب هايف تجمع أفضل العطور ومنتجات العناية بالجسم.",
+        "سواء كنت تدلل نفسك أو تفاجئ شخصًا مميزًا، فإن صناديق Sasan Perfumes تجمع أفضل العطور ومنتجات العناية بالجسم.",
       instructions:
         "أنشئ مجموعة فريدة مثل شخصيتك العطرية. اختر 3 منتجات أو أكثر من اختيارك.",
       yourBox: "صندوقك",
@@ -1079,3 +1079,4 @@ export function BuildYourOwnSetClient({
     </>
   );
 }
+

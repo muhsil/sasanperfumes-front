@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import Image from "next/image";
 import { Suspense, type ReactNode } from "react";
 import { notFound } from "next/navigation";
@@ -45,7 +45,7 @@ const defaultKeywords = {
     "Dubai fragrance house",
   ],
   ar: [
-    "عن شيب هايف",
+    "عن Sasan Perfumes",
     "عطور إماراتية",
     "صناعة العطور",
     "عطور فاخرة",
@@ -61,7 +61,7 @@ const defaultKeywords = {
 };
 
 const arabicKeywords = [
-  "عن شيب هايف",
+  "عن Sasan Perfumes",
   "عطور إماراتية",
   "صناعة العطور",
   "عطور فاخرة",
@@ -80,7 +80,7 @@ const arabicKeywords = [
     heroSubtitle: "بيت عطور في الإمارات",
     title: "نصنع عطوراً مميزة بدقة وعناية وذوق عربي معاصر.",
     heroDescription:
-      "تجمع شيب هايف بين المكونات المختارة والتركيبات المتقنة وخدمات الإنتاج الموثوقة للعملاء والعلامات التجارية في الإمارات.",
+      "تجمع Sasan Perfumes بين المكونات المختارة والتركيبات المتقنة وخدمات الإنتاج الموثوقة للعملاء والعلامات التجارية في الإمارات.",
     stats: ["من الإمارات", "عطور فاخرة", "علامات خاصة", "تركيبات مخصصة"],
     mainTitle: "شريك عطري يركز على الجودة.",
     mainParagraphs: [
@@ -708,3 +708,4 @@ export default async function AboutPage({ params }: AboutPageProps) {
     </main>
   );
 }
+

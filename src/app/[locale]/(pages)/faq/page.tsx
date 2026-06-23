@@ -1,4 +1,4 @@
-import { notFound as nextNotFound } from "next/navigation";
+﻿import { notFound as nextNotFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { PageHeader } from "@/components/common/PageHeader";
 import { FAQPageContent } from "./FAQPageContent";
@@ -19,7 +19,7 @@ interface FAQPageProps {
 // Default keywords (fallback when WordPress page doesn't exist)
 const defaultKeywords = {
   en: ["FAQ", "frequently asked questions", "perfume FAQ", "fragrance help", "shipping UAE", "returns", "payment methods", "Arabian oud", "luxury perfumes", "Sasan Perfumes", "how to order perfume", "delivery time UAE", "exchange policy", "order tracking", "aromatic perfume FAQ", "aromatic scents help", "Sasan Perfumes questions", "how to order from aromatic"],
-  ar: ["أسئلة شائعة", "مساعدة", "عطور", "شحن", "إرجاع", "طرق الدفع", "توصيل الإمارات", "عود عربي", "عطور فاخرة", "شيب هايف", "كيف اطلب عطور", "مدة التوصيل", "طريقة الاستبدال", "تتبع الطلب"],
+  ar: ["أسئلة شائعة", "مساعدة", "عطور", "شحن", "إرجاع", "طرق الدفع", "توصيل الإمارات", "عود عربي", "عطور فاخرة", "Sasan Perfumes", "كيف اطلب عطور", "مدة التوصيل", "طريقة الاستبدال", "تتبع الطلب"],
 };
 
 export async function generateMetadata({
@@ -93,3 +93,4 @@ export default async function FAQPage({ params }: FAQPageProps) {
     </div>
   );
 }
+

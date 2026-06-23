@@ -1,4 +1,4 @@
-import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
+﻿import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/common/PageHeader";
 import { GroupedFAQAccordion, type FAQGroup } from "@/components/common/GroupedFAQAccordion";
@@ -18,7 +18,7 @@ interface TermsPageProps {
 // Default keywords (fallback when WordPress page doesn't exist)
 const defaultKeywords = {
   en: ["terms and conditions", "terms of use", "user agreement", "store policies", "Sasan Perfumes", "purchase terms", "online store policy", "shopping terms"],
-  ar: ["الشروط والأحكام", "شروط الاستخدام", "اتفاقية المستخدم", "سياسات المتجر", "شيب هايف", "شروط الشراء", "سياسة المتجر الإلكتروني", "أحكام التسوق"],
+  ar: ["الشروط والأحكام", "شروط الاستخدام", "اتفاقية المستخدم", "سياسات المتجر", "Sasan Perfumes", "شروط الشراء", "سياسة المتجر الإلكتروني", "أحكام التسوق"],
 };
 
 export async function generateMetadata({
@@ -119,3 +119,4 @@ export default async function TermsPage({ params }: TermsPageProps) {
     </div>
   );
 }
+

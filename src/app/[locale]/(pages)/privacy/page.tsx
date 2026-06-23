@@ -1,4 +1,4 @@
-import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
+﻿import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/common/PageHeader";
 import { GroupedFAQAccordion, type FAQGroup } from "@/components/common/GroupedFAQAccordion";
@@ -18,7 +18,7 @@ interface PrivacyPageProps {
 // Default keywords (fallback when WordPress page doesn't exist)
 const defaultKeywords = {
   en: ["privacy policy", "data protection", "customer privacy", "information security", "Sasan Perfumes", "customer data protection", "UAE data policy", "personal information security"],
-  ar: ["سياسة الخصوصية", "حماية البيانات", "أمان المعلومات", "خصوصية العملاء", "شيب هايف", "حماية بيانات العملاء", "سياسة البيانات الإمارات", "أمان المعلومات الشخصية"],
+  ar: ["سياسة الخصوصية", "حماية البيانات", "أمان المعلومات", "خصوصية العملاء", "Sasan Perfumes", "حماية بيانات العملاء", "سياسة البيانات الإمارات", "أمان المعلومات الشخصية"],
 };
 
 export async function generateMetadata({
@@ -119,3 +119,4 @@ export default async function PrivacyPage({ params }: PrivacyPageProps) {
     </div>
   );
 }
+

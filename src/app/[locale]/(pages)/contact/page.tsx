@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   MapPin,
@@ -25,7 +25,7 @@ interface ContactPageProps {
 // Default keywords (fallback when WordPress page doesn't exist)
 const defaultKeywords = {
   en: ["contact us", "customer service", "perfume support", "inquiries", "Sasan Perfumes", "contact Dubai perfume", "WhatsApp fragrance", "perfume store locations", "UAE fragrance help", "perfume phone number", "perfume email", "UAE customer support", "Dubai perfume store", "contact Sasan Perfumes", "aromatic perfume support", "aromatic customer service UAE", "aromatic store location Dubai"],
-  ar: ["تواصل معنا", "خدمة العملاء", "دعم العطور", "استفسارات", "شيب هايف", "اتصل بنا دبي", "واتساب عطور", "مواقع متاجر العطور", "مساعدة عطور الإمارات", "رقم هاتف عطور", "بريد إلكتروني عطور", "دعم عملاء الإمارات", "فروع عطور دبي"],
+  ar: ["تواصل معنا", "خدمة العملاء", "دعم العطور", "استفسارات", "Sasan Perfumes", "اتصل بنا دبي", "واتساب عطور", "مواقع متاجر العطور", "مساعدة عطور الإمارات", "رقم هاتف عطور", "بريد إلكتروني عطور", "دعم عملاء الإمارات", "فروع عطور دبي"],
 };
 
 export async function generateMetadata({
@@ -197,3 +197,4 @@ export default async function ContactPage({ params }: ContactPageProps) {
     </div>
   );
 }
+
