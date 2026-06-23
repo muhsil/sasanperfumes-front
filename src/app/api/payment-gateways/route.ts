@@ -120,10 +120,17 @@ function expandPaymentGatewayIdAliases(ids: string[]): Set<string> {
 
   if (normalized.has("stripe")) {
     normalized.add("woocommerce_payments");
+    normalized.add("card");
   }
 
   if (normalized.has("woocommerce_payments")) {
     normalized.add("stripe");
+    normalized.add("card");
+  }
+
+  if (normalized.has("card")) {
+    normalized.add("stripe");
+    normalized.add("woocommerce_payments");
   }
 
   return normalized;

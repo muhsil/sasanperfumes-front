@@ -96,6 +96,22 @@ const PAYMENT_METHOD_COUNTRY_AVAILABILITY: Record<string, { type: "include" | "e
   tamara: { type: "include", countries: ["AE", "SA", "BH"] },
 };
 
+const WOO_PAYMENTS_METHODS = new Set(["woocommerce_payments", "stripe", "card"]);
+
+const isWooPaymentsMethod = (paymentMethod: string): boolean => {
+  const normalized = (paymentMethod || "").toLowerCase();
+  if (WOO_PAYMENTS_METHODS.has(normalized)) return true;
+
+  // WooPayments method IDs can vary by version (for example: stripe_card).
+  return (
+    normalized.includes("stripe") ||
+    normalized.includes("woocommerce_payments") ||
+    (normalized.includes("card") &&
+      !normalized.includes("myfatoorah") &&
+      !normalized.includes("check"))
+  );
+};
+
 const isPaymentMethodAvailableForCountry = (methodId: string, countryCode: string): boolean => {
   const availability = PAYMENT_METHOD_COUNTRY_AVAILABILITY[methodId];
   if (!availability) {
@@ -1175,11 +1191,12 @@ export default function CheckoutClient() {
         })();
       }
 
-            // Check payment method type and handle accordingly
-            const isMyFatoorahPayment = formData.paymentMethod.startsWith("myfatoorah");
-            const isTabbyPayment = formData.paymentMethod.startsWith("tabby");
-            const isTamaraPayment = formData.paymentMethod.startsWith("tamara");
-            const isWooPayments = formData.paymentMethod === "woocommerce_payments" || formData.paymentMethod === "stripe";
+      // Check payment method type and handle accordingly
+            const normalizedPaymentMethod = formData.paymentMethod.toLowerCase();
+            const isMyFatoorahPayment = normalizedPaymentMethod.startsWith("myfatoorah");
+            const isTabbyPayment = normalizedPaymentMethod.startsWith("tabby");
+            const isTamaraPayment = normalizedPaymentMethod.startsWith("tamara");
+            const isWooPayments = isWooPaymentsMethod(normalizedPaymentMethod);
             const isExternalPayment = isMyFatoorahPayment || isTabbyPayment || isTamaraPayment || isWooPayments;
 
             // Clear customer tracking data after successful order creation
@@ -1353,7 +1370,9 @@ export default function CheckoutClient() {
               const paymentUrl = data.order?.payment_url || data.payment_url;
 
               if (!paymentUrl) {
-                throw new Error("Payment URL is missing for WooPayments");
+                const orderPayUrl = `${baseUrl}${marketPrefix}/${locale}/order-pay/${data.order_id}?pay_for_order=true&key=${data.order_key}`;
+                window.location.href = orderPayUrl;
+                return;
               }
 
               window.location.href = paymentUrl;

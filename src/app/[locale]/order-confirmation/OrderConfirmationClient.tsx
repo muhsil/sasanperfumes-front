@@ -101,6 +101,43 @@ interface OrderConfirmationClientProps {
   locale: string;
 }
 
+const WOO_PAYMENTS_METHODS = new Set(["woocommerce_payments", "stripe", "card"]);
+
+function isWooPaymentsMethod(method: string): boolean {
+  const normalized = (method || "").toLowerCase();
+  if (WOO_PAYMENTS_METHODS.has(normalized)) return true;
+
+  return (
+    normalized.includes("stripe") ||
+    normalized.includes("woocommerce_payments") ||
+    (normalized.includes("card") &&
+      !normalized.includes("myfatoorah") &&
+      !normalized.includes("check"))
+  );
+}
+
+function isExternalPaymentMethod(method: string): boolean {
+  const normalizedMethod = (method || "").toLowerCase();
+  return (
+    normalizedMethod.startsWith("myfatoorah")
+    || normalizedMethod.startsWith("tabby")
+    || normalizedMethod.startsWith("tamara")
+    || isWooPaymentsMethod(normalizedMethod)
+  );
+}
+
+function isLikelyCardPayment(method: string, methodTitle = ""): boolean {
+  if (isWooPaymentsMethod(method)) return true;
+  const normalizedTitle = (methodTitle || "").toLowerCase();
+  return normalizedTitle.includes("credit") && normalizedTitle.includes("card");
+}
+
+function buildOrderPayUrl(marketPrefix: string, locale: string, orderId: string, orderKey: string): string {
+  const baseUrl = window.location.origin;
+  const prefix = marketPrefix === "/" ? "" : marketPrefix;
+  return `${baseUrl}${prefix}/${locale}/order-pay/${orderId}?pay_for_order=true&key=${encodeURIComponent(orderKey)}`;
+}
+
 export default function OrderConfirmationClient({ locale }: OrderConfirmationClientProps) {
   const marketPrefix = useMarketPrefix();
   const searchParams = useSearchParams();
@@ -140,12 +177,14 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
     try {
       const baseUrl = window.location.origin;
       const paymentMethod = order.payment_method;
+      const normalizedPaymentMethod = (paymentMethod || "").toLowerCase();
       const orderTotal = parseFloat(order.total);
       
-      const isMyFatoorahPayment = paymentMethod.startsWith("myfatoorah");
-      const isTabbyPayment = paymentMethod.startsWith("tabby");
-      const isTamaraPayment = paymentMethod.startsWith("tamara");
-      const isWooPaymentsPayment = paymentMethod === "woocommerce_payments" || paymentMethod === "stripe";
+      const isMyFatoorahPayment = normalizedPaymentMethod.startsWith("myfatoorah");
+      const isTabbyPayment = normalizedPaymentMethod.startsWith("tabby");
+      const isTamaraPayment = normalizedPaymentMethod.startsWith("tamara");
+      const isWooPaymentsPayment = isWooPaymentsMethod(normalizedPaymentMethod);
+      const isLikelyCardCheckout = isLikelyCardPayment(normalizedPaymentMethod, order.payment_method_title);
       
       if (isMyFatoorahPayment) {
         const mfResponse = await fetch("/api/myfatoorah/initiate-payment", {
@@ -270,6 +309,10 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
       } else if (isWooPaymentsPayment) {
         if (order.payment_url) {
           window.location.href = order.payment_url;
+          return;
+        }
+        if (isLikelyCardCheckout && order.id && order.order_key) {
+          window.location.href = buildOrderPayUrl(marketPrefix, locale, `${order.id}`, order.order_key);
           return;
         }
         throw new Error("Payment URL is missing for WooPayments");
@@ -417,6 +460,47 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
         // Facebook Pixel: Purchase (fire once for successful payments)
         const fetchedOrder = data.data as OrderData;
         const fetchedStatus = fetchedOrder?.status;
+        const gatewayRedirectKey = `payment_redirected_${resolvedOrderId}_${fetchedOrder?.order_key || ""}`;
+        const paymentMethod = fetchedOrder?.payment_method || "";
+        const paymentMethodTitle = fetchedOrder?.payment_method_title || "";
+        const isExternalPayment =
+          isExternalPaymentMethod(paymentMethod) ||
+          isLikelyCardPayment(paymentMethod, paymentMethodTitle);
+
+        const hasExternalPaymentParams = myFatoorahPaymentId || tabbyPaymentId || tamaraOrderId;
+
+        if (
+          fetchedOrder?.payment_url &&
+          isExternalPayment &&
+          fetchedStatus === "pending" &&
+          !hasExternalPaymentParams &&
+          typeof window !== "undefined"
+        ) {
+          const alreadyRedirected = window.sessionStorage.getItem(gatewayRedirectKey);
+          if (!alreadyRedirected) {
+            window.sessionStorage.setItem(gatewayRedirectKey, "1");
+            window.location.href = fetchedOrder.payment_url;
+            return;
+          }
+        } else if (
+          !fetchedOrder?.payment_url &&
+          isLikelyCardPayment(paymentMethod, paymentMethodTitle) &&
+          fetchedStatus === "pending" &&
+          !hasExternalPaymentParams &&
+          fetchedOrder?.order_key &&
+          typeof window !== "undefined"
+        ) {
+          const alreadyRedirectedToPay = window.sessionStorage.getItem(`${gatewayRedirectKey}_orderpay`);
+          if (!alreadyRedirectedToPay) {
+            window.sessionStorage.setItem(`${gatewayRedirectKey}_orderpay`, "1");
+            window.location.href = buildOrderPayUrl(marketPrefix, locale, resolvedOrderId, fetchedOrder.order_key);
+            return;
+          }
+        } else if (fetchedOrder?.order_key && typeof window !== "undefined") {
+          window.sessionStorage.removeItem(`${gatewayRedirectKey}_orderpay`);
+          window.sessionStorage.removeItem(gatewayRedirectKey);
+        }
+
         const isFailedOrder = fetchedStatus === "failed" || fetchedStatus === "cancelled";
         const isPendingOrder = fetchedStatus === "pending";
         const isSuccessOrder = fetchedStatus === "processing" || fetchedStatus === "completed" || fetchedStatus === "on-hold";
@@ -439,8 +523,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
 
         // Only clear cart if payment was successful or if it's a non-external payment (like COD)
         // For failed payments, keep the cart so user can retry
-        const hasExternalPaymentParams = myFatoorahPaymentId || tabbyPaymentId || tamaraOrderId;
-        const shouldClearCart = !hasExternalPaymentParams || paymentVerifiedRef.current;
+        const shouldClearCart = !hasExternalPayment || paymentVerifiedRef.current;
         
         // Check if this is a successful payment or COD order
         const orderStatus = data.data?.status;
