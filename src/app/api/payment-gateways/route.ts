@@ -349,27 +349,28 @@ export async function GET() {
 
     const gateways = addStripeFallbackGateway(
       applyPaymentGatewayFilters(
-      mergeGatewayOverrides(
-      fallbackPaymentMethodIds
-      .filter((id: string) => !excludedFromFallback.includes(id))
-      .map((id: string, index: number) => {
-        const details = PAYMENT_METHOD_DETAILS[id] || {
-          title: id.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
-          description: "",
-        };
-        return {
-          id,
-          title: details.title,
-          description: details.description,
-          method_title: details.title,
-          order: index,
-          enabled: true, // Assumed enabled since it's in the cart response
-        };
-      }),
-      gatewayOverrides
+        mergeGatewayOverrides(
+          fallbackPaymentMethodIds
+            .filter((id: string) => !excludedFromFallback.includes(id))
+            .map((id: string, index: number) => {
+              const details = PAYMENT_METHOD_DETAILS[id] || {
+                title: id.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+                description: "",
+              };
+              return {
+                id,
+                title: details.title,
+                description: details.description,
+                method_title: details.title,
+                order: index,
+                enabled: true, // Assumed enabled since it's in the cart response
+              };
+            }),
+          gatewayOverrides
+        ),
+        gatewayFilters
       ),
       gatewayFilters
-      ),
     );
 
     // Check if MyFatoorah test mode is enabled
