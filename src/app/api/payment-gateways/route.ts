@@ -262,6 +262,7 @@ export async function GET() {
     const { consumerKey, consumerSecret } = getWcCredentials(market.code);
     const allowedGatewaySet = expandPaymentGatewayIdAliases(gatewayFilters.allowed);
     const hasAllowFilter = gatewayFilters.allowed.length > 0;
+    const stripeConfigured = isStripeConfigured();
     
     if (consumerKey && consumerSecret) {
       const url = `${apiBase}/payment_gateways?${getBasicAuthParams(market.code)}`;
@@ -278,6 +279,11 @@ export async function GET() {
         if (isGatewayArray(data)) {
         const enabledGateways: PaymentGatewayResponseItem[] = data
             .filter((gateway) => {
+              const gatewayId = gateway.id.toLowerCase();
+              if ((gatewayId === "woocommerce_payments" || gatewayId === "stripe") && !stripeConfigured) {
+                return false;
+              }
+
               if (gateway.enabled) {
                 return isPaymentGatewayAllowed(gateway.id, allowedGatewaySet, hasAllowFilter);
               }
@@ -287,7 +293,7 @@ export async function GET() {
             .map((gateway) => {
               const rawGatewayId = gateway.id.toLowerCase();
               const gatewayId =
-                isStripeConfigured() && (rawGatewayId === "woocommerce_payments" || rawGatewayId === "stripe")
+                stripeConfigured && (rawGatewayId === "woocommerce_payments" || rawGatewayId === "stripe")
                   ? "stripe"
                   : gateway.id;
               const details = PAYMENT_METHOD_DETAILS[gatewayId];
