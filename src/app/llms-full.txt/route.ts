@@ -32,7 +32,7 @@ export async function GET() {
 > UAE perfume store for everyday fragrances, hair mist, all over sprays, and gift sets
 
 ## About
-ShapeHive is a UAE fragrance store offering perfumes, hair mist, all over sprays, and gift-ready scent collections online.
+Sasan Perfumes is a UAE fragrance store offering perfumes, hair mist, all over sprays, and gift-ready scent collections online.
 
 Our focus is a simple, polished fragrance experience: discover a scent, choose a thoughtful gift, or request private-label perfume support.
 

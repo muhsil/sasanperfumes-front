@@ -39,7 +39,7 @@ function marketCurrencyResponse(currencies: CurrencyData[], request: NextRequest
 
 export async function GET(request: NextRequest) {
   try {
-    // Try to fetch currencies from WordPress REST API (ShapeHive Currencies plugin)
+    // Try to fetch currencies from WordPress REST API (Sasan Perfumes Currencies plugin)
     const frontendHost = normalizeMarketHost(
       request.headers.get("x-frontend-host") ||
       request.headers.get("x-forwarded-host") ||

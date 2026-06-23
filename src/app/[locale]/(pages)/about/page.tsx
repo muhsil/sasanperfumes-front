@@ -31,7 +31,7 @@ interface AboutPageProps {
 
 const defaultKeywords = {
   en: [
-    "about ShapeHive",
+    "about Sasan Perfumes",
     "UAE perfumery",
     "fragrance crafting",
     "premium perfumes",

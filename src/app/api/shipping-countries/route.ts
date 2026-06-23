@@ -5,6 +5,7 @@ export const revalidate = 0;
 import { siteConfig } from "@/config/site";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { getRequestMarket } from "@/lib/market/server";
+import { getShippingFreightCountries } from "@/config/shipping";
 
 const API_BASE = `${siteConfig.apiUrl}/wp-json/wc/v3`;
 
@@ -108,6 +109,10 @@ export async function GET() {
           }
         }
       }
+    }
+
+    for (const freightCountry of getShippingFreightCountries()) {
+      countryCodes.add(freightCountry);
     }
 
     let wcCountries: WCCountry[] = [];

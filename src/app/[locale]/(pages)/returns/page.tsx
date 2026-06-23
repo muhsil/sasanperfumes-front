@@ -27,7 +27,7 @@ interface ReturnsPageProps {
 
 // Default keywords (fallback when WordPress page doesn't exist)
 const defaultKeywords = {
-  en: ["return policy", "perfume exchange", "product returns", "returns and exchanges", "order help", "quality guarantee", "ShapeHive", "UAE perfume returns", "refund policy", "return conditions", "Dubai perfume exchange"],
+  en: ["return policy", "perfume exchange", "product returns", "returns and exchanges", "order help", "quality guarantee", "Sasan Perfumes", "UAE perfume returns", "refund policy", "return conditions", "Dubai perfume exchange"],
   ar: ["سياسة الإرجاع", "استبدال عطور", "إرجاع منتجات", "ضمان الجودة", "إرجاع عطور", "استبدال منتجات", "مساعدة الطلبات", "شيب هايف", "إرجاع عطور الإمارات", "استرجاع الأموال", "شروط الإرجاع", "استبدال عطور دبي"],
 };
 

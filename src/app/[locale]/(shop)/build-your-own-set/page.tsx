@@ -22,7 +22,7 @@ interface BuildYourOwnSetPageProps {
 const defaultSeo = {
   title: { en: "Build Your Own Set | Custom Luxury Perfume Gift Bundle", ar: "اصنع مجموعتك | طقم عطور مخصص هدية فاخرة" },
   description: {
-    en: "Create a unique fragrance gift set. Pick 3+ products from perfumes, oud, oils & home fragrances. The perfect luxury gift from ShapeHive. Free delivery over 500 AED.",
+    en: "Create a unique fragrance gift set. Pick 3+ products from perfumes, oud, oils & home fragrances. The perfect luxury gift from Sasan Perfumes. Free delivery over 500 AED.",
     ar: "أنشئ مجموعة عطور فريدة من اختيارك. اختر 3 منتجات أو أكثر من العطور والزيوت واللوشن ومعطرات المنزل. هدية مثالية من شيب هايف. توصيل مجاني للطلبات فوق 500 درهم.",
   },
   keywords: {

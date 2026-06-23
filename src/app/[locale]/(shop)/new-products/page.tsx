@@ -23,7 +23,7 @@ interface NewProductsPageProps {
 const defaultSeo = {
   title: { en: "New Arrivals | Latest Luxury Perfumes & Oud Fragrances", ar: "منتجات جديدة | أحدث العطور والإصدارات الفاخرة" },
   description: {
-    en: "Discover our newest luxury perfumes, Arabian oud & aromatic oils from ShapeHive. Handcrafted in the UAE. Free delivery on orders over 500 AED.",
+    en: "Discover our newest luxury perfumes, Arabian oud & aromatic oils from Sasan Perfumes. Handcrafted in the UAE. Free delivery on orders over 500 AED.",
     ar: "اكتشف أحدث إصداراتنا من العطور الفاخرة والعود العربي والزيوت العطرية من شيب هايف. منتجات يدوية فاخرة من الإمارات. توصيل مجاني للطلبات فوق 500 درهم.",
   },
   keywords: {

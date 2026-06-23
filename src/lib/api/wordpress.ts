@@ -1399,7 +1399,7 @@ export async function getTopbarSettings(locale?: Locale, frontendHost?: string):
 // ─── Footer Settings ───
 const defaultFooterSettings: FooterSettings = {
   description: {
-    en: "Discover ShapeHive, a UAE fragrance destination for perfumes, hair mist, all over sprays, and gift-ready scent collections.",
+    en: "Discover Sasan Perfumes, a UAE fragrance destination for perfumes, hair mist, all over sprays, and gift-ready scent collections.",
     ar: "اكتشف شيب هايف، وجهتك في الإمارات للعطور، معطرات الشعر، بخاخات الجسم، ومجموعات الهدايا العطرية.",
   },
   copyright: {

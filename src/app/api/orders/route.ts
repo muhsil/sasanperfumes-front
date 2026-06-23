@@ -15,6 +15,11 @@ function getBasicAuthParams(marketCode?: string): string {
   return `consumer_key=${consumerKey}&consumer_secret=${consumerSecret}`;
 }
 
+function getBasicAuthHeader(marketCode?: string): string {
+  const { consumerKey, consumerSecret } = getWcCredentials(marketCode);
+  return `Basic ${Buffer.from(`${consumerKey}:${consumerSecret}`).toString("base64")}`;
+}
+
 const MARKET_CODES = new Set(["qa", "om", "sa"]);
 
 function responseHeadersFromNode(headers: Record<string, string | string[] | undefined>): Headers {
@@ -433,7 +438,9 @@ export async function POST(request: NextRequest) {
     
     const response = await fetchOrdersBackend(url, {
       method: "POST",
-      headers: backendPostHeaders(),
+      headers: backendPostHeaders({
+        Authorization: getBasicAuthHeader(market.code),
+      }),
       body: JSON.stringify(orderData),
     }, market.code);
 
@@ -677,7 +684,9 @@ export async function PUT(request: NextRequest) {
     
     const response = await fetchOrdersBackend(url, {
       method: "PUT",
-      headers: backendPostHeaders(),
+      headers: backendPostHeaders({
+        Authorization: getBasicAuthHeader(market.code),
+      }),
       body: JSON.stringify(updateData),
     }, market.code);
 

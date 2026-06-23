@@ -1234,7 +1234,7 @@ export interface SlotConfig {
   exclude_products?: number[];
 }
 
-// Bundle Configuration API (from ShapeHive Bundles Creator plugin)
+// Bundle Configuration API (from Sasan Perfumes Bundles Creator plugin)
 export interface BundleConfig {
   product_id: number;
   bundle_id?: string;

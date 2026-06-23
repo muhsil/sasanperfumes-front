@@ -93,11 +93,11 @@ function sasanperfumes_render_footer_general_tab() {
     <table class="form-table">
         <tr>
             <th>Description (EN)</th>
-            <td><textarea name="sasanperfumes_footer_description_en" rows="3" class="large-text"><?php echo esc_textarea(get_theme_mod('sasanperfumes_footer_description_en', 'Discover premium fragrances, perfumes, and aromatic products at ShapeHive. Shop our exclusive collection of luxury scents with delivery across the UAE and GCC.')); ?></textarea></td>
+            <td><textarea name="sasanperfumes_footer_description_en" rows="3" class="large-text"><?php echo esc_textarea(get_theme_mod('sasanperfumes_footer_description_en', 'Discover premium fragrances, perfumes, and aromatic products at Sasan Perfumes. Shop our exclusive collection of luxury scents with delivery across the UAE and GCC.')); ?></textarea></td>
         </tr>
         <tr>
             <th>Description (AR)</th>
-            <td><textarea name="sasanperfumes_footer_description_ar" rows="3" class="large-text" dir="rtl"><?php echo esc_textarea(get_theme_mod('sasanperfumes_footer_description_ar', 'اكتشف العطور الفاخرة ومنتجات العناية العطرية المصنوعة بعناية في ShapeHive.')); ?></textarea></td>
+            <td><textarea name="sasanperfumes_footer_description_ar" rows="3" class="large-text" dir="rtl"><?php echo esc_textarea(get_theme_mod('sasanperfumes_footer_description_ar', 'اكتشف العطور الفاخرة ومنتجات العناية العطرية المصنوعة بعناية في ساسان للعطور.')); ?></textarea></td>
         </tr>
     </table>
 
@@ -469,8 +469,8 @@ function sasanperfumes_get_footer_settings() {
 
     return array(
         'description' => array(
-            'en' => get_theme_mod('sasanperfumes_footer_description_en', 'Discover premium fragrances, perfumes, and aromatic products at ShapeHive. Shop our exclusive collection of luxury scents with delivery across the UAE and GCC.'),
-            'ar' => get_theme_mod('sasanperfumes_footer_description_ar', 'اكتشف العطور الفاخرة ومنتجات العناية العطرية المصنوعة بعناية في ShapeHive.'),
+            'en' => get_theme_mod('sasanperfumes_footer_description_en', 'Discover premium fragrances, perfumes, and aromatic products at Sasan Perfumes. Shop our exclusive collection of luxury scents with delivery across the UAE and GCC.'),
+            'ar' => get_theme_mod('sasanperfumes_footer_description_ar', 'اكتشف العطور الفاخرة ومنتجات العناية العطرية المصنوعة بعناية في ساسان للعطور.'),
         ),
         'copyright' => array(
             'en' => get_theme_mod('sasanperfumes_footer_copyright_en', 'All rights reserved.'),

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { siteConfig } from "@/config/site";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { getRequestMarket } from "@/lib/market/server";
+import { resolveFreightPrice } from "@/config/shipping";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -77,6 +78,13 @@ interface ZoneLocation {
   type: "country" | "state" | "postcode" | "continent";
 }
 
+const FREIGHT_COUNTRY_LABELS: Record<string, string> = {
+  SA: "Saudi Arabia",
+  BH: "Bahrain",
+  KW: "Kuwait",
+  QA: "Qatar",
+};
+
 const CONTINENT_COUNTRIES: Record<string, string[]> = {
   AF: ["DZ", "AO", "BJ", "BW", "BF", "BI", "CM", "CV", "CF", "TD", "KM", "CG", "CD", "CI", "DJ", "EG", "GQ", "ER", "SZ", "ET", "GA", "GM", "GH", "GN", "GW", "KE", "LS", "LR", "LY", "MG", "MW", "ML", "MR", "MU", "YT", "MA", "MZ", "NA", "NE", "NG", "RE", "RW", "SH", "ST", "SN", "SC", "SL", "SO", "ZA", "SS", "SD", "TZ", "TG", "TN", "UG", "EH", "ZM", "ZW"],
   AN: ["AQ", "BV", "TF", "HM", "GS"],
@@ -141,6 +149,46 @@ async function getZoneMethods(zoneId: number, marketCode?: string): Promise<Zone
 
   if (!response.ok) return [];
   return response.json();
+}
+
+function buildFreightRate(
+  country: string,
+  cartWeight: number,
+  currencyCode: string,
+  currencySymbol: string
+): ShippingRate | null {
+  const freightMatch = resolveFreightPrice(country, cartWeight);
+  if (!freightMatch) {
+    return null;
+  }
+
+  const countryLabel = FREIGHT_COUNTRY_LABELS[country.toUpperCase()] || country.toUpperCase();
+  const ratePrice = String(Math.round(freightMatch.price * 100));
+  const weightLabel = freightMatch.row.weightLabel;
+
+  return {
+    rate_id: `aramex_freight:${country.toUpperCase()}:${weightLabel}`,
+    name: `Aramex Freight ${countryLabel} ${weightLabel}`,
+    description: `${countryLabel} freight charge`,
+    delivery_time: "",
+    price: ratePrice,
+    taxes: "0",
+    instance_id: 0,
+    method_id: "aramex_freight",
+    meta_data: [
+      { key: "country", value: country.toUpperCase() },
+      { key: "weight", value: weightLabel },
+      { key: "pcs", value: String(freightMatch.row.pcs) },
+    ],
+    selected: true,
+    currency_code: currencyCode,
+    currency_symbol: currencySymbol,
+    currency_minor_unit: 2,
+    currency_decimal_separator: ".",
+    currency_thousand_separator: ",",
+    currency_prefix: currencySymbol,
+    currency_suffix: "",
+  };
 }
 
 function parseFlexibleShippingRules(settings: Record<string, { value: string }>): WeightRule[] {
@@ -322,6 +370,34 @@ export async function GET(request: NextRequest) {
     const cartWeight = parseFloat(request.nextUrl.searchParams.get("cart_weight") || "0");
     const currencyCode = request.nextUrl.searchParams.get("currency_code") || "AED";
     const currencySymbol = request.nextUrl.searchParams.get("currency_symbol") || "د.إ";
+
+    const freightRate = buildFreightRate(country, cartWeight, currencyCode, currencySymbol);
+    if (freightRate) {
+      const pkg: ShippingPackage = {
+        package_id: 0,
+        name: "Shipping",
+        destination: {
+          address_1: "",
+          address_2: "",
+          city,
+          state: "",
+          postcode,
+          country,
+        },
+        items: [],
+        shipping_rates: [freightRate],
+      };
+
+      return NextResponse.json({
+        success: true,
+        needs_shipping: true,
+        shipping_rates: [pkg],
+        totals: {
+          shipping_total: freightRate.price,
+          shipping_tax: "0",
+        },
+      });
+    }
 
     const zoneId = await findZoneForCountry(country, market.code);
 

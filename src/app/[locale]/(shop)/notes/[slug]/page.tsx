@@ -55,7 +55,7 @@ export async function generateMetadata({
     ? (locale === "ar" ? noteData.description.ar : noteData.description.en)
     : locale === "ar"
       ? `تسوق عطور ${noteName} من شيب هايف. اكتشف مجموعتنا من العطور الفاخرة بنوتة ${noteName}. توصيل مجاني للطلبات فوق 500 درهم.`
-      : `Shop ${noteName} perfumes at ShapeHive. Explore our collection of luxury fragrances featuring ${noteName} notes. Free delivery on orders over 500 AED.`;
+      : `Shop ${noteName} perfumes at Sasan Perfumes. Explore our collection of luxury fragrances featuring ${noteName} notes. Free delivery on orders over 500 AED.`;
 
   return generateSeoMetadata({
     title,
@@ -64,7 +64,7 @@ export async function generateMetadata({
     pathname: `/notes/${slug}`,
     keywords: locale === "ar"
       ? [noteName, `عطور ${noteName}`, "عطور", "عطور فاخرة", "شيب هايف", "عطور الإمارات", `${noteName} عطر`, "نوتات عطرية", "عطور أروماتيك", "شراء عطور أون لاين"]
-      : [noteName, `${noteName} perfume`, "perfume", "luxury fragrance", "ShapeHive", "UAE perfume", `${noteName} fragrance`, "fragrance notes", "aromatic perfume", "buy perfume online"],
+      : [noteName, `${noteName} perfume`, "perfume", "luxury fragrance", "Sasan Perfumes", "UAE perfume", `${noteName} fragrance`, "fragrance notes", "aromatic perfume", "buy perfume online"],
   });
 }
 

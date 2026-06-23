@@ -72,7 +72,7 @@ export async function generateMetadata({
   const description =
     locale === "ar"
       ? `تسوق ${categoryName} من شيب هايف. ${categoryCount > 0 ? `اكتشف ${categoryCount}+ منتج` : "اكتشف مجموعتنا"} من العطور الفاخرة المصنوعة يدوياً في الإمارات. توصيل مجاني للطلبات فوق 500 درهم.`
-      : `Shop ${categoryName} at ShapeHive. ${categoryCount > 0 ? `Explore ${categoryCount}+ handcrafted` : "Explore our handcrafted"} luxury products made in the UAE. Free delivery on orders over 500 AED.`;
+      : `Shop ${categoryName} at Sasan Perfumes. ${categoryCount > 0 ? `Explore ${categoryCount}+ handcrafted` : "Explore our handcrafted"} luxury products made in the UAE. Free delivery on orders over 500 AED.`;
 
   return generateSeoMetadata({
     title: locale === "ar"
@@ -83,7 +83,7 @@ export async function generateMetadata({
     pathname: `/category/${canonicalSlug}`,
     keywords: locale === "ar"
       ? [categoryName, "عطور", "عطور فاخرة", "منتجات عطرية", "شيب هايف", "عطور الإمارات", "شراء عطور اون لاين", "عود عربي", "هدايا عطرية", "عطور مسك", "عطور عنبر", "عطور دبي", "أفضل عطور", "عطور نسائية", "عطور رجالية", `أروماتيك ${categoryName}`, `أفضل ${categoryName} الإمارات`, `${categoryName} بأسعار مناسبة`, "عطور أروماتيك أصلية", "روائح عطرية فاخرة", "تسوق عطور أروماتيك"]
-      : [categoryName, "perfume", "premium fragrance", "aromatic products", "ShapeHive", "UAE perfume shop", "buy perfume online", "Arabian oud", "fragrance gifts", "musk perfume", "amber fragrance", "Dubai perfume", "best perfume", "women perfume", "men cologne", `aromatic ${categoryName.toLowerCase()}`, `best ${categoryName.toLowerCase()} UAE`, `${categoryName.toLowerCase()} affordable price`, "aromatic original perfume", "luxury aromatic scents", "shop aromatic fragrances"],
+      : [categoryName, "perfume", "premium fragrance", "aromatic products", "Sasan Perfumes", "UAE perfume shop", "buy perfume online", "Arabian oud", "fragrance gifts", "musk perfume", "amber fragrance", "Dubai perfume", "best perfume", "women perfume", "men cologne", `aromatic ${categoryName.toLowerCase()}`, `best ${categoryName.toLowerCase()} UAE`, `${categoryName.toLowerCase()} affordable price`, "aromatic original perfume", "luxury aromatic scents", "shop aromatic fragrances"],
   });
 }
 

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getEnvVar, getWcCredentials } from "@/lib/utils/loadEnv";
+import { getPaymentGatewayOverrides } from "@/config/payment";
 import { API_BASE as BASE_URL, backendHeaders, noCacheUrl } from "@/lib/utils/backendFetch";
 import { getRequestMarket } from "@/lib/market/server";
 
@@ -91,9 +92,53 @@ interface CartResponse {
   payment_methods?: string[];
 }
 
+interface PaymentGatewayResponseItem {
+  id: string;
+  title: string;
+  description: string;
+  method_title: string;
+  order: number;
+  enabled: boolean;
+}
+
+function mergeGatewayOverrides(
+  gateways: PaymentGatewayResponseItem[],
+  overrides: ReturnType<typeof getPaymentGatewayOverrides>
+): PaymentGatewayResponseItem[] {
+  const gatewayMap = new Map<string, PaymentGatewayResponseItem>();
+
+  for (const gateway of gateways) {
+    gatewayMap.set(gateway.id, { ...gateway });
+  }
+
+  for (const override of overrides) {
+    if (!override.id) continue;
+
+    if (override.enabled === false) {
+      gatewayMap.delete(override.id);
+      continue;
+    }
+
+    const existing = gatewayMap.get(override.id);
+    const fallbackTitle = override.title || existing?.title || override.id;
+
+    gatewayMap.set(override.id, {
+      id: override.id,
+      title: fallbackTitle,
+      description: override.description ?? existing?.description ?? "",
+      method_title: override.title || existing?.method_title || fallbackTitle,
+      order: override.order ?? existing?.order ?? gateways.length,
+      enabled: true,
+    });
+  }
+
+  return Array.from(gatewayMap.values()).sort((a, b) => a.order - b.order || a.title.localeCompare(b.title));
+}
+
 export async function GET() {
   try {
     const market = await getRequestMarket();
+    const gatewayOverrides = getPaymentGatewayOverrides();
     if (gatewaysCache && Date.now() - gatewaysCache.timestamp < GATEWAYS_CACHE_TTL) {
       return gatewaysJson(gatewaysCache.data);
     }
@@ -111,8 +156,8 @@ export async function GET() {
 
       if (response.ok) {
         const data: WCPaymentGateway[] = await response.json();
-        
-        const enabledGateways = data
+
+        const enabledGateways: PaymentGatewayResponseItem[] = data
           .filter((gateway) => gateway.enabled)
           .sort((a, b) => a.order - b.order)
           .map((gateway) => {
@@ -127,13 +172,15 @@ export async function GET() {
             };
           });
 
+        const mergedGateways = mergeGatewayOverrides(enabledGateways, gatewayOverrides);
+
         // Check if MyFatoorah test mode is enabled
         const myFatoorahTestMode = getEnvVar("MYFATOORAH_TEST_MODE") === "true";
 
         const responseData = { 
           success: true, 
-          gateways: enabledGateways,
-          source: "woocommerce_rest_api",
+          gateways: mergedGateways,
+          source: gatewayOverrides.length > 0 ? "woocommerce_rest_api+hostinger_env" : "woocommerce_rest_api",
           myfatoorah_test_mode: myFatoorahTestMode,
         };
         gatewaysCache = { data: responseData, timestamp: Date.now() };
@@ -173,7 +220,8 @@ export async function GET() {
     
     const fallbackPaymentMethodIds = Array.from(new Set([...paymentMethodIds, "cod"]));
 
-    const gateways = fallbackPaymentMethodIds
+    const gateways = mergeGatewayOverrides(
+      fallbackPaymentMethodIds
       .filter((id: string) => !excludedFromFallback.includes(id))
       .map((id: string, index: number) => {
         const details = PAYMENT_METHOD_DETAILS[id] || {
@@ -188,7 +236,9 @@ export async function GET() {
           order: index,
           enabled: true, // Assumed enabled since it's in the cart response
         };
-      });
+      }),
+      gatewayOverrides
+    );
 
     // Check if MyFatoorah test mode is enabled
     const myFatoorahTestMode = getEnvVar("MYFATOORAH_TEST_MODE") === "true";
@@ -196,7 +246,7 @@ export async function GET() {
     const fallbackData = { 
       success: true, 
       gateways,
-      source: "store_api_fallback",
+      source: gatewayOverrides.length > 0 ? "store_api_fallback+hostinger_env" : "store_api_fallback",
       myfatoorah_test_mode: myFatoorahTestMode,
     };
     gatewaysCache = { data: fallbackData, timestamp: Date.now() };

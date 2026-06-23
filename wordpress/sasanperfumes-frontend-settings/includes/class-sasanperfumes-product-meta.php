@@ -178,11 +178,11 @@ function sasanperfumes_auto_generate_product_meta_desc($product, $lang = 'en') {
 /**
  * Build English meta description (150-160 chars target).
  *
- * Format: "{short_desc}. {name} by ShapeHive. Fragrance family: {olfactory}. Notes: {notes}. Price: {price} AED. Free delivery on orders over 500 AED."
+ * Format: "{short_desc}. {name} by Sasan Perfumes. Fragrance family: {olfactory}. Notes: {notes}. Price: {price} AED. Free delivery on orders over 500 AED."
  * Truncated at word boundary to max 160 characters.
  */
 function sasanperfumes_build_english_product_meta_desc($name, $short_desc, $category, $olfactory, $notes, $price) {
-    $brand = 'ShapeHive';
+    $brand = 'Sasan Perfumes';
 
     // Start with short description snippet if available (truncate at ~80 chars)
     $desc_snippet = '';
@@ -227,11 +227,11 @@ function sasanperfumes_build_english_product_meta_desc($name, $short_desc, $cate
 /**
  * Build Arabic meta description (150-160 chars target).
  *
- * Format: "{short_desc}. {name} من ShapeHive. عائلة العطر: {olfactory}. المكونات: {notes}. السعر: {price} درهم. توصيل مجاني للطلبات فوق 500 درهم."
+ * Format: "{short_desc}. {name} من Sasan Perfumes. عائلة العطر: {olfactory}. المكونات: {notes}. السعر: {price} درهم. توصيل مجاني للطلبات فوق 500 درهم."
  * Truncated at word boundary to max 160 characters.
  */
 function sasanperfumes_build_arabic_product_meta_desc($name, $short_desc, $category, $olfactory, $notes, $price) {
-    $brand = 'ShapeHive';
+    $brand = 'Sasan Perfumes';
 
     $desc_snippet = '';
     if (!empty($short_desc)) {

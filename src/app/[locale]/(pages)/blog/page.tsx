@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: BlogPageProps): Promise<Metad
     title: lang === "ar" ? "المدونة" : "Blog",
     description: lang === "ar"
       ? "أحدث المقالات والأخبار من شيب هايف"
-      : "Latest articles and news from ShapeHive",
+      : "Latest articles and news from Sasan Perfumes",
     locale: lang,
     pathname: "/blog",
   });

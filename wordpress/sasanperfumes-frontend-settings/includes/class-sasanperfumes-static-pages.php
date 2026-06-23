@@ -237,6 +237,14 @@ function sasanperfumes_sp_page_configs() {
                     'delivery_en'=>['label'=>'Delivery (EN)','class'=>'regular-text'],
                     'delivery_ar'=>['label'=>'Delivery (AR)','class'=>'regular-text','rtl'=>true],
                 ]],
+                'shipping_freight_rates' => ['label'=>'Freight Charges','fields'=>[
+                    'weight'=>['label'=>'Weight / الوزن','class'=>'regular-text'],
+                    'pcs'=>['label'=>'PCS / القطع','class'=>'regular-text'],
+                    'saudi_arabia'=>['label'=>'Saudi Arabia / السعودية','class'=>'regular-text'],
+                    'bahrain'=>['label'=>'Bahrain / البحرين','class'=>'regular-text'],
+                    'kuwait'=>['label'=>'Kuwait / الكويت','class'=>'regular-text'],
+                    'qatar'=>['label'=>'Qatar / قطر','class'=>'regular-text'],
+                ]],
             ],
         ],
         'returns' => [

@@ -23,7 +23,7 @@ interface FeaturedProductsPageProps {
 const defaultSeo = {
   title: { en: "Best Sellers | Top Rated Luxury Perfumes & Oud Fragrances", ar: "الأكثر مبيعاً | أفضل العطور الفاخرة والمميزة" },
   description: {
-    en: "Shop our best-selling luxury perfumes, Arabian oud & aromatic oils from ShapeHive. Handcrafted in the UAE. Free delivery on orders over 500 AED.",
+    en: "Shop our best-selling luxury perfumes, Arabian oud & aromatic oils from Sasan Perfumes. Handcrafted in the UAE. Free delivery on orders over 500 AED.",
     ar: "تسوق أفضل العطور المميزة والأكثر مبيعاً من شيب هايف. عطور فاخرة وعود عربي وزيوت عطرية مصنوعة يدوياً في الإمارات. توصيل مجاني للطلبات فوق 500 درهم.",
   },
   keywords: {

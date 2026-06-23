@@ -52,7 +52,7 @@ class sasanperfumes_Email_Templates {
 	}
 
 	public function override_email_from_name( $from_name ) {
-		return get_bloginfo( 'name' ) ?: 'ShapeHive';
+		return get_bloginfo( 'name' ) ?: 'Sasan Perfumes';
 	}
 
 	public function override_email_from_address( $from_address ) {

@@ -17,7 +17,7 @@ interface TermsPageProps {
 
 // Default keywords (fallback when WordPress page doesn't exist)
 const defaultKeywords = {
-  en: ["terms and conditions", "terms of use", "user agreement", "store policies", "ShapeHive", "purchase terms", "online store policy", "shopping terms"],
+  en: ["terms and conditions", "terms of use", "user agreement", "store policies", "Sasan Perfumes", "purchase terms", "online store policy", "shopping terms"],
   ar: ["الشروط والأحكام", "شروط الاستخدام", "اتفاقية المستخدم", "سياسات المتجر", "شيب هايف", "شروط الشراء", "سياسة المتجر الإلكتروني", "أحكام التسوق"],
 };
 

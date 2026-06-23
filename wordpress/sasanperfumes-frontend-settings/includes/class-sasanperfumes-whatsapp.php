@@ -38,7 +38,7 @@ function sasanperfumes_wa_render() {
 
     $enabled  = get_option('sasanperfumes_whatsapp_enabled', '1');
     $number   = get_option('sasanperfumes_whatsapp_number', '');
-    $msgEn    = get_option('sasanperfumes_whatsapp_message_en', 'Hello ShapeHive, I would like to know more about your products and services.');
+    $msgEn    = get_option('sasanperfumes_whatsapp_message_en', 'Hello Sasan Perfumes, I would like to know more about your products and services.');
     $msgAr    = get_option('sasanperfumes_whatsapp_message_ar', 'مرحباً، أود معرفة المزيد عن منتجاتكم وخدماتكم.');
     $desktop  = get_option('sasanperfumes_whatsapp_show_desktop', '1');
     $mobile   = get_option('sasanperfumes_whatsapp_show_mobile', '1');
@@ -76,7 +76,7 @@ add_action('rest_api_init', function () {
                 'enabled'     => (bool) get_option('sasanperfumes_whatsapp_enabled', true),
                 'number'      => get_option('sasanperfumes_whatsapp_number', ''),
                 'message'     => [
-                    'en' => get_option('sasanperfumes_whatsapp_message_en', 'Hello ShapeHive, I would like to know more about your products and services.'),
+                    'en' => get_option('sasanperfumes_whatsapp_message_en', 'Hello Sasan Perfumes, I would like to know more about your products and services.'),
                     'ar' => get_option('sasanperfumes_whatsapp_message_ar', 'مرحباً، أود معرفة المزيد عن منتجاتكم وخدماتكم.'),
                 ],
                 'showDesktop' => (bool) get_option('sasanperfumes_whatsapp_show_desktop', true),

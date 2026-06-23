@@ -17,7 +17,7 @@ interface PrivacyPageProps {
 
 // Default keywords (fallback when WordPress page doesn't exist)
 const defaultKeywords = {
-  en: ["privacy policy", "data protection", "customer privacy", "information security", "ShapeHive", "customer data protection", "UAE data policy", "personal information security"],
+  en: ["privacy policy", "data protection", "customer privacy", "information security", "Sasan Perfumes", "customer data protection", "UAE data policy", "personal information security"],
   ar: ["سياسة الخصوصية", "حماية البيانات", "أمان المعلومات", "خصوصية العملاء", "شيب هايف", "حماية بيانات العملاء", "سياسة البيانات الإمارات", "أمان المعلومات الشخصية"],
 };
 
