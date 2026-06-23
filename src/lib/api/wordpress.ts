@@ -123,13 +123,28 @@ function sanitizeLegacyDescription(value: string, fallback: string): string {
 }
 
 const legacyMediaHosts = [["cms", ["fragrance", "network"].join(""), "ae"].join(".")];
+const legacyStorefrontHosts = [
+  ["aromatic", "scents", "lab.com"].join(""),
+  ["www", ["aromatic", "scents", "lab.com"].join("")].join("."),
+  ["shape", "hive.com"].join(""),
+  ["www", ["shape", "hive.com"].join("")].join("."),
+  [["fragrance", "network"].join(""), "ae"].join("."),
+  ["www", [["fragrance", "network"].join(""), "ae"].join(".")].join("."),
+];
 
 function rebrandText(value: string): string {
-  return legacyMediaHosts.reduce(
+  const withMediaHosts = legacyMediaHosts.reduce(
     (text, host) => text
       .replaceAll(`https://${host}`, siteConfig.apiUrl)
       .replaceAll(`http://${host}`, siteConfig.apiUrl),
     value
+  );
+
+  return legacyStorefrontHosts.reduce(
+    (text, host) => text
+      .replaceAll(`https://${host}`, siteConfig.url)
+      .replaceAll(`http://${host}`, siteConfig.url),
+    withMediaHosts
   );
 }
 
@@ -1113,8 +1128,8 @@ interface SasanMenu {
 function transformMenuItem(rawItem: RawWPMenuItem): WPMenuItem {
   return {
     id: rawItem.ID,
-    title: rawItem.title,
-    url: rawItem.url,
+    title: rebrandText(rawItem.title),
+    url: rebrandText(rawItem.url),
     target: rawItem.target || "",
     parent: parseInt(rawItem.menu_item_parent, 10) || 0,
     order: rawItem.menu_order,
@@ -1125,8 +1140,8 @@ function transformMenuItem(rawItem: RawWPMenuItem): WPMenuItem {
 function transformSasanMenuItem(rawItem: SasanMenuItem): WPMenuItem {
   return {
     id: rawItem.id,
-    title: rawItem.title,
-    url: rawItem.url,
+    title: rebrandText(rawItem.title),
+    url: rebrandText(rawItem.url),
     target: rawItem.target || "",
     parent: Number(rawItem.parent) || 0,
     order: rawItem.order,
@@ -2024,6 +2039,14 @@ function mergeBilingualContent<T extends { en: string; ar: string }>(value: T | 
 
 function normalizeHomeSections(data?: HomeSections | null): HomeSections {
   const source = data ?? defaultHomeSections;
+  const sourceStory = source.ourStory;
+  const storyHasConfiguredContent = Boolean(
+    hasBilingualContent(sourceStory?.title) ||
+      hasBilingualContent(sourceStory?.description1) ||
+      hasBilingualContent(sourceStory?.description2) ||
+      sourceStory?.image?.trim()
+  );
+
   return {
     whyChooseUs: {
       ...sasanFallbackHomeSections.whyChooseUs,
@@ -2038,16 +2061,20 @@ function normalizeHomeSections(data?: HomeSections | null): HomeSections {
     },
     ourStory: {
       ...sasanFallbackHomeSections.ourStory,
-      ...(source.ourStory || {}),
-      enabled: source.ourStory?.enabled !== false,
-      eyebrow: mergeBilingualContent(source.ourStory?.eyebrow, sasanFallbackHomeSections.ourStory.eyebrow),
-      title: mergeBilingualContent(source.ourStory?.title, sasanFallbackHomeSections.ourStory.title),
-      description1: mergeBilingualContent(source.ourStory?.description1, sasanFallbackHomeSections.ourStory.description1),
-      description2: mergeBilingualContent(source.ourStory?.description2, sasanFallbackHomeSections.ourStory.description2),
-      image: source.ourStory?.image || sasanFallbackHomeSections.ourStory.image,
-      stats: source.ourStory?.stats?.some((stat) => stat.value || hasBilingualContent(stat.label))
-        ? source.ourStory.stats
-        : sasanFallbackHomeSections.ourStory.stats,
+      ...(sourceStory || {}),
+      enabled: sourceStory?.enabled !== false && storyHasConfiguredContent,
+      eyebrow: mergeBilingualContent(sourceStory?.eyebrow, sasanFallbackHomeSections.ourStory.eyebrow),
+      title: storyHasConfiguredContent
+        ? mergeBilingualContent(sourceStory?.title, sasanFallbackHomeSections.ourStory.title)
+        : { en: "", ar: "" },
+      description1: storyHasConfiguredContent
+        ? mergeBilingualContent(sourceStory?.description1, sasanFallbackHomeSections.ourStory.description1)
+        : { en: "", ar: "" },
+      description2: storyHasConfiguredContent
+        ? mergeBilingualContent(sourceStory?.description2, sasanFallbackHomeSections.ourStory.description2)
+        : { en: "", ar: "" },
+      image: storyHasConfiguredContent ? sourceStory?.image || "" : "",
+      stats: sourceStory?.stats?.some((stat) => stat.value || hasBilingualContent(stat.label)) ? sourceStory.stats : [],
     },
     faq: {
       ...sasanFallbackHomeSections.faq,
