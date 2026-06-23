@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
 import { getEnvVar, getWcCredentials } from "@/lib/utils/loadEnv";
 import { getPaymentGatewayOverrides } from "@/config/payment";
-import { API_BASE as BASE_URL, backendHeaders, noCacheUrl } from "@/lib/utils/backendFetch";
+import {
+  backendHeaders,
+  noCacheUrl,
+  safeJsonResponse,
+  wpJsonBaseForMarket,
+} from "@/lib/utils/backendFetch";
 import { getRequestMarket } from "@/lib/market/server";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-
-const API_BASE = `${BASE_URL}/wp-json/wc/v3`;
-const STORE_API_BASE = `${BASE_URL}/wp-json/wc/store/v1`;
 
 const GATEWAYS_CACHE_TTL = 0;
 interface CachedGateways {
@@ -101,6 +103,10 @@ interface PaymentGatewayResponseItem {
   enabled: boolean;
 }
 
+function isGatewayArray(value: unknown): value is WCPaymentGateway[] {
+  return Array.isArray(value) && value.every((item) => Boolean(item) && typeof item === "object" && "id" in item);
+}
+
 function mergeGatewayOverrides(
   gateways: PaymentGatewayResponseItem[],
   overrides: ReturnType<typeof getPaymentGatewayOverrides>
@@ -139,6 +145,10 @@ export async function GET() {
   try {
     const market = await getRequestMarket();
     const gatewayOverrides = getPaymentGatewayOverrides();
+    const wpJsonBase = wpJsonBaseForMarket(market.code);
+    const apiBase = `${wpJsonBase}/wc/v3`;
+    const storeApiBase = `${wpJsonBase}/wc/store/v1`;
+
     if (gatewaysCache && Date.now() - gatewaysCache.timestamp < GATEWAYS_CACHE_TTL) {
       return gatewaysJson(gatewaysCache.data);
     }
@@ -146,7 +156,7 @@ export async function GET() {
     const { consumerKey, consumerSecret } = getWcCredentials(market.code);
     
     if (consumerKey && consumerSecret) {
-      const url = `${API_BASE}/payment_gateways?${getBasicAuthParams(market.code)}`;
+      const url = `${apiBase}/payment_gateways?${getBasicAuthParams(market.code)}`;
       
       const response = await fetch(noCacheUrl(url), {
         method: "GET",
@@ -155,40 +165,42 @@ export async function GET() {
       });
 
       if (response.ok) {
-        const data: WCPaymentGateway[] = await response.json();
+        const data = await safeJsonResponse(response);
 
-        const enabledGateways: PaymentGatewayResponseItem[] = data
-          .filter((gateway) => gateway.enabled)
-          .sort((a, b) => a.order - b.order)
-          .map((gateway) => {
-            const details = PAYMENT_METHOD_DETAILS[gateway.id];
-            return {
-              id: gateway.id,
-              title: details?.title || gateway.title,
-              description: details?.description || gateway.description || "",
-              method_title: gateway.method_title,
-              order: gateway.order,
-              enabled: true, // Confirmed enabled from WooCommerce REST API
-            };
-          });
+        if (isGatewayArray(data)) {
+          const enabledGateways: PaymentGatewayResponseItem[] = data
+            .filter((gateway) => gateway.enabled)
+            .sort((a, b) => a.order - b.order)
+            .map((gateway) => {
+              const details = PAYMENT_METHOD_DETAILS[gateway.id];
+              return {
+                id: gateway.id,
+                title: details?.title || gateway.title,
+                description: details?.description || gateway.description || "",
+                method_title: gateway.method_title,
+                order: gateway.order,
+                enabled: true,
+              };
+            });
 
-        const mergedGateways = mergeGatewayOverrides(enabledGateways, gatewayOverrides);
+          const mergedGateways = mergeGatewayOverrides(enabledGateways, gatewayOverrides);
 
-        // Check if MyFatoorah test mode is enabled
-        const myFatoorahTestMode = getEnvVar("MYFATOORAH_TEST_MODE") === "true";
+          // Check if MyFatoorah test mode is enabled
+          const myFatoorahTestMode = getEnvVar("MYFATOORAH_TEST_MODE") === "true";
 
-        const responseData = { 
-          success: true, 
-          gateways: mergedGateways,
-          source: gatewayOverrides.length > 0 ? "woocommerce_rest_api+hostinger_env" : "woocommerce_rest_api",
-          myfatoorah_test_mode: myFatoorahTestMode,
-        };
-        gatewaysCache = { data: responseData, timestamp: Date.now() };
-        return gatewaysJson(responseData);
+          const responseData = {
+            success: true,
+            gateways: mergedGateways,
+            source: gatewayOverrides.length > 0 ? "woocommerce_rest_api+hostinger_env" : "woocommerce_rest_api",
+            myfatoorah_test_mode: myFatoorahTestMode,
+          };
+          gatewaysCache = { data: responseData, timestamp: Date.now() };
+          return gatewaysJson(responseData);
+        }
       }
     }
     
-    const storeUrl = `${STORE_API_BASE}/cart`;
+    const storeUrl = `${storeApiBase}/cart`;
     
     const storeResponse = await fetch(noCacheUrl(storeUrl), {
       method: "GET",
@@ -196,7 +208,7 @@ export async function GET() {
       cache: "no-store",
     });
 
-    const storeData: CartResponse = await storeResponse.json();
+    const storeData = await safeJsonResponse(storeResponse);
 
     if (!storeResponse.ok) {
       return gatewaysJson(
@@ -211,7 +223,9 @@ export async function GET() {
       );
     }
 
-    const paymentMethodIds = storeData.payment_methods || [];
+    const paymentMethodIds = Array.isArray((storeData as CartResponse).payment_methods)
+      ? (storeData as CartResponse).payment_methods || []
+      : [];
     
     // When using Store API fallback, we cannot verify if payment methods are actually enabled
     // in the WooCommerce settings. Only include basic payment methods (COD, bank transfer)
