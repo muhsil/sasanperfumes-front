@@ -57,7 +57,7 @@ export async function generateMetadata({
   const frontendHost = await getRequestFrontendHost();
   
   const siteSettings = await getSiteSettings(validLocale, frontendHost);
-  const metadataSiteName = siteSettings.site_name || siteConfig.name;
+  const metadataSiteName = siteConfig.name;
   const metadataDescription = siteSettings.tagline || siteConfig.description;
   
   const faviconUrl = siteSettings.favicon?.url;

@@ -42,7 +42,7 @@ export async function generateMetadata({
   const frontendHost = await getRequestFrontendHost(marketHint);
   const seoSettings = await getSeoSettings(validLocale, frontendHost);
 
-  const seoTitle = (isArabic ? seoSettings.titleAr : seoSettings.title) || siteConfig.name;
+  const seoTitle = siteConfig.name;
   const seoDescription = (isArabic ? seoSettings.descriptionAr : seoSettings.description) || siteConfig.description;
 
   const baseMetadata = generateSeoMetadata({
