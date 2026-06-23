@@ -40,7 +40,7 @@
     "typescript": "^5"
   },
   "description": "A modern, bilingual (English/Arabic) headless e-commerce frontend built with Next.js 16, Tailwind CSS, and WordPress/WooCommerce REST API.",
-  "main": "screenshot.js",
+  "main": "server.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/muhsil/sasanperfumes-front.git"
