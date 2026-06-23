@@ -1,5 +1,5 @@
 // WooCommerce Store API Types
-// Based on https://cms.shapehive.com/wp-json/wc/store/v1/
+// Based on https://cms.sasanperfumes.com/wp-json/wc/store/v1/
 
 export interface WCProductImage {
   id: number;

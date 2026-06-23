@@ -662,8 +662,16 @@ function extractWPMarketFromHost(frontendHost?: string): string | undefined {
   return market && WP_KNOWN_MARKETS.has(market) ? market : undefined;
 }
 
+function publicFrontendHostName(): string {
+  try {
+    return new URL(siteConfig.url).hostname;
+  } catch {
+    return "sasanperfumes.com";
+  }
+}
+
 function cmsFrontendHostForMarket(market?: string, frontendHost?: string): string | undefined {
-  return market && WP_KNOWN_MARKETS.has(market) ? `${market}.shapehive.com` : frontendHost;
+  return market && WP_KNOWN_MARKETS.has(market) ? `${market}.${publicFrontendHostName()}` : frontendHost;
 }
 
 async function detectMarketFromRequest(): Promise<string | undefined> {
@@ -1469,7 +1477,7 @@ const defaultFooterSettings: FooterSettings = {
     twitter: "",
     tiktok: "",
     snapchat: "",
-    whatsapp: "https://wa.me/971506071405",
+    whatsapp: "https://wa.me/0567394314",
   },
   poweredBy: {
     text: { en: "Powered by", ar: "مدعوم من" },
@@ -1745,7 +1753,7 @@ function extractCategorySlugFromUrl(url: string): string {
 
 /**
  * Transform a WordPress URL to a frontend category URL
- * WordPress URLs like https://cms.shapehive.com/product-category/perfumes-oils/
+ * WordPress URLs like https://cms.sasanperfumes.com/product-category/perfumes-oils/
  * become /{locale}/category/{slug}
  */
 function transformToFrontendCategoryUrl(url: string, slug: string, locale?: Locale): string {

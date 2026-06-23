@@ -60,6 +60,22 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
 const DEFAULT_API_CURRENCY = API_BASE_CURRENCY;
 const BACKEND_FETCH_TIMEOUT_MS = 8000;
 
+function cmsApiHostName(): string {
+  try {
+    return new URL(siteConfig.apiUrl).hostname;
+  } catch {
+    return "cms.sasanperfumes.com";
+  }
+}
+
+function cmsApiOrigin(): string {
+  try {
+    return new URL(siteConfig.apiUrl).origin;
+  } catch {
+    return "https://cms.sasanperfumes.com";
+  }
+}
+
 function headersToRecord(headers?: HeadersInit): Record<string, string> {
   if (!headers) return {};
   if (headers instanceof Headers) {
@@ -93,7 +109,7 @@ function cmsMarketHost(market: string): string {
   try {
     return `${new URL(siteConfig.apiUrl).hostname}/${market}`;
   } catch {
-    return `cms.shapehive.com/${market}`;
+    return `cms.sasanperfumes.com/${market}`;
   }
 }
 
@@ -120,7 +136,7 @@ function shouldUsePublicDnsForCms(url: string, init: RequestInit): boolean {
     const parsed = new URL(url);
     const headers = headersToRecord(init.headers);
     return (
-      parsed.hostname === "cms.shapehive.com" &&
+      parsed.hostname === cmsApiHostName() &&
       parsed.pathname.includes("/wp-json/wc/store/v1/products") &&
       parsed.searchParams.has("_market_cache_bust") &&
       Boolean(headers["X-Market"] || headers["x-market"])
@@ -435,7 +451,7 @@ async function fetchStoreAPI<T>(
   const { revalidate = 60, tags } = options;
   const urls = buildStoreAPIUrls(endpoint, market, options);
   const hdrs = market
-    ? backendHeaders({ "Origin": "https://cms.shapehive.com", "X-Market": market, "Cache-Control": "no-cache", "Pragma": "no-cache" })
+    ? backendHeaders({ "Origin": cmsApiOrigin(), "X-Market": market, "Cache-Control": "no-cache", "Pragma": "no-cache" })
     : backendHeaders();
   const fetchOptions: RequestInit = disableRuntimeCache
     ? { cache: "no-store", headers: hdrs }
@@ -1454,7 +1470,7 @@ export async function getHiddenProductIds(frontendHost?: string): Promise<number
     
     const response = await fetch(url, {
       headers: {
-        ...(backendHeaders(market ? { "Origin": "https://cms.shapehive.com", "X-Market": market } : undefined) as Record<string, string>),
+        ...(backendHeaders(market ? { "Origin": cmsApiOrigin(), "X-Market": market } : undefined) as Record<string, string>),
         Authorization: `Basic ${Buffer.from(`${consumerKey}:${consumerSecret}`).toString("base64")}`,
       },
       next: {

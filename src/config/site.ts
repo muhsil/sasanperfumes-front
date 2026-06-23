@@ -5,8 +5,8 @@
  * These values are read from environment variables when available,
  * with fallbacks for local development.
  */
-const DEFAULT_SITE_URL = "https://shapehive.com";
-const DEFAULT_CMS_URL = "https://cms.shapehive.com";
+const DEFAULT_SITE_URL = "https://sasanperfumes.com";
+const DEFAULT_CMS_URL = "https://cms.sasanperfumes.com";
 
 function safeUrl(value: string | undefined, fallback: string): string {
   const candidate = value?.trim() || fallback;
@@ -40,6 +40,7 @@ export const cmsHostname = urlHost(cmsUrl, DEFAULT_CMS_URL.replace(/^https?:\/\/
 export const mediaHostNames = Array.from(
   new Set([
     cmsHostname,
+    "cms.sasanperfumes.com",
     "cms.shapehive.com",
   ])
 );
@@ -80,10 +81,10 @@ export const siteConfig = {
 
   // Public contact details used by contact buttons and structured data.
   contact: {
-    whatsapp: "971506071405",
-    phone: "+971 50 607 1405",
-    callPhone: "+971506071405",
-    email: "",
+    whatsapp: "0567394314",
+    phone: "0563982953",
+    callPhone: "0563982953",
+    email: "accounts@sasanperfumes.com",
     address: "United Arab Emirates",
   },
   

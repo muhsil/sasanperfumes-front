@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { normalizeMarketHost } from "@/config/market";
+import { siteConfig } from "@/config/site";
 import {
   API_BASE,
   backendHeaders,
@@ -53,8 +54,16 @@ function wpJsonBaseForRouteMarket(market: string): string {
   return `${parsed.toString().replace(/\/+$/, "")}/wp-json`;
 }
 
+function publicFrontendHostName(): string {
+  try {
+    return new URL(siteConfig.url).hostname;
+  } catch {
+    return "sasanperfumes.com";
+  }
+}
+
 function cmsFrontendHostForMarket(market?: string): string {
-  return market && MARKET_CODES.has(market) ? `${market}.shapehive.com` : "";
+  return market && MARKET_CODES.has(market) ? `${market}.${publicFrontendHostName()}` : "";
 }
 
 function responseHeaders(market?: string) {

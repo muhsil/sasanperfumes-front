@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -414,16 +414,16 @@ export default function CheckoutClient() {
                 
                 if (verifyData.success && verifyData.payment_status === "failed") {
                   const errorMessage = verifyData.status_message || verifyData.error_message || 
-                    (isRTL ? "فشل الدفع. يرجى المحاولة مرة أخرى أو استخدام طريقة دفع مختلفة." : "Payment failed. Please try again or use a different payment method.");
+                    (isRTL ? "ÙØ´Ù„ Ø§Ù„Ø¯ÙØ¹. ÙŠØ±Ø¬Ù‰ Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø© Ù…Ø±Ø© Ø£Ø®Ø±Ù‰ Ø£Ùˆ Ø§Ø³ØªØ®Ø¯Ø§Ù… Ø·Ø±ÙŠÙ‚Ø© Ø¯ÙØ¹ Ù…Ø®ØªÙ„ÙØ©." : "Payment failed. Please try again or use a different payment method.");
                   setPaymentError(errorMessage);
                 } else if (!verifyData.success) {
                   // API call failed, show generic error
-                  setPaymentError(isRTL ? "فشل الدفع. يرجى المحاولة مرة أخرى." : "Payment failed. Please try again.");
+                  setPaymentError(isRTL ? "ÙØ´Ù„ Ø§Ù„Ø¯ÙØ¹. ÙŠØ±Ø¬Ù‰ Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø© Ù…Ø±Ø© Ø£Ø®Ø±Ù‰." : "Payment failed. Please try again.");
                 }
               }
             } catch (err) {
               console.error("Failed to verify payment:", err);
-              setPaymentError(isRTL ? "فشل الدفع. يرجى المحاولة مرة أخرى." : "Payment failed. Please try again.");
+              setPaymentError(isRTL ? "ÙØ´Ù„ Ø§Ù„Ø¯ÙØ¹. ÙŠØ±Ø¬Ù‰ Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø© Ù…Ø±Ø© Ø£Ø®Ø±Ù‰." : "Payment failed. Please try again.");
             } finally {
               setIsVerifyingPayment(false);
             }
@@ -560,7 +560,7 @@ export default function CheckoutClient() {
 
 
 
-    // Calculate total fees — merge client-side customs fee with any existing cart.fees
+    // Calculate total fees â€” merge client-side customs fee with any existing cart.fees
     const cartFeeTotal = useMemo(() => {
       let total = 0;
       // Add any existing cart fees from CoCart (excluding customs fees to avoid double-counting)
@@ -597,8 +597,8 @@ export default function CheckoutClient() {
     }, [discountedCartSubtotal, shippingTotal, shippingPackages, cartTotal, cartFeeTotal, customsFee, cart?.fees]);
 
     const breadcrumbItems = [
-    { name: isRTL ? "السلة" : "Cart", href: `${marketPrefix}/${locale}/cart` },
-    { name: isRTL ? "الدفع" : "Checkout", href: `${marketPrefix}/${locale}/checkout` },
+    { name: isRTL ? "Ø§Ù„Ø³Ù„Ø©" : "Cart", href: `${marketPrefix}/${locale}/cart` },
+    { name: isRTL ? "Ø§Ù„Ø¯ÙØ¹" : "Checkout", href: `${marketPrefix}/${locale}/checkout` },
   ];
 
   const checkoutTitle = breadcrumbItems[1]?.name || "Checkout";
@@ -805,17 +805,17 @@ export default function CheckoutClient() {
     try {
       const newAddressErrors: typeof addressErrors = {};
       if (formData.shipping.address && isNumericOnly(formData.shipping.address)) {
-        newAddressErrors.shippingAddress = isRTL ? "يجب أن يحتوي العنوان على أحرف، ولا يمكن أن يكون أرقامًا فقط" : "Address must contain letters, not only numbers";
+        newAddressErrors.shippingAddress = isRTL ? "ÙŠØ¬Ø¨ Ø£Ù† ÙŠØ­ØªÙˆÙŠ Ø§Ù„Ø¹Ù†ÙˆØ§Ù† Ø¹Ù„Ù‰ Ø£Ø­Ø±ÙØŒ ÙˆÙ„Ø§ ÙŠÙ…ÙƒÙ† Ø£Ù† ÙŠÙƒÙˆÙ† Ø£Ø±Ù‚Ø§Ù…Ù‹Ø§ ÙÙ‚Ø·" : "Address must contain letters, not only numbers";
       }
       if (formData.shipping.city && isNumericOnly(formData.shipping.city)) {
-        newAddressErrors.shippingCity = isRTL ? "يجب أن تحتوي المدينة على أحرف، ولا يمكن أن تكون أرقامًا فقط" : "City must contain letters, not only numbers";
+        newAddressErrors.shippingCity = isRTL ? "ÙŠØ¬Ø¨ Ø£Ù† ØªØ­ØªÙˆÙŠ Ø§Ù„Ù…Ø¯ÙŠÙ†Ø© Ø¹Ù„Ù‰ Ø£Ø­Ø±ÙØŒ ÙˆÙ„Ø§ ÙŠÙ…ÙƒÙ† Ø£Ù† ØªÙƒÙˆÙ† Ø£Ø±Ù‚Ø§Ù…Ù‹Ø§ ÙÙ‚Ø·" : "City must contain letters, not only numbers";
       }
       if (!formData.sameAsShipping) {
         if (formData.billing.address && isNumericOnly(formData.billing.address)) {
-          newAddressErrors.billingAddress = isRTL ? "يجب أن يحتوي العنوان على أحرف، ولا يمكن أن يكون أرقامًا فقط" : "Address must contain letters, not only numbers";
+          newAddressErrors.billingAddress = isRTL ? "ÙŠØ¬Ø¨ Ø£Ù† ÙŠØ­ØªÙˆÙŠ Ø§Ù„Ø¹Ù†ÙˆØ§Ù† Ø¹Ù„Ù‰ Ø£Ø­Ø±ÙØŒ ÙˆÙ„Ø§ ÙŠÙ…ÙƒÙ† Ø£Ù† ÙŠÙƒÙˆÙ† Ø£Ø±Ù‚Ø§Ù…Ù‹Ø§ ÙÙ‚Ø·" : "Address must contain letters, not only numbers";
         }
         if (formData.billing.city && isNumericOnly(formData.billing.city)) {
-          newAddressErrors.billingCity = isRTL ? "يجب أن تحتوي المدينة على أحرف، ولا يمكن أن تكون أرقامًا فقط" : "City must contain letters, not only numbers";
+          newAddressErrors.billingCity = isRTL ? "ÙŠØ¬Ø¨ Ø£Ù† ØªØ­ØªÙˆÙŠ Ø§Ù„Ù…Ø¯ÙŠÙ†Ø© Ø¹Ù„Ù‰ Ø£Ø­Ø±ÙØŒ ÙˆÙ„Ø§ ÙŠÙ…ÙƒÙ† Ø£Ù† ØªÙƒÙˆÙ† Ø£Ø±Ù‚Ø§Ù…Ù‹Ø§ ÙÙ‚Ø·" : "City must contain letters, not only numbers";
         }
       }
       if (Object.keys(newAddressErrors).length > 0) {
@@ -830,13 +830,13 @@ export default function CheckoutClient() {
       if (createAccount && !isAuthenticated) {
         // Validate passwords
         if (!accountPassword || accountPassword.length < 6) {
-          setPasswordError(isRTL ? "كلمة المرور يجب أن تكون 6 أحرف على الأقل" : "Password must be at least 6 characters");
+          setPasswordError(isRTL ? "ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± ÙŠØ¬Ø¨ Ø£Ù† ØªÙƒÙˆÙ† 6 Ø£Ø­Ø±Ù Ø¹Ù„Ù‰ Ø§Ù„Ø£Ù‚Ù„" : "Password must be at least 6 characters");
           setIsSubmitting(false);
           return;
         }
         
         if (accountPassword !== confirmPassword) {
-          setPasswordError(isRTL ? "كلمات المرور غير متطابقة" : "Passwords do not match");
+          setPasswordError(isRTL ? "ÙƒÙ„Ù…Ø§Øª Ø§Ù„Ù…Ø±ÙˆØ± ØºÙŠØ± Ù…ØªØ·Ø§Ø¨Ù‚Ø©" : "Passwords do not match");
           setIsSubmitting(false);
           return;
         }
@@ -884,7 +884,7 @@ export default function CheckoutClient() {
           const customerData = await customerResponse.json();
           
           if (!customerData.success) {
-            const errorMessage = customerData.error?.message || (isRTL ? "فشل إنشاء الحساب" : "Failed to create account");
+            const errorMessage = customerData.error?.message || (isRTL ? "ÙØ´Ù„ Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„Ø­Ø³Ø§Ø¨" : "Failed to create account");
             setPasswordError(errorMessage);
             setIsSubmitting(false);
             setIsCreatingAccount(false);
@@ -893,7 +893,7 @@ export default function CheckoutClient() {
           
           newCustomerId = customerData.data?.id;
         } catch {
-          setPasswordError(isRTL ? "حدث خطأ أثناء إنشاء الحساب" : "An error occurred while creating account");
+          setPasswordError(isRTL ? "Ø­Ø¯Ø« Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„Ø­Ø³Ø§Ø¨" : "An error occurred while creating account");
           setIsSubmitting(false);
           setIsCreatingAccount(false);
           return;
@@ -1179,7 +1179,8 @@ export default function CheckoutClient() {
             const isMyFatoorahPayment = formData.paymentMethod.startsWith("myfatoorah");
             const isTabbyPayment = formData.paymentMethod.startsWith("tabby");
             const isTamaraPayment = formData.paymentMethod.startsWith("tamara");
-            const isExternalPayment = isMyFatoorahPayment || isTabbyPayment || isTamaraPayment;
+            const isWooPayments = formData.paymentMethod === "woocommerce_payments" || formData.paymentMethod === "stripe";
+            const isExternalPayment = isMyFatoorahPayment || isTabbyPayment || isTamaraPayment || isWooPayments;
 
             // Clear customer tracking data after successful order creation
             clearTracking();
@@ -1348,6 +1349,14 @@ export default function CheckoutClient() {
               } else {
                 throw new Error(tamaraData.error?.message || "Failed to initiate Tamara payment");
               }
+            } else if (isWooPayments) {
+              const paymentUrl = data.order?.payment_url || data.payment_url;
+
+              if (!paymentUrl) {
+                throw new Error("Payment URL is missing for WooPayments");
+              }
+
+              window.location.href = paymentUrl;
             } else {
               router.push(`${marketPrefix}/${locale}/order-confirmation?order_id=${data.order_id}&order_key=${data.order_key}`);
             }
@@ -1369,19 +1378,19 @@ export default function CheckoutClient() {
             </div>
             <div>
               <p className="text-xs font-semibold text-brand-primary md:text-sm">
-                {isAuthenticated ? user?.user_email : (isRTL ? "ضيف" : "Guest")}
+                {isAuthenticated ? user?.user_email : (isRTL ? "Ø¶ÙŠÙ" : "Guest")}
               </p>
               <p className="text-[11px] text-brand-muted md:text-xs">
                 {isAuthenticated 
-                  ? (isRTL ? "حساب مسجل" : "Registered account")
-                  : (isRTL ? "الدفع كضيف" : "Checkout as guest")}
+                  ? (isRTL ? "Ø­Ø³Ø§Ø¨ Ù…Ø³Ø¬Ù„" : "Registered account")
+                  : (isRTL ? "Ø§Ù„Ø¯ÙØ¹ ÙƒØ¶ÙŠÙ" : "Checkout as guest")}
               </p>
             </div>
           </div>
           {isAuthenticated && (
             <div className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-4 py-1">
               <div className="h-2 w-2 rounded-full bg-emerald-500"></div>
-              <span className="text-xs font-medium text-emerald-700">{isRTL ? "متصل" : "Connected"}</span>
+              <span className="text-xs font-medium text-emerald-700">{isRTL ? "Ù…ØªØµÙ„" : "Connected"}</span>
             </div>
           )}
         </div>
@@ -1411,7 +1420,7 @@ export default function CheckoutClient() {
             <div className="flex items-center gap-3">
               <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-300 border-t-blue-600"></div>
               <span className="text-blue-700">
-                {isRTL ? "جاري التحقق من حالة الدفع..." : "Verifying payment status..."}
+                {isRTL ? "Ø¬Ø§Ø±ÙŠ Ø§Ù„ØªØ­Ù‚Ù‚ Ù…Ù† Ø­Ø§Ù„Ø© Ø§Ù„Ø¯ÙØ¹..." : "Verifying payment status..."}
               </span>
             </div>
           </div>
@@ -1427,13 +1436,13 @@ export default function CheckoutClient() {
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-red-800">
-                  {isRTL ? "فشل الدفع" : "Payment Failed"}
+                  {isRTL ? "ÙØ´Ù„ Ø§Ù„Ø¯ÙØ¹" : "Payment Failed"}
                 </h3>
                 <p className="mt-1 text-sm text-red-700">
                   {paymentError}
                 </p>
                 <p className="mt-2 text-sm text-red-600">
-                  {isRTL ? "يرجى التحقق من تفاصيل الدفع والمحاولة مرة أخرى." : "Please check your payment details and try again."}
+                  {isRTL ? "ÙŠØ±Ø¬Ù‰ Ø§Ù„ØªØ­Ù‚Ù‚ Ù…Ù† ØªÙØ§ØµÙŠÙ„ Ø§Ù„Ø¯ÙØ¹ ÙˆØ§Ù„Ù…Ø­Ø§ÙˆÙ„Ø© Ù…Ø±Ø© Ø£Ø®Ø±Ù‰." : "Please check your payment details and try again."}
                 </p>
               </div>
               <button
@@ -1450,7 +1459,7 @@ export default function CheckoutClient() {
               {isLoadingCustomer && (
                 <div className="mb-6 flex items-center justify-center py-4">
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-border border-t-brand-primary"></div>
-                  <span className="ml-2 text-brand-muted">{isRTL ? "جاري تحميل بياناتك..." : "Loading your data..."}</span>
+                  <span className="ml-2 text-brand-muted">{isRTL ? "Ø¬Ø§Ø±ÙŠ ØªØ­Ù…ÙŠÙ„ Ø¨ÙŠØ§Ù†Ø§ØªÙƒ..." : "Loading your data..."}</span>
                 </div>
               )}
 
@@ -1463,16 +1472,16 @@ export default function CheckoutClient() {
                     </svg>
                   </div>
                   <h2 className="mb-2 font-title text-xl text-brand-primary md:text-2xl">
-                    {isRTL ? "سلة التسوق فارغة" : "Your cart is empty"}
+                    {isRTL ? "Ø³Ù„Ø© Ø§Ù„ØªØ³ÙˆÙ‚ ÙØ§Ø±ØºØ©" : "Your cart is empty"}
                   </h2>
                   <p className="mb-4 text-brand-muted">
                     {isRTL 
-                      ? "لا يمكنك المتابعة للدفع بدون منتجات في السلة." 
+                      ? "Ù„Ø§ ÙŠÙ…ÙƒÙ†Ùƒ Ø§Ù„Ù…ØªØ§Ø¨Ø¹Ø© Ù„Ù„Ø¯ÙØ¹ Ø¨Ø¯ÙˆÙ† Ù…Ù†ØªØ¬Ø§Øª ÙÙŠ Ø§Ù„Ø³Ù„Ø©." 
                       : "You cannot proceed to checkout without any products in your cart."}
                   </p>
                   <p className="text-sm text-brand-primary">
                     {isRTL 
-                      ? `سيتم توجيهك إلى الصفحة الرئيسية خلال ${emptyCartCountdown} ثانية...` 
+                      ? `Ø³ÙŠØªÙ… ØªÙˆØ¬ÙŠÙ‡Ùƒ Ø¥Ù„Ù‰ Ø§Ù„ØµÙØ­Ø© Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ© Ø®Ù„Ø§Ù„ ${emptyCartCountdown} Ø«Ø§Ù†ÙŠØ©...` 
                       : `Redirecting to home page in ${emptyCartCountdown} seconds...`}
                   </p>
                   <button
@@ -1480,7 +1489,7 @@ export default function CheckoutClient() {
                     onClick={() => router.push(`${marketPrefix}/${locale}`)}
                     className="mt-4 inline-flex items-center rounded-full bg-brand-primary px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-primary-dark"
                   >
-                    {isRTL ? "العودة للرئيسية الآن" : "Go to Home Now"}
+                    {isRTL ? "Ø§Ù„Ø¹ÙˆØ¯Ø© Ù„Ù„Ø±Ø¦ÙŠØ³ÙŠØ© Ø§Ù„Ø¢Ù†" : "Go to Home Now"}
                   </button>
                 </div>
               )}
@@ -1492,13 +1501,13 @@ export default function CheckoutClient() {
             {/* Contact Information */}
             <div className="luxury-panel p-4 md:p-6">
                             <h2 className="mb-3 font-title text-xl text-brand-primary md:mb-5 md:text-2xl">
-                              {isRTL ? "معلومات الاتصال" : "Contact Information"}
+                              {isRTL ? "Ù…Ø¹Ù„ÙˆÙ…Ø§Øª Ø§Ù„Ø§ØªØµØ§Ù„" : "Contact Information"}
                             </h2>
               <div className={`grid gap-3 md:gap-4 ${isAuthenticated ? "sm:grid-cols-1" : "sm:grid-cols-2"}`}>
                 {!isAuthenticated && (
                 <div className="relative">
                   <Input
-                    label={isRTL ? "البريد الإلكتروني" : "Email"}
+                    label={isRTL ? "Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ" : "Email"}
                     type="email"
                     required
                     value={formData.shipping.email}
@@ -1510,7 +1519,7 @@ export default function CheckoutClient() {
                 </div>
                 )}
                 <PhoneInput
-                  label={isRTL ? "رقم الهاتف" : "Phone"}
+                  label={isRTL ? "Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ" : "Phone"}
                   required
                   value={formData.shipping.phone}
                   onChange={(phone) => handleShippingChange("phone", phone)}
@@ -1530,11 +1539,11 @@ export default function CheckoutClient() {
                     </div>
                     <div className="flex-1">
                       <h3 className="text-sm font-medium text-brand-primary">
-                        {isRTL ? "هذا البريد الإلكتروني مسجل بالفعل" : "This email is already registered"}
+                        {isRTL ? "Ù‡Ø°Ø§ Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ Ù…Ø³Ø¬Ù„ Ø¨Ø§Ù„ÙØ¹Ù„" : "This email is already registered"}
                       </h3>
                       <p className="mt-1 text-sm text-brand-primary">
                         {isRTL 
-                          ? "يرجى تسجيل الدخول لربط هذا الطلب بحسابك وتتبع طلباتك بسهولة."
+                          ? "ÙŠØ±Ø¬Ù‰ ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„ Ù„Ø±Ø¨Ø· Ù‡Ø°Ø§ Ø§Ù„Ø·Ù„Ø¨ Ø¨Ø­Ø³Ø§Ø¨Ùƒ ÙˆØªØªØ¨Ø¹ Ø·Ù„Ø¨Ø§ØªÙƒ Ø¨Ø³Ù‡ÙˆÙ„Ø©."
                           : "Please log in to link this order to your account and easily track your orders."}
                       </p>
                       <div className="mt-3 flex flex-wrap gap-2">
@@ -1544,7 +1553,7 @@ export default function CheckoutClient() {
                           size="sm"
                           onClick={() => router.push(`${marketPrefix}/${locale}/login?redirect=${encodeURIComponent(`${marketPrefix}/${locale}/checkout`)}`)}
                         >
-                          {isRTL ? "تسجيل الدخول" : "Log In"}
+                          {isRTL ? "ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„" : "Log In"}
                         </Button>
                         <Button
                           type="button"
@@ -1552,7 +1561,7 @@ export default function CheckoutClient() {
                           size="sm"
                           onClick={() => setShowLoginPrompt(false)}
                         >
-                          {isRTL ? "المتابعة كضيف" : "Continue as Guest"}
+                          {isRTL ? "Ø§Ù„Ù…ØªØ§Ø¨Ø¹Ø© ÙƒØ¶ÙŠÙ" : "Continue as Guest"}
                         </Button>
                       </div>
                     </div>
@@ -1579,10 +1588,10 @@ export default function CheckoutClient() {
                     />
                     <div className="flex-1">
                       <label htmlFor="create-account" className="cursor-pointer text-sm font-semibold text-brand-primary">
-                        {isRTL ? "إنشاء حساب لتتبع طلباتك" : "Create an account to track your orders"}
+                        {isRTL ? "Ø¥Ù†Ø´Ø§Ø¡ Ø­Ø³Ø§Ø¨ Ù„ØªØªØ¨Ø¹ Ø·Ù„Ø¨Ø§ØªÙƒ" : "Create an account to track your orders"}
                       </label>
                       <p className="mt-0.5 text-xs text-brand-muted">
-                        {isRTL ? "يمكنك تتبع طلباتك وحفظ عناوينك" : "Track your orders and save your addresses"}
+                        {isRTL ? "ÙŠÙ…ÙƒÙ†Ùƒ ØªØªØ¨Ø¹ Ø·Ù„Ø¨Ø§ØªÙƒ ÙˆØ­ÙØ¸ Ø¹Ù†Ø§ÙˆÙŠÙ†Ùƒ" : "Track your orders and save your addresses"}
                       </p>
                     </div>
                   </div>
@@ -1597,11 +1606,11 @@ export default function CheckoutClient() {
                       {isCreatingAccount && (
                         <div className="flex items-center gap-2 rounded-md bg-blue-50 p-3 text-sm text-blue-600">
                           <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-300 border-t-blue-600"></div>
-                          {isRTL ? "جاري إنشاء الحساب..." : "Creating account..."}
+                          {isRTL ? "Ø¬Ø§Ø±ÙŠ Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„Ø­Ø³Ø§Ø¨..." : "Creating account..."}
                         </div>
                       )}
                       <Input
-                        label={isRTL ? "كلمة المرور" : "Password"}
+                        label={isRTL ? "ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±" : "Password"}
                         type="password"
                         required={createAccount}
                         value={accountPassword}
@@ -1609,11 +1618,11 @@ export default function CheckoutClient() {
                           setAccountPassword(e.target.value);
                           setPasswordError(null);
                         }}
-                        placeholder={isRTL ? "أدخل كلمة المرور" : "Enter password"}
+                        placeholder={isRTL ? "Ø£Ø¯Ø®Ù„ ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±" : "Enter password"}
                         disabled={isCreatingAccount}
                       />
                       <Input
-                        label={isRTL ? "تأكيد كلمة المرور" : "Confirm Password"}
+                        label={isRTL ? "ØªØ£ÙƒÙŠØ¯ ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±" : "Confirm Password"}
                         type="password"
                         required={createAccount}
                         value={confirmPassword}
@@ -1621,7 +1630,7 @@ export default function CheckoutClient() {
                           setConfirmPassword(e.target.value);
                           setPasswordError(null);
                         }}
-                        placeholder={isRTL ? "أعد إدخال كلمة المرور" : "Re-enter password"}
+                        placeholder={isRTL ? "Ø£Ø¹Ø¯ Ø¥Ø¯Ø®Ø§Ù„ ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±" : "Re-enter password"}
                         disabled={isCreatingAccount}
                       />
                     </div>
@@ -1633,7 +1642,7 @@ export default function CheckoutClient() {
             {/* Shipping Address */}
             <div className="luxury-panel p-4 md:p-6">
                             <h2 className="mb-3 font-title text-xl text-brand-primary md:mb-5 md:text-2xl">
-                              {isRTL ? "عنوان الشحن" : "Delivery"}
+                              {isRTL ? "Ø¹Ù†ÙˆØ§Ù† Ø§Ù„Ø´Ø­Ù†" : "Delivery"}
                             </h2>
 
               {/* Show saved addresses selector for authenticated users */}
@@ -1651,8 +1660,8 @@ export default function CheckoutClient() {
                           <div>
                             <p className="font-semibold text-brand-primary">
                               {selectedAddressId 
-                                ? savedAddresses.find(a => a.id === selectedAddressId)?.label || (isRTL ? "العنوان المحدد" : "Selected Address")
-                                : (isRTL ? "اختر عنوان محفوظ" : "Select a saved address")}
+                                ? savedAddresses.find(a => a.id === selectedAddressId)?.label || (isRTL ? "Ø§Ù„Ø¹Ù†ÙˆØ§Ù† Ø§Ù„Ù…Ø­Ø¯Ø¯" : "Selected Address")
+                                : (isRTL ? "Ø§Ø®ØªØ± Ø¹Ù†ÙˆØ§Ù† Ù…Ø­ÙÙˆØ¸" : "Select a saved address")}
                             </p>
                             {selectedAddressId && (
                               <p className="mt-1 text-sm text-brand-muted">
@@ -1690,7 +1699,7 @@ export default function CheckoutClient() {
                                   <p className="font-medium text-brand-primary">{address.label}</p>
                                   {address.is_default && (
                                     <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">
-                                      {isRTL ? "افتراضي" : "Default"}
+                                      {isRTL ? "Ø§ÙØªØ±Ø§Ø¶ÙŠ" : "Default"}
                                     </span>
                                   )}
                                 </div>
@@ -1717,20 +1726,20 @@ export default function CheckoutClient() {
 
               <div className="grid gap-3 md:gap-4 sm:grid-cols-2">
                 <Input
-                  label={isRTL ? "الاسم الأول" : "First Name"}
+                  label={isRTL ? "Ø§Ù„Ø§Ø³Ù… Ø§Ù„Ø£ÙˆÙ„" : "First Name"}
                   required
                   value={formData.shipping.firstName}
                   onChange={(e) => handleShippingChange("firstName", e.target.value)}
                 />
                 <Input
-                  label={isRTL ? "اسم العائلة" : "Last Name"}
+                  label={isRTL ? "Ø§Ø³Ù… Ø§Ù„Ø¹Ø§Ø¦Ù„Ø©" : "Last Name"}
                   required
                   value={formData.shipping.lastName}
                   onChange={(e) => handleShippingChange("lastName", e.target.value)}
                 />
                 <div className="sm:col-span-2">
                   <Input
-                    label={isRTL ? "العنوان" : "Address"}
+                    label={isRTL ? "Ø§Ù„Ø¹Ù†ÙˆØ§Ù†" : "Address"}
                     required
                     value={formData.shipping.address}
                     onChange={(e) => handleShippingChange("address", e.target.value)}
@@ -1739,31 +1748,31 @@ export default function CheckoutClient() {
                 </div>
                 <div className="sm:col-span-2">
                   <Input
-                    label={isRTL ? "العنوان (سطر 2)" : "Address Line 2"}
+                    label={isRTL ? "Ø§Ù„Ø¹Ù†ÙˆØ§Ù† (Ø³Ø·Ø± 2)" : "Address Line 2"}
                     value={formData.shipping.address2}
                     onChange={(e) => handleShippingChange("address2", e.target.value)}
-                    placeholder={isRTL ? "شقة، جناح، وحدة، إلخ. (اختياري)" : "Apartment, suite, unit, etc. (optional)"}
+                    placeholder={isRTL ? "Ø´Ù‚Ø©ØŒ Ø¬Ù†Ø§Ø­ØŒ ÙˆØ­Ø¯Ø©ØŒ Ø¥Ù„Ø®. (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)" : "Apartment, suite, unit, etc. (optional)"}
                   />
                 </div>
                 <Input
-                  label={isRTL ? "المدينة" : "City"}
+                  label={isRTL ? "Ø§Ù„Ù…Ø¯ÙŠÙ†Ø©" : "City"}
                   required
                   value={formData.shipping.city}
                   onChange={(e) => handleShippingChange("city", e.target.value)}
                   error={addressErrors.shippingCity}
                 />
                 <Input
-                  label={isRTL ? "المنطقة" : "State/Province"}
+                  label={isRTL ? "Ø§Ù„Ù…Ù†Ø·Ù‚Ø©" : "State/Province"}
                   value={formData.shipping.state}
                   onChange={(e) => handleShippingChange("state", e.target.value)}
                 />
                 <Input
-                  label={isRTL ? "الرمز البريدي" : "Postal Code"}
+                  label={isRTL ? "Ø§Ù„Ø±Ù…Ø² Ø§Ù„Ø¨Ø±ÙŠØ¯ÙŠ" : "Postal Code"}
                   value={formData.shipping.postalCode}
                   onChange={(e) => handleShippingChange("postalCode", e.target.value)}
                 />
                 <CountrySelect
-                  label={isRTL ? "الدولة" : "Country"}
+                  label={isRTL ? "Ø§Ù„Ø¯ÙˆÙ„Ø©" : "Country"}
                   required
                   value={formData.shipping.country}
                   onChange={(value) => handleShippingChange("country", value)}
@@ -1776,19 +1785,19 @@ export default function CheckoutClient() {
             {/* Shipping Method Selection */}
             <div className="luxury-panel p-4 md:p-6">
               <h2 className="mb-3 font-title text-xl text-brand-primary md:mb-5 md:text-2xl">
-                {isRTL ? "طريقة الشحن" : "Shipping Method"}
+                {isRTL ? "Ø·Ø±ÙŠÙ‚Ø© Ø§Ù„Ø´Ø­Ù†" : "Shipping Method"}
               </h2>
               
               {isLoadingShipping ? (
                 <div className="flex items-center justify-center py-4">
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-border border-t-brand-primary"></div>
-                  <span className="ml-2 text-brand-muted">{isRTL ? "جاري تحميل طرق الشحن..." : "Loading shipping methods..."}</span>
+                  <span className="ml-2 text-brand-muted">{isRTL ? "Ø¬Ø§Ø±ÙŠ ØªØ­Ù…ÙŠÙ„ Ø·Ø±Ù‚ Ø§Ù„Ø´Ø­Ù†..." : "Loading shipping methods..."}</span>
                 </div>
               ) : shippingPackages.length === 0 || shippingPackages.every(pkg => !pkg.shipping_rates || pkg.shipping_rates.length === 0) ? (
                 <div className="rounded-lg border border-brand-primary bg-brand-beige p-4">
                   <p className="text-sm text-brand-primary">
                     {isRTL 
-                      ? "يرجى إدخال عنوان الشحن لعرض طرق الشحن المتاحة" 
+                      ? "ÙŠØ±Ø¬Ù‰ Ø¥Ø¯Ø®Ø§Ù„ Ø¹Ù†ÙˆØ§Ù† Ø§Ù„Ø´Ø­Ù† Ù„Ø¹Ø±Ø¶ Ø·Ø±Ù‚ Ø§Ù„Ø´Ø­Ù† Ø§Ù„Ù…ØªØ§Ø­Ø©" 
                       : "Please enter your shipping address to see available shipping methods"}
                   </p>
                 </div>
@@ -1838,10 +1847,10 @@ export default function CheckoutClient() {
                                   }`}>
                                     {rate.free_shipping_eligible === false
                                       ? (isRTL
-                                          ? `الحد الأدنى للشراء ${rate.free_shipping_min_amount} ${rate.currency_code}`
+                                          ? `Ø§Ù„Ø­Ø¯ Ø§Ù„Ø£Ø¯Ù†Ù‰ Ù„Ù„Ø´Ø±Ø§Ø¡ ${rate.free_shipping_min_amount} ${rate.currency_code}`
                                           : `Minimum purchase of ${rate.free_shipping_min_amount} ${rate.currency_code} required`)
                                       : (isRTL
-                                          ? `الحد الأدنى للشراء ${rate.free_shipping_min_amount} ${rate.currency_code} - تم الاستيفاء!`
+                                          ? `Ø§Ù„Ø­Ø¯ Ø§Ù„Ø£Ø¯Ù†Ù‰ Ù„Ù„Ø´Ø±Ø§Ø¡ ${rate.free_shipping_min_amount} ${rate.currency_code} - ØªÙ… Ø§Ù„Ø§Ø³ØªÙŠÙØ§Ø¡!`
                                           : `Minimum purchase of ${rate.free_shipping_min_amount} ${rate.currency_code} met!`)}
                                   </p>
                                 )}
@@ -1853,7 +1862,7 @@ export default function CheckoutClient() {
                                       ? "text-brand-muted"
                                       : "text-green-600"
                                   }`}>
-                                    {isRTL ? "مجاني" : "Free"}
+                                    {isRTL ? "Ù…Ø¬Ø§Ù†ÙŠ" : "Free"}
                                   </span>
                                 ) : (
                                   <FormattedPrice
@@ -1877,7 +1886,7 @@ export default function CheckoutClient() {
             <div className="luxury-panel p-4 md:p-6">
               <div className="mb-4 flex items-center justify-between">
                                 <h2 className="font-title text-xl text-brand-primary md:text-2xl">
-                                  {isRTL ? "عنوان الفاتورة" : "Billing Address"}
+                                  {isRTL ? "Ø¹Ù†ÙˆØ§Ù† Ø§Ù„ÙØ§ØªÙˆØ±Ø©" : "Billing Address"}
                                 </h2>
                 <button
                   type="button"
@@ -1893,7 +1902,7 @@ export default function CheckoutClient() {
                 <Checkbox
                   checked={formData.sameAsShipping}
                   onChange={(e) => handleSameAsShippingChange(e.target.checked)}
-                  label={isRTL ? "نفس عنوان الشحن" : "Same as shipping address"}
+                  label={isRTL ? "Ù†ÙØ³ Ø¹Ù†ÙˆØ§Ù† Ø§Ù„Ø´Ø­Ù†" : "Same as shipping address"}
                 />
               </div>
 
@@ -1901,20 +1910,20 @@ export default function CheckoutClient() {
               {(!formData.sameAsShipping || showBillingSection) && !formData.sameAsShipping && (
                 <div className="mt-4 grid gap-3 md:gap-4 sm:grid-cols-2">
                   <Input
-                    label={isRTL ? "الاسم الأول" : "First Name"}
+                    label={isRTL ? "Ø§Ù„Ø§Ø³Ù… Ø§Ù„Ø£ÙˆÙ„" : "First Name"}
                     required
                     value={formData.billing.firstName}
                     onChange={(e) => handleBillingChange("firstName", e.target.value)}
                   />
                   <Input
-                    label={isRTL ? "اسم العائلة" : "Last Name"}
+                    label={isRTL ? "Ø§Ø³Ù… Ø§Ù„Ø¹Ø§Ø¦Ù„Ø©" : "Last Name"}
                     required
                     value={formData.billing.lastName}
                     onChange={(e) => handleBillingChange("lastName", e.target.value)}
                   />
                   <div className="sm:col-span-2">
                     <Input
-                      label={isRTL ? "العنوان" : "Address"}
+                      label={isRTL ? "Ø§Ù„Ø¹Ù†ÙˆØ§Ù†" : "Address"}
                       required
                       value={formData.billing.address}
                       onChange={(e) => handleBillingChange("address", e.target.value)}
@@ -1923,45 +1932,45 @@ export default function CheckoutClient() {
                   </div>
                   <div className="sm:col-span-2">
                     <Input
-                      label={isRTL ? "العنوان (سطر 2)" : "Address Line 2"}
+                      label={isRTL ? "Ø§Ù„Ø¹Ù†ÙˆØ§Ù† (Ø³Ø·Ø± 2)" : "Address Line 2"}
                       value={formData.billing.address2}
                       onChange={(e) => handleBillingChange("address2", e.target.value)}
-                      placeholder={isRTL ? "شقة، جناح، وحدة، إلخ. (اختياري)" : "Apartment, suite, unit, etc. (optional)"}
+                      placeholder={isRTL ? "Ø´Ù‚Ø©ØŒ Ø¬Ù†Ø§Ø­ØŒ ÙˆØ­Ø¯Ø©ØŒ Ø¥Ù„Ø®. (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)" : "Apartment, suite, unit, etc. (optional)"}
                     />
                   </div>
                   <Input
-                    label={isRTL ? "المدينة" : "City"}
+                    label={isRTL ? "Ø§Ù„Ù…Ø¯ÙŠÙ†Ø©" : "City"}
                     required
                     value={formData.billing.city}
                     onChange={(e) => handleBillingChange("city", e.target.value)}
                     error={addressErrors.billingCity}
                   />
                   <Input
-                    label={isRTL ? "المنطقة" : "State/Province"}
+                    label={isRTL ? "Ø§Ù„Ù…Ù†Ø·Ù‚Ø©" : "State/Province"}
                     value={formData.billing.state}
                     onChange={(e) => handleBillingChange("state", e.target.value)}
                   />
                   <Input
-                    label={isRTL ? "الرمز البريدي" : "Postal Code"}
+                    label={isRTL ? "Ø§Ù„Ø±Ù…Ø² Ø§Ù„Ø¨Ø±ÙŠØ¯ÙŠ" : "Postal Code"}
                     value={formData.billing.postalCode}
                     onChange={(e) => handleBillingChange("postalCode", e.target.value)}
                   />
                   <CountrySelect
-                    label={isRTL ? "الدولة" : "Country"}
+                    label={isRTL ? "Ø§Ù„Ø¯ÙˆÙ„Ø©" : "Country"}
                     required
                     value={formData.billing.country}
                     onChange={(value) => handleBillingChange("country", value)}
                     isRTL={isRTL}
                   />
                   <PhoneInput
-                    label={isRTL ? "رقم الهاتف" : "Phone"}
+                    label={isRTL ? "Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ" : "Phone"}
                     value={formData.billing.phone}
                     onChange={(phone) => handleBillingChange("phone", phone)}
                     countryCode={formData.billing.country}
                     isRTL={isRTL}
                   />
                   <Input
-                    label={isRTL ? "البريد الإلكتروني" : "Email"}
+                    label={isRTL ? "Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ" : "Email"}
                     type="email"
                     value={formData.billing.email}
                     onChange={(e) => handleBillingChange("email", e.target.value)}
@@ -1973,7 +1982,7 @@ export default function CheckoutClient() {
                         {/* Payment Method */}
                         <div className="luxury-panel p-4 md:p-6">
                                         <h2 className="mb-3 font-title text-xl text-brand-primary md:mb-5 md:text-2xl">
-                                          {isRTL ? "طريقة الدفع" : "Payment Method"}
+                                          {isRTL ? "Ø·Ø±ÙŠÙ‚Ø© Ø§Ù„Ø¯ÙØ¹" : "Payment Method"}
                                         </h2>
                           
                           {/* MyFatoorah Test Mode Banner */}
@@ -1984,7 +1993,7 @@ export default function CheckoutClient() {
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                 </svg>
                                 <span className="text-sm font-medium text-brand-primary">
-                                  {isRTL ? "وضع الاختبار - لن يتم خصم أي مبالغ حقيقية" : "Test Mode - No real charges will be made"}
+                                  {isRTL ? "ÙˆØ¶Ø¹ Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø± - Ù„Ù† ÙŠØªÙ… Ø®ØµÙ… Ø£ÙŠ Ù…Ø¨Ø§Ù„Øº Ø­Ù‚ÙŠÙ‚ÙŠØ©" : "Test Mode - No real charges will be made"}
                                 </span>
                               </div>
                             </div>
@@ -1994,50 +2003,52 @@ export default function CheckoutClient() {
                             {isLoadingGateways ? (
                               <div className="flex items-center justify-center py-4">
                                 <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-border border-t-brand-primary"></div>
-                                <span className="ml-2 text-brand-muted">{isRTL ? "جاري تحميل طرق الدفع..." : "Loading payment methods..."}</span>
+                                <span className="ml-2 text-brand-muted">{isRTL ? "Ø¬Ø§Ø±ÙŠ ØªØ­Ù…ÙŠÙ„ Ø·Ø±Ù‚ Ø§Ù„Ø¯ÙØ¹..." : "Loading payment methods..."}</span>
                               </div>
                             ) : filteredPaymentGateways.length === 0 ? (
                               <div className="py-4 text-center text-brand-muted">
-                                {isRTL ? "لا توجد طرق دفع متاحة" : "No payment methods available"}
+                                {isRTL ? "Ù„Ø§ ØªÙˆØ¬Ø¯ Ø·Ø±Ù‚ Ø¯ÙØ¹ Ù…ØªØ§Ø­Ø©" : "No payment methods available"}
                               </div>
                             ) : (
                               filteredPaymentGateways.map((gateway) => {
                                                                 const getGatewayLabel = (id: string, title: string) => {
                                                                   const labels: Record<string, { en: string; ar: string }> = {
-                                                                    tabby_installments: { en: "Pay with Tabby", ar: "الدفع مع تابي" },
-                                                                    tabby_checkout: { en: "Pay with Tabby", ar: "الدفع مع تابي" },
-                                                                    tabby: { en: "Pay with Tabby", ar: "الدفع مع تابي" },
-                                                                    tamara: { en: "Tamara - Buy Now Pay Later", ar: "تمارا - اشترِ الآن وادفع لاحقاً" },
-                                                                    "tamara-gateway": { en: "Tamara - Buy Now Pay Later", ar: "تمارا - اشترِ الآن وادفع لاحقاً" },
-                                                                    bacs: { en: "Bank Transfer", ar: "تحويل بنكي" },
-                                                                    cheque: { en: "Check Payment", ar: "الدفع بشيك" },
-                                                                    paypal: { en: "PayPal", ar: "باي بال" },
-                                                                    stripe: { en: "Credit Card", ar: "بطاقة ائتمان" },
-                                                                    card: { en: "Credit Card", ar: "بطاقة ائتمان" },
-                                                                    myfatoorah_v2: { en: "Credit/Debit Card", ar: "بطاقة ائتمان/خصم" },
-                                                                    myfatoorah: { en: "Credit/Debit Card", ar: "بطاقة ائتمان/خصم" },
-                                                                    myfatoorah_cards: { en: "Credit/Debit Card", ar: "بطاقة ائتمان/خصم" },
-                                                                    myfatoorah_embedded: { en: "Credit/Debit Card", ar: "بطاقة ائتمان/خصم" },
+                                                                    tabby_installments: { en: "Pay with Tabby", ar: "Ø§Ù„Ø¯ÙØ¹ Ù…Ø¹ ØªØ§Ø¨ÙŠ" },
+                                                                    tabby_checkout: { en: "Pay with Tabby", ar: "Ø§Ù„Ø¯ÙØ¹ Ù…Ø¹ ØªØ§Ø¨ÙŠ" },
+                                                                    tabby: { en: "Pay with Tabby", ar: "Ø§Ù„Ø¯ÙØ¹ Ù…Ø¹ ØªØ§Ø¨ÙŠ" },
+                                                                    tamara: { en: "Tamara - Buy Now Pay Later", ar: "ØªÙ…Ø§Ø±Ø§ - Ø§Ø´ØªØ±Ù Ø§Ù„Ø¢Ù† ÙˆØ§Ø¯ÙØ¹ Ù„Ø§Ø­Ù‚Ø§Ù‹" },
+                                                                    "tamara-gateway": { en: "Tamara - Buy Now Pay Later", ar: "ØªÙ…Ø§Ø±Ø§ - Ø§Ø´ØªØ±Ù Ø§Ù„Ø¢Ù† ÙˆØ§Ø¯ÙØ¹ Ù„Ø§Ø­Ù‚Ø§Ù‹" },
+                                                                    bacs: { en: "Bank Transfer", ar: "ØªØ­ÙˆÙŠÙ„ Ø¨Ù†ÙƒÙŠ" },
+                                                                    cheque: { en: "Check Payment", ar: "Ø§Ù„Ø¯ÙØ¹ Ø¨Ø´ÙŠÙƒ" },
+                                                                    paypal: { en: "PayPal", ar: "Ø¨Ø§ÙŠ Ø¨Ø§Ù„" },
+                                                                    woocommerce_payments: { en: "Credit Card", ar: "بطاقة ائتمان" },
+                                                                    stripe: { en: "Credit Card", ar: "Ø¨Ø·Ø§Ù‚Ø© Ø§Ø¦ØªÙ…Ø§Ù†" },
+                                                                    card: { en: "Credit Card", ar: "Ø¨Ø·Ø§Ù‚Ø© Ø§Ø¦ØªÙ…Ø§Ù†" },
+                                                                    myfatoorah_v2: { en: "Credit/Debit Card", ar: "Ø¨Ø·Ø§Ù‚Ø© Ø§Ø¦ØªÙ…Ø§Ù†/Ø®ØµÙ…" },
+                                                                    myfatoorah: { en: "Credit/Debit Card", ar: "Ø¨Ø·Ø§Ù‚Ø© Ø§Ø¦ØªÙ…Ø§Ù†/Ø®ØµÙ…" },
+                                                                    myfatoorah_cards: { en: "Credit/Debit Card", ar: "Ø¨Ø·Ø§Ù‚Ø© Ø§Ø¦ØªÙ…Ø§Ù†/Ø®ØµÙ…" },
+                                                                    myfatoorah_embedded: { en: "Credit/Debit Card", ar: "Ø¨Ø·Ø§Ù‚Ø© Ø§Ø¦ØªÙ…Ø§Ù†/Ø®ØµÙ…" },
                                                                   };
                                                                   return labels[id]?.[isRTL ? "ar" : "en"] || title;
                                                                 };
 
                                                                 const getGatewayDescription = (id: string, description: string) => {
                                                                   const descriptions: Record<string, { en: string; ar: string }> = {
-                                                                    tabby_installments: { en: "Split your payment into 4 interest-free installments", ar: "قسّم دفعتك إلى 4 أقساط بدون فوائد" },
-                                                                    tabby_checkout: { en: "Split your payment into 4 interest-free installments", ar: "قسّم دفعتك إلى 4 أقساط بدون فوائد" },
-                                                                    tabby: { en: "Split your payment into 4 interest-free installments", ar: "قسّم دفعتك إلى 4 أقساط بدون فوائد" },
-                                                                    tamara: { en: "Pay in easy installments with Tamara", ar: "ادفع بأقساط سهلة مع تمارا" },
-                                                                    "tamara-gateway": { en: "Pay in easy installments with Tamara", ar: "ادفع بأقساط سهلة مع تمارا" },
-                                                                    bacs: { en: "Make payment directly to our bank account", ar: "قم بالدفع مباشرة إلى حسابنا البنكي" },
-                                                                    cheque: { en: "Pay with a check", ar: "الدفع بشيك" },
-                                                                    paypal: { en: "Pay securely with PayPal", ar: "ادفع بأمان مع باي بال" },
-                                                                    stripe: { en: "Pay securely with your card", ar: "ادفع بأمان ببطاقتك" },
-                                                                    card: { en: "Pay securely with your card", ar: "ادفع بأمان ببطاقتك" },
-                                                                    myfatoorah_v2: { en: "Pay securely with KNET, VISA, Mastercard, MADA, Apple Pay", ar: "ادفع بأمان عبر كي نت، فيزا، ماستركارد، مدى، أبل باي" },
-                                                                    myfatoorah: { en: "Pay securely with KNET, VISA, Mastercard, MADA, Apple Pay", ar: "ادفع بأمان عبر كي نت، فيزا، ماستركارد، مدى، أبل باي" },
-                                                                    myfatoorah_cards: { en: "Pay securely with KNET, VISA, Mastercard, MADA, Apple Pay", ar: "ادفع بأمان عبر كي نت، فيزا، ماستركارد، مدى، أبل باي" },
-                                                                    myfatoorah_embedded: { en: "Pay securely with KNET, VISA, Mastercard, MADA, Apple Pay", ar: "ادفع بأمان عبر كي نت، فيزا، ماستركارد، مدى، أبل باي" },
+                                                                    tabby_installments: { en: "Split your payment into 4 interest-free installments", ar: "Ù‚Ø³Ù‘Ù… Ø¯ÙØ¹ØªÙƒ Ø¥Ù„Ù‰ 4 Ø£Ù‚Ø³Ø§Ø· Ø¨Ø¯ÙˆÙ† ÙÙˆØ§Ø¦Ø¯" },
+                                                                    tabby_checkout: { en: "Split your payment into 4 interest-free installments", ar: "Ù‚Ø³Ù‘Ù… Ø¯ÙØ¹ØªÙƒ Ø¥Ù„Ù‰ 4 Ø£Ù‚Ø³Ø§Ø· Ø¨Ø¯ÙˆÙ† ÙÙˆØ§Ø¦Ø¯" },
+                                                                    tabby: { en: "Split your payment into 4 interest-free installments", ar: "Ù‚Ø³Ù‘Ù… Ø¯ÙØ¹ØªÙƒ Ø¥Ù„Ù‰ 4 Ø£Ù‚Ø³Ø§Ø· Ø¨Ø¯ÙˆÙ† ÙÙˆØ§Ø¦Ø¯" },
+                                                                    tamara: { en: "Pay in easy installments with Tamara", ar: "Ø§Ø¯ÙØ¹ Ø¨Ø£Ù‚Ø³Ø§Ø· Ø³Ù‡Ù„Ø© Ù…Ø¹ ØªÙ…Ø§Ø±Ø§" },
+                                                                    "tamara-gateway": { en: "Pay in easy installments with Tamara", ar: "Ø§Ø¯ÙØ¹ Ø¨Ø£Ù‚Ø³Ø§Ø· Ø³Ù‡Ù„Ø© Ù…Ø¹ ØªÙ…Ø§Ø±Ø§" },
+                                                                    bacs: { en: "Make payment directly to our bank account", ar: "Ù‚Ù… Ø¨Ø§Ù„Ø¯ÙØ¹ Ù…Ø¨Ø§Ø´Ø±Ø© Ø¥Ù„Ù‰ Ø­Ø³Ø§Ø¨Ù†Ø§ Ø§Ù„Ø¨Ù†ÙƒÙŠ" },
+                                                                    cheque: { en: "Pay with a check", ar: "Ø§Ù„Ø¯ÙØ¹ Ø¨Ø´ÙŠÙƒ" },
+                                                                    paypal: { en: "Pay securely with PayPal", ar: "Ø§Ø¯ÙØ¹ Ø¨Ø£Ù…Ø§Ù† Ù…Ø¹ Ø¨Ø§ÙŠ Ø¨Ø§Ù„" },
+                                                                    woocommerce_payments: { en: "Pay securely with your card", ar: "ادفع بأمان ببطاقتك" },
+                                                                    stripe: { en: "Pay securely with your card", ar: "Ø§Ø¯ÙØ¹ Ø¨Ø£Ù…Ø§Ù† Ø¨Ø¨Ø·Ø§Ù‚ØªÙƒ" },
+                                                                    card: { en: "Pay securely with your card", ar: "Ø§Ø¯ÙØ¹ Ø¨Ø£Ù…Ø§Ù† Ø¨Ø¨Ø·Ø§Ù‚ØªÙƒ" },
+                                                                    myfatoorah_v2: { en: "Pay securely with KNET, VISA, Mastercard, MADA, Apple Pay", ar: "Ø§Ø¯ÙØ¹ Ø¨Ø£Ù…Ø§Ù† Ø¹Ø¨Ø± ÙƒÙŠ Ù†ØªØŒ ÙÙŠØ²Ø§ØŒ Ù…Ø§Ø³ØªØ±ÙƒØ§Ø±Ø¯ØŒ Ù…Ø¯Ù‰ØŒ Ø£Ø¨Ù„ Ø¨Ø§ÙŠ" },
+                                                                    myfatoorah: { en: "Pay securely with KNET, VISA, Mastercard, MADA, Apple Pay", ar: "Ø§Ø¯ÙØ¹ Ø¨Ø£Ù…Ø§Ù† Ø¹Ø¨Ø± ÙƒÙŠ Ù†ØªØŒ ÙÙŠØ²Ø§ØŒ Ù…Ø§Ø³ØªØ±ÙƒØ§Ø±Ø¯ØŒ Ù…Ø¯Ù‰ØŒ Ø£Ø¨Ù„ Ø¨Ø§ÙŠ" },
+                                                                    myfatoorah_cards: { en: "Pay securely with KNET, VISA, Mastercard, MADA, Apple Pay", ar: "Ø§Ø¯ÙØ¹ Ø¨Ø£Ù…Ø§Ù† Ø¹Ø¨Ø± ÙƒÙŠ Ù†ØªØŒ ÙÙŠØ²Ø§ØŒ Ù…Ø§Ø³ØªØ±ÙƒØ§Ø±Ø¯ØŒ Ù…Ø¯Ù‰ØŒ Ø£Ø¨Ù„ Ø¨Ø§ÙŠ" },
+                                                                    myfatoorah_embedded: { en: "Pay securely with KNET, VISA, Mastercard, MADA, Apple Pay", ar: "Ø§Ø¯ÙØ¹ Ø¨Ø£Ù…Ø§Ù† Ø¹Ø¨Ø± ÙƒÙŠ Ù†ØªØŒ ÙÙŠØ²Ø§ØŒ Ù…Ø§Ø³ØªØ±ÙƒØ§Ø±Ø¯ØŒ Ù…Ø¯Ù‰ØŒ Ø£Ø¨Ù„ Ø¨Ø§ÙŠ" },
                                                                   };
                                                                   return descriptions[id]?.[isRTL ? "ar" : "en"] || description || "";
                                                                 };
@@ -2070,6 +2081,17 @@ export default function CheckoutClient() {
                                                                       <Image
                                                                         src="/images/payment/credit-debit-card.png"
                                                                         alt="Credit/Debit Card"
+                                                                        width={80}
+                                                                        height={32}
+                                                                        className="h-8 w-auto object-contain"
+                                                                      />
+                                                                    );
+                                                                  }
+                                                                  if (id === "woocommerce_payments" || id === "stripe" || id === "card") {
+                                                                    return (
+                                                                      <Image
+                                                                        src="/images/payment/credit-debit-card.png"
+                                                                        alt="Card"
                                                                         width={80}
                                                                         height={32}
                                                                         className="h-8 w-auto object-contain"
@@ -2127,14 +2149,14 @@ export default function CheckoutClient() {
             {/* Order Notes */}
             <div className="luxury-panel p-4 md:p-6">
                             <h2 className="mb-3 font-title text-xl text-brand-primary md:mb-5 md:text-2xl">
-                              {isRTL ? "ملاحظات الطلب" : "Order Notes"}
+                              {isRTL ? "Ù…Ù„Ø§Ø­Ø¸Ø§Øª Ø§Ù„Ø·Ù„Ø¨" : "Order Notes"}
                             </h2>
               <textarea
                 className="w-full rounded-lg border border-brand-border/80 bg-brand-beige/50 p-3 text-sm text-brand-primary transition-colors hover:border-brand-primary/45 focus:border-brand-primary/55 focus:outline-none focus:ring-2 focus:ring-brand-gold/15"
                 rows={4}
                 placeholder={
                   isRTL
-                    ? "ملاحظات إضافية حول طلبك (اختياري)"
+                    ? "Ù…Ù„Ø§Ø­Ø¸Ø§Øª Ø¥Ø¶Ø§ÙÙŠØ© Ø­ÙˆÙ„ Ø·Ù„Ø¨Ùƒ (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)"
                     : "Additional notes about your order (optional)"
                 }
                 value={formData.orderNotes}
@@ -2147,7 +2169,7 @@ export default function CheckoutClient() {
           <div className="lg:col-span-1 lg:sticky lg:top-24 lg:self-start">
             <div className="luxury-panel p-4 md:p-6">
                             <h2 className="mb-3 font-title text-xl text-brand-primary md:mb-5 md:text-2xl">
-                              {isRTL ? "ملخص الطلب" : "Order Summary"}
+                              {isRTL ? "Ù…Ù„Ø®Øµ Ø§Ù„Ø·Ù„Ø¨" : "Order Summary"}
                             </h2>
 
                             {/* Cart Items with Thumbnails */}
@@ -2198,7 +2220,7 @@ export default function CheckoutClient() {
                                       </p>
                                     )}
                                     <p className="text-[11px] text-brand-muted md:text-xs">
-                                      {isRTL ? "الكمية:" : "Qty:"} {item.quantity.value}
+                                      {isRTL ? "Ø§Ù„ÙƒÙ…ÙŠØ©:" : "Qty:"} {item.quantity.value}
                                     </p>
                                     <BundleItemsList item={item} locale={locale} compact />
                                   </div>
@@ -2232,7 +2254,7 @@ export default function CheckoutClient() {
                             <div className="border-b border-brand-border/70 py-4">
                               {selectedCoupons.length === 0 && (
                                 <p className="mb-3 text-sm text-brand-muted">
-                                  {isRTL ? "لا توجد كوبونات مطبقة. العودة إلى السلة لإضافة كود خصم." : "No coupons applied. Go back to cart to add a coupon code."}
+                                  {isRTL ? "Ù„Ø§ ØªÙˆØ¬Ø¯ ÙƒÙˆØ¨ÙˆÙ†Ø§Øª Ù…Ø·Ø¨Ù‚Ø©. Ø§Ù„Ø¹ÙˆØ¯Ø© Ø¥Ù„Ù‰ Ø§Ù„Ø³Ù„Ø© Ù„Ø¥Ø¶Ø§ÙØ© ÙƒÙˆØ¯ Ø®ØµÙ…." : "No coupons applied. Go back to cart to add a coupon code."}
                                 </p>
                               )}
 
@@ -2277,7 +2299,7 @@ export default function CheckoutClient() {
                                           {/* Totals */}
                             <div className="space-y-3 border-b border-brand-border/70 py-4">
                               <div className="flex justify-between text-sm text-brand-muted">
-                                <span>{isRTL ? "المجموع الفرعي" : "Subtotal"}</span>
+                                <span>{isRTL ? "Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹ Ø§Ù„ÙØ±Ø¹ÙŠ" : "Subtotal"}</span>
                                 <FormattedPrice
                                   price={parseFloat(cartSubtotal) / divisor}
                                   iconSize="xs"
@@ -2285,7 +2307,7 @@ export default function CheckoutClient() {
                               </div>
                               {couponDiscount > 0 && (
                                 <div className="flex justify-between text-sm text-green-600">
-                                  <span>{isRTL ? "الخصم" : "Discount"}</span>
+                                  <span>{isRTL ? "Ø§Ù„Ø®ØµÙ…" : "Discount"}</span>
                                   <span className="inline-flex items-center gap-1">
                                     -<FormattedPrice
                                       price={couponDiscount / divisor}
@@ -2300,7 +2322,7 @@ export default function CheckoutClient() {
                                 divisor={divisor}
                               />
                               <div className="flex justify-between text-sm text-brand-muted">
-                                <span>{isRTL ? "الشحن" : "Shipping"}</span>
+                                <span>{isRTL ? "Ø§Ù„Ø´Ø­Ù†" : "Shipping"}</span>
                                 {parseFloat(shippingTotal) > 0 ? (
                                   <FormattedPrice
                                     price={parseFloat(shippingTotal) / divisor}
@@ -2312,10 +2334,10 @@ export default function CheckoutClient() {
                                     iconSize="xs"
                                   />
                                 ) : (
-                                  <span className="text-green-600 font-medium">{isRTL ? "مجاني" : "Free"}</span>
+                                  <span className="text-green-600 font-medium">{isRTL ? "Ù…Ø¬Ø§Ù†ÙŠ" : "Free"}</span>
                                 )}
                               </div>
-                              {/* Fees — show non-customs fees from cart, plus client-side customs fee */}
+                              {/* Fees â€” show non-customs fees from cart, plus client-side customs fee */}
                               {cart?.fees && cart.fees.length > 0 && cart.fees
                                 .filter(fee => fee.name.toLowerCase() !== "customs fees")
                                 .map((fee, index) => (
@@ -2329,7 +2351,7 @@ export default function CheckoutClient() {
                               ))}
                               {customsFee ? (
                                 <div className="flex justify-between text-sm text-brand-muted">
-                                  <span>{isRTL ? "رسوم جمركية" : customsFee.name}</span>
+                                  <span>{isRTL ? "Ø±Ø³ÙˆÙ… Ø¬Ù…Ø±ÙƒÙŠØ©" : customsFee.name}</span>
                                   <FormattedPrice
                                     price={parseFloat(customsFee.fee) / divisor}
                                     iconSize="xs"
@@ -2339,7 +2361,7 @@ export default function CheckoutClient() {
                                 .filter(fee => fee.name.toLowerCase() === "customs fees")
                                 .map((fee, index) => (
                                 <div key={`customs-fee-${index}`} className="flex justify-between text-sm text-brand-muted">
-                                  <span>{isRTL ? "رسوم جمركية" : fee.name}</span>
+                                  <span>{isRTL ? "Ø±Ø³ÙˆÙ… Ø¬Ù…Ø±ÙƒÙŠØ©" : fee.name}</span>
                                   <FormattedPrice
                                     price={parseFloat(fee.fee) / divisor}
                                     iconSize="xs"
@@ -2349,7 +2371,7 @@ export default function CheckoutClient() {
                             </div>
 
               <div className="hidden py-4 text-lg font-bold text-brand-primary lg:flex lg:justify-between">
-                <span>{isRTL ? "الإجمالي" : "Total"}</span>
+                <span>{isRTL ? "Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ" : "Total"}</span>
                 <FormattedPrice
                   price={checkoutTotal / divisor}
                   iconSize="sm"
@@ -2363,23 +2385,23 @@ export default function CheckoutClient() {
                 isLoading={isSubmitting || isAuthLoading}
                 disabled={isAuthLoading}
               >
-                {isRTL ? "تأكيد الطلب" : "Place Order"}
+                {isRTL ? "ØªØ£ÙƒÙŠØ¯ Ø§Ù„Ø·Ù„Ø¨" : "Place Order"}
               </Button>
 
               <p className="mt-2 hidden text-center text-xs text-brand-muted lg:block">
-                {isRTL ? "جميع الأسعار شاملة ضريبة القيمة المضافة" : "All prices are inclusive of VAT"}
+                {isRTL ? "Ø¬Ù…ÙŠØ¹ Ø§Ù„Ø£Ø³Ø¹Ø§Ø± Ø´Ø§Ù…Ù„Ø© Ø¶Ø±ÙŠØ¨Ø© Ø§Ù„Ù‚ÙŠÙ…Ø© Ø§Ù„Ù…Ø¶Ø§ÙØ©" : "All prices are inclusive of VAT"}
               </p>
 
               <p className="mt-4 hidden text-center text-xs text-brand-muted lg:block">
                 {isRTL
-                  ? "بالنقر على تأكيد الطلب، فإنك توافق على شروط الخدمة وسياسة الخصوصية."
+                  ? "Ø¨Ø§Ù„Ù†Ù‚Ø± Ø¹Ù„Ù‰ ØªØ£ÙƒÙŠØ¯ Ø§Ù„Ø·Ù„Ø¨ØŒ ÙØ¥Ù†Ùƒ ØªÙˆØ§ÙÙ‚ Ø¹Ù„Ù‰ Ø´Ø±ÙˆØ· Ø§Ù„Ø®Ø¯Ù…Ø© ÙˆØ³ÙŠØ§Ø³Ø© Ø§Ù„Ø®ØµÙˆØµÙŠØ©."
                   : "By clicking Place Order, you agree to our Terms of Service and Privacy Policy."}
               </p>
 
               {/* WhatsApp Help */}
               <div className="mt-6 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-center">
                 <p className="text-sm text-brand-primary">
-                  {isRTL ? "هل تحتاج مساعدة في طلبك؟" : "Need help with your order?"}
+                  {isRTL ? "Ù‡Ù„ ØªØ­ØªØ§Ø¬ Ù…Ø³Ø§Ø¹Ø¯Ø© ÙÙŠ Ø·Ù„Ø¨ÙƒØŸ" : "Need help with your order?"}
                 </p>
                 <a
                   href="https://wa.me/97143442448"
@@ -2390,7 +2412,7 @@ export default function CheckoutClient() {
                   <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
                   </svg>
-                  {isRTL ? "تواصل معنا عبر واتساب" : "Contact us on WhatsApp"}
+                  {isRTL ? "ØªÙˆØ§ØµÙ„ Ù…Ø¹Ù†Ø§ Ø¹Ø¨Ø± ÙˆØ§ØªØ³Ø§Ø¨" : "Contact us on WhatsApp"}
                 </a>
               </div>
             </div>
@@ -2408,7 +2430,7 @@ export default function CheckoutClient() {
       >
         <div className="flex items-center justify-between gap-3">
           <div className="flex flex-col">
-            <span className="text-xs text-brand-muted">{isRTL ? "الإجمالي" : "Total"}</span>
+            <span className="text-xs text-brand-muted">{isRTL ? "Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ" : "Total"}</span>
             <FormattedPrice
               price={checkoutTotal / divisor}
               className="text-base font-bold text-brand-primary"
@@ -2423,7 +2445,7 @@ export default function CheckoutClient() {
             isLoading={isSubmitting || isAuthLoading}
             disabled={isAuthLoading}
           >
-            {isRTL ? "تأكيد الطلب" : "Place Order"}
+            {isRTL ? "ØªØ£ÙƒÙŠØ¯ Ø§Ù„Ø·Ù„Ø¨" : "Place Order"}
           </Button>
         </div>
       </div>

@@ -8,6 +8,27 @@ export interface PaymentGatewayOverride {
   enabled?: boolean;
 }
 
+export interface PaymentGatewayFilters {
+  allowed: string[];
+  blocked: string[];
+}
+
+function parseGatewayIdList(value: unknown): string[] {
+  if (typeof value !== "string") return [];
+  return value
+    .split(",")
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function getMarketplaceSuffix(marketCode?: string | null): string {
+  const code = (marketCode || "").toLowerCase();
+  if (code === "qa" || code === "om" || code === "sa") {
+    return `_${code.toUpperCase()}`;
+  }
+  return "";
+}
+
 function parseBooleanLike(value: unknown, fallback = true): boolean {
   if (typeof value === "boolean") return value;
   if (typeof value === "number") return value !== 0;
@@ -66,4 +87,40 @@ export function getPaymentGatewayOverrides(): PaymentGatewayOverride[] {
     getEnvVar("NEXT_PUBLIC_PAYMENT_GATEWAYS_JSON");
 
   return parseGatewayList(raw) || [];
+}
+
+function getEnvValueWithAliases(keys: string[]): string | undefined {
+  for (const key of keys) {
+    const value = getEnvVar(key);
+    if (typeof value === "string" && value.trim().length > 0) {
+      return value;
+    }
+  }
+
+  return undefined;
+}
+
+export function getPaymentGatewayFilters(marketCode?: string | null): PaymentGatewayFilters {
+  const suffix = getMarketplaceSuffix(marketCode);
+
+  const allowedRaw = getEnvValueWithAliases([
+    `PAYMENT_GATEWAYS_ALLOWLIST${suffix}`,
+    "PAYMENT_GATEWAYS_ALLOWLIST",
+    `NEXT_PUBLIC_PAYMENT_GATEWAYS_ALLOWLIST${suffix}`,
+    "NEXT_PUBLIC_PAYMENT_GATEWAYS_ALLOWLIST",
+  ]);
+
+  const blockedRaw = getEnvValueWithAliases([
+    `PAYMENT_GATEWAYS_BLOCKLIST${suffix}`,
+    "PAYMENT_GATEWAYS_BLOCKLIST",
+    "PAYMENT_GATEMENTS_BLOCKLIST",
+    `NEXT_PUBLIC_PAYMENT_GATEWAYS_BLOCKLIST${suffix}`,
+    "NEXT_PUBLIC_PAYMENT_GATEWAYS_BLOCKLIST",
+    "NEXT_PUBLIC_PAYMENT_GATEMENTS_BLOCKLIST",
+  ]);
+
+  return {
+    allowed: parseGatewayIdList(allowedRaw),
+    blocked: parseGatewayIdList(blockedRaw),
+  };
 }

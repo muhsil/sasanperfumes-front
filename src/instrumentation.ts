@@ -116,12 +116,12 @@ export async function register() {
     // .env file not found, continue with process env values
   }
 
-  const cmsUrl = (process.env.NEXT_PUBLIC_WC_API_URL || "https://cms.shapehive.com").replace(/\/+$/, "");
+  const cmsUrl = (process.env.NEXT_PUBLIC_WC_API_URL || "https://cms.sasanperfumes.com").replace(/\/+$/, "");
   const cmsHost = (() => {
     try {
       return new URL(cmsUrl).hostname.toLowerCase();
     } catch {
-      return "cms.shapehive.com";
+      return "cms.sasanperfumes.com";
     }
   })();
 

@@ -9,6 +9,7 @@ export function isWordPressMediaUrl(src?: string): boolean {
   if (!src || typeof src !== 'string') return false;
   const hostNames = new Set([
     ...siteConfig?.mediaHostNames,
+    "cms.sasanperfumes.com",
     "cms.shapehive.com",
   ]);
 

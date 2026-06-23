@@ -4,9 +4,13 @@ const disableRuntimeCache =
   process.env.NODE_ENV === "development" ||
   process.env.DISABLE_RUNTIME_CACHE === "true" ||
   process.env.NEXT_PUBLIC_DISABLE_RUNTIME_CACHE === "true";
+const disableSearchIndexing =
+  process.env.DISABLE_INDEXING === "true" ||
+  process.env.NEXT_PUBLIC_DISABLE_INDEXING === "true";
 
-const cmsApiUrl = (process.env.NEXT_PUBLIC_WC_API_URL || "https://cms.shapehive.com").replace(/\/+$/, "");
+const cmsApiUrl = (process.env.NEXT_PUBLIC_WC_API_URL || "https://cms.sasanperfumes.com").replace(/\/+$/, "");
 const imageHostFallbacks = [
+  "cms.sasanperfumes.com",
   "cms.shapehive.com",
 ];
 const extraImageHosts = (
@@ -21,7 +25,7 @@ const cmsApiHost = (() => {
   try {
     return new URL(cmsApiUrl).hostname;
   } catch {
-    return "cms.shapehive.com";
+    return "cms.sasanperfumes.com";
   }
 })();
 const mediaHostnames = Array.from(new Set([cmsApiHost, ...imageHostFallbacks, ...extraImageHosts]));
@@ -122,10 +126,14 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     const securityHeaders = [
-      {
-        key: "X-Robots-Tag",
-        value: "noindex, nofollow",
-      },
+      ...(disableSearchIndexing
+        ? [
+            {
+              key: "X-Robots-Tag",
+              value: "noindex, nofollow",
+            },
+          ]
+        : []),
       {
         key: "X-Frame-Options",
         value: "DENY",

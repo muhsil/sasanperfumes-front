@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) exit;
 
 class sasanperfumes_Security {
 
-    private $frontend_redirect_url = 'https://shapehive.com';
+    private $frontend_redirect_url = 'https://sasanperfumes.com';
 
     public function __construct() {
         $this->frontend_redirect_url = untrailingslashit(
@@ -37,6 +37,7 @@ class sasanperfumes_Security {
         $this->protect_login();
         $this->disable_unnecessary_features();
         $this->fix_admin_rest_url();
+        $this->force_mail_from();
     }
 
     /**
@@ -211,12 +212,26 @@ class sasanperfumes_Security {
     }
 
     /**
+     * Enforce the storefront sender for all WordPress and WooCommerce outbound emails
+     * so login and OTP-style flows consistently use the requested address.
+     */
+    private function force_mail_from() {
+        add_filter('wp_mail_from', function() {
+            return 'accounts@sasanperfumes.com';
+        }, 999);
+
+        add_filter('wp_mail_from_name', function($name) {
+            return trim((string) $name) !== '' ? $name : 'Sasan Perfumes';
+        }, 999);
+    }
+
+    /**
      * Fix REST API URL in admin context for headless setups.
      *
      * When WordPress 'home' (Site Address) differs from 'siteurl' (WordPress Address),
      * WooCommerce admin JS constructs REST API URLs using home_url(), which points to
-     * the Next.js frontend (e.g. shapehive.com). Since the admin is served from
-     * the WordPress backend (cms.shapehive.com), these cross-origin requests are
+     * the Next.js frontend (e.g. sasanperfumes.com). Since the admin is served from
+     * the WordPress backend (cms.sasanperfumes.com), these cross-origin requests are
      * blocked by the browser's CORS policy, breaking Analytics and other admin features.
      *
      * This filter forces admin REST API URLs to use siteurl instead of home.

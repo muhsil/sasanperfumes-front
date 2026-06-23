@@ -77,6 +77,33 @@ class sasanperfumes_Forms {
             ),
         ));
     }
+
+    private function get_notification_recipients(): string {
+        $recipients = trim((string) get_option('woocommerce_new_order_recipient', ''));
+        if ($recipients === '') {
+            $recipients = 'orders@sasanperfumes.com,sasanperfumesuae@gmail.com';
+        }
+
+        $emails = array_filter(array_map('trim', explode(',', $recipients)), 'strlen');
+        if (empty($emails)) {
+            return 'orders@sasanperfumes.com,sasanperfumesuae@gmail.com';
+        }
+
+        return implode(',', array_unique($emails));
+    }
+
+	private function get_from_address(): string {
+		return 'accounts@sasanperfumes.com';
+	}
+
+    private function get_from_name(): string {
+        $name = trim((string) get_option('woocommerce_email_from_name', ''));
+        if ($name !== '') {
+            return $name;
+        }
+
+        return get_bloginfo('name') ?: 'Sasan Perfumes';
+    }
     
     /**
      * Handle contact form submission
@@ -101,8 +128,7 @@ class sasanperfumes_Forms {
             ), 400);
         }
         
-        // Get admin email
-        $to = get_option('admin_email');
+        $to = $this->get_notification_recipients();
         
         // Build email subject
         $email_subject = sprintf('[%s] Contact Form: %s', get_bloginfo('name'), $subject);
@@ -174,8 +200,7 @@ class sasanperfumes_Forms {
             ), 400);
         }
         
-        // Get admin email
-        $to = get_option('admin_email');
+        $to = $this->get_notification_recipients();
         
         // Build email subject
         $email_subject = sprintf('[%s] New Newsletter Subscription', get_bloginfo('name'));
@@ -223,7 +248,7 @@ class sasanperfumes_Forms {
      * @return bool Whether the email was sent successfully
      */
     private function send_newsletter_confirmation_email($email) {
-        $site_name = get_bloginfo('name');
+        $site_name = $this->get_from_name();
         $subject = sprintf('Welcome to %s Newsletter!', $site_name);
 
         $body = sprintf(
@@ -239,7 +264,7 @@ class sasanperfumes_Forms {
 
         $headers = array(
             'Content-Type: text/plain; charset=UTF-8',
-            sprintf('From: %s <%s>', $site_name, get_option('admin_email')),
+            sprintf('From: %s <%s>', $site_name, $this->get_from_address()),
         );
 
         return wp_mail($email, $subject, $body, $headers);

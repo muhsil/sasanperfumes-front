@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getEnvVar, getWcCredentials } from "@/lib/utils/loadEnv";
-import { getPaymentGatewayOverrides } from "@/config/payment";
+import { getPaymentGatewayFilters, getPaymentGatewayOverrides } from "@/config/payment";
 import {
   backendHeaders,
   noCacheUrl,
@@ -33,6 +33,10 @@ function getBasicAuthParams(marketCode?: string): string {
 }
 
 const PAYMENT_METHOD_DETAILS: Record<string, { title: string; description: string }> = {
+  woocommerce_payments: {
+    title: "Credit/Debit Card",
+    description: "Pay securely with your card via WooPayments",
+  },
   myfatoorah_v2: {
     title: "Credit/Debit Card",
     description: "Pay securely with your credit or debit card via MyFatoorah",
@@ -73,6 +77,14 @@ const PAYMENT_METHOD_DETAILS: Record<string, { title: string; description: strin
     title: "Bank Transfer",
     description: "Make your payment directly into our bank account",
   },
+  card: {
+    title: "Credit/Debit Card",
+    description: "Pay securely with your card",
+  },
+  stripe: {
+    title: "Credit/Debit Card",
+    description: "Pay securely with your card",
+  },
   cod: {
     title: "Cash on Delivery",
     description: "Pay with cash upon delivery",
@@ -103,8 +115,49 @@ interface PaymentGatewayResponseItem {
   enabled: boolean;
 }
 
+function expandPaymentGatewayIdAliases(ids: string[]): Set<string> {
+  const normalized = new Set(ids.map((id) => id.toLowerCase()));
+
+  if (normalized.has("stripe")) {
+    normalized.add("woocommerce_payments");
+  }
+
+  if (normalized.has("woocommerce_payments")) {
+    normalized.add("stripe");
+  }
+
+  return normalized;
+}
+
+function isPaymentGatewayAllowed(
+  id: string,
+  allowedSet: Set<string>,
+  isAllowedFilterEnabled: boolean
+): boolean {
+  if (!isAllowedFilterEnabled) return true;
+
+  return allowedSet.has(id.toLowerCase());
+}
+
 function isGatewayArray(value: unknown): value is WCPaymentGateway[] {
   return Array.isArray(value) && value.every((item) => Boolean(item) && typeof item === "object" && "id" in item);
+}
+
+function applyPaymentGatewayFilters(
+  gateways: PaymentGatewayResponseItem[],
+  filters: { allowed: string[]; blocked: string[] }
+): PaymentGatewayResponseItem[] {
+  if (filters.allowed.length > 0) {
+    const allowSet = expandPaymentGatewayIdAliases(filters.allowed);
+    gateways = gateways.filter((gateway) => allowSet.has(gateway.id.toLowerCase()));
+  }
+
+  if (filters.blocked.length > 0) {
+    const blockSet = new Set(filters.blocked.map((id) => id.toLowerCase()));
+    gateways = gateways.filter((gateway) => !blockSet.has(gateway.id.toLowerCase()));
+  }
+
+  return gateways;
 }
 
 function mergeGatewayOverrides(
@@ -145,6 +198,7 @@ export async function GET() {
   try {
     const market = await getRequestMarket();
     const gatewayOverrides = getPaymentGatewayOverrides();
+    const gatewayFilters = getPaymentGatewayFilters(market.code);
     const wpJsonBase = wpJsonBaseForMarket(market.code);
     const apiBase = `${wpJsonBase}/wc/v3`;
     const storeApiBase = `${wpJsonBase}/wc/store/v1`;
@@ -154,6 +208,8 @@ export async function GET() {
     }
 
     const { consumerKey, consumerSecret } = getWcCredentials(market.code);
+    const allowedGatewaySet = expandPaymentGatewayIdAliases(gatewayFilters.allowed);
+    const hasAllowFilter = gatewayFilters.allowed.length > 0;
     
     if (consumerKey && consumerSecret) {
       const url = `${apiBase}/payment_gateways?${getBasicAuthParams(market.code)}`;
@@ -168,8 +224,19 @@ export async function GET() {
         const data = await safeJsonResponse(response);
 
         if (isGatewayArray(data)) {
-          const enabledGateways: PaymentGatewayResponseItem[] = data
-            .filter((gateway) => gateway.enabled)
+        const enabledGateways: PaymentGatewayResponseItem[] = data
+            .filter((gateway) => {
+              if (gateway.enabled) {
+                return isPaymentGatewayAllowed(gateway.id, allowedGatewaySet, hasAllowFilter);
+              }
+
+              // If a gateway is disabled in WooCommerce but explicitly allowlisted,
+              // keep it so admins can still expose legacy/alias methods (for example Stripe)
+              // without additional import/config changes.
+              return hasAllowFilter
+                && isPaymentGatewayAllowed(gateway.id, allowedGatewaySet, hasAllowFilter)
+                && (gateway.id.toLowerCase() === "woocommerce_payments" || gateway.id.toLowerCase() === "stripe");
+            })
             .sort((a, b) => a.order - b.order)
             .map((gateway) => {
               const details = PAYMENT_METHOD_DETAILS[gateway.id];
@@ -183,17 +250,20 @@ export async function GET() {
               };
             });
 
-          const mergedGateways = mergeGatewayOverrides(enabledGateways, gatewayOverrides);
+          const mergedGateways = applyPaymentGatewayFilters(
+            mergeGatewayOverrides(enabledGateways, gatewayOverrides),
+            gatewayFilters
+          );
 
           // Check if MyFatoorah test mode is enabled
           const myFatoorahTestMode = getEnvVar("MYFATOORAH_TEST_MODE") === "true";
 
-          const responseData = {
-            success: true,
-            gateways: mergedGateways,
-            source: gatewayOverrides.length > 0 ? "woocommerce_rest_api+hostinger_env" : "woocommerce_rest_api",
-            myfatoorah_test_mode: myFatoorahTestMode,
-          };
+            const responseData = {
+              success: true,
+              gateways: mergedGateways,
+              source: gatewayOverrides.length > 0 ? "woocommerce_rest_api+hostinger_env" : "woocommerce_rest_api",
+              myfatoorah_test_mode: myFatoorahTestMode,
+            };
           gatewaysCache = { data: responseData, timestamp: Date.now() };
           return gatewaysJson(responseData);
         }
@@ -234,7 +304,8 @@ export async function GET() {
     
     const fallbackPaymentMethodIds = Array.from(new Set([...paymentMethodIds, "cod"]));
 
-    const gateways = mergeGatewayOverrides(
+    const gateways = applyPaymentGatewayFilters(
+      mergeGatewayOverrides(
       fallbackPaymentMethodIds
       .filter((id: string) => !excludedFromFallback.includes(id))
       .map((id: string, index: number) => {
@@ -252,6 +323,8 @@ export async function GET() {
         };
       }),
       gatewayOverrides
+      ),
+      gatewayFilters
     );
 
     // Check if MyFatoorah test mode is enabled

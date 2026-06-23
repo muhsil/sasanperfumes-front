@@ -3,7 +3,7 @@ import dns from "dns";
 import https from "https";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { verifyAuth, unauthorizedResponse, forbiddenResponse } from "@/lib/security";
-import { backendHeaders, backendPostHeaders, noCacheUrl, parseBackendJson, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
+import { API_BASE, backendHeaders, backendPostHeaders, noCacheUrl, parseBackendJson, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
 import { getRequestMarket } from "@/lib/market/server";
 
 function getOrdersApiBase(marketCode?: string | null): string {
@@ -21,6 +21,13 @@ function getBasicAuthHeader(marketCode?: string): string {
 }
 
 const MARKET_CODES = new Set(["qa", "om", "sa"]);
+const BACKEND_ORIGIN = (() => {
+  try {
+    return new URL(API_BASE).origin;
+  } catch {
+    return "https://cms.sasanperfumes.com";
+  }
+})();
 
 function responseHeadersFromNode(headers: Record<string, string | string[] | undefined>): Headers {
   const responseHeaders = new Headers();
@@ -93,7 +100,7 @@ function fetchOrdersBackend(url: string, init: RequestInit, marketCode?: string 
 
   const headers = {
     ...((init.headers || {}) as Record<string, string>),
-    Origin: "https://cms.shapehive.com",
+    Origin: BACKEND_ORIGIN,
     "X-Market": code,
   };
 
@@ -164,6 +171,7 @@ interface CreateOrderRequest {
 
 const PAYMENT_METHOD_TITLES: Record<string, string> = {
   myfatoorah_v2: "Credit/Debit Card",
+  woocommerce_payments: "Credit/Debit Card",
   myfatoorah: "Credit/Debit Card",
   myfatoorah_cards: "Credit/Debit Card",
   myfatoorah_embedded: "Credit/Debit Card",
@@ -189,6 +197,12 @@ function resolvePaymentMethodTitle(paymentMethod: string, providedTitle: unknown
     return PAYMENT_METHOD_TITLES[normalizedMethod];
   }
   if (normalizedMethod.startsWith("myfatoorah")) {
+    return "Credit/Debit Card";
+  }
+  if (normalizedMethod.startsWith("woocommerce_payments")) {
+    return "Credit/Debit Card";
+  }
+  if (normalizedMethod.startsWith("stripe")) {
     return "Credit/Debit Card";
   }
   if (normalizedMethod.startsWith("tabby")) {

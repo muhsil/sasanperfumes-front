@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
@@ -49,6 +49,7 @@ interface OrderData {
   fee_lines?: OrderFeeLine[];
   payment_method: string;
   payment_method_title: string;
+  payment_url?: string;
   meta_data?: OrderMetaData[];
 }
 
@@ -105,10 +106,13 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
   const searchParams = useSearchParams();
   const orderId = searchParams.get("order_id");
   const orderKey = searchParams.get("order_key");
+  const orderReceivedId = searchParams.get("order-received");
+  const wcOrderKey = searchParams.get("key");
   const myFatoorahPaymentId = searchParams.get("paymentId");
   const tabbyPaymentId = searchParams.get("payment_id");
   const tamaraOrderId = searchParams.get("orderId");
   const isRTL = locale === "ar";
+  const resolvedOrderId = orderId || orderReceivedId;
   const { clearCart, setIsCartOpen } = useCart();
   const cartClearedRef = useRef(false);
   const paymentVerifiedRef = useRef(false);
@@ -128,7 +132,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
   }, [setIsCartOpen]);
 
   const handleRetryPayment = useCallback(async () => {
-    if (!order || !orderId) return;
+    if (!order || !resolvedOrderId) return;
     
     setRetryingPayment(true);
     setRetryError(null);
@@ -141,6 +145,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
       const isMyFatoorahPayment = paymentMethod.startsWith("myfatoorah");
       const isTabbyPayment = paymentMethod.startsWith("tabby");
       const isTamaraPayment = paymentMethod.startsWith("tamara");
+      const isWooPaymentsPayment = paymentMethod === "woocommerce_payments" || paymentMethod === "stripe";
       
       if (isMyFatoorahPayment) {
         const mfResponse = await fetch("/api/myfatoorah/initiate-payment", {
@@ -262,19 +267,25 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
         } else {
           throw new Error(tamaraData.error?.message || "Failed to initiate payment");
         }
+      } else if (isWooPaymentsPayment) {
+        if (order.payment_url) {
+          window.location.href = order.payment_url;
+          return;
+        }
+        throw new Error("Payment URL is missing for WooPayments");
       } else {
-        setRetryError(isRTL ? "طريقة الدفع غير مدعومة لإعادة المحاولة" : "Payment method not supported for retry");
+        setRetryError(isRTL ? "Ø·Ø±ÙŠÙ‚Ø© Ø§Ù„Ø¯ÙØ¹ ØºÙŠØ± Ù…Ø¯Ø¹ÙˆÙ…Ø© Ù„Ø¥Ø¹Ø§Ø¯Ø© Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø©" : "Payment method not supported for retry");
       }
     } catch (err) {
-      setRetryError(err instanceof Error ? err.message : (isRTL ? "فشل في إعادة المحاولة" : "Failed to retry payment"));
+      setRetryError(err instanceof Error ? err.message : (isRTL ? "ÙØ´Ù„ ÙÙŠ Ø¥Ø¹Ø§Ø¯Ø© Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø©" : "Failed to retry payment"));
     } finally {
       setRetryingPayment(false);
     }
-  }, [order, orderId, locale, isRTL]);
+    }, [order, resolvedOrderId, locale, isRTL]);
 
   useEffect(() => {
     const verifyPaymentAndFetchOrder = async () => {
-      if (!orderId) {
+      if (!resolvedOrderId) {
         setError("Order ID not found");
         setLoading(false);
         return;
@@ -314,7 +325,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
                         "Content-Type": "application/json",
                       },
                       body: JSON.stringify({
-                        order_id: parseInt(orderId, 10),
+                        order_id: parseInt(resolvedOrderId, 10),
                         status: "processing",
                         set_paid: true,
                         transaction_id: verifyData.transaction_id || verifyData.invoice_id,
@@ -351,7 +362,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
                         "Content-Type": "application/json",
                       },
                       body: JSON.stringify({
-                        order_id: parseInt(orderId, 10),
+                        order_id: parseInt(resolvedOrderId, 10),
                         status: "failed",
                         payment_details: {
                           ...verifyData.payment_details,
@@ -391,9 +402,9 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
         }
 
         // Include order_key for guest checkout authentication (WooCommerce standard pattern)
-        const orderApiUrl = orderKey 
-          ? `/api/orders?orderId=${orderId}&order_key=${orderKey}`
-          : `/api/orders?orderId=${orderId}`;
+        const orderApiUrl = orderKey || wcOrderKey
+          ? `/api/orders?orderId=${resolvedOrderId}&order_key=${orderKey || wcOrderKey}`
+          : `/api/orders?orderId=${resolvedOrderId}`;
         const response = await fetch(orderApiUrl);
         const data = await response.json();
 
@@ -406,7 +417,16 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
         // Facebook Pixel: Purchase (fire once for successful payments)
         const fetchedOrder = data.data as OrderData;
         const fetchedStatus = fetchedOrder?.status;
+        const isFailedOrder = fetchedStatus === "failed" || fetchedStatus === "cancelled";
+        const isPendingOrder = fetchedStatus === "pending";
         const isSuccessOrder = fetchedStatus === "processing" || fetchedStatus === "completed" || fetchedStatus === "on-hold";
+        if (!paymentStatus) {
+          if (isFailedOrder) {
+            setPaymentStatus("failed");
+          } else if (isPendingOrder) {
+            setPaymentStatus("pending");
+          }
+        }
         if (!purchaseTrackedRef.current && fetchedOrder && isSuccessOrder) {
           purchaseTrackedRef.current = true;
           fbTrackPurchase({
@@ -442,14 +462,14 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
     };
 
     verifyPaymentAndFetchOrder();
-  }, [orderId, orderKey, myFatoorahPaymentId, tabbyPaymentId, tamaraOrderId, clearCart]);
+    }, [resolvedOrderId, orderKey, wcOrderKey, myFatoorahPaymentId, tabbyPaymentId, tamaraOrderId, clearCart, paymentStatus]);
 
   if (loading) {
     return (
       <div className="container mx-auto flex min-h-[60vh] items-center justify-center px-4 py-8">
         <div className="text-center">
           <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-gray-900"></div>
-          <p className="text-gray-600">{isRTL ? "جاري التحميل..." : "Loading..."}</p>
+          <p className="text-gray-600">{isRTL ? "Ø¬Ø§Ø±ÙŠ Ø§Ù„ØªØ­Ù…ÙŠÙ„..." : "Loading..."}</p>
         </div>
       </div>
     );
@@ -461,13 +481,13 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
         <div className="mx-auto max-w-2xl text-center">
           <div className="mb-6 text-6xl">!</div>
           <h1 className="mb-4 text-2xl font-bold text-gray-900">
-            {isRTL ? "حدث خطأ" : "Something went wrong"}
+            {isRTL ? "Ø­Ø¯Ø« Ø®Ø·Ø£" : "Something went wrong"}
           </h1>
           <p className="mb-8 text-gray-600">
-            {error || (isRTL ? "لم نتمكن من تحميل تفاصيل الطلب" : "We couldn't load your order details")}
+            {error || (isRTL ? "Ù„Ù… Ù†ØªÙ…ÙƒÙ† Ù…Ù† ØªØ­Ù…ÙŠÙ„ ØªÙØ§ØµÙŠÙ„ Ø§Ù„Ø·Ù„Ø¨" : "We couldn't load your order details")}
           </p>
           <Link href={`${marketPrefix}/${locale}/shop`}>
-            <Button>{isRTL ? "العودة للتسوق" : "Continue Shopping"}</Button>
+            <Button>{isRTL ? "Ø§Ù„Ø¹ÙˆØ¯Ø© Ù„Ù„ØªØ³ÙˆÙ‚" : "Continue Shopping"}</Button>
           </Link>
         </div>
       </div>
@@ -485,7 +505,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
             <div className="flex items-center justify-center gap-2">
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-300 border-t-blue-600"></div>
               <span className="text-blue-700">
-                {isRTL ? "جاري التحقق من حالة الدفع..." : "Verifying payment status..."}
+                {isRTL ? "Ø¬Ø§Ø±ÙŠ Ø§Ù„ØªØ­Ù‚Ù‚ Ù…Ù† Ø­Ø§Ù„Ø© Ø§Ù„Ø¯ÙØ¹..." : "Verifying payment status..."}
               </span>
             </div>
           </div>
@@ -501,10 +521,10 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-red-800">
-                  {isRTL ? "فشل الدفع" : "Payment Failed"}
+                  {isRTL ? "ÙØ´Ù„ Ø§Ù„Ø¯ÙØ¹" : "Payment Failed"}
                 </h3>
                 <p className="mt-1 text-sm text-red-700">
-                  {paymentMessage || (isRTL ? "لم يتم إتمام الدفع. يرجى المحاولة مرة أخرى." : "Payment was not completed. Please try again.")}
+                  {paymentMessage || (isRTL ? "Ù„Ù… ÙŠØªÙ… Ø¥ØªÙ…Ø§Ù… Ø§Ù„Ø¯ÙØ¹. ÙŠØ±Ø¬Ù‰ Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø© Ù…Ø±Ø© Ø£Ø®Ø±Ù‰." : "Payment was not completed. Please try again.")}
                 </p>
                 {retryError && (
                   <p className="mt-2 text-sm text-red-600">
@@ -521,10 +541,10 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
                   {retryingPayment ? (
                     <span className="flex items-center gap-2">
                       <span className="h-4 w-4 animate-spin rounded-full border-2 border-red-300 border-t-red-600"></span>
-                      {isRTL ? "جاري المعالجة..." : "Processing..."}
+                      {isRTL ? "Ø¬Ø§Ø±ÙŠ Ø§Ù„Ù…Ø¹Ø§Ù„Ø¬Ø©..." : "Processing..."}
                     </span>
                   ) : (
-                    isRTL ? "إعادة المحاولة" : "Try Again"
+                    isRTL ? "Ø¥Ø¹Ø§Ø¯Ø© Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø©" : "Try Again"
                   )}
                 </Button>
               </div>
@@ -542,10 +562,10 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
               </div>
               <div>
                 <h3 className="font-semibold text-yellow-800">
-                  {isRTL ? "الدفع قيد المعالجة" : "Payment Processing"}
+                  {isRTL ? "Ø§Ù„Ø¯ÙØ¹ Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø¹Ø§Ù„Ø¬Ø©" : "Payment Processing"}
                 </h3>
                 <p className="mt-1 text-sm text-yellow-700">
-                  {paymentMessage || (isRTL ? "جاري معالجة الدفع. سيتم تحديث حالة الطلب قريباً." : "Your payment is being processed. Order status will be updated shortly.")}
+                  {paymentMessage || (isRTL ? "Ø¬Ø§Ø±ÙŠ Ù…Ø¹Ø§Ù„Ø¬Ø© Ø§Ù„Ø¯ÙØ¹. Ø³ÙŠØªÙ… ØªØ­Ø¯ÙŠØ« Ø­Ø§Ù„Ø© Ø§Ù„Ø·Ù„Ø¨ Ù‚Ø±ÙŠØ¨Ø§Ù‹." : "Your payment is being processed. Order status will be updated shortly.")}
                 </p>
               </div>
             </div>
@@ -572,14 +592,14 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
           </div>
           <h1 className="mb-2 text-3xl font-bold text-gray-900">
             {isPaymentFailed 
-              ? (isRTL ? "فشل الدفع" : "Payment Failed")
+              ? (isRTL ? "ÙØ´Ù„ Ø§Ù„Ø¯ÙØ¹" : "Payment Failed")
               : isPaymentPending
-              ? (isRTL ? "الطلب قيد المعالجة" : "Order Processing")
-              : (isRTL ? "شكراً لطلبك!" : "Thank you for your order!")}
+              ? (isRTL ? "Ø§Ù„Ø·Ù„Ø¨ Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø¹Ø§Ù„Ø¬Ø©" : "Order Processing")
+              : (isRTL ? "Ø´ÙƒØ±Ø§Ù‹ Ù„Ø·Ù„Ø¨Ùƒ!" : "Thank you for your order!")}
           </h1>
           <p className="text-gray-600">
             {isRTL
-              ? `رقم الطلب: #${order.id}`
+              ? `Ø±Ù‚Ù… Ø§Ù„Ø·Ù„Ø¨: #${order.id}`
               : `Order number: #${order.id}`}
           </p>
           {order.currency && !isPaymentFailed && (() => {
@@ -603,7 +623,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
           <>
             <div className="mb-8 rounded-lg border bg-gray-50 p-6">
               <h2 className="mb-4 text-lg font-semibold text-gray-900">
-                {isRTL ? "تفاصيل الطلب" : "Order Details"}
+                {isRTL ? "ØªÙØ§ØµÙŠÙ„ Ø§Ù„Ø·Ù„Ø¨" : "Order Details"}
               </h2>
 
               <div className="mb-6 space-y-4 border-b pb-4">
@@ -618,7 +638,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
                           {decodeHtmlEntities(item.name)} x {item.quantity}
                           {isFreeGift && (
                             <span className="ml-2 inline-flex items-center rounded-full bg-brand-beige px-2 py-0.5 text-xs font-medium text-brand-primary">
-                              {isRTL ? "هدية مجانية" : "Free Gift"}
+                              {isRTL ? "Ù‡Ø¯ÙŠØ© Ù…Ø¬Ø§Ù†ÙŠØ©" : "Free Gift"}
                             </span>
                           )}
                         </span>
@@ -640,7 +660,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
 
               <div className="space-y-2">
                 <div className="flex justify-between text-sm text-gray-600">
-                  <span>{isRTL ? "المجموع الفرعي" : "Subtotal"}</span>
+                  <span>{isRTL ? "Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹ Ø§Ù„ÙØ±Ø¹ÙŠ" : "Subtotal"}</span>
                   <OrderPrice price={(() => {
                     const orderTax = parseFloat(order.total_tax || "0");
                     const totalWithoutTax = parseFloat(order.total) - orderTax;
@@ -649,32 +669,32 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
                   })()} orderCurrency={order.currency} iconSize="xs" />
                 </div>
                 <div className="flex justify-between text-sm text-gray-600">
-                  <span>{isRTL ? "الشحن" : "Shipping"}</span>
+                  <span>{isRTL ? "Ø§Ù„Ø´Ø­Ù†" : "Shipping"}</span>
                   <OrderPrice price={order.shipping_total || "0"} orderCurrency={order.currency} iconSize="xs" />
                 </div>
                 {parseFloat(order.discount_total || "0") > 0 && (
                   <div className="flex justify-between text-sm text-gray-600">
-                    <span>{isRTL ? "الخصم" : "Discount"}</span>
+                    <span>{isRTL ? "Ø§Ù„Ø®ØµÙ…" : "Discount"}</span>
                     <span className="text-green-600">-<OrderPrice price={order.discount_total} orderCurrency={order.currency} iconSize="xs" /></span>
                   </div>
                 )}
                 {/* Customs Fees */}
                 {order.fee_lines && order.fee_lines.length > 0 && order.fee_lines.map((fee) => (
                   <div key={fee.id} className="flex justify-between text-sm text-gray-600">
-                    <span>{isRTL ? "رسوم جمركية" : fee.name}</span>
+                    <span>{isRTL ? "Ø±Ø³ÙˆÙ… Ø¬Ù…Ø±ÙƒÙŠØ©" : fee.name}</span>
                     <OrderPrice price={fee.total} orderCurrency={order.currency} iconSize="xs" />
                   </div>
                 ))}
                 <div className="flex justify-between text-lg font-semibold border-t pt-2">
-                  <span>{isRTL ? "الإجمالي" : "Total"}</span>
+                  <span>{isRTL ? "Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ" : "Total"}</span>
                   <OrderPrice price={order.total} orderCurrency={order.currency} iconSize="sm" showConversion={true} isRTL={isRTL} />
                 </div>
                 <div className="flex justify-between text-sm text-gray-600">
-                  <span>{isRTL ? "طريقة الدفع" : "Payment Method"}</span>
+                  <span>{isRTL ? "Ø·Ø±ÙŠÙ‚Ø© Ø§Ù„Ø¯ÙØ¹" : "Payment Method"}</span>
                   <span>{order.payment_method_title}</span>
                 </div>
                 <div className="flex justify-between text-sm text-gray-600">
-                  <span>{isRTL ? "الحالة" : "Status"}</span>
+                  <span>{isRTL ? "Ø§Ù„Ø­Ø§Ù„Ø©" : "Status"}</span>
                   <span className="capitalize">{order.status.replace(/-/g, " ")}</span>
                 </div>
               </div>
@@ -682,7 +702,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
 
             <div className="mb-8 rounded-lg border p-6">
               <h2 className="mb-4 text-lg font-semibold text-gray-900">
-                {isRTL ? "عنوان الشحن" : "Shipping Address"}
+                {isRTL ? "Ø¹Ù†ÙˆØ§Ù† Ø§Ù„Ø´Ø­Ù†" : "Shipping Address"}
               </h2>
               <div className="text-gray-600">
                 <p>{order.billing.first_name} {order.billing.last_name}</p>
@@ -696,17 +716,17 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
             <div className="text-center">
               <p className="mb-6 text-gray-600">
                 {isRTL
-                  ? "سيتم إرسال تأكيد الطلب إلى بريدك الإلكتروني"
+                  ? "Ø³ÙŠØªÙ… Ø¥Ø±Ø³Ø§Ù„ ØªØ£ÙƒÙŠØ¯ Ø§Ù„Ø·Ù„Ø¨ Ø¥Ù„Ù‰ Ø¨Ø±ÙŠØ¯Ùƒ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ"
                   : "A confirmation email has been sent to your email address"}
               </p>
               <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
                 <Link href={`${marketPrefix}/${locale}/shop`}>
                   <Button variant="outline">
-                    {isRTL ? "متابعة التسوق" : "Continue Shopping"}
+                    {isRTL ? "Ù…ØªØ§Ø¨Ø¹Ø© Ø§Ù„ØªØ³ÙˆÙ‚" : "Continue Shopping"}
                   </Button>
                 </Link>
                 <Link href={`${marketPrefix}/${locale}/account/orders`}>
-                  <Button>{isRTL ? "عرض طلباتي" : "View My Orders"}</Button>
+                  <Button>{isRTL ? "Ø¹Ø±Ø¶ Ø·Ù„Ø¨Ø§ØªÙŠ" : "View My Orders"}</Button>
                 </Link>
               </div>
             </div>
@@ -718,13 +738,13 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
           <div className="text-center">
             <p className="mb-6 text-gray-600">
               {isRTL
-                ? "يمكنك إعادة محاولة الدفع أو العودة للتسوق"
+                ? "ÙŠÙ…ÙƒÙ†Ùƒ Ø¥Ø¹Ø§Ø¯Ø© Ù…Ø­Ø§ÙˆÙ„Ø© Ø§Ù„Ø¯ÙØ¹ Ø£Ùˆ Ø§Ù„Ø¹ÙˆØ¯Ø© Ù„Ù„ØªØ³ÙˆÙ‚"
                 : "You can retry the payment or continue shopping"}
             </p>
             <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
               <Link href={`${marketPrefix}/${locale}/shop`}>
                 <Button variant="outline">
-                  {isRTL ? "متابعة التسوق" : "Continue Shopping"}
+                  {isRTL ? "Ù…ØªØ§Ø¨Ø¹Ø© Ø§Ù„ØªØ³ÙˆÙ‚" : "Continue Shopping"}
                 </Button>
               </Link>
             </div>

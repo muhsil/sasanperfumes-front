@@ -1,6 +1,6 @@
 <?php
 /**
- * Email Footer - ShapeHive Custom Style
+ * Email Footer - Sasan Perfumes Custom Style
  *
  * This template can be overridden by copying it to yourtheme/woocommerce/emails/email-footer.php.
  *
@@ -12,8 +12,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// Frontend app URL for headless setup
-$frontend_url = 'https://shapehive.com';
+// Frontend URL for storefront links
+$frontend_url = function_exists( 'sasanperfumes_get_frontend_url' ) ? sasanperfumes_get_frontend_url( 'https://shapehive.com' ) : 'https://shapehive.com';
 ?>
 						</td>
 					</tr>

@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: sasanperfumes
- * Plugin URI: https://cms.shapehive.com
+ * Plugin URI: https://cms.sasanperfumes.com
  * Description: Admin dashboard and REST API endpoints for sasanperfumes with Media Library upload, dynamic slides, layout options, Bundles Creator, and Free Gift functionality.
  * Version: 6.6.8
  * Author: ShapeHive

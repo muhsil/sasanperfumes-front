@@ -5,11 +5,20 @@ import { proxy } from "./src/proxy";
 
 const DEV_ALLOWED_HOSTS = ["localhost", "127.0.0.1", "::1", "localhost:3000"];
 const CANONICAL_HOSTS_ENV = process.env.NEXT_PUBLIC_CANONICAL_HOSTS || process.env.CANONICAL_HOSTS || "";
-const DEFAULT_CANONICAL_HOST = "shapehive.com";
-const SHAPEHIVE_HOST_SUFFIX = ".shapehive.com";
+const DEFAULT_CANONICAL_HOST = "sasanperfumes.com";
+const REDIRECTABLE_HOST_SUFFIXES = [".shapehive.com", ".sasanperfumes.com"];
 const MARKET_PREFIX_SEGMENTS = new Set<string>(["qa", "om", "sa"]);
 const LOCALE_SEGMENTS = new Set<string>(["en", "ar"]);
+const MARKET_DOMAIN_HOSTS = [
+  "qa.shapehive.com",
+  "om.shapehive.com",
+  "sa.shapehive.com",
+  "qa.sasanperfumes.com",
+  "om.sasanperfumes.com",
+  "sa.sasanperfumes.com",
+];
 const KNOWN_CANONICAL_HOSTS = [
+  "sasanperfumes.com",
   "shapehive.com",
 ];
 
@@ -40,9 +49,10 @@ function getAllowedHosts(): string[] {
   const allowed = new Set<string>([
     ...DEV_ALLOWED_HOSTS,
     ...canonicalHosts,
-    "cms.shapehive.com",
-    "shapehive.com",
+    "cms.sasanperfumes.com",
+    "sasanperfumes.com",
     cmsHostname,
+    ...MARKET_DOMAIN_HOSTS,
     ...mediaHostNames,
   ]);
 
@@ -81,11 +91,11 @@ function isCanonicalHost(request: NextRequest) {
 
   const canonicalHosts = getCanonicalHosts();
   const isKnownCanonical = canonicalHosts.some((hostName) => host === hostName);
-  const isShapeHiveRelated = host.endsWith(SHAPEHIVE_HOST_SUFFIX);
+  const isRedirectableKnownDomain = REDIRECTABLE_HOST_SUFFIXES.some((suffix) => host.endsWith(suffix));
 
-  // Let unknown shapehive hostnames pass through middleware checks and be redirected
+  // Let unknown owned hostnames pass through middleware checks and be redirected
   // to the configured canonical host to avoid production-level 503 behavior.
-  if (!isKnownCanonical && isShapeHiveRelated) {
+  if (!isKnownCanonical && isRedirectableKnownDomain) {
     return false;
   }
 

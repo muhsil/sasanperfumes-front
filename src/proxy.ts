@@ -128,6 +128,28 @@ function getMarketAndLocale(pathname: string): { market?: string; locale?: strin
   return {};
 }
 
+function normalizeHostForMarket(value: string | null | undefined): string {
+  if (!value) return "";
+  const raw = value.split(",")[0]?.trim();
+  if (!raw) return "";
+  return normalizeHostHeader(raw).replace(/^www\./, "");
+}
+
+function getMarketFromHost(value: string | null | undefined): string | undefined {
+  const normalized = normalizeHostForMarket(value);
+  if (!normalized) return undefined;
+
+  const hostPart = normalized.split("/")[0];
+  if (!hostPart) return undefined;
+
+  const segments = hostPart.split(".").filter(Boolean);
+  if (segments.length > 2 && MARKET_PREFIX_SEGMENTS.has(segments[0])) {
+    return segments[0];
+  }
+
+  return undefined;
+}
+
 function getPathFromHeader(request: NextRequest): string {
   const referer = request.headers.get("referer") || request.headers.get("referrer");
   if (!referer) return "";
@@ -182,7 +204,12 @@ export function proxy(request: NextRequest) {
   const refererPath = getPathFromHeader(request);
   const { market: refererMarket, locale: refererLocale } = getMarketAndLocale(refererPath);
   const explicitMarket = request.headers.get("x-market")?.toLowerCase();
-  const market = routeMarket || refererMarket || (MARKET_PREFIX_SEGMENTS.has(explicitMarket || "") ? explicitMarket : undefined);
+  const hostMarket =
+    getMarketFromHost(request.headers.get("x-forwarded-host")) ||
+    getMarketFromHost(request.headers.get("host")) ||
+    getMarketFromHost(request.nextUrl.host);
+  const market = routeMarket || refererMarket || (MARKET_PREFIX_SEGMENTS.has(explicitMarket || "") ? explicitMarket : undefined) || hostMarket;
+  const marketIsFromPath = Boolean(routeMarket);
 
   if (isBlockedRequest(request)) {
     return new NextResponse("Not Found", { status: 404 });
@@ -282,7 +309,7 @@ export function proxy(request: NextRequest) {
   // Redirect to market-first locale path when market exists without locale
   if (market && !routeLocale) {
     const locale = getLocale(request);
-    const redirectPath = `/${market}/${locale}${segments.length > 1 ? `/${segments.slice(1).join("/")}` : ""}`;
+    const redirectPath = `${marketIsFromPath ? `/${market}` : ""}/${locale}${segments.length > 1 ? `/${segments.slice(1).join("/")}` : ""}`.replace(/^\/+/, "/");
     const requestHeaders = applyRequestRoutingHeaders(request, locale, market);
     request.nextUrl.pathname = redirectPath;
     const response = NextResponse.redirect(request.nextUrl, 308);

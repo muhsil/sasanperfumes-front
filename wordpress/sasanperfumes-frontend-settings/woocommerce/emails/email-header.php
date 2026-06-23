@@ -1,6 +1,6 @@
 <?php
 /**
- * Email Header - ShapeHive Custom Style
+ * Email Header - Sasan Perfumes Custom Style
  *
  * This template can be overridden by copying it to yourtheme/woocommerce/emails/email-header.php.
  *
@@ -14,19 +14,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 $header_text = $email_heading;
 
-// Frontend app URL for headless setup
-$frontend_url = 'https://shapehive.com';
+// Frontend URL for storefront links
+$frontend_url = function_exists( 'sasanperfumes_get_frontend_url' ) ? sasanperfumes_get_frontend_url( 'https://shapehive.com' ) : 'https://shapehive.com';
 
-// Get the custom logo URL - fallback to ShapeHive logo
-$logo_url = $frontend_url . '/images/logo-shapehive.svg';
+// Use the WooCommerce email logo when set, then fall back to the site logo.
+$logo_url = (string) get_option( 'woocommerce_email_header_image', '' );
 
 // Try to get the site logo from WordPress customizer
 $custom_logo_id = get_theme_mod( 'custom_logo' );
-if ( $custom_logo_id ) {
+if ( ! $logo_url && $custom_logo_id ) {
 	$logo_data = wp_get_attachment_image_src( $custom_logo_id, 'full' );
 	if ( $logo_data ) {
 		$logo_url = $logo_data[0];
 	}
+}
+
+if ( ! $logo_url ) {
+	$logo_url = 'https://sasanperfumes.com/wp-content/uploads/2025/08/Sasan-logo-03-1.png';
 }
 ?>
 <!DOCTYPE html>

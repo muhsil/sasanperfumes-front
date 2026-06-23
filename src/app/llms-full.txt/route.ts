@@ -51,7 +51,8 @@ ${categoriesSection}
 - About Us: ${siteConfig.url}/en/about-us
 - Contact Us: ${siteConfig.url}/en/contact-us
 - Guides: ${siteConfig.url}/en/guides
-- WhatsApp: +971 50 607 1405
+- WhatsApp: ${siteConfig.contact.whatsapp}
+- Complaints & Calls: ${siteConfig.contact.callPhone}
 
 ## Policies
 - Return Policy: ${siteConfig.url}/en/returns

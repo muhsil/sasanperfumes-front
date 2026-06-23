@@ -52,11 +52,16 @@ class sasanperfumes_Email_Templates {
 	}
 
 	public function override_email_from_name( $from_name ) {
+		$configured_name = trim( (string) get_option( 'woocommerce_email_from_name', '' ) );
+		if ( $configured_name !== '' ) {
+			return $configured_name;
+		}
+
 		return get_bloginfo( 'name' ) ?: 'Sasan Perfumes';
 	}
 
 	public function override_email_from_address( $from_address ) {
-		return get_option( 'admin_email' ) ?: $from_address;
+		return 'accounts@sasanperfumes.com';
 	}
 
 	public function override_woocommerce_template( $template, $template_name, $template_path ) {
