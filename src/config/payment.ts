@@ -100,8 +100,27 @@ function getEnvValueWithAliases(keys: string[]): string | undefined {
   return undefined;
 }
 
+function shouldApplyEnvGatewayFilters(marketCode?: string | null): boolean {
+  const suffix = getMarketplaceSuffix(marketCode);
+  const mode = getEnvValueWithAliases([
+    `PAYMENT_GATEWAYS_FILTER_MODE${suffix}`,
+    "PAYMENT_GATEWAYS_FILTER_MODE",
+    `NEXT_PUBLIC_PAYMENT_GATEWAYS_FILTER_MODE${suffix}`,
+    "NEXT_PUBLIC_PAYMENT_GATEWAYS_FILTER_MODE",
+  ]);
+
+  return (mode || "backend").trim().toLowerCase() === "env";
+}
+
 export function getPaymentGatewayFilters(marketCode?: string | null): PaymentGatewayFilters {
   const suffix = getMarketplaceSuffix(marketCode);
+
+  if (!shouldApplyEnvGatewayFilters(marketCode)) {
+    return {
+      allowed: [],
+      blocked: [],
+    };
+  }
 
   const allowedRaw = getEnvValueWithAliases([
     `PAYMENT_GATEWAYS_ALLOWLIST${suffix}`,
