@@ -14,7 +14,7 @@ interface PageProps {
   }>;
 }
 
-const DEFAULT_PAYMENT_SITE_URL = "https://sasanperfumes.com";
+const DEFAULT_PAYMENT_SITE_URL = "https://cms.shapehive.com";
 
 function getPaymentSiteOrigin(): string {
   const rawUrl =

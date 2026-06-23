@@ -117,6 +117,10 @@ class sasanperfumes_Frontend_Urls {
             return true;
         }
 
+        if ($this->is_woocommerce_payment_request($request_uri)) {
+            return true;
+        }
+
         $path = parse_url((string) $request_uri, PHP_URL_PATH);
         $path = $this->strip_market_prefix_from_path($path ? $path : '/');
 
@@ -140,6 +144,32 @@ class sasanperfumes_Frontend_Urls {
         }
 
         return (bool) preg_match('/\.(?:css|js|json|png|jpe?g|gif|svg|webp|ico|txt|xml|map|woff2?|ttf|eot|otf|pdf)$/i', $path);
+    }
+
+    private function is_woocommerce_payment_request($request_uri) {
+        $path = parse_url((string) $request_uri, PHP_URL_PATH);
+        $path = $this->strip_market_prefix_from_path($path ? $path : '/');
+        $query = array();
+        parse_str((string) parse_url((string) $request_uri, PHP_URL_QUERY), $query);
+
+        if (!empty($query['pay_for_order'])) {
+            return true;
+        }
+
+        $payment_paths = array(
+            '/checkout/order-pay',
+            '/checkout/order-received',
+            '/order-pay',
+            '/wc-api',
+        );
+
+        foreach ($payment_paths as $payment_path) {
+            if ($path === $payment_path || strpos($path, $payment_path . '/') === 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function get_headless_redirect_path($request_path) {

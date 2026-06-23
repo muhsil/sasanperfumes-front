@@ -124,6 +124,20 @@ class sasanperfumes_Security {
             if (defined('XMLRPC_REQUEST') && XMLRPC_REQUEST) return;
 
             $uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
+            $path = parse_url((string) $uri, PHP_URL_PATH);
+            $query = array();
+            parse_str((string) parse_url((string) $uri, PHP_URL_QUERY), $query);
+
+            if (
+                !empty($query['pay_for_order']) ||
+                strpos((string) $path, '/checkout/order-pay') === 0 ||
+                strpos((string) $path, '/checkout/order-received') === 0 ||
+                strpos((string) $path, '/order-pay') === 0 ||
+                strpos((string) $path, '/wc-api') === 0
+            ) {
+                return;
+            }
+
             if (
                 strpos($uri, '/wp-admin') !== false ||
                 strpos($uri, '/wp-login') !== false ||

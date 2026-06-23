@@ -21,7 +21,7 @@ const KNOWN_CANONICAL_HOSTS = [
   "sasanperfumes.com",
   "shapehive.com",
 ];
-const DEFAULT_PAYMENT_SITE_URL = "https://sasanperfumes.com";
+const DEFAULT_PAYMENT_SITE_URL = "https://cms.shapehive.com";
 
 function parseHost(value: string | undefined): string {
   if (!value) return "";
