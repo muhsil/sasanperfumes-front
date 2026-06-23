@@ -14,42 +14,18 @@ interface PageProps {
   }>;
 }
 
-const DEFAULT_PAYMENT_SITE_URL = "https://cms.shapehive.com";
-
-function getPaymentSiteOrigin(): string {
-  const rawUrl =
-    process.env.PAYMENT_SITE_URL ||
-    process.env.NEXT_PUBLIC_PAYMENT_SITE_URL ||
-    process.env.WOOCOMMERCE_PAYMENT_SITE_URL ||
-    process.env.NEXT_PUBLIC_WOOCOMMERCE_PAYMENT_SITE_URL ||
-    DEFAULT_PAYMENT_SITE_URL;
-
-  try {
-    return new URL(rawUrl).origin;
-  } catch {
-    return DEFAULT_PAYMENT_SITE_URL;
-  }
-}
-
 export default async function OrderPayPage({ params, searchParams }: PageProps) {
   const { locale, orderId } = await params;
   const search = await searchParams;
-  const { key } = search;
 
   if (!orderId) {
     notFound();
   }
 
-  if (key) {
-    const orderPayUrl = new URL(`/checkout/order-pay/${encodeURIComponent(orderId)}/`, getPaymentSiteOrigin());
-    orderPayUrl.searchParams.set("pay_for_order", search.pay_for_order || "true");
-    orderPayUrl.searchParams.set("key", key);
-    redirect(orderPayUrl.toString());
-  }
-
   const query = new URLSearchParams({ order_id: orderId });
 
   if (search.key) {
+    query.set("order_key", search.key);
     query.set("key", search.key);
   }
   if (search.pay_for_order) {

@@ -21,7 +21,6 @@ const KNOWN_CANONICAL_HOSTS = [
   "sasanperfumes.com",
   "shapehive.com",
 ];
-const DEFAULT_PAYMENT_SITE_URL = "https://cms.shapehive.com";
 
 function parseHost(value: string | undefined): string {
   if (!value) return "";
@@ -176,42 +175,6 @@ function enforceCanonicalHost(request: NextRequest) {
   return NextResponse.redirect(redirectUrl, 308);
 }
 
-function getPaymentSiteOrigin(): string {
-  const rawUrl =
-    process.env.PAYMENT_SITE_URL ||
-    process.env.NEXT_PUBLIC_PAYMENT_SITE_URL ||
-    process.env.WOOCOMMERCE_PAYMENT_SITE_URL ||
-    process.env.NEXT_PUBLIC_WOOCOMMERCE_PAYMENT_SITE_URL ||
-    DEFAULT_PAYMENT_SITE_URL;
-
-  try {
-    return new URL(rawUrl).origin;
-  } catch {
-    return DEFAULT_PAYMENT_SITE_URL;
-  }
-}
-
-function redirectOrderPayToWooCommerce(request: NextRequest) {
-  const segments = request.nextUrl.pathname.split("/").filter(Boolean);
-  const orderPayIndex = segments.findIndex((segment) => segment.toLowerCase() === "order-pay");
-
-  if (orderPayIndex === -1) return;
-
-  const orderId = segments[orderPayIndex + 1];
-  const orderKey = request.nextUrl.searchParams.get("key");
-
-  if (!orderId || !orderKey) return;
-
-  const redirectUrl = new URL(`/checkout/order-pay/${encodeURIComponent(orderId)}/`, getPaymentSiteOrigin());
-  redirectUrl.searchParams.set("pay_for_order", request.nextUrl.searchParams.get("pay_for_order") || "true");
-  redirectUrl.searchParams.set("key", orderKey);
-
-  const response = NextResponse.redirect(redirectUrl, 302);
-  response.headers.set("Cache-Control", "no-store, no-cache, max-age=0, must-revalidate");
-  response.headers.set("Pragma", "no-cache");
-  return response;
-}
-
 export function proxy(request: NextRequest) {
   const marketLocaleOrderRedirect = enforceMarketLocalePathOrder(request);
   if (marketLocaleOrderRedirect) {
@@ -221,11 +184,6 @@ export function proxy(request: NextRequest) {
   const canonicalRedirect = enforceCanonicalHost(request);
   if (canonicalRedirect) {
     return canonicalRedirect;
-  }
-
-  const orderPayRedirect = redirectOrderPayToWooCommerce(request);
-  if (orderPayRedirect) {
-    return orderPayRedirect;
   }
 
   return appProxy(request);

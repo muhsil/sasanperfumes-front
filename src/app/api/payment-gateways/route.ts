@@ -8,6 +8,7 @@ import {
   wpJsonBaseForMarket,
 } from "@/lib/utils/backendFetch";
 import { getRequestMarket } from "@/lib/market/server";
+import { isStripeConfigured } from "@/lib/stripe/config";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -205,6 +206,10 @@ function addStripeFallbackGateway(
   gateways: PaymentGatewayResponseItem[],
   filters: { allowed: string[]; blocked: string[] }
 ): PaymentGatewayResponseItem[] {
+  if (!isStripeConfigured()) {
+    return gateways;
+  }
+
   const allowedSet = expandPaymentGatewayIdAliases(filters.allowed);
   const blockedSet = new Set(filters.blocked.map((id) => id.toLowerCase()));
 
@@ -213,7 +218,7 @@ function addStripeFallbackGateway(
   }
 
   const allowStripe = allowedSet.has("stripe") || allowedSet.has("woocommerce_payments");
-  const blockStripe = blockedSet.has("stripe") || blockedSet.has("woocommerce_payments");
+  const blockStripe = blockedSet.has("stripe");
 
   if (!allowStripe || blockStripe) {
     return gateways;
@@ -230,10 +235,10 @@ function addStripeFallbackGateway(
 
   const fallbackOrder = gateways.length + 1;
   const fallbackGateway: PaymentGatewayResponseItem = {
-    id: "woocommerce_payments",
-    title: PAYMENT_METHOD_DETAILS.woocommerce_payments.title,
-    description: PAYMENT_METHOD_DETAILS.woocommerce_payments.description,
-    method_title: PAYMENT_METHOD_DETAILS.woocommerce_payments.title,
+    id: "stripe",
+    title: PAYMENT_METHOD_DETAILS.stripe.title,
+    description: PAYMENT_METHOD_DETAILS.stripe.description,
+    method_title: PAYMENT_METHOD_DETAILS.stripe.title,
     order: fallbackOrder,
     enabled: true,
   };
@@ -276,13 +281,7 @@ export async function GET() {
               if (gateway.enabled) {
                 return isPaymentGatewayAllowed(gateway.id, allowedGatewaySet, hasAllowFilter);
               }
-
-              // If a gateway is disabled in WooCommerce but explicitly allowlisted,
-              // keep it so admins can still expose legacy/alias methods (for example Stripe)
-              // without additional import/config changes.
-              return hasAllowFilter
-                && isPaymentGatewayAllowed(gateway.id, allowedGatewaySet, hasAllowFilter)
-                && (gateway.id.toLowerCase() === "woocommerce_payments" || gateway.id.toLowerCase() === "stripe");
+              return false;
             })
             .sort((a, b) => a.order - b.order)
             .map((gateway) => {
@@ -331,6 +330,25 @@ export async function GET() {
     const storeData = await safeJsonResponse(storeResponse);
 
     if (!storeResponse.ok) {
+      const envFallbackGateways = addStripeFallbackGateway(
+        applyPaymentGatewayFilters(
+          mergeGatewayOverrides([], gatewayOverrides),
+          gatewayFilters
+        ),
+        gatewayFilters
+      );
+
+      if (envFallbackGateways.length > 0) {
+        const fallbackData = {
+          success: true,
+          gateways: envFallbackGateways,
+          source: gatewayOverrides.length > 0 ? "hostinger_env_fallback+overrides" : "hostinger_env_fallback",
+          myfatoorah_test_mode: getEnvVar("MYFATOORAH_TEST_MODE") === "true",
+        };
+        gatewaysCache = { data: fallbackData, timestamp: Date.now() };
+        return gatewaysJson(fallbackData);
+      }
+
       return gatewaysJson(
         {
           success: false,

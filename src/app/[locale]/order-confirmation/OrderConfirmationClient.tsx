@@ -133,12 +133,6 @@ function isLikelyCardPayment(method: string, methodTitle = ""): boolean {
   return normalizedTitle.includes("credit") && normalizedTitle.includes("card");
 }
 
-function buildOrderPayUrl(marketPrefix: string, locale: string, orderId: string, orderKey: string): string {
-  const baseUrl = window.location.origin;
-  const prefix = marketPrefix === "/" ? "" : marketPrefix;
-  return `${baseUrl}${prefix}/${locale}/order-pay/${orderId}?pay_for_order=true&key=${encodeURIComponent(orderKey)}`;
-}
-
 export default function OrderConfirmationClient({ locale }: OrderConfirmationClientProps) {
   const marketPrefix = useMarketPrefix();
   const searchParams = useSearchParams();
@@ -149,6 +143,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
   const myFatoorahPaymentId = searchParams.get("paymentId");
   const tabbyPaymentId = searchParams.get("payment_id");
   const tamaraOrderId = searchParams.get("orderId");
+  const stripeSessionId = searchParams.get("stripe_session_id");
   const isRTL = locale === "ar";
   const resolvedOrderId = orderId || orderReceivedId;
   const { clearCart, setIsCartOpen } = useCart();
@@ -164,6 +159,29 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
   const [verifyingPayment, setVerifyingPayment] = useState(false);
   const [retryingPayment, setRetryingPayment] = useState(false);
   const [retryError, setRetryError] = useState<string | null>(null);
+
+  const startStripeCheckout = useCallback(async (targetOrder: OrderData) => {
+    const response = await fetch("/api/stripe/create-checkout-session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        order_id: targetOrder.id,
+        order_key: targetOrder.order_key,
+        locale,
+        market_prefix: marketPrefix,
+      }),
+    });
+
+    const data = await response.json();
+    if (data.success && data.checkout_url) {
+      window.location.href = data.checkout_url;
+      return;
+    }
+
+    throw new Error(data.error?.message || "Failed to initiate Stripe payment");
+  }, [locale, marketPrefix]);
 
   useEffect(() => {
     setIsCartOpen(false);
@@ -307,24 +325,9 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
         } else {
           throw new Error(tamaraData.error?.message || "Failed to initiate payment");
         }
-      } else if (isWooPaymentsPayment) {
-        if (order.payment_url) {
-          const normalizedPaymentUrl = normalizeFrontendPaymentUrl(order.payment_url, {
-            origin: window.location.origin,
-            locale,
-            marketPrefix,
-          });
-          if (normalizedPaymentUrl) {
-            window.location.href = normalizedPaymentUrl;
-            return;
-          }
-          throw new Error("Payment URL is invalid for WooPayments");
-        }
-        if (isLikelyCardCheckout && order.id && order.order_key) {
-          window.location.href = buildOrderPayUrl(marketPrefix, locale, `${order.id}`, order.order_key);
-          return;
-        }
-        throw new Error("Payment URL is missing for WooPayments");
+      } else if (isWooPaymentsPayment || isLikelyCardCheckout) {
+        await startStripeCheckout(order);
+        return;
       } else {
         setRetryError(isRTL ? "Ø·Ø±ÙŠÙ‚Ø© Ø§Ù„Ø¯ÙØ¹ ØºÙŠØ± Ù…Ø¯Ø¹ÙˆÙ…Ø© Ù„Ø¥Ø¹Ø§Ø¯Ø© Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø©" : "Payment method not supported for retry");
       }
@@ -333,7 +336,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
     } finally {
       setRetryingPayment(false);
     }
-    }, [order, resolvedOrderId, locale, isRTL]);
+    }, [order, resolvedOrderId, locale, isRTL, startStripeCheckout]);
 
   useEffect(() => {
     const verifyPaymentAndFetchOrder = async () => {
@@ -344,7 +347,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
       }
 
       try {
-        const hasExternalPayment = myFatoorahPaymentId || tabbyPaymentId || tamaraOrderId;
+        const hasExternalPayment = myFatoorahPaymentId || tabbyPaymentId || tamaraOrderId || stripeSessionId;
         
         if (hasExternalPayment && !paymentVerifiedRef.current) {
           paymentVerifiedRef.current = true;
@@ -359,6 +362,11 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
               verifyUrl = `/api/tabby/verify-payment?payment_id=${tabbyPaymentId}`;
             } else if (tamaraOrderId) {
               verifyUrl = `/api/tamara/verify-payment?order_id=${tamaraOrderId}`;
+            } else if (stripeSessionId) {
+              verifyUrl =
+                `/api/stripe/verify-session?session_id=${encodeURIComponent(stripeSessionId)}` +
+                `&order_id=${encodeURIComponent(resolvedOrderId)}` +
+                `&order_key=${encodeURIComponent(orderKey || wcOrderKey || "")}`;
             }
             
             if (verifyUrl) {
@@ -476,9 +484,21 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
           isExternalPaymentMethod(paymentMethod) ||
           isLikelyCardPayment(paymentMethod, paymentMethodTitle);
 
-        const hasExternalPaymentParams = myFatoorahPaymentId || tabbyPaymentId || tamaraOrderId;
+        const hasExternalPaymentParams = myFatoorahPaymentId || tabbyPaymentId || tamaraOrderId || stripeSessionId;
 
         if (
+          isLikelyCardPayment(paymentMethod, paymentMethodTitle) &&
+          fetchedStatus === "pending" &&
+          !hasExternalPaymentParams &&
+          typeof window !== "undefined"
+        ) {
+          const alreadyRedirectedToStripe = window.sessionStorage.getItem(`${gatewayRedirectKey}_stripe`);
+          if (!alreadyRedirectedToStripe) {
+            window.sessionStorage.setItem(`${gatewayRedirectKey}_stripe`, "1");
+            await startStripeCheckout(fetchedOrder);
+            return;
+          }
+        } else if (
           fetchedOrder?.payment_url &&
           isExternalPayment &&
           fetchedStatus === "pending" &&
@@ -497,27 +517,14 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
             if (normalizedPaymentUrl) {
               window.location.href = normalizedPaymentUrl;
             } else {
-              window.location.href = buildOrderPayUrl(marketPrefix, locale, resolvedOrderId, fetchedOrder.order_key);
+              setPaymentStatus("pending");
             }
-            return;
-          }
-        } else if (
-          !fetchedOrder?.payment_url &&
-          isLikelyCardPayment(paymentMethod, paymentMethodTitle) &&
-          fetchedStatus === "pending" &&
-          !hasExternalPaymentParams &&
-          fetchedOrder?.order_key &&
-          typeof window !== "undefined"
-        ) {
-          const alreadyRedirectedToPay = window.sessionStorage.getItem(`${gatewayRedirectKey}_orderpay`);
-          if (!alreadyRedirectedToPay) {
-            window.sessionStorage.setItem(`${gatewayRedirectKey}_orderpay`, "1");
-            window.location.href = buildOrderPayUrl(marketPrefix, locale, resolvedOrderId, fetchedOrder.order_key);
             return;
           }
         } else if (fetchedOrder?.order_key && typeof window !== "undefined") {
           window.sessionStorage.removeItem(`${gatewayRedirectKey}_orderpay`);
           window.sessionStorage.removeItem(gatewayRedirectKey);
+          window.sessionStorage.removeItem(`${gatewayRedirectKey}_stripe`);
         }
 
         const isFailedOrder = fetchedStatus === "failed" || fetchedStatus === "cancelled";
@@ -564,7 +571,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
     };
 
     verifyPaymentAndFetchOrder();
-    }, [resolvedOrderId, orderKey, wcOrderKey, myFatoorahPaymentId, tabbyPaymentId, tamaraOrderId, clearCart, paymentStatus]);
+    }, [resolvedOrderId, orderKey, wcOrderKey, myFatoorahPaymentId, tabbyPaymentId, tamaraOrderId, stripeSessionId, clearCart, paymentStatus, startStripeCheckout]);
 
   if (loading) {
     return (
