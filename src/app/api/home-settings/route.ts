@@ -62,9 +62,9 @@ function responseHeaders(market?: string) {
   return {
     "Cache-Control": "no-store, max-age=0",
     "Vary": "Host, X-Frontend-Host, X-Market",
-    "X-ShapeHive-Market-Routing": "v3",
-    "X-ShapeHive-Market": market || "intl",
-    ...(cmsFrontendHost ? { "X-ShapeHive-Cms-Frontend-Host": cmsFrontendHost } : {}),
+    "X-SasanPerfumes-Market-Routing": "v3",
+    "X-SasanPerfumes-Market": market || "intl",
+    ...(cmsFrontendHost ? { "X-SasanPerfumes-Cms-Frontend-Host": cmsFrontendHost } : {}),
   };
 }
 

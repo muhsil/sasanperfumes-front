@@ -904,8 +904,14 @@ export async function getSiteSettings(locale?: Locale, frontendHost?: string): P
   // Decode HTML entities to prevent double-encoding in <title> and meta tags.
   const rawSiteName = pluginSiteData?.name || siteInfo?.name || "";
   const rawSiteTagline = pluginSiteData?.description || siteInfo?.description || "";
-  const siteName = decodeHtmlEntities(rawSiteName);
-  const siteTagline = decodeHtmlEntities(rawSiteTagline);
+  const decodedSiteName = decodeHtmlEntities(rawSiteName).trim();
+  const decodedSiteTagline = decodeHtmlEntities(rawSiteTagline).trim();
+  const siteName = /shapehive/i.test(decodedSiteName) || !decodedSiteName
+    ? siteConfig.name
+    : decodedSiteName;
+  const siteTagline = /shapehive/i.test(decodedSiteTagline) || !decodedSiteTagline
+    ? siteConfig.description
+    : decodedSiteTagline;
 
   // Build site settings from available sources
   const settings: SiteSettings = {
