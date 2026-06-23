@@ -94,6 +94,16 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: '/:locale(en|ar)/order-pay/:orderId',
+        destination: 'https://cms.shapehive.com/checkout/order-pay/:orderId/',
+        permanent: false,
+      },
+      {
+        source: '/:market(qa|om|sa)/:locale(en|ar)/order-pay/:orderId',
+        destination: 'https://cms.shapehive.com/checkout/order-pay/:orderId/',
+        permanent: false,
+      },
+      {
         source: '/:slug([\\w-]+)-perfume',
         destination: '/en/product/:slug-perfume',
         permanent: true,

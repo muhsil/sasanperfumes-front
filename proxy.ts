@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { canonicalHost, cmsHostname, mediaHostNames } from "./src/config/site";
-import { proxy } from "./src/proxy";
+import { proxy as appProxy } from "./src/proxy";
 
 const DEV_ALLOWED_HOSTS = ["localhost", "127.0.0.1", "::1", "localhost:3000"];
 const CANONICAL_HOSTS_ENV = process.env.NEXT_PUBLIC_CANONICAL_HOSTS || process.env.CANONICAL_HOSTS || "";
@@ -212,7 +212,7 @@ function redirectOrderPayToWooCommerce(request: NextRequest) {
   return response;
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const marketLocaleOrderRedirect = enforceMarketLocalePathOrder(request);
   if (marketLocaleOrderRedirect) {
     return marketLocaleOrderRedirect;
@@ -228,7 +228,7 @@ export function middleware(request: NextRequest) {
     return orderPayRedirect;
   }
 
-  return proxy(request);
+  return appProxy(request);
 }
 
 export const config = {
