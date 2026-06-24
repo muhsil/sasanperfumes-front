@@ -1,7 +1,6 @@
 ﻿import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { ProductGridSkeleton } from "@/components/common/Skeleton";
-import { CollectionPageHeader } from "@/components/shop/CollectionPageHeader";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { getDictionary } from "@/i18n";
 import { generateMetadata as generateSeoMetadata, generateCollectionPageJsonLd, generateItemListJsonLd, generateBreadcrumbJsonLd } from "@/lib/utils/seo";
@@ -13,7 +12,7 @@ import type { Metadata } from "next";
 import { CategoryClient } from "./CategoryClient";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { categorySeoContent } from "@/data/category-seo-content";
-import { getCategorySeoContent, getCategorySubtitle } from "@/lib/api/wordpress";
+import { getCategorySeoContent } from "@/lib/api/wordpress";
 import { getMarketPathPrefix } from "@/config/market";
 
 // Helper to check if a slug contains non-ASCII characters (e.g., Arabic)
@@ -155,8 +154,8 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     notFound();
   }
 
-  // Fetch products, gift product info (IDs and slugs), bundle product slugs, and subtitle in parallel
-  const [{ products: allProducts }, giftProductInfo, bundleProductSlugs, categorySubtitle] = await Promise.all([
+  // Fetch products, gift product info (IDs and slugs), and bundle product slugs in parallel
+  const [{ products: allProducts }, giftProductInfo, bundleProductSlugs] = await Promise.all([
     getProductsByCategory(slug, {
       per_page: 50,
       locale: locale as Locale,
@@ -165,7 +164,6 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     }),
     getFreeGiftProductInfo(market.defaultCurrency, frontendHost),
     getBundleEnabledProductSlugs(frontendHost),
-    getCategorySubtitle(slug),
   ]);
 
   // Filter out gift products from the category listing
@@ -232,24 +230,12 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     { name: categoryName, url: categoryUrl },
   ]);
 
-  const categoryDescriptionText = category.description
-    ? decodeHtmlEntities(category.description.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()).slice(0, 240)
-    : "";
-
   return (
     <div className="page-flush container mx-auto px-4 bg-transparent text-brand-primary">
       <JsonLd data={collectionJsonLd} />
       <JsonLd data={itemListJsonLd} />
       <JsonLd data={breadcrumbJsonLd} />
       <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} className="sr-only" />
-
-      <CollectionPageHeader
-        title={categoryName}
-        subtitle={categorySubtitle ? (locale === "ar" ? categorySubtitle.ar : categorySubtitle.en) : undefined}
-        description={categoryDescriptionText}
-        image={category.image?.src}
-        locale={locale as Locale}
-      />
 
       <Suspense fallback={<ProductGridSkeleton count={12} columns={6} />}>
         <CategoryClient

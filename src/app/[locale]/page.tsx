@@ -7,6 +7,7 @@ import {
   getBundleEnabledProductSlugs,
   getBestsellerProducts,
   getFeaturedProducts,
+  getCategories,
 } from "@/lib/api/woocommerce";
 import { getHomePageSettings, getSeoSettings, getHomeSections, getSiteSettings } from "@/lib/api/wordpress";
 import { getMarketHintFromSearchParams, getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
@@ -14,12 +15,119 @@ import {
   HeroSlider,
   ProductSection,
   BannersSection,
+  CategorySection,
+  CollectionsSection,
   SeoContentSection,
   OurStorySection,
 } from "@/components/sections";
 import { ProductSectionSkeleton } from "@/components/sections/ProductSection";
 import { siteConfig, type Currency, type Locale } from "@/config/site";
 import type { Metadata } from "next";
+import type { HomeSectionFAQ, HomeSectionWhyChooseUs } from "@/types/wordpress";
+
+function hasText(value?: string | null): boolean {
+  return Boolean(value?.trim());
+}
+
+function WhyChooseSection({
+  section,
+  locale,
+  isRTL,
+}: {
+  section: HomeSectionWhyChooseUs;
+  locale: Locale;
+  isRTL: boolean;
+}) {
+  const t = (bi: { en: string; ar: string }) => locale === "ar" ? bi.ar : bi.en;
+  const items = (section.items || []).filter((item) => hasText(t(item.title)) || hasText(t(item.description)));
+  if (section.enabled === false || items.length === 0) return null;
+
+  return (
+    <section className="section-band py-10 md:py-14" dir={isRTL ? "rtl" : "ltr"}>
+      <div className="section-shell">
+        <div className={isRTL ? "text-right" : "text-left"}>
+          {hasText(t(section.eyebrow)) && (
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-brand-gold">
+              {t(section.eyebrow)}
+            </p>
+          )}
+          {hasText(t(section.title)) && (
+            <h2 className="font-title text-[28px] leading-tight text-brand-primary md:text-[34px]">
+              {t(section.title)}
+            </h2>
+          )}
+          {hasText(t(section.subtitle)) && (
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-brand-muted md:text-base">
+              {t(section.subtitle)}
+            </p>
+          )}
+        </div>
+
+        <div className="mt-7 grid gap-4 md:grid-cols-3">
+          {items.map((item, index) => (
+            <div key={`${t(item.title)}-${index}`} className="rounded-lg border border-brand-border/70 bg-white p-5">
+              <h3 className="text-base font-semibold text-brand-primary">{t(item.title)}</h3>
+              {hasText(t(item.description)) && (
+                <p className="mt-3 text-sm leading-6 text-brand-muted">{t(item.description)}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FAQSection({
+  section,
+  locale,
+  isRTL,
+}: {
+  section: HomeSectionFAQ;
+  locale: Locale;
+  isRTL: boolean;
+}) {
+  const t = (bi: { en: string; ar: string }) => locale === "ar" ? bi.ar : bi.en;
+  const items = (section.items || []).filter((item) => hasText(t(item.question)) || hasText(t(item.answer)));
+  if (section.enabled === false || items.length === 0) return null;
+
+  return (
+    <section className="section-band py-10 md:py-14" dir={isRTL ? "rtl" : "ltr"}>
+      <div className="section-shell">
+        <div className={isRTL ? "text-right" : "text-left"}>
+          {hasText(t(section.eyebrow)) && (
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-brand-gold">
+              {t(section.eyebrow)}
+            </p>
+          )}
+          {hasText(t(section.title)) && (
+            <h2 className="font-title text-[28px] leading-tight text-brand-primary md:text-[34px]">
+              {t(section.title)}
+            </h2>
+          )}
+          {hasText(t(section.subtitle)) && (
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-brand-muted md:text-base">
+              {t(section.subtitle)}
+            </p>
+          )}
+        </div>
+
+        <div className="mt-7 divide-y divide-brand-border rounded-lg border border-brand-border bg-white">
+          {items.map((item, index) => (
+            <details key={`${t(item.question)}-${index}`} className="group p-5">
+              <summary className="cursor-pointer list-none text-sm font-semibold text-brand-primary md:text-base">
+                {t(item.question)}
+              </summary>
+              {hasText(t(item.answer)) && (
+                <p className="mt-3 text-sm leading-7 text-brand-muted">{t(item.answer)}</p>
+              )}
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -306,11 +414,12 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
     getRequestFrontendHost(marketHint),
   ]);
 
-  const [dictionary, homeSettings, homeSections, siteSettings] = await Promise.all([
+  const [dictionary, homeSettings, homeSections, siteSettings, categories] = await Promise.all([
     getDictionary(validLocale),
     getHomePageSettings(validLocale, frontendHost),
     getHomeSections(frontendHost),
     getSiteSettings(validLocale, frontendHost),
+    getCategories(validLocale, market.defaultCurrency, frontendHost),
   ]);
 
   const t = (bi: { en: string; ar: string }) => isRTL ? bi.ar : bi.en;
@@ -345,7 +454,12 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
           />
         </Suspense>
 
-        <BannersSection settings={homeSettings.banners} />
+        <CategorySection
+          settings={homeSettings.shop_by_category}
+          categories={categories}
+          locale={validLocale}
+          isRTL={isRTL}
+        />
 
         <Suspense fallback={<ProductSectionSkeleton fullView />}>
           <FeaturedProductsSection
@@ -358,14 +472,11 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
           />
         </Suspense>
 
-        {homeSections.seoContent?.enabled !== false && (homeSections.seoContent?.paragraphs?.length ?? 0) > 0 && (
-          <SeoContentSection
-            title={homeSections.seoContent.title ? t(homeSections.seoContent.title) : undefined}
-            paragraphs={homeSections.seoContent.paragraphs.map((p) => t(p))}
-            backgroundImage={homeSections.seoContent.backgroundImage}
-            isRTL={isRTL}
-          />
-        )}
+        <CollectionsSection settings={homeSettings.collections} />
+
+        <BannersSection settings={homeSettings.banners} />
+
+        <WhyChooseSection section={homeSections.whyChooseUs} locale={validLocale} isRTL={isRTL} />
 
         {homeSections.ourStory?.enabled !== false && (t(homeSections.ourStory?.title) || homeSections.ourStory?.image) && (
           <OurStorySection
@@ -375,6 +486,17 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
             description2={t(homeSections.ourStory?.description2)}
             image={homeSections.ourStory?.image}
             stats={homeSections.ourStory?.stats?.map((s) => ({ value: s.value, label: t(s.label) }))}
+          />
+        )}
+
+        <FAQSection section={homeSections.faq} locale={validLocale} isRTL={isRTL} />
+
+        {homeSections.seoContent?.enabled !== false && (homeSections.seoContent?.paragraphs?.length ?? 0) > 0 && (
+          <SeoContentSection
+            title={homeSections.seoContent.title ? t(homeSections.seoContent.title) : undefined}
+            paragraphs={homeSections.seoContent.paragraphs.map((p) => t(p))}
+            backgroundImage={homeSections.seoContent.backgroundImage}
+            isRTL={isRTL}
           />
         )}
       </div>

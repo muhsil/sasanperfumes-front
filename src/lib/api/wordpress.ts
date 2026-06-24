@@ -119,6 +119,10 @@ function sanitizeLegacyDescription(value: string, fallback: string): string {
     return fallback;
   }
 
+  if (/^Sasan Perfumes(?:\s+(?:Qatar|Oman|Saudi Arabia|UAE))?\s+luxury fragrances and gifts\.?$/i.test(replaced)) {
+    return fallback;
+  }
+
   return replaced;
 }
 

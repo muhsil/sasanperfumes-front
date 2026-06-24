@@ -96,10 +96,8 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
   };
 
   const description = footerSettings?.description
-    ? t(footerSettings.description)
-    : locale === "ar"
-      ? "اكتشف العطور الفاخرة ومنتجات العناية العطرية المصنوعة بعناية في Sasan Perfumes."
-      : (siteSettings?.tagline || "Premium fragrances and aromatic products crafted with care.");
+    ? t(footerSettings.description).trim()
+    : "";
 
   const social = footerSettings?.social;
   const facebookUrl = social?.facebook || siteConfig.links.facebook;
@@ -162,9 +160,6 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
         <div className="relative mx-auto w-full max-w-[80rem] px-4 py-10 md:py-14">
           <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-12">
           <div className="border-b border-white/10 pb-8 lg:border-b-0 lg:border-e lg:pe-12">
-            <p className="mb-4 text-[11px] font-semibold uppercase text-brand-gold">
-              {siteSettings?.tagline || "Logo"}
-            </p>
             {siteSettings?.logo?.url ? (
               <Image
                 src={siteSettings.logo.url}
@@ -179,7 +174,9 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
                 {displaySiteName}
               </span>
             ) : null}
-            <p className="mt-5 max-w-xl text-sm leading-7 text-brand-ivory/68">{description}</p>
+            {description && (
+              <p className="mt-5 max-w-xl text-sm leading-7 text-brand-ivory/68">{description}</p>
+            )}
           </div>
 
           <div className="grid gap-8 sm:grid-cols-2">
