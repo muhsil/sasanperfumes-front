@@ -37,7 +37,7 @@ Primary data flow:
 4. Cart uses CoCart.
 5. Market context is inferred from the request host/prefix and passed to backend selectors so each market gets isolated pages, products, and SEO.
 6. Orders, customers, coupons, and shipping use WooCommerce REST APIs where credentials are needed.
-7. Payments use MyFatoorah, Tabby, and Tamara server-side API routes.
+7. Payments use Stripe, Tabby, and Tamara server-side API routes.
 
 ## Tech Stack
 
@@ -192,7 +192,8 @@ Private server-side credentials:
 ```env
 WC_CONSUMER_KEY=ck_xxx
 WC_CONSUMER_SECRET=cs_xxx
-MYFATOORAH_API_KEY=xxx
+STRIPE_SECRET_KEY=sk_xxx
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_xxx
 TABBY_SECRET_KEY=xxx
 TABBY_MERCHANT_CODE=xxx
 TAMARA_API_TOKEN=xxx
@@ -367,7 +368,6 @@ Route groups:
 | `/api/shipping` | Shipping rates/methods |
 | `/api/shipping-countries` | Shipping countries |
 | `/api/payment-gateways` | Payment gateway list |
-| `/api/myfatoorah/*` | MyFatoorah payment APIs |
 | `/api/tabby/*` | Tabby payment APIs |
 | `/api/tamara/*` | Tamara payment APIs |
 | `/api/contact` | Contact form |
@@ -588,7 +588,7 @@ Payment integrations are server-side only:
 
 | Provider | Routes | Required env |
 |---|---|---|
-| MyFatoorah | `/api/myfatoorah/*` | `MYFATOORAH_API_KEY`, `MYFATOORAH_COUNTRY`, `MYFATOORAH_TEST_MODE` |
+| Stripe | `/api/stripe/*` | `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` |
 | Tabby | `/api/tabby/*` | `TABBY_SECRET_KEY`, `TABBY_MERCHANT_CODE` |
 | Tamara | `/api/tamara/*` | `TAMARA_API_TOKEN`, `NEXT_PUBLIC_TAMARA_PUBLIC_KEY`, `NEXT_PUBLIC_TAMARA_COUNTRY` |
 

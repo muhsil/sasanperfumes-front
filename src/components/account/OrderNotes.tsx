@@ -69,7 +69,7 @@ const translations = {
 };
 
 function parsePaymentDetails(note: string): ParsedPaymentDetails | null {
-  if (!note.includes("MyFatoorah") && !note.includes("Payment Details")) {
+  if (!note.includes("Payment Details")) {
     return null;
   }
 
@@ -100,7 +100,7 @@ function parsePaymentDetails(note: string): ParsedPaymentDetails | null {
 }
 
 function getNoteType(note: string): "payment" | "status" | "general" {
-  if (note.includes("MyFatoorah") || note.includes("Payment")) {
+  if (note.includes("Payment")) {
     return "payment";
   }
   if (note.includes("status changed") || note.includes("Order status")) {

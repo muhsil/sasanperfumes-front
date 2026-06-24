@@ -54,24 +54,6 @@ interface OrderData {
   meta_data?: OrderMetaData[];
 }
 
-interface PaymentDetails {
-  payment_id?: string;
-  reference_id?: string;
-  track_id?: string;
-  authorization_id?: string;
-  transaction_date?: string;
-  customer_ip?: string;
-  customer_country?: string;
-  card_brand?: string;
-  card_number?: string;
-  card_issuer?: string;
-  card_issuer_country?: string;
-  card_funding_method?: string;
-  payable_amount?: string;
-  client_deduction?: string;
-  receivable_amount?: string;
-}
-
 interface PaymentVerificationResult {
   success: boolean;
   payment_status?: "success" | "failed" | "pending";
@@ -91,7 +73,6 @@ interface PaymentVerificationResult {
   customer_mobile?: string;
   error_code?: string;
   error_message?: string;
-  payment_details?: PaymentDetails;
   error?: {
     code: string;
     message: string;
@@ -111,17 +92,14 @@ function isWooPaymentsMethod(method: string): boolean {
   return (
     normalized.includes("stripe") ||
     normalized.includes("woocommerce_payments") ||
-    (normalized.includes("card") &&
-      !normalized.includes("myfatoorah") &&
-      !normalized.includes("check"))
+    (normalized.includes("card") && !normalized.includes("check"))
   );
 }
 
 function isExternalPaymentMethod(method: string): boolean {
   const normalizedMethod = (method || "").toLowerCase();
   return (
-    normalizedMethod.startsWith("myfatoorah")
-    || normalizedMethod.startsWith("tabby")
+    normalizedMethod.startsWith("tabby")
     || normalizedMethod.startsWith("tamara")
     || isWooPaymentsMethod(normalizedMethod)
   );
@@ -140,7 +118,6 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
   const orderKey = searchParams.get("order_key");
   const orderReceivedId = searchParams.get("order-received");
   const wcOrderKey = searchParams.get("key");
-  const myFatoorahPaymentId = searchParams.get("paymentId");
   const tabbyPaymentId = searchParams.get("payment_id");
   const tamaraOrderId = searchParams.get("orderId");
   const stripeSessionId = searchParams.get("stripe_session_id");
@@ -199,39 +176,12 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
       const normalizedPaymentMethod = (paymentMethod || "").toLowerCase();
       const orderTotal = parseFloat(order.total);
       
-      const isMyFatoorahPayment = normalizedPaymentMethod.startsWith("myfatoorah");
       const isTabbyPayment = normalizedPaymentMethod.startsWith("tabby");
       const isTamaraPayment = normalizedPaymentMethod.startsWith("tamara");
       const isWooPaymentsPayment = isWooPaymentsMethod(normalizedPaymentMethod);
       const isLikelyCardCheckout = isLikelyCardPayment(normalizedPaymentMethod, order.payment_method_title);
       
-      if (isMyFatoorahPayment) {
-        const mfResponse = await fetch("/api/myfatoorah/initiate-payment", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            order_id: order.id,
-            order_key: order.order_key,
-            invoice_value: orderTotal,
-            customer_name: `${order.billing.first_name} ${order.billing.last_name}`,
-            customer_email: order.billing.email,
-            customer_phone: order.billing.phone,
-            currency_iso: order.currency || "KWD",
-            language: locale === "ar" ? "ar" : "en",
-            callback_url: `${baseUrl}/${locale}/order-confirmation`,
-            error_url: `${baseUrl}/${locale}/order-confirmation`,
-          }),
-        });
-        
-        const mfData = await mfResponse.json();
-        
-        if (mfData.success && mfData.payment_url) {
-          window.location.href = mfData.payment_url;
-          return;
-        } else {
-          throw new Error(mfData.error?.message || "Failed to initiate payment");
-        }
-      } else if (isTabbyPayment) {
+      if (isTabbyPayment) {
         const tabbyResponse = await fetch("/api/tabby/create-session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -347,7 +297,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
       }
 
       try {
-        const hasExternalPayment = myFatoorahPaymentId || tabbyPaymentId || tamaraOrderId || stripeSessionId;
+        const hasExternalPayment = tabbyPaymentId || tamaraOrderId || stripeSessionId;
         
         if (hasExternalPayment && !paymentVerifiedRef.current) {
           paymentVerifiedRef.current = true;
@@ -356,9 +306,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
           try {
             let verifyUrl = "";
             
-            if (myFatoorahPaymentId) {
-              verifyUrl = `/api/myfatoorah/verify-payment?paymentId=${myFatoorahPaymentId}`;
-            } else if (tabbyPaymentId) {
+            if (tabbyPaymentId) {
               verifyUrl = `/api/tabby/verify-payment?payment_id=${tabbyPaymentId}`;
             } else if (tamaraOrderId) {
               verifyUrl = `/api/tamara/verify-payment?order_id=${tamaraOrderId}`;
@@ -389,22 +337,6 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
                         status: "processing",
                         set_paid: true,
                         transaction_id: verifyData.transaction_id || verifyData.invoice_id,
-                        payment_details: {
-                          ...verifyData.payment_details,
-                          invoice_id: verifyData.invoice_id,
-                          invoice_status: verifyData.invoice_status,
-                          invoice_reference: verifyData.invoice_reference,
-                          invoice_value: verifyData.invoice_value,
-                          created_date: verifyData.created_date,
-                          transaction_id: verifyData.transaction_id,
-                          transaction_status: verifyData.transaction_status,
-                          payment_method: verifyData.payment_method,
-                          paid_currency: verifyData.paid_currency,
-                          paid_currency_value: verifyData.paid_currency_value,
-                          customer_name: verifyData.customer_name,
-                          customer_email: verifyData.customer_email,
-                          customer_mobile: verifyData.customer_mobile,
-                        },
                       }),
                     });
                     const updateData = await updateResponse.json();
@@ -424,22 +356,6 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
                       body: JSON.stringify({
                         order_id: parseInt(resolvedOrderId, 10),
                         status: "failed",
-                        payment_details: {
-                          ...verifyData.payment_details,
-                          invoice_id: verifyData.invoice_id,
-                          invoice_status: verifyData.invoice_status,
-                          invoice_reference: verifyData.invoice_reference,
-                          invoice_value: verifyData.invoice_value,
-                          created_date: verifyData.created_date,
-                          transaction_id: verifyData.transaction_id,
-                          transaction_status: verifyData.transaction_status,
-                          payment_method: verifyData.payment_method,
-                          customer_name: verifyData.customer_name,
-                          customer_email: verifyData.customer_email,
-                          customer_mobile: verifyData.customer_mobile,
-                          error_code: verifyData.error_code,
-                          error_message: verifyData.error_message,
-                        },
                       }),
                     });
                     const updateData = await updateResponse.json();
@@ -484,7 +400,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
           isExternalPaymentMethod(paymentMethod) ||
           isLikelyCardPayment(paymentMethod, paymentMethodTitle);
 
-        const hasExternalPaymentParams = myFatoorahPaymentId || tabbyPaymentId || tamaraOrderId || stripeSessionId;
+        const hasExternalPaymentParams = tabbyPaymentId || tamaraOrderId || stripeSessionId;
 
         if (
           isLikelyCardPayment(paymentMethod, paymentMethodTitle) &&
@@ -571,7 +487,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
     };
 
     verifyPaymentAndFetchOrder();
-    }, [resolvedOrderId, orderKey, wcOrderKey, myFatoorahPaymentId, tabbyPaymentId, tamaraOrderId, stripeSessionId, clearCart, paymentStatus, startStripeCheckout]);
+    }, [resolvedOrderId, orderKey, wcOrderKey, tabbyPaymentId, tamaraOrderId, stripeSessionId, clearCart, paymentStatus, startStripeCheckout]);
 
   if (loading) {
     return (
@@ -711,20 +627,11 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
               ? `Ø±Ù‚Ù… Ø§Ù„Ø·Ù„Ø¨: #${order.id}`
               : `Order number: #${order.id}`}
           </p>
-          {order.currency && !isPaymentFailed && (() => {
-                        const paidCurrencyMeta = order.meta_data?.find((m) => m.key === "myfatoorah_paid_currency");
-                        const paidCurrencyValueMeta = order.meta_data?.find((m) => m.key === "myfatoorah_paid_currency_value");
-            return (
-              <div className="mt-3">
-                <OrderCurrencyBadge 
-                  orderCurrency={order.currency} 
-                  paidCurrency={paidCurrencyMeta?.value}
-                  paidCurrencyValue={paidCurrencyValueMeta?.value}
-                  isRTL={isRTL}
-                />
-              </div>
-            );
-          })()}
+          {order.currency && !isPaymentFailed && (
+            <div className="mt-3">
+              <OrderCurrencyBadge orderCurrency={order.currency} isRTL={isRTL} />
+            </div>
+          )}
         </div>
 
         {/* Only show order details/invoice when payment is successful (not failed) */}

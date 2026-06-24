@@ -170,11 +170,7 @@ interface CreateOrderRequest {
 }
 
 const PAYMENT_METHOD_TITLES: Record<string, string> = {
-  myfatoorah_v2: "Credit/Debit Card",
   woocommerce_payments: "Credit/Debit Card",
-  myfatoorah: "Credit/Debit Card",
-  myfatoorah_cards: "Credit/Debit Card",
-  myfatoorah_embedded: "Credit/Debit Card",
   cod: "Cash on Delivery",
   bacs: "Bank Transfer",
   cheque: "Check Payment",
@@ -195,9 +191,6 @@ function resolvePaymentMethodTitle(paymentMethod: string, providedTitle: unknown
   const normalizedMethod = paymentMethod.toLowerCase();
   if (PAYMENT_METHOD_TITLES[normalizedMethod]) {
     return PAYMENT_METHOD_TITLES[normalizedMethod];
-  }
-  if (normalizedMethod.startsWith("myfatoorah")) {
-    return "Credit/Debit Card";
   }
   if (normalizedMethod.startsWith("woocommerce_payments")) {
     return "Credit/Debit Card";
@@ -397,7 +390,7 @@ export async function POST(request: NextRequest) {
     const paymentMethod =
       typeof body.payment_method === "string" && body.payment_method.trim()
         ? body.payment_method.trim()
-        : "myfatoorah_v2";
+        : "stripe";
     
     const orderData: CreateOrderRequest = {
       payment_method: paymentMethod,
@@ -494,47 +487,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-interface PaymentMetaData {
-  // Invoice details
-  invoice_id?: string;
-  invoice_status?: string;
-  invoice_reference?: string;
-  invoice_value?: string;
-  created_date?: string;
-  // Transaction details
-  transaction_id?: string;
-  transaction_status?: string;
-  // Payment details
-  payment_id?: string;
-  payment_method?: string;
-  reference_id?: string;
-  track_id?: string;
-  authorization_id?: string;
-  transaction_date?: string;
-  // Customer details
-  customer_ip?: string;
-  customer_country?: string;
-  customer_name?: string;
-  customer_email?: string;
-  customer_mobile?: string;
-  // Card details
-  card_brand?: string;
-  card_number?: string;
-  card_issuer?: string;
-  card_issuer_country?: string;
-  card_funding_method?: string;
-  // Paid currency details (actual gateway currency)
-  paid_currency?: string;
-  paid_currency_value?: string;
-  // Amount details
-  payable_amount?: string;
-  client_deduction?: string;
-  receivable_amount?: string;
-  // Error details
-  error_code?: string;
-  error_message?: string;
-}
-
 interface UpdateOrderRequest {
   order_id: number;
   status?: string;
@@ -542,7 +494,6 @@ interface UpdateOrderRequest {
   transaction_id?: string;
   payment_method?: string;
   payment_method_title?: string;
-  payment_details?: PaymentMetaData;
 }
 
 export async function PUT(request: NextRequest) {
@@ -577,114 +528,6 @@ export async function PUT(request: NextRequest) {
     
     if (body.payment_method_title) {
       updateData.payment_method_title = body.payment_method_title;
-    }
-
-    // Add payment details as meta_data for WooCommerce
-    if (body.payment_details) {
-      const metaData: Array<{ key: string; value: string }> = [];
-      
-      // Invoice details
-      if (body.payment_details.invoice_id) {
-        metaData.push({ key: "myfatoorah_invoice_id", value: body.payment_details.invoice_id });
-      }
-      if (body.payment_details.invoice_status) {
-        metaData.push({ key: "myfatoorah_invoice_status", value: body.payment_details.invoice_status });
-      }
-      if (body.payment_details.invoice_reference) {
-        metaData.push({ key: "myfatoorah_invoice_reference", value: body.payment_details.invoice_reference });
-      }
-      if (body.payment_details.invoice_value) {
-        metaData.push({ key: "myfatoorah_invoice_value", value: body.payment_details.invoice_value });
-      }
-      if (body.payment_details.created_date) {
-        metaData.push({ key: "myfatoorah_created_date", value: body.payment_details.created_date });
-      }
-      // Transaction details
-      if (body.payment_details.transaction_id) {
-        metaData.push({ key: "myfatoorah_transaction_id", value: body.payment_details.transaction_id });
-      }
-      if (body.payment_details.transaction_status) {
-        metaData.push({ key: "myfatoorah_transaction_status", value: body.payment_details.transaction_status });
-      }
-      // Payment details
-      if (body.payment_details.payment_id) {
-        metaData.push({ key: "myfatoorah_payment_id", value: body.payment_details.payment_id });
-      }
-      if (body.payment_details.payment_method) {
-        metaData.push({ key: "myfatoorah_payment_method", value: body.payment_details.payment_method });
-      }
-      if (body.payment_details.reference_id) {
-        metaData.push({ key: "myfatoorah_reference_id", value: body.payment_details.reference_id });
-      }
-      if (body.payment_details.track_id) {
-        metaData.push({ key: "myfatoorah_track_id", value: body.payment_details.track_id });
-      }
-      if (body.payment_details.authorization_id) {
-        metaData.push({ key: "myfatoorah_authorization_id", value: body.payment_details.authorization_id });
-      }
-      if (body.payment_details.transaction_date) {
-        metaData.push({ key: "myfatoorah_transaction_date", value: body.payment_details.transaction_date });
-      }
-      // Customer details
-      if (body.payment_details.customer_ip) {
-        metaData.push({ key: "myfatoorah_customer_ip", value: body.payment_details.customer_ip });
-      }
-      if (body.payment_details.customer_country) {
-        metaData.push({ key: "myfatoorah_customer_country", value: body.payment_details.customer_country });
-      }
-      if (body.payment_details.customer_name) {
-        metaData.push({ key: "myfatoorah_customer_name", value: body.payment_details.customer_name });
-      }
-      if (body.payment_details.customer_email) {
-        metaData.push({ key: "myfatoorah_customer_email", value: body.payment_details.customer_email });
-      }
-      if (body.payment_details.customer_mobile) {
-        metaData.push({ key: "myfatoorah_customer_mobile", value: body.payment_details.customer_mobile });
-      }
-      // Card details
-      if (body.payment_details.card_brand) {
-        metaData.push({ key: "myfatoorah_card_brand", value: body.payment_details.card_brand });
-      }
-      if (body.payment_details.card_number) {
-        metaData.push({ key: "myfatoorah_card_number", value: body.payment_details.card_number });
-      }
-      if (body.payment_details.card_issuer) {
-        metaData.push({ key: "myfatoorah_card_issuer", value: body.payment_details.card_issuer });
-      }
-      if (body.payment_details.card_issuer_country) {
-        metaData.push({ key: "myfatoorah_card_issuer_country", value: body.payment_details.card_issuer_country });
-      }
-      if (body.payment_details.card_funding_method) {
-        metaData.push({ key: "myfatoorah_card_funding_method", value: body.payment_details.card_funding_method });
-      }
-      // Paid currency details
-      if (body.payment_details.paid_currency) {
-        metaData.push({ key: "myfatoorah_paid_currency", value: body.payment_details.paid_currency });
-      }
-      if (body.payment_details.paid_currency_value) {
-        metaData.push({ key: "myfatoorah_paid_currency_value", value: body.payment_details.paid_currency_value });
-      }
-      // Amount details
-      if (body.payment_details.payable_amount) {
-        metaData.push({ key: "myfatoorah_payable_amount", value: body.payment_details.payable_amount });
-      }
-      if (body.payment_details.client_deduction) {
-        metaData.push({ key: "myfatoorah_client_deduction", value: body.payment_details.client_deduction });
-      }
-      if (body.payment_details.receivable_amount) {
-        metaData.push({ key: "myfatoorah_receivable_amount", value: body.payment_details.receivable_amount });
-      }
-      // Error details
-      if (body.payment_details.error_code) {
-        metaData.push({ key: "myfatoorah_error_code", value: body.payment_details.error_code });
-      }
-      if (body.payment_details.error_message) {
-        metaData.push({ key: "myfatoorah_error_message", value: body.payment_details.error_message });
-      }
-      
-      if (metaData.length > 0) {
-        updateData.meta_data = metaData;
-      }
     }
 
     if (Object.keys(updateData).length === 0) {

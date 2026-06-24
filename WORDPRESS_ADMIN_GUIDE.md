@@ -456,10 +456,6 @@ NEXT_PUBLIC_SITE_URL=https://shapehive.com
 WC_CONSUMER_KEY=ck_xxx
 WC_CONSUMER_SECRET=cs_xxx
 
-MYFATOORAH_API_KEY=xxx
-MYFATOORAH_TEST_MODE=false
-MYFATOORAH_COUNTRY=AE
-
 TABBY_SECRET_KEY=xxx
 TABBY_MERCHANT_CODE=xxx
 
@@ -500,7 +496,7 @@ Error responses should also be JSON:
   "success": false,
   "error": {
     "code": "missing_api_key",
-    "message": "MyFatoorah API key is not configured"
+    "message": "Stripe secret key is missing"
   }
 }
 ```

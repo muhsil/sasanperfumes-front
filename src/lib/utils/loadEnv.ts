@@ -97,38 +97,6 @@ export function getEnvVar(key: string): string | undefined {
  * On Hostinger, non-NEXT_PUBLIC env vars may not be available at runtime,
  * so we need these direct references to ensure the values are inlined during build.
  */
-/**
- * Get MyFatoorah credentials using direct literal process.env references.
- *
- * Same principle as getWcCredentials() - Next.js replaces process.env.NEXT_PUBLIC_*
- * at BUILD TIME only when accessed as literal strings.
- */
-export function getMyFatoorahConfig(): {
-  apiKey: string;
-  country: string;
-  testMode: string;
-} {
-  const apiKey =
-    process.env.MYFATOORAH_API_KEY ||
-    process.env.NEXT_PUBLIC_MYFATOORAH_API_KEY ||
-    getEnvVar("MYFATOORAH_API_KEY") ||
-    getEnvVar("NEXT_PUBLIC_MYFATOORAH_API_KEY") ||
-    "";
-  const country =
-    process.env.MYFATOORAH_COUNTRY ||
-    process.env.NEXT_PUBLIC_MYFATOORAH_COUNTRY ||
-    getEnvVar("MYFATOORAH_COUNTRY") ||
-    getEnvVar("NEXT_PUBLIC_MYFATOORAH_COUNTRY") ||
-    "";
-  const testMode =
-    process.env.MYFATOORAH_TEST_MODE ||
-    process.env.NEXT_PUBLIC_MYFATOORAH_TEST_MODE ||
-    getEnvVar("MYFATOORAH_TEST_MODE") ||
-    getEnvVar("NEXT_PUBLIC_MYFATOORAH_TEST_MODE") ||
-    "";
-  return { apiKey, country, testMode };
-}
-
 function getGlobalWcCredentials(): { consumerKey: string; consumerSecret: string } {
   return {
     consumerKey:

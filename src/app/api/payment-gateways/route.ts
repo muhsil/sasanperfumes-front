@@ -38,22 +38,6 @@ const PAYMENT_METHOD_DETAILS: Record<string, { title: string; description: strin
     title: "Credit/Debit Card",
     description: "Pay securely with your card via WooPayments",
   },
-  myfatoorah_v2: {
-    title: "Credit/Debit Card",
-    description: "Pay securely with your credit or debit card via MyFatoorah",
-  },
-  myfatoorah: {
-    title: "Credit/Debit Card",
-    description: "Pay securely with your credit or debit card via MyFatoorah",
-  },
-  myfatoorah_cards: {
-    title: "Credit/Debit Card",
-    description: "Pay securely with your credit or debit card via MyFatoorah",
-  },
-  myfatoorah_embedded: {
-    title: "Credit/Debit Card",
-    description: "Pay securely with your credit or debit card via MyFatoorah",
-  },
   tabby_installments: {
     title: "Tabby - Pay in Installments",
     description: "Split your purchase into 4 interest-free payments",
@@ -315,14 +299,10 @@ export async function GET() {
             gatewayFilters
           );
 
-          // Check if MyFatoorah test mode is enabled
-          const myFatoorahTestMode = getEnvVar("MYFATOORAH_TEST_MODE") === "true";
-
             const responseData = {
               success: true,
               gateways: mergedGateways,
               source: gatewayOverrides.length > 0 ? "woocommerce_rest_api+hostinger_env" : "woocommerce_rest_api",
-              myfatoorah_test_mode: myFatoorahTestMode,
             };
           gatewaysCache = { data: responseData, timestamp: Date.now() };
           return gatewaysJson(responseData);
@@ -354,7 +334,6 @@ export async function GET() {
           success: true,
           gateways: envFallbackGateways,
           source: gatewayOverrides.length > 0 ? "hostinger_env_fallback+overrides" : "hostinger_env_fallback",
-          myfatoorah_test_mode: getEnvVar("MYFATOORAH_TEST_MODE") === "true",
         };
         gatewaysCache = { data: fallbackData, timestamp: Date.now() };
         return gatewaysJson(fallbackData);
@@ -409,14 +388,10 @@ export async function GET() {
       gatewayFilters
     );
 
-    // Check if MyFatoorah test mode is enabled
-    const myFatoorahTestMode = getEnvVar("MYFATOORAH_TEST_MODE") === "true";
-
     const fallbackData = { 
       success: true, 
       gateways,
       source: gatewayOverrides.length > 0 ? "store_api_fallback+hostinger_env" : "store_api_fallback",
-      myfatoorah_test_mode: myFatoorahTestMode,
     };
     gatewaysCache = { data: fallbackData, timestamp: Date.now() };
     return gatewaysJson(fallbackData);

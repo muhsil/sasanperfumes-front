@@ -14,7 +14,7 @@ A modern, bilingual (English/Arabic) headless e-commerce frontend built with Nex
 - **TypeScript** - Full type safety throughout the codebase
 - **SEO Optimized** - Metadata, hreflang, structured data (Product, Offer, BreadcrumbList, Organization)
 - **Image Optimization** - Blur placeholders, lazy loading, error handling with logo fallback
-- **Payment Integration** - MyFatoorah (cards), Tabby (BNPL), Tamara (BNPL), Cash on Delivery
+- **Payment Integration** - Stripe/WooPayments (cards), Tabby (BNPL), Tamara (BNPL), Cash on Delivery
 - **Google Sign-In** - OAuth-based social login
 - **Product Bundles** - Build-your-own-set functionality
 - **41 API Routes** - Server-side proxy layer for security and data transformation
@@ -38,7 +38,7 @@ src/
 │       ├── products/          # Product listings
 │       ├── bundles/           # Bundle configurations
 │       ├── shipping/          # Shipping rates
-│       ├── myfatoorah/        # MyFatoorah payment (7 endpoints)
+│       ├── stripe/            # Stripe Checkout payment
 │       ├── tabby/             # Tabby BNPL payment
 │       ├── tamara/            # Tamara BNPL payment
 │       └── ...                # Currencies, coupons, CSRF, health, etc.

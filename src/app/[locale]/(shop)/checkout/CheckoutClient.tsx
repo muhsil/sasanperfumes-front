@@ -106,9 +106,7 @@ const isWooPaymentsMethod = (paymentMethod: string): boolean => {
   return (
     normalized.includes("stripe") ||
     normalized.includes("woocommerce_payments") ||
-    (normalized.includes("card") &&
-      !normalized.includes("myfatoorah") &&
-      !normalized.includes("check"))
+    (normalized.includes("card") && !normalized.includes("check"))
   );
 };
 
@@ -191,7 +189,6 @@ export default function CheckoutClient() {
             const [giftWrap, setGiftWrap] = useState(false);
         const [paymentGateways, setPaymentGateways] = useState<PaymentGateway[]>([]);
         const [isLoadingGateways, setIsLoadingGateways] = useState(true);
-        const [isMyFatoorahTestMode, setIsMyFatoorahTestMode] = useState(false);
         const [shippingPackages, setShippingPackages] = useState<ShippingPackage[]>([]);
         const [isLoadingShipping, setIsLoadingShipping] = useState(false);
         const [selectedShippingRate, setSelectedShippingRate] = useState<string | null>(null);
@@ -220,7 +217,7 @@ export default function CheckoutClient() {
     shipping: { ...emptyAddress },
     billing: { ...emptyAddress },
     sameAsShipping: true,
-    paymentMethod: "myfatoorah_v2",
+    paymentMethod: "stripe",
     orderNotes: "",
   });
 
@@ -330,9 +327,6 @@ export default function CheckoutClient() {
               if (data.success && data.gateways) {
                 setPaymentGateways(data.gateways);
               }
-              if (data.myfatoorah_test_mode !== undefined) {
-                setIsMyFatoorahTestMode(data.myfatoorah_test_mode);
-              }
             } catch (err) {
               console.error("Failed to fetch payment gateways:", err);
             } finally {
@@ -397,10 +391,9 @@ export default function CheckoutClient() {
           }
         }, [filteredPaymentGateways, formData.paymentMethod]);
 
-        // Check for payment error from redirect (MyFatoorah, Tabby, Tamara)
+        // Check for payment error from redirect (Tabby, Tamara)
         useEffect(() => {
           const verifyFailedPayment = async () => {
-            const myFatoorahPaymentId = searchParams.get("paymentId");
             const tabbyPaymentId = searchParams.get("payment_id");
             const tamaraOrderId = searchParams.get("orderId");
             const orderId = searchParams.get("order_id");
@@ -408,7 +401,7 @@ export default function CheckoutClient() {
             // Only verify if we have payment params and an order_id (indicates redirect from payment gateway)
             if (!orderId) return;
             
-            const hasPaymentParams = myFatoorahPaymentId || tabbyPaymentId || tamaraOrderId;
+            const hasPaymentParams = tabbyPaymentId || tamaraOrderId;
             if (!hasPaymentParams) return;
             
             setIsVerifyingPayment(true);
@@ -416,9 +409,7 @@ export default function CheckoutClient() {
             try {
               let verifyUrl = "";
               
-              if (myFatoorahPaymentId) {
-                verifyUrl = `/api/myfatoorah/verify-payment?paymentId=${myFatoorahPaymentId}`;
-              } else if (tabbyPaymentId) {
+              if (tabbyPaymentId) {
                 verifyUrl = `/api/tabby/verify-payment?payment_id=${tabbyPaymentId}`;
               } else if (tamaraOrderId) {
                 verifyUrl = `/api/tamara/verify-payment?order_id=${tamaraOrderId}`;
@@ -1191,13 +1182,12 @@ export default function CheckoutClient() {
         })();
       }
 
-      // Check payment method type and handle accordingly
+            // Check payment method type and handle accordingly
             const normalizedPaymentMethod = formData.paymentMethod.toLowerCase();
-            const isMyFatoorahPayment = normalizedPaymentMethod.startsWith("myfatoorah");
             const isTabbyPayment = normalizedPaymentMethod.startsWith("tabby");
             const isTamaraPayment = normalizedPaymentMethod.startsWith("tamara");
             const isWooPayments = isWooPaymentsMethod(normalizedPaymentMethod);
-            const isExternalPayment = isMyFatoorahPayment || isTabbyPayment || isTamaraPayment || isWooPayments;
+            const isExternalPayment = isTabbyPayment || isTamaraPayment || isWooPayments;
 
             // Clear customer tracking data after successful order creation
             clearTracking();
@@ -1239,36 +1229,7 @@ export default function CheckoutClient() {
               });
             }
       
-            if (isMyFatoorahPayment) {
-              // Initiate MyFatoorah payment (redirect flow)
-              const mfResponse = await fetch("/api/myfatoorah/initiate-payment", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  order_id: data.order_id,
-                  order_key: data.order_key,
-                  invoice_value: paymentAmount,
-                  customer_name: `${billingInfo.firstName} ${billingInfo.lastName}`,
-                  customer_email: billingInfo.email || formData.shipping.email,
-                  customer_phone: billingInfo.phone || formData.shipping.phone,
-                  currency_iso: data.order?.currency || "KWD",
-                  language: locale === "ar" ? "ar" : "en",
-                  callback_url: `${baseUrl}/${locale}/order-confirmation`,
-                  error_url: `${baseUrl}/${locale}/order-confirmation`,
-                }),
-              });
-
-              const mfData = await mfResponse.json();
-
-              if (mfData.success && mfData.payment_url) {
-                // Redirect to MyFatoorah payment page
-                window.location.href = mfData.payment_url;
-              } else {
-                throw new Error(mfData.error?.message || "Failed to initiate MyFatoorah payment");
-              }
-            } else if (isTabbyPayment) {
+            if (isTabbyPayment) {
               // Initiate Tabby payment directly
               const tabbyResponse = await fetch("/api/tabby/create-session", {
                 method: "POST",
@@ -2016,20 +1977,6 @@ export default function CheckoutClient() {
                                           {isRTL ? "Ø·Ø±ÙŠÙ‚Ø© Ø§Ù„Ø¯ÙØ¹" : "Payment Method"}
                                         </h2>
                           
-                          {/* MyFatoorah Test Mode Banner */}
-                          {isMyFatoorahTestMode && (
-                            <div className="mb-4 rounded-lg border border-brand-primary bg-brand-beige p-3">
-                              <div className="flex items-center gap-2">
-                                <svg className="h-5 w-5 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                </svg>
-                                <span className="text-sm font-medium text-brand-primary">
-                                  {isRTL ? "ÙˆØ¶Ø¹ Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø± - Ù„Ù† ÙŠØªÙ… Ø®ØµÙ… Ø£ÙŠ Ù…Ø¨Ø§Ù„Øº Ø­Ù‚ÙŠÙ‚ÙŠØ©" : "Test Mode - No real charges will be made"}
-                                </span>
-                              </div>
-                            </div>
-                          )}
-
                           <div className="space-y-3">
                             {isLoadingGateways ? (
                               <div className="flex items-center justify-center py-4">
@@ -2055,10 +2002,6 @@ export default function CheckoutClient() {
                                                                     woocommerce_payments: { en: "Credit Card", ar: "بطاقة ائتمان" },
                                                                     stripe: { en: "Credit Card", ar: "Ø¨Ø·Ø§Ù‚Ø© Ø§Ø¦ØªÙ…Ø§Ù†" },
                                                                     card: { en: "Credit Card", ar: "Ø¨Ø·Ø§Ù‚Ø© Ø§Ø¦ØªÙ…Ø§Ù†" },
-                                                                    myfatoorah_v2: { en: "Credit/Debit Card", ar: "Ø¨Ø·Ø§Ù‚Ø© Ø§Ø¦ØªÙ…Ø§Ù†/Ø®ØµÙ…" },
-                                                                    myfatoorah: { en: "Credit/Debit Card", ar: "Ø¨Ø·Ø§Ù‚Ø© Ø§Ø¦ØªÙ…Ø§Ù†/Ø®ØµÙ…" },
-                                                                    myfatoorah_cards: { en: "Credit/Debit Card", ar: "Ø¨Ø·Ø§Ù‚Ø© Ø§Ø¦ØªÙ…Ø§Ù†/Ø®ØµÙ…" },
-                                                                    myfatoorah_embedded: { en: "Credit/Debit Card", ar: "Ø¨Ø·Ø§Ù‚Ø© Ø§Ø¦ØªÙ…Ø§Ù†/Ø®ØµÙ…" },
                                                                   };
                                                                   return labels[id]?.[isRTL ? "ar" : "en"] || title;
                                                                 };
@@ -2076,10 +2019,6 @@ export default function CheckoutClient() {
                                                                     woocommerce_payments: { en: "Pay securely with your card", ar: "ادفع بأمان ببطاقتك" },
                                                                     stripe: { en: "Pay securely with your card", ar: "Ø§Ø¯ÙØ¹ Ø¨Ø£Ù…Ø§Ù† Ø¨Ø¨Ø·Ø§Ù‚ØªÙƒ" },
                                                                     card: { en: "Pay securely with your card", ar: "Ø§Ø¯ÙØ¹ Ø¨Ø£Ù…Ø§Ù† Ø¨Ø¨Ø·Ø§Ù‚ØªÙƒ" },
-                                                                    myfatoorah_v2: { en: "Pay securely with KNET, VISA, Mastercard, MADA, Apple Pay", ar: "Ø§Ø¯ÙØ¹ Ø¨Ø£Ù…Ø§Ù† Ø¹Ø¨Ø± ÙƒÙŠ Ù†ØªØŒ ÙÙŠØ²Ø§ØŒ Ù…Ø§Ø³ØªØ±ÙƒØ§Ø±Ø¯ØŒ Ù…Ø¯Ù‰ØŒ Ø£Ø¨Ù„ Ø¨Ø§ÙŠ" },
-                                                                    myfatoorah: { en: "Pay securely with KNET, VISA, Mastercard, MADA, Apple Pay", ar: "Ø§Ø¯ÙØ¹ Ø¨Ø£Ù…Ø§Ù† Ø¹Ø¨Ø± ÙƒÙŠ Ù†ØªØŒ ÙÙŠØ²Ø§ØŒ Ù…Ø§Ø³ØªØ±ÙƒØ§Ø±Ø¯ØŒ Ù…Ø¯Ù‰ØŒ Ø£Ø¨Ù„ Ø¨Ø§ÙŠ" },
-                                                                    myfatoorah_cards: { en: "Pay securely with KNET, VISA, Mastercard, MADA, Apple Pay", ar: "Ø§Ø¯ÙØ¹ Ø¨Ø£Ù…Ø§Ù† Ø¹Ø¨Ø± ÙƒÙŠ Ù†ØªØŒ ÙÙŠØ²Ø§ØŒ Ù…Ø§Ø³ØªØ±ÙƒØ§Ø±Ø¯ØŒ Ù…Ø¯Ù‰ØŒ Ø£Ø¨Ù„ Ø¨Ø§ÙŠ" },
-                                                                    myfatoorah_embedded: { en: "Pay securely with KNET, VISA, Mastercard, MADA, Apple Pay", ar: "Ø§Ø¯ÙØ¹ Ø¨Ø£Ù…Ø§Ù† Ø¹Ø¨Ø± ÙƒÙŠ Ù†ØªØŒ ÙÙŠØ²Ø§ØŒ Ù…Ø§Ø³ØªØ±ÙƒØ§Ø±Ø¯ØŒ Ù…Ø¯Ù‰ØŒ Ø£Ø¨Ù„ Ø¨Ø§ÙŠ" },
                                                                   };
                                                                   return descriptions[id]?.[isRTL ? "ar" : "en"] || description || "";
                                                                 };
@@ -2102,17 +2041,6 @@ export default function CheckoutClient() {
                                                                         src="/images/payment/tamara.png"
                                                                         alt="Tamara"
                                                                         width={60}
-                                                                        height={32}
-                                                                        className="h-8 w-auto object-contain"
-                                                                      />
-                                                                    );
-                                                                  }
-                                                                  if (id === "myfatoorah_v2" || id === "myfatoorah" || id === "myfatoorah_cards" || id === "myfatoorah_embedded") {
-                                                                    return (
-                                                                      <Image
-                                                                        src="/images/payment/credit-debit-card.png"
-                                                                        alt="Credit/Debit Card"
-                                                                        width={80}
                                                                         height={32}
                                                                         className="h-8 w-auto object-contain"
                                                                       />
