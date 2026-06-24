@@ -13,7 +13,7 @@ import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 const menuDataFetchPromise: Record<string, Promise<MegaMenuData | null> | null> = {};
 const categoriesFetchPromise: Record<string, Promise<MegaMenuColumn[]> | null> = {};
-const hiddenCategorySlugs = new Set(["new-arrival", "new-arrivals"]);
+const hiddenCategorySlugs = new Set(["new-arrival", "new-arrivals", "uncategorized"]);
 const hiddenCategoryTitles = new Set(["new arrival", "new arrivals", "وصل حديثا", "وصل حديثاً"]);
 
 interface MegaMenuProps {
