@@ -1209,23 +1209,24 @@ export async function getPrimaryMenu(locale?: Locale, frontendHost?: string): Pr
 }
 
 // Fetch mobile header menu (used for Categories drawer - separate from primary/desktop menu)
-export async function getMobileHeaderMenu(locale?: Locale): Promise<WPMenu | null> {
-  return getMenu("mobile-header", locale);
+export async function getMobileHeaderMenu(locale?: Locale, frontendHost?: string): Promise<WPMenu | null> {
+  return getMenu("mobile-header", locale, frontendHost);
 }
 
 // Fetch mobile bottom bar menu (used for bottom navigation icons - separate from other menus)
-export async function getMobileBottomBarMenu(locale?: Locale): Promise<WPMenu | null> {
-  return getMenu("mobile-bottom", locale);
+export async function getMobileBottomBarMenu(locale?: Locale, frontendHost?: string): Promise<WPMenu | null> {
+  return getMenu("mobile-bottom", locale, frontendHost);
 }
 
 // Fetch WordPress menu by slug (uses /menus/v1/menus/{slug} endpoint)
 // For Arabic locale, appends "-ar" suffix to fetch the translated menu
-export async function getMenuBySlug(slug: string, locale?: Locale): Promise<WPMenu | null> {
+export async function getMenuBySlug(slug: string, locale?: Locale, frontendHost?: string): Promise<WPMenu | null> {
   const menuSlug = locale === "ar" ? `${slug}-ar` : slug;
   const data = await fetchWPAPI<RawWPMenu>(
     `/menus/v1/menus/${menuSlug}`,
     {
       tags: ["menus", `menu-slug-${menuSlug}`],
+      frontendHost,
       revalidate: 600,
     }
   );
@@ -1238,8 +1239,8 @@ export async function getMenuBySlug(slug: string, locale?: Locale): Promise<WPMe
 }
 
 // Fetch categories drawer menu (independent from mobile hamburger and desktop header)
-export async function getCategoriesDrawerMenu(locale?: Locale): Promise<WPMenu | null> {
-  return getMenuBySlug("categories-drawer", locale);
+export async function getCategoriesDrawerMenu(locale?: Locale, frontendHost?: string): Promise<WPMenu | null> {
+  return getMenuBySlug("categories-drawer", locale, frontendHost);
 }
 
 // Fetch footer menu
@@ -1804,8 +1805,8 @@ function isProductIdsLabel(label: string): boolean {
   return hasNumbers && hasOnlyBracketsNumbersAndPunctuation;
 }
 
-export async function getMegaMenuData(locale?: Locale): Promise<MegaMenuData | null> {
-  const menu = await getPrimaryMenu(locale);
+export async function getMegaMenuData(locale?: Locale, frontendHost?: string): Promise<MegaMenuData | null> {
+  const menu = await getPrimaryMenu(locale, frontendHost);
   
   if (!menu || !menu.items || menu.items.length === 0) {
     return null;

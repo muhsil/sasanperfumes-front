@@ -408,7 +408,13 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
         </div>
 
         <div onMouseEnter={handlePerfumesMegaMenuMouseEnter} onMouseLeave={handlePerfumesMouseLeave}>
-          <MegaMenu isOpen={isPerfumesMegaMenuOpen} onClose={handlePerfumesMegaMenuClose} locale={locale} dictionary={dictionary} />
+          <MegaMenu
+            isOpen={isPerfumesMegaMenuOpen}
+            onClose={handlePerfumesMegaMenuClose}
+            locale={locale}
+            dictionary={dictionary}
+            menuItems={categoriesDrawerMenuItems}
+          />
         </div>
 
         {/* Mobile menu drawer overlay and sidebar */}
