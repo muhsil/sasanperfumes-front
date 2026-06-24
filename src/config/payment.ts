@@ -148,20 +148,7 @@ function shouldApplyEnvGatewayFilters(marketCode?: string | null): boolean {
   if (normalizedMode === "env") return true;
   if (normalizedMode === "backend") return false;
 
-  return Boolean(
-    getEnvValueWithAliases([
-      `PAYMENT_GATEWAYS_ALLOWLIST${suffix}`,
-      "PAYMENT_GATEWAYS_ALLOWLIST",
-      `NEXT_PUBLIC_PAYMENT_GATEWAYS_ALLOWLIST${suffix}`,
-      "NEXT_PUBLIC_PAYMENT_GATEWAYS_ALLOWLIST",
-      `PAYMENT_GATEWAYS_BLOCKLIST${suffix}`,
-      "PAYMENT_GATEWAYS_BLOCKLIST",
-      "PAYMENT_GATEMENTS_BLOCKLIST",
-      `NEXT_PUBLIC_PAYMENT_GATEWAYS_BLOCKLIST${suffix}`,
-      "NEXT_PUBLIC_PAYMENT_GATEWAYS_BLOCKLIST",
-      "NEXT_PUBLIC_PAYMENT_GATEMENTS_BLOCKLIST",
-    ])
-  );
+  return true;
 }
 
 export function getPaymentGatewayFilters(marketCode?: string | null): PaymentGatewayFilters {
@@ -191,7 +178,11 @@ export function getPaymentGatewayFilters(marketCode?: string | null): PaymentGat
   ]);
 
   return {
-    allowed: parseGatewayIdList(allowedRaw),
-    blocked: parseGatewayIdList(blockedRaw),
+    allowed: parseGatewayIdList(allowedRaw).length > 0
+      ? parseGatewayIdList(allowedRaw)
+      : ["woocommerce_payments", "stripe"],
+    blocked: parseGatewayIdList(blockedRaw).length > 0
+      ? parseGatewayIdList(blockedRaw)
+      : ["cod", "bacs", "cheque", "myfatoorah", "myfatoorah_v2", "myfatoorah_cards", "myfatoorah_embedded"],
   };
 }
