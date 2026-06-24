@@ -2,12 +2,10 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-import { siteConfig } from "@/config/site";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { getRequestMarket } from "@/lib/market/server";
 import { getShippingFreightCountries } from "@/config/shipping";
-
-const API_BASE = `${siteConfig.apiUrl}/wp-json/wc/v3`;
+import { wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
 
 function getBasicAuthParams(marketCode?: string): string {
   const { consumerKey, consumerSecret } = getWcCredentials(marketCode);
@@ -44,7 +42,8 @@ export async function GET() {
   try {
     const market = await getRequestMarket();
     const authParams = getBasicAuthParams(market.code);
-    const zonesUrl = `${API_BASE}/shipping/zones?${authParams}`;
+    const apiBase = `${wpJsonBaseForMarket(market.code)}/wc/v3`;
+    const zonesUrl = `${apiBase}/shipping/zones?${authParams}`;
     const zonesResponse = await fetch(zonesUrl, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
@@ -63,7 +62,7 @@ export async function GET() {
     let hasRestOfWorld = false;
 
     const locationPromises = zones.map(async (zone) => {
-      const locationsUrl = `${API_BASE}/shipping/zones/${zone.id}/locations?${authParams}`;
+      const locationsUrl = `${apiBase}/shipping/zones/${zone.id}/locations?${authParams}`;
       const locationsResponse = await fetch(locationsUrl, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
@@ -80,7 +79,7 @@ export async function GET() {
       const locations = allLocations[i];
 
       if (zone.id === 0 || zone.name === "Locations not covered by your other zones") {
-        const methodsUrl = `${API_BASE}/shipping/zones/${zone.id}/methods?${authParams}`;
+        const methodsUrl = `${apiBase}/shipping/zones/${zone.id}/methods?${authParams}`;
         const methodsResponse = await fetch(methodsUrl, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
@@ -116,7 +115,7 @@ export async function GET() {
     }
 
     let wcCountries: WCCountry[] = [];
-    const countriesUrl = `${API_BASE}/data/countries?${authParams}`;
+    const countriesUrl = `${apiBase}/data/countries?${authParams}`;
     const countriesResponse = await fetch(countriesUrl, {
       method: "GET",
       headers: { "Content-Type": "application/json" },

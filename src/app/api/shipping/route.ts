@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { siteConfig } from "@/config/site";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { getRequestMarket } from "@/lib/market/server";
 import { resolveFreightPrice } from "@/config/shipping";
+import { wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-
-const WC_API_BASE = `${siteConfig.apiUrl}/wp-json/wc/v3`;
 
 function getBasicAuthParams(marketCode?: string): string {
   const { consumerKey, consumerSecret } = getWcCredentials(marketCode);
@@ -97,7 +95,7 @@ const CONTINENT_COUNTRIES: Record<string, string[]> = {
 
 async function findZoneForCountry(country: string, marketCode?: string): Promise<number | null> {
   const authParams = getBasicAuthParams(marketCode);
-  const zonesUrl = `${WC_API_BASE}/shipping/zones?${authParams}`;
+  const zonesUrl = `${wpJsonBaseForMarket(marketCode)}/wc/v3/shipping/zones?${authParams}`;
   const zonesResponse = await fetch(zonesUrl, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
@@ -110,7 +108,7 @@ async function findZoneForCountry(country: string, marketCode?: string): Promise
   for (const zone of zones) {
     if (zone.id === 0) continue;
 
-    const locationsUrl = `${WC_API_BASE}/shipping/zones/${zone.id}/locations?${authParams}`;
+    const locationsUrl = `${wpJsonBaseForMarket(marketCode)}/wc/v3/shipping/zones/${zone.id}/locations?${authParams}`;
     const locationsResponse = await fetch(locationsUrl, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
@@ -141,7 +139,7 @@ async function findZoneForCountry(country: string, marketCode?: string): Promise
 
 async function getZoneMethods(zoneId: number, marketCode?: string): Promise<ZoneMethod[]> {
   const authParams = getBasicAuthParams(marketCode);
-  const methodsUrl = `${WC_API_BASE}/shipping/zones/${zoneId}/methods?${authParams}`;
+  const methodsUrl = `${wpJsonBaseForMarket(marketCode)}/wc/v3/shipping/zones/${zoneId}/methods?${authParams}`;
   const response = await fetch(methodsUrl, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
