@@ -1,17 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { disableRuntimeCache } from "@/config/site";
-import { API_BASE, backendHeaders, noCacheUrl, safeJsonResponse } from "@/lib/utils/backendFetch";
+import { API_BASE, backendHeaders, extractMarketCode, noCacheUrl, safeJsonResponse, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
 import type { Locale } from "@/config/site";
 
 export async function GET(request: NextRequest) {
   const locale = (request.nextUrl.searchParams.get("locale") as Locale) || undefined;
+  const market = extractMarketCode(
+    request.nextUrl.searchParams.get("market") ||
+    request.headers.get("x-market") ||
+    request.headers.get("referer")
+  );
   const langQuery = locale ? `&lang=${locale}` : "";
 
   try {
-    const url = `${API_BASE}/wp-json/wc/store/v1/products/categories?per_page=100${langQuery}`;
+    const apiBase = market ? wpJsonBaseForMarket(market) : `${API_BASE}/wp-json`;
+    const url = `${apiBase}/wc/store/v1/products/categories?per_page=100${langQuery}`;
     const response = await fetch(noCacheUrl(url), {
       method: "GET",
-      headers: backendHeaders(),
+      headers: backendHeaders(
+        market
+          ? {
+              "X-Market": market,
+              "X-Frontend-Host": `store.sasanperfumes.com/${market}`,
+            }
+          : undefined
+      ),
     });
 
     if (!response.ok) {

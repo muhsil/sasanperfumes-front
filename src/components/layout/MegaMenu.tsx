@@ -6,7 +6,7 @@ import type { Dictionary } from "@/i18n";
 import type { Locale } from "@/config/site";
 import { cn, decodeHtmlEntities } from "@/lib/utils";
 import { CategoriesGridSkeleton } from "@/components/common/Skeleton";
-import { getMegaMenuCategories, normalizeMenuUrl } from "@/config/menu";
+import { getMegaMenuCategories, normalizeMenuUrl, translateToArabic } from "@/config/menu";
 import { getMegaMenuData, type MegaMenuColumn, type MegaMenuData, type MegaMenuSettings } from "@/lib/api/wordpress";
 import type { WPMenuItem } from "@/types/wordpress";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
@@ -39,6 +39,16 @@ function shouldHideCategory(title: string, slug: string): boolean {
   return hiddenCategorySlugs.has(cleanSlug) || hiddenCategoryTitles.has(cleanTitle);
 }
 
+function displayCategoryName(title: string, locale: Locale): string {
+  const decoded = decodeHtmlEntities(title);
+  return locale === "ar" ? translateToArabic(decoded) : decoded;
+}
+
+function isCategoryItem(item: WPMenuItem): boolean {
+  const url = item.url.trim().toLowerCase();
+  return url.includes("/category/") || url.includes("/product-category/");
+}
+
 function isShopAllItem(item: WPMenuItem): boolean {
   const title = decodeHtmlEntities(item.title).trim().toLowerCase();
   const url = item.url.trim().toLowerCase();
@@ -67,18 +77,20 @@ function menuItemsToColumns(items: WPMenuItem[] | null | undefined, locale: Loca
 
   return sourceItems
     .filter((item) => !isShopAllItem(item))
+    .filter((item) => isCategoryItem(item))
     .map((item) => {
       const href = normalizeMenuUrl(item.url, locale, marketPrefix);
       const slug = extractSlugFromUrl(href || item.url);
-      const title = decodeHtmlEntities(item.title);
+      const title = displayCategoryName(item.title, locale);
       const children = childItemsFor(item, childrenByParent)
         .filter((child) => !isShopAllItem(child))
+        .filter((child) => isCategoryItem(child))
         .map((child) => {
           const childHref = normalizeMenuUrl(child.url, locale, marketPrefix);
           const childSlug = extractSlugFromUrl(childHref || child.url);
           return {
             id: child.id,
-            name: decodeHtmlEntities(child.title),
+            name: displayCategoryName(child.title, locale),
             slug: childSlug,
             url: childHref,
           };
@@ -112,7 +124,7 @@ function normalizeColumns(columns: MegaMenuColumn[], locale: Locale, marketPrefi
       const slug = column.slug || extractSlugFromUrl(href);
       return {
         ...column,
-        name: decodeHtmlEntities(column.name),
+        name: displayCategoryName(column.name, locale),
         slug,
         url: href,
         image: null,
@@ -122,7 +134,7 @@ function normalizeColumns(columns: MegaMenuColumn[], locale: Locale, marketPrefi
             const childSlug = child.slug || extractSlugFromUrl(childHref);
             return {
               ...child,
-              name: decodeHtmlEntities(child.name),
+              name: displayCategoryName(child.name, locale),
               slug: childSlug,
               url: childHref,
             };
@@ -137,6 +149,16 @@ function normalizeColumns(columns: MegaMenuColumn[], locale: Locale, marketPrefi
       seen.add(key);
       return true;
     });
+}
+
+function mergeColumns(...groups: MegaMenuColumn[][]): MegaMenuColumn[] {
+  const seen = new Set<string>();
+  return groups.flat().filter((column) => {
+    const key = column.slug || column.url || column.name;
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 export function MegaMenu({
@@ -212,8 +234,6 @@ export function MegaMenu({
   }, [cacheKey, fallbackFrontendHost, locale, providedColumns.length]);
 
   const fetchWcCategories = useCallback(async () => {
-    if (providedColumns.length > 0 || menuData?.columns?.length) return;
-
     if (categoriesFetchPromise[cacheKey]) {
       try {
         const cats = await categoriesFetchPromise[cacheKey];
@@ -226,7 +246,9 @@ export function MegaMenu({
 
     try {
       categoriesFetchPromise[cacheKey] = (async () => {
-        const resp = await fetch(`/api/categories?locale=${encodeURIComponent(locale)}`);
+        const market = marketPrefix.replace("/", "");
+        const marketParam = market ? `&market=${encodeURIComponent(market)}` : "";
+        const resp = await fetch(`/api/categories?locale=${encodeURIComponent(locale)}${marketParam}`);
         if (!resp.ok) return [];
         const cats = await resp.json();
         return normalizeColumns(
@@ -251,7 +273,7 @@ export function MegaMenu({
     } finally {
       categoriesFetchPromise[cacheKey] = null;
     }
-  }, [cacheKey, locale, marketPrefix, menuData?.columns?.length, providedColumns.length]);
+  }, [cacheKey, locale, marketPrefix]);
 
   useEffect(() => {
     if (isOpen && !hasMenuFetchedRef.current && providedColumns.length === 0) {
@@ -261,11 +283,11 @@ export function MegaMenu({
   }, [isOpen, fetchMenuData, providedColumns.length]);
 
   useEffect(() => {
-    if (isOpen && !menuLoading && !hasWcCategoriesFetchedRef.current && providedColumns.length === 0 && !(menuData?.columns?.length)) {
+    if (isOpen && !menuLoading && !hasWcCategoriesFetchedRef.current) {
       hasWcCategoriesFetchedRef.current = true;
       fetchWcCategories();
     }
-  }, [isOpen, menuLoading, menuData?.columns?.length, providedColumns.length, fetchWcCategories]);
+  }, [isOpen, menuLoading, fetchWcCategories]);
 
   useEffect(() => {
     hasMenuFetchedRef.current = false;
@@ -274,13 +296,15 @@ export function MegaMenu({
     setWcCategories([]);
   }, [cacheKey]);
 
-  const displayColumns = providedColumns.length > 0
+  const backendColumns = providedColumns.length > 0
     ? providedColumns
     : menuData?.columns?.length
       ? normalizeColumns(menuData.columns, locale, marketPrefix)
-      : wcCategories.length > 0
-        ? wcCategories
-        : staticColumns;
+      : [];
+  const displayColumns = mergeColumns(
+    backendColumns,
+    wcCategories.length > 0 ? wcCategories : staticColumns
+  );
 
   if (!isOpen) return null;
 
