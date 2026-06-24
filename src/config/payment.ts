@@ -109,7 +109,24 @@ function shouldApplyEnvGatewayFilters(marketCode?: string | null): boolean {
     "NEXT_PUBLIC_PAYMENT_GATEWAYS_FILTER_MODE",
   ]);
 
-  return (mode || "backend").trim().toLowerCase() === "env";
+  const normalizedMode = mode?.trim().toLowerCase();
+  if (normalizedMode === "env") return true;
+  if (normalizedMode === "backend") return false;
+
+  return Boolean(
+    getEnvValueWithAliases([
+      `PAYMENT_GATEWAYS_ALLOWLIST${suffix}`,
+      "PAYMENT_GATEWAYS_ALLOWLIST",
+      `NEXT_PUBLIC_PAYMENT_GATEWAYS_ALLOWLIST${suffix}`,
+      "NEXT_PUBLIC_PAYMENT_GATEWAYS_ALLOWLIST",
+      `PAYMENT_GATEWAYS_BLOCKLIST${suffix}`,
+      "PAYMENT_GATEWAYS_BLOCKLIST",
+      "PAYMENT_GATEMENTS_BLOCKLIST",
+      `NEXT_PUBLIC_PAYMENT_GATEWAYS_BLOCKLIST${suffix}`,
+      "NEXT_PUBLIC_PAYMENT_GATEWAYS_BLOCKLIST",
+      "NEXT_PUBLIC_PAYMENT_GATEMENTS_BLOCKLIST",
+    ])
+  );
 }
 
 export function getPaymentGatewayFilters(marketCode?: string | null): PaymentGatewayFilters {
