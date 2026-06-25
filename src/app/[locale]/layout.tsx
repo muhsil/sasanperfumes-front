@@ -4,7 +4,6 @@ import dynamic from "next/dynamic";
 import NextTopLoader from "nextjs-toploader";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { MobileBottomBar } from "@/components/layout/MobileBottomBar";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
@@ -105,14 +104,13 @@ export default async function LocaleLayout({
   ]);
 
   // Fetch site settings, header settings, topbar settings, menu, and SEO settings in parallel
-  const [siteSettings, headerSettings, topbarSettings, menuItems, mobileMenuItems, mobileBottomBarMenu, mobileBarSettings, categoriesDrawerMenu, seoSettings, footerSettings, whatsAppSettings, featureToggles, contactPageContent] = await Promise.all([
+  const [siteSettings, headerSettings, topbarSettings, menuItems, mobileMenuItems, mobileBottomBarMenu, categoriesDrawerMenu, seoSettings, footerSettings, whatsAppSettings, featureToggles, contactPageContent] = await Promise.all([
     getSiteSettings(validLocale, frontendHost),
     getHeaderSettings(frontendHost),
     getTopbarSettings(validLocale, frontendHost),
     getPrimaryMenu(validLocale, frontendHost),
     getMobileHeaderMenu(validLocale, frontendHost),
     getMobileBottomBarMenu(validLocale, frontendHost),
-    getMobileBarSettings(validLocale),
     getCategoriesDrawerMenu(validLocale, frontendHost),
     getSeoSettings(validLocale, frontendHost),
     getFooterSettings(frontendHost),
@@ -188,18 +186,6 @@ export default async function LocaleLayout({
                   <MobileEnhancements>{children}</MobileEnhancements>
                 </main>
                 <Footer locale={validLocale} dictionary={dictionary} siteSettings={siteSettings} footerSettings={footerSettings} featureToggles={featureToggles} footerTopSocialLinks={footerTopSocialLinks} pathPrefix={getMarketPathPrefix(market.code)} />
-                <MobileBottomBar
-                  locale={validLocale}
-                  settings={mobileBarSettings}
-                  dictionary={dictionary}
-                  menuItems={menuItems?.items}
-                  mobileMenuItems={mobileMenuItems?.items}
-                  mobileBottomBarMenuItems={mobileBottomBarMenu?.items}
-                  categoriesDrawerMenuItems={categoriesDrawerMenu?.items}
-                  whatsAppPhoneNumber={whatsAppSettings?.number || siteConfig.contact.whatsapp}
-                  whatsAppMessage={pickLocale(whatsAppSettings?.message, validLocale, "")}
-                  whatsAppEnabled={showWhatsApp}
-                />
               </div>
               <MiniCartDrawer
                 locale={validLocale}

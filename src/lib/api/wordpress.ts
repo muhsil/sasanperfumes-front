@@ -489,6 +489,46 @@ function createWPLink(url: string, title: string = ""): WPLink | undefined {
   };
 }
 
+const SASAN_DISCOVER_COLLECTIONS = [
+  {
+    image: "https://cms.sasanperfumes.com/wp-content/uploads/2026/05/Sasan5515-scaled-1.jpg",
+    title: { en: "All Over Spray", ar: "بخاخ الجسم" },
+    description: { en: "10 products", ar: "10 منتجات" },
+    link: "/category/all-over-spray",
+  },
+  {
+    image: "https://cms.sasanperfumes.com/wp-content/uploads/2026/05/Sasan4318-scaled-1.jpg",
+    title: { en: "Gift Set", ar: "طقم هدايا" },
+    description: { en: "6 products", ar: "6 منتجات" },
+    link: "/category/gift-set",
+  },
+  {
+    image: "https://cms.sasanperfumes.com/wp-content/uploads/2026/05/newww-1-scaled-1.jpg",
+    title: { en: "Perfumes", ar: "عطور" },
+    description: { en: "41 products", ar: "41 منتج" },
+    link: "/category/perfumes",
+  },
+  {
+    image: "https://cms.sasanperfumes.com/wp-content/uploads/2026/05/Vusa-01-scaled-1.jpg",
+    title: { en: "Hair Mist", ar: "معطر الشعر" },
+    description: { en: "13 products", ar: "13 منتج" },
+    link: "/category/sasan-hair-mist",
+  },
+];
+
+function getSasanDiscoverCollections(locale?: Locale): Collection[] {
+  const isArabic = locale === "ar";
+  return SASAN_DISCOVER_COLLECTIONS.map((item, index) => {
+    const title = isArabic ? item.title.ar : item.title.en;
+    return {
+      title,
+      description: isArabic ? item.description.ar : item.description.en,
+      image: createWPImage(item.image, title) as WPImage,
+      link: createWPLink(item.link, title) as WPLink,
+    };
+  });
+}
+
 function normalizeDelay(value: number | string | undefined, fallback: number): number {
   const delay = Number(value);
   return Number.isFinite(delay) && delay > 0 ? delay : fallback;
@@ -598,14 +638,15 @@ function transformCollectionsSettings(pluginCollections: WPPluginCollectionsSett
       image: createWPImage(item.image, item.title || `Collection ${index + 1}`) as WPImage,
       link: createWPLink(item.link, item.title) as WPLink,
     }));
+  const fallbackCollections = getSasanDiscoverCollections(locale);
 
   return {
-    enabled: pluginCollections.enabled,
-    section_title: locale === "ar" ? (pluginCollections.titleAr || "") : pluginCollections.title,
+    enabled: true,
+    section_title: locale === "ar" ? (pluginCollections.titleAr || "اكتشف المزيد") : (pluginCollections.title || "Discover More"),
     section_subtitle: locale === "ar" ? (pluginCollections.subtitleAr || "") : pluginCollections.subtitle,
-    collections,
+    collections: collections.length > 0 ? collections : fallbackCollections,
     layout: 'grid',
-    responsive_columns: pluginCollections.responsive,
+    responsive_columns: pluginCollections.responsive ?? { desktop: 4, tablet: 2, mobile: 1 },
     hide_on_mobile: pluginCollections.hideOnMobile,
     hide_on_desktop: pluginCollections.hideOnDesktop,
   };
@@ -635,8 +676,8 @@ function transformProductSectionSettings(pluginSection: WPPluginProductSectionSe
 // Transform WordPress Plugin category section settings to frontend format
 function transformCategorySectionSettings(pluginSection: WPPluginProductSectionSettings, locale?: Locale): CategorySectionSettings {
   return {
-    enabled: pluginSection.enabled ?? true,
-    section_title: locale === "ar" ? (pluginSection.titleAr || "") : pluginSection.title,
+    enabled: true,
+    section_title: locale === "ar" ? (pluginSection.titleAr || "تسوق حسب الفئة") : (pluginSection.title || "Shop by Category"),
     section_subtitle: locale === "ar" ? (pluginSection.subtitleAr || "") : pluginSection.subtitle,
     categories_count: pluginSection.count,
     selected_category_ids: pluginSection.selectedIds ?? [],
@@ -650,7 +691,7 @@ function transformCategorySectionSettings(pluginSection: WPPluginProductSectionS
 // Transform WordPress Plugin featured products settings to frontend format
 function transformFeaturedProductsSettings(pluginSection: WPPluginProductSectionSettings, locale?: Locale): FeaturedProductsSettings {
   return {
-    enabled: pluginSection.enabled ?? true,
+    enabled: true,
     section_title: locale === "ar" ? (pluginSection.titleAr || "") : pluginSection.title,
     section_subtitle: locale === "ar" ? (pluginSection.subtitleAr || "") : pluginSection.subtitle,
     products_count: pluginSection.count,

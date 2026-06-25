@@ -11,6 +11,7 @@ import {
 } from "@/lib/api/woocommerce";
 import { getHomePageSettings, getSeoSettings, getHomeSections, getSiteSettings } from "@/lib/api/wordpress";
 import { getMarketHintFromSearchParams, getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
+import { getMarketPathPrefix } from "@/config/market";
 import {
   HeroSlider,
   ProductSection,
@@ -424,6 +425,7 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
 
   const t = (bi: { en: string; ar: string }) => isRTL ? bi.ar : bi.en;
   const h1Text = siteSettings.site_name || siteConfig.name;
+  const marketPrefix = getMarketPathPrefix(market.code);
 
   return (
     <>
@@ -472,7 +474,7 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
           />
         </Suspense>
 
-        <CollectionsSection settings={homeSettings.collections} />
+        <CollectionsSection settings={homeSettings.collections} locale={validLocale} marketPrefix={marketPrefix} />
 
         <BannersSection settings={homeSettings.banners} />
 

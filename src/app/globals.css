@@ -454,6 +454,22 @@ body.gallery-fullscreen-open .whatsapp-floating-button {
 }
 
 @media (max-width: 767px) {
+  .hero-banner {
+    width: 100vw;
+    max-width: 100vw;
+    margin-inline: calc(50% - 50vw);
+  }
+
+  .home-hero-media {
+    height: min(116vw, 520px);
+    min-height: 320px;
+  }
+
+  .home-hero-media :where(img, video, iframe) {
+    object-fit: cover;
+    object-position: center center;
+  }
+
   .hero-slider.swiper {
     overflow: visible !important;
     height: auto !important;

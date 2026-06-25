@@ -1,8 +1,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Skeleton } from "@/components/common/Skeleton";
-import { BLUR_DATA_URL, decodeHtmlEntities } from "@/lib/utils";
+import { BLUR_DATA_URL, decodeHtmlEntities, getLocalizedMarketPath } from "@/lib/utils";
 import { shouldUseUnoptimizedImage } from "@/lib/utils/image";
+import type { Locale } from "@/config/site";
 import type { CollectionsSettings } from "@/types/wordpress";
 
 // Static class maps — Tailwind must see these strings to include them in the bundle
@@ -18,6 +19,8 @@ const DESKTOP_COLS: Record<number, string> = {
 
 interface CollectionsSectionProps {
   settings: CollectionsSettings;
+  locale?: Locale;
+  marketPrefix?: string;
   className?: string;
   isLoading?: boolean;
 }
@@ -44,6 +47,8 @@ export function CollectionsSectionSkeleton({ count = 3 }: { count?: number }) {
 
 export function CollectionsSection({
   settings,
+  locale = "en",
+  marketPrefix = "",
   className = "",
   isLoading = false,
 }: CollectionsSectionProps) {
@@ -92,7 +97,7 @@ export function CollectionsSection({
         {settings.collections.map((collection, index) => (
           <Link
             key={index}
-            href={collection.link?.url || "#"}
+            href={collection.link?.url ? getLocalizedMarketPath(collection.link.url, locale, marketPrefix) : "#"}
             target={collection.link?.target || "_self"}
             className="group relative flex flex-col overflow-hidden"
           >
@@ -125,7 +130,7 @@ export function CollectionsSection({
                     </p>
                   )}
                   <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-brand-ivory px-4 py-2.5 text-xs font-semibold uppercase text-brand-primary shadow-lg shadow-black/20 transition-all duration-500 ease-out group-hover:-translate-y-1 group-hover:bg-white group-hover:text-brand-primary group-hover:shadow-xl group-hover:shadow-black/30 hover:border hover:border-white hover:bg-brand-primary hover:text-white md:text-sm">
-                    <span>Explore</span>
+                    <span>{locale === "ar" ? "استكشف" : "Explore"}</span>
                     <svg className="h-4 w-4 transition-transform duration-500 ease-out group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                     </svg>
