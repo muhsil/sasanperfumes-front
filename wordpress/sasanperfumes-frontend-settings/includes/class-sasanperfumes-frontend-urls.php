@@ -29,6 +29,7 @@ class sasanperfumes_Frontend_Urls {
         add_filter('post_link', array($this, 'rewrite_post_link'), 10, 2);
         add_filter('post_type_link', array($this, 'rewrite_post_type_link'), 10, 2);
         add_filter('term_link', array($this, 'rewrite_term_link'), 10, 3);
+        add_filter('allowed_redirect_hosts', array($this, 'allow_frontend_redirect_host'));
 
         add_filter('get_sample_permalink_html', array($this, 'rewrite_sample_permalink_html'), 10, 5);
 
@@ -37,6 +38,7 @@ class sasanperfumes_Frontend_Urls {
         add_filter('woocommerce_product_get_permalink', array($this, 'rewrite_wc_product_permalink'), 10, 2);
         add_action('plugins_loaded', array($this, 'redirect_public_request_to_headless_early'), 0);
         add_action('init', array($this, 'redirect_public_request_to_headless_early'), 0);
+        add_action('parse_request', array($this, 'redirect_public_request_to_headless_early'), 0);
         add_action('template_redirect', array($this, 'redirect_public_frontend_to_headless'), 1);
 
         // Google Listings & Ads (Merchant Center) - rewrite product URLs in feeds
@@ -186,6 +188,21 @@ class sasanperfumes_Frontend_Urls {
         return $target_path;
     }
 
+    public function allow_frontend_redirect_host($hosts) {
+        $frontend_host = parse_url($this->frontend_url, PHP_URL_HOST);
+        if ($frontend_host && !in_array($frontend_host, $hosts, true)) {
+            $hosts[] = $frontend_host;
+        }
+
+        return $hosts;
+    }
+
+    private function redirect_to_frontend($target_path, $status = 301) {
+        $target_url = trailingslashit($this->frontend_url) . ltrim((string) $target_path, '/');
+        wp_redirect($target_url, $status, 'sasanperfumes');
+        exit;
+    }
+
     private function get_frontend_path_for_post($post) {
         if (!$post) return '';
 
@@ -252,8 +269,7 @@ class sasanperfumes_Frontend_Urls {
         $path = parse_url($request_uri, PHP_URL_PATH);
         $target_path = $this->get_headless_redirect_path($path ? $path : '/');
 
-        wp_safe_redirect(trailingslashit($this->frontend_url) . ltrim($target_path, '/'), 301);
-        exit;
+        $this->redirect_to_frontend($target_path, 301);
     }
 
     public function redirect_public_frontend_to_headless() {
@@ -285,8 +301,7 @@ class sasanperfumes_Frontend_Urls {
             $target_path = '/en/shop';
         }
 
-        wp_safe_redirect(trailingslashit($this->frontend_url) . ltrim($target_path, '/'), 301);
-        exit;
+        $this->redirect_to_frontend($target_path, 301);
     }
 
     public function rewrite_page_link($link, $post_id) {
