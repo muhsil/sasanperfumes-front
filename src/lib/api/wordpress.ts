@@ -35,6 +35,7 @@ const WP_API_BASE = `${siteConfig.apiUrl}/wp-json`;
 const WP_API_HEADERS = backendHeaders();
 const WP_NAMESPACE_FALLBACKS = ["sasanperfumes/v1"];
 const CMS_FORCE_DYNAMIC_CACHE = process.env.NEXT_PUBLIC_DISABLE_CMS_CACHE === "true" || process.env.DISABLE_CMS_CACHE === "true";
+const WP_API_FETCH_TIMEOUT_MS = 6000;
 
 function isCmsContentEndpoint(endpoint: string): boolean {
   return (
@@ -100,6 +101,20 @@ function uniqueUrls(urls: string[]): string[] {
 function appendQueryParam(url: string, key: string, value: string): string {
   const separator = url.includes("?") ? "&" : "?";
   return `${url}${separator}${key}=${encodeURIComponent(value)}`;
+}
+
+async function fetchWPUrl(url: string, init: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), WP_API_FETCH_TIMEOUT_MS);
+
+  try {
+    return await fetch(url, {
+      ...init,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function replaceLegacyBrandText(value: string): string {
@@ -792,10 +807,10 @@ async function fetchWPAPI<T>(
         };
 
     for (const url of urls) {
-      let response = await fetch(url, fetchOptions);
+      let response = await fetchWPUrl(url, fetchOptions);
 
       if (response.status === 403) {
-        response = await fetch(url, { headers: apiHeaders });
+        response = await fetchWPUrl(url, { headers: apiHeaders });
       }
 
       if (!response.ok) {

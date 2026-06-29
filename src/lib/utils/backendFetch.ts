@@ -2,6 +2,7 @@ import { siteConfig } from "@/config/site";
 
 const API_BASE = siteConfig.apiUrl;
 const MARKET_CODES = new Set(["qa", "om", "sa"]);
+const BACKEND_FETCH_TIMEOUT_MS = 6000;
 const BACKEND_USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36";
 const LEGACY_MEDIA_HOSTS = [["cms", ["fragrance", "network"].join(""), "ae"].join(".")];
@@ -121,15 +122,23 @@ export function noCacheUrl(url: string): string {
 
 export async function fetchBackend(url: string, init?: RequestInit): Promise<Response> {
   const requestHeaders = init?.headers ? headersToRecord(init.headers) : undefined;
-  const response = await fetch(url, {
-    ...init,
-    headers: requestHeaders || init?.headers,
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), BACKEND_FETCH_TIMEOUT_MS);
 
-  if (response.status !== 404 && response.status !== 403) {
+  try {
+    const response = await fetch(url, {
+      ...init,
+      headers: requestHeaders || init?.headers,
+      signal: controller.signal,
+    });
+
+    if (response.status !== 404 && response.status !== 403) {
+      return response;
+    }
     return response;
+  } finally {
+    clearTimeout(timeout);
   }
-  return response;
 }
 
 function sanitizeBackendText(value: string): string {
