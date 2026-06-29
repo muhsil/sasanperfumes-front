@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getEnvVar, getWcCredentials } from "@/lib/utils/loadEnv";
 import { getPaymentGatewayFilters, getPaymentGatewayOverrides } from "@/config/payment";
 import {
-  backendHeaders,
+  backendMarketHeaders,
   noCacheUrl,
   safeJsonResponse,
   wpJsonBaseForMarket,
@@ -253,7 +253,7 @@ export async function GET() {
       
       const response = await fetch(noCacheUrl(url), {
         method: "GET",
-        headers: backendHeaders(),
+        headers: backendMarketHeaders(market.code),
         cache: "no-store",
       });
 
@@ -314,7 +314,7 @@ export async function GET() {
     
     const storeResponse = await fetch(noCacheUrl(storeUrl), {
       method: "GET",
-      headers: backendHeaders(),
+      headers: backendMarketHeaders(market.code),
       cache: "no-store",
     });
 

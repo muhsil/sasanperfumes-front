@@ -5,7 +5,7 @@ export const revalidate = 0;
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { getRequestMarket } from "@/lib/market/server";
 import { getShippingFreightCountries } from "@/config/shipping";
-import { wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
+import { backendMarketHeaders, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
 
 function getBasicAuthParams(marketCode?: string): string {
   const { consumerKey, consumerSecret } = getWcCredentials(marketCode);
@@ -46,7 +46,7 @@ export async function GET() {
     const zonesUrl = `${apiBase}/shipping/zones?${authParams}`;
     const zonesResponse = await fetch(zonesUrl, {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
+      headers: backendMarketHeaders(market.code, { "Content-Type": "application/json" }),
     });
 
     if (!zonesResponse.ok) {
@@ -65,7 +65,7 @@ export async function GET() {
       const locationsUrl = `${apiBase}/shipping/zones/${zone.id}/locations?${authParams}`;
       const locationsResponse = await fetch(locationsUrl, {
         method: "GET",
-        headers: { "Content-Type": "application/json" },
+        headers: backendMarketHeaders(market.code, { "Content-Type": "application/json" }),
       });
 
       if (!locationsResponse.ok) return [];
@@ -82,7 +82,7 @@ export async function GET() {
         const methodsUrl = `${apiBase}/shipping/zones/${zone.id}/methods?${authParams}`;
         const methodsResponse = await fetch(methodsUrl, {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
+          headers: backendMarketHeaders(market.code, { "Content-Type": "application/json" }),
         });
         if (methodsResponse.ok) {
           const methods = await methodsResponse.json();
@@ -118,7 +118,7 @@ export async function GET() {
     const countriesUrl = `${apiBase}/data/countries?${authParams}`;
     const countriesResponse = await fetch(countriesUrl, {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
+      headers: backendMarketHeaders(market.code, { "Content-Type": "application/json" }),
     });
 
     if (countriesResponse.ok) {

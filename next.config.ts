@@ -11,7 +11,6 @@ const disableSearchIndexing =
 const cmsApiUrl = (process.env.NEXT_PUBLIC_WC_API_URL || "https://cms.sasanperfumes.com").replace(/\/+$/, "");
 const imageHostFallbacks = [
   "cms.sasanperfumes.com",
-  "cms.shapehive.com",
 ];
 const extraImageHosts = (
   process.env.NEXT_PUBLIC_CMS_IMAGE_HOSTS ||

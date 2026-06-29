@@ -188,14 +188,17 @@ function rewriteMarketPathToLocaleRoute(
   const rest = segments.slice(2);
   const isApiRoute = rest[0] === "api";
   const rewriteUrl = request.nextUrl.clone();
-  const requestHost = request.headers.get("host");
-  const requestProto = request.headers.get("x-forwarded-proto");
-  if (requestHost) {
-    rewriteUrl.host = requestHost;
+
+  if (
+    rewriteUrl.port &&
+    rewriteUrl.hostname !== "localhost" &&
+    rewriteUrl.hostname !== "127.0.0.1" &&
+    rewriteUrl.hostname !== "::1"
+  ) {
+    rewriteUrl.protocol = "http:";
+    rewriteUrl.hostname = "localhost";
   }
-  if (requestProto) {
-    rewriteUrl.protocol = `${requestProto}:`;
-  }
+
   rewriteUrl.pathname = isApiRoute ? `/${rest.join("/")}` : `/${locale}${rest.length ? `/${rest.join("/")}` : ""}`;
   rewriteUrl.searchParams.set("__market", market);
   const requestHeaders = applyRequestRoutingHeaders(request, locale, market);

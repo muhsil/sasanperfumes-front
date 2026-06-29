@@ -8,8 +8,8 @@ A modern, bilingual (English/Arabic) headless e-commerce frontend built with Nex
 - **Bilingual Support** - English and Arabic (RTL) with seamless language switching
 - **Multi-Currency** - Support for AED, BHD, KWD, OMR, QAR, SAR, USD with persistent selection
 - **WordPress/WooCommerce Backend** - Headless CMS via REST API, Store API, and CoCart
-- **Market-aware Frontend Routing** - Shared CMS with separate frontends at `/qa`, `/om`, and `/sa` (plus base `https://shapehive.com`)
-- **Multisite market separation** - One WordPress host (`cms.shapehive.com`) with market-specific content, pages, products, and SEO returned by market context.
+- **Market-aware Frontend Routing** - Shared CMS with separate frontends at `/qa`, `/om`, and `/sa` (plus base `https://store.sasanperfumes.com`)
+- **Multisite market separation** - One WordPress host (`cms.sasanperfumes.com`) with market-specific content, pages, products, and SEO returned by market context.
 - **Tailwind CSS** - Utility-first styling with RTL support
 - **TypeScript** - Full type safety throughout the codebase
 - **SEO Optimized** - Metadata, hreflang, structured data (Product, Offer, BreadcrumbList, Organization)
@@ -84,28 +84,28 @@ cp .env.example .env.local
 
 4. Update `.env.local` with your WordPress backend and market frontend details:
 ```
-NEXT_PUBLIC_SITE_URL=https://shapehive.com
-NEXT_PUBLIC_WC_API_URL=https://cms.shapehive.com
-NEXT_PUBLIC_CANONICAL_HOST=https://shapehive.com
+NEXT_PUBLIC_SITE_URL=https://store.sasanperfumes.com
+NEXT_PUBLIC_WC_API_URL=https://cms.sasanperfumes.com
+NEXT_PUBLIC_CANONICAL_HOST=https://store.sasanperfumes.com
 WC_CONSUMER_KEY=ck_xxxxx
 WC_CONSUMER_SECRET=cs_xxxxx
 ```
 
 Market frontends:
 ```
-https://shapehive.com/        -> intl market (default currency/country logic)
-https://shapehive.com/en      -> intl in English
-https://shapehive.com/ar      -> intl in Arabic
-https://shapehive.com/qa/en   -> Qatar market in English
-https://shapehive.com/qa/ar   -> Qatar market in Arabic
-https://shapehive.com/om/en   -> Oman market in English
-https://shapehive.com/om/ar   -> Oman market in Arabic
-https://shapehive.com/sa/en   -> Saudi market in English
-https://shapehive.com/sa/ar   -> Saudi market in Arabic
+https://store.sasanperfumes.com/        -> intl market (default currency/country logic)
+https://store.sasanperfumes.com/en      -> intl in English
+https://store.sasanperfumes.com/ar      -> intl in Arabic
+https://store.sasanperfumes.com/qa/en   -> Qatar market in English
+https://store.sasanperfumes.com/qa/ar   -> Qatar market in Arabic
+https://store.sasanperfumes.com/om/en   -> Oman market in English
+https://store.sasanperfumes.com/om/ar   -> Oman market in Arabic
+https://store.sasanperfumes.com/sa/en   -> Saudi market in English
+https://store.sasanperfumes.com/sa/ar   -> Saudi market in Arabic
 ```
 
 All market routes use one backend:
-`https://cms.shapehive.com`
+`https://cms.sasanperfumes.com`
 
 The backend uses market context to resolve separate site data per market (market pages, products, SEO, and settings are served from the active frontend segment).
 
@@ -160,10 +160,10 @@ Note: Currencies and SEO/content are loaded per market context from the shared b
 ## Frontend Market URLs
 
 Use one canonical backend and separate frontend market routes:
-- `https://shapehive.com/`
-- `https://shapehive.com/qa`
-- `https://shapehive.com/om`
-- `https://shapehive.com/sa`
+- `https://store.sasanperfumes.com/`
+- `https://store.sasanperfumes.com/qa`
+- `https://store.sasanperfumes.com/om`
+- `https://store.sasanperfumes.com/sa`
 
 Market-specific hostnames are not used for frontend routing now; use path-based market routes (`/qa`, `/om`, `/sa`).
 

@@ -1,6 +1,6 @@
 # Sasan Perfumes Site Documentation
 
-Sasan Perfumes is a headless ecommerce storefront. The frontend is a Next.js app. A single WordPress + WooCommerce backend (`cms.shapehive.com`) serves all market frontends.
+Sasan Perfumes is a headless ecommerce storefront. The frontend is a Next.js app. A single WordPress + WooCommerce backend (`cms.sasanperfumes.com`) serves all market frontends.
 
 ## Project Summary
 
@@ -9,9 +9,9 @@ Sasan Perfumes is a headless ecommerce storefront. The frontend is a Next.js app
 | Project | Sasan Perfumes |
 | Frontend | Next.js 16, React 19, TypeScript |
 | Backend | WordPress, WooCommerce, CoCart, WPGraphQL, custom plugin |
-| Production storefront(s) | `https://shapehive.com`, `https://shapehive.com/en`, `https://shapehive.com/ar`, `https://shapehive.com/qa/en`, `https://shapehive.com/qa/ar`, `https://shapehive.com/om/en`, `https://shapehive.com/om/ar`, `https://shapehive.com/sa/en`, `https://shapehive.com/sa/ar` |
-| CMS/API | `https://cms.shapehive.com` |
-| WordPress REST base | `https://cms.shapehive.com/wp-json` |
+| Production storefront(s) | `https://store.sasanperfumes.com`, `https://store.sasanperfumes.com/en`, `https://store.sasanperfumes.com/ar`, `https://store.sasanperfumes.com/qa/en`, `https://store.sasanperfumes.com/qa/ar`, `https://store.sasanperfumes.com/om/en`, `https://store.sasanperfumes.com/om/ar`, `https://store.sasanperfumes.com/sa/en`, `https://store.sasanperfumes.com/sa/ar` |
+| CMS/API | `https://cms.sasanperfumes.com` |
+| WordPress REST base | `https://cms.sasanperfumes.com/wp-json` |
 | Custom REST namespace | `sasanperfumes/v1` |
 | Local plugin source | `wordpress/sasanperfumes-frontend-settings/` |
 | Local wp-content reference | `fnf_wp_contents/` |
@@ -147,7 +147,7 @@ process.env.NEXT_PUBLIC_WC_API_URL
 Fallback:
 
 ```text
-https://cms.shapehive.com
+https://cms.sasanperfumes.com
 ```
 
 Required local environment file:
@@ -159,33 +159,33 @@ Required local environment file:
 Common values for shared CMS multi-market setup:
 
 ```env
-NEXT_PUBLIC_WC_API_URL=https://cms.shapehive.com
-NEXT_PUBLIC_WORDPRESS_GRAPHQL_URL=https://cms.shapehive.com/graphql
-NEXT_PUBLIC_SITE_URL=https://shapehive.com
-NEXT_PUBLIC_CANONICAL_HOST=https://shapehive.com
-NEXT_PUBLIC_CANONICAL_HOSTS=shapehive.com
-NEXT_PUBLIC_ALLOWED_HOSTS=localhost,127.0.0.1,::1,shapehive.com,cms.shapehive.com,localhost:3000,localhost:3001
+NEXT_PUBLIC_WC_API_URL=https://cms.sasanperfumes.com
+NEXT_PUBLIC_WORDPRESS_GRAPHQL_URL=https://cms.sasanperfumes.com/graphql
+NEXT_PUBLIC_SITE_URL=https://store.sasanperfumes.com
+NEXT_PUBLIC_CANONICAL_HOST=https://store.sasanperfumes.com
+NEXT_PUBLIC_CANONICAL_HOSTS=store.sasanperfumes.com
+NEXT_PUBLIC_ALLOWED_HOSTS=localhost,127.0.0.1,::1,store.sasanperfumes.com,cms.sasanperfumes.com,localhost:3000,localhost:3001
 ```
 
 Market entry URLs:
 
 ```text
-https://shapehive.com/
-https://shapehive.com/qa
-https://shapehive.com/om
-https://shapehive.com/sa
+https://store.sasanperfumes.com/
+https://store.sasanperfumes.com/qa
+https://store.sasanperfumes.com/om
+https://store.sasanperfumes.com/sa
 ```
 
 CMS content/admin market sites:
 
 ```text
-https://cms.shapehive.com/wp-admin
-https://cms.shapehive.com/qa/wp-admin
-https://cms.shapehive.com/om/wp-admin
-https://cms.shapehive.com/sa/wp-admin
+https://cms.sasanperfumes.com/wp-admin
+https://cms.sasanperfumes.com/qa/wp-admin
+https://cms.sasanperfumes.com/om/wp-admin
+https://cms.sasanperfumes.com/sa/wp-admin
 ```
 
-The frontend keeps public markets on path URLs and reads CMS data from matching CMS paths, for example `https://cms.shapehive.com/qa/wp-json` for Qatar.
+The frontend keeps public markets on path URLs and reads CMS data from matching CMS paths, for example `https://cms.sasanperfumes.com/wp-json` for Qatar.
 
 Private server-side credentials:
 
@@ -245,8 +245,8 @@ Market routing:
  - Legacy market subdomain hosts are retired.
  - Market prefixes are optional; supported prefixes: `qa`, `om`, `sa`.
 - URL pattern is `/{market}/{locale}/...` (for market routes) or `/{locale}/...` for default intl.
-- Market is resolved by the first path segment (`/qa`, `/om`, `/sa`) under `shapehive.com`.
-- Example: `https://shapehive.com/qa/en/product/{market-product-slug}`.
+- Market is resolved by the first path segment (`/qa`, `/om`, `/sa`) under `store.sasanperfumes.com`.
+- Example: `https://store.sasanperfumes.com/qa/en/product/{market-product-slug}`.
 
 Locale routing:
 
@@ -425,7 +425,7 @@ The local folder `fnf_wp_contents/` is ignored by Git and is only for reference.
 Base:
 
 ```text
-https://cms.shapehive.com/wp-json
+https://cms.sasanperfumes.com/wp-json
 ```
 
 Core custom endpoints:
@@ -686,9 +686,9 @@ Run the sync without `--overwrite` for the first production pass. It creates mis
 Market REST verification:
 
 ```powershell
-Invoke-WebRequest -Uri "https://cms.shapehive.com/qa/wp-json/sasanperfumes/v1/home-settings" -UseBasicParsing
-Invoke-WebRequest -Uri "https://cms.shapehive.com/om/wp-json/wc/store/v1/products?per_page=1" -UseBasicParsing
-Invoke-WebRequest -Uri "https://cms.shapehive.com/sa/wp-json/wc/store/v1/products?per_page=1" -UseBasicParsing
+Invoke-WebRequest -Uri "https://cms.sasanperfumes.com/wp-json/sasanperfumes/v1/home-settings" -UseBasicParsing
+Invoke-WebRequest -Uri "https://cms.sasanperfumes.com/wp-json/wc/store/v1/products?per_page=1" -UseBasicParsing
+Invoke-WebRequest -Uri "https://cms.sasanperfumes.com/wp-json/wc/store/v1/products?per_page=1" -UseBasicParsing
 ```
 
 These must return JSON, not an HTML/default page. If they return HTML, flush WordPress permalinks, clear cache/CDN, and confirm the server routes `/qa`, `/om`, and `/sa` to WordPress before relying on separate market content/products.
@@ -710,7 +710,7 @@ Invoke-WebRequest -Uri "http://localhost:3000/api/debug-backend" -UseBasicParsin
 Live CMS:
 
 ```powershell
-Invoke-WebRequest -Uri "https://cms.shapehive.com/wp-json/sasanperfumes/v1/home-settings" -UseBasicParsing
+Invoke-WebRequest -Uri "https://cms.sasanperfumes.com/wp-json/sasanperfumes/v1/home-settings" -UseBasicParsing
 ```
 
 Recommended page checks:

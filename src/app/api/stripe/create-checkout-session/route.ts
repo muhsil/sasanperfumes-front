@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRequestMarket } from "@/lib/market/server";
-import { backendHeaders, backendPostHeaders, extractMarketCode, noCacheUrl, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
+import { backendMarketHeaders, backendMarketPostHeaders, extractMarketCode, noCacheUrl, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { buildCheckoutSessionParams, createStripeCheckoutSession } from "@/lib/stripe/api";
 import { getStripeSecretKey } from "@/lib/stripe/config";
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     const orderUrl = `${getOrdersApiBase(market.code)}/orders/${orderId}?${getBasicAuthParams(market.code)}`;
     const orderResponse = await fetch(noCacheUrl(orderUrl), {
       method: "GET",
-      headers: backendHeaders(),
+      headers: backendMarketHeaders(market.code),
       cache: "no-store",
     });
 
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
 
     await fetch(noCacheUrl(`${getOrdersApiBase(market.code)}/orders/${orderId}?${getBasicAuthParams(market.code)}`), {
       method: "PUT",
-      headers: backendPostHeaders({
+      headers: backendMarketPostHeaders(market.code, {
         Authorization: getBasicAuthHeader(market.code),
       }),
       body: JSON.stringify({

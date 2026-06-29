@@ -6,8 +6,6 @@ import { getWcCredentials } from "@/lib/utils/loadEnv";
 import {
   backendHeaders,
   extractMarketCode,
-  rewriteBackendUrlForMarket,
-  wpJsonBaseForMarket,
 } from "@/lib/utils/backendFetch";
 import type {
   WCProduct,
@@ -225,11 +223,10 @@ function formatFetchError(error: unknown): string {
 }
 
 function withFrontendHostParam(url: string, frontendHost?: string): string {
-  const marketAwareUrl = rewriteBackendUrlForMarket(url, extractMarketFromHost(frontendHost));
-  if (!frontendHost) return marketAwareUrl;
+  if (!frontendHost) return url;
 
-  const separator = marketAwareUrl.includes("?") ? "&" : "?";
-  return `${marketAwareUrl}${separator}frontend_host=${encodeURIComponent(frontendHost)}`;
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}frontend_host=${encodeURIComponent(frontendHost)}`;
 }
 
 const KNOWN_MARKETS = new Set(["qa", "om", "sa"]);
@@ -307,9 +304,7 @@ function buildStoreAPIUrls(
   market: string | undefined,
   options: Pick<FetchOptions, "locale" | "currency" | "frontendHost">
 ): string[] {
-  const rootApiBase = market
-    ? withExplicitHttpsPort(wpJsonBaseForMarket(market).replace(/\/wp-json$/, ""))
-    : siteConfig.apiUrl.replace(/\/+$/, "");
+  const rootApiBase = withExplicitHttpsPort(siteConfig.apiUrl.replace(/\/+$/, ""));
   const apiBases = [`${rootApiBase}/wp-json/wc/store/v1`];
   const currencyToUse = options.currency || DEFAULT_API_CURRENCY;
 

@@ -3,7 +3,7 @@ import dns from "dns";
 import https from "https";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { verifyAuth, unauthorizedResponse, forbiddenResponse } from "@/lib/security";
-import { API_BASE, backendHeaders, backendPostHeaders, noCacheUrl, parseBackendJson, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
+import { API_BASE, backendHeaders, backendMarketHeaders, backendPostHeaders, noCacheUrl, parseBackendJson, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
 import { getRequestMarket } from "@/lib/market/server";
 
 function getOrdersApiBase(marketCode?: string | null): string {
@@ -99,9 +99,8 @@ function fetchOrdersBackend(url: string, init: RequestInit, marketCode?: string 
   }
 
   const headers = {
-    ...((init.headers || {}) as Record<string, string>),
+    ...(backendMarketHeaders(code, init.headers) as Record<string, string>),
     Origin: BACKEND_ORIGIN,
-    "X-Market": code,
   };
 
   return fetchWithPublicDns(noCacheUrl(url), {

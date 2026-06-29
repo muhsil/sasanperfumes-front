@@ -11,19 +11,19 @@ Verified on live production on 2026-06-19:
 
 | Route | Status | Market signal |
 | --- | --- | --- |
-| `https://shapehive.com/en` | 200, homepage renders | AED |
-| `https://shapehive.com/ar` | 200, Arabic RTL renders | AED |
-| `https://shapehive.com/qa/en` | 200, homepage renders | QAR |
-| `https://shapehive.com/qa/ar` | 200, Arabic RTL renders | QAR |
-| `https://shapehive.com/om/en` | 200, homepage renders | OMR |
-| `https://shapehive.com/om/ar` | 200, Arabic RTL renders | OMR |
-| `https://shapehive.com/sa/en` | 200, homepage renders | SAR |
-| `https://shapehive.com/sa/ar` | 200, Arabic RTL renders | SAR |
+| `https://store.sasanperfumes.com/en` | 200, homepage renders | AED |
+| `https://store.sasanperfumes.com/ar` | 200, Arabic RTL renders | AED |
+| `https://store.sasanperfumes.com/qa/en` | 200, homepage renders | QAR |
+| `https://store.sasanperfumes.com/qa/ar` | 200, Arabic RTL renders | QAR |
+| `https://store.sasanperfumes.com/om/en` | 200, homepage renders | OMR |
+| `https://store.sasanperfumes.com/om/ar` | 200, Arabic RTL renders | OMR |
+| `https://store.sasanperfumes.com/sa/en` | 200, homepage renders | SAR |
+| `https://store.sasanperfumes.com/sa/ar` | 200, Arabic RTL renders | SAR |
 
 The frontend API check is also healthy:
 
-- `https://shapehive.com/api/home-settings?lang=en` returns valid JSON.
-- `https://shapehive.com/api/home-settings?lang=ar` returns valid JSON.
+- `https://store.sasanperfumes.com/api/home-settings?lang=en` returns valid JSON.
+- `https://store.sasanperfumes.com/api/home-settings?lang=ar` returns valid JSON.
 - The previous `{"code":"invalid_response"}` problem is fixed on live.
 
 ### Routing behavior implemented in code
@@ -37,7 +37,7 @@ The frontend API check is also healthy:
 - Market routes internally resolve to the existing locale pages while preserving market context through request headers.
 - `x-market` and `x-frontend-host` are propagated to backend/API calls.
 - Backend JSON parsing now strips hidden WordPress BOM/zero-width characters before parsing, preventing frontend crashes from malformed response prefixes.
-- CORS defaults are narrowed to `https://shapehive.com`, `https://cms.shapehive.com`, and local development origins.
+- CORS defaults are narrowed to `https://store.sasanperfumes.com`, `https://cms.sasanperfumes.com`, and local development origins.
 
 ### Backend network changes already performed
 
@@ -45,10 +45,10 @@ The WordPress multisite network was restored to include the main CMS plus QA, OM
 
 | Backend site | Purpose | Frontend path |
 | --- | --- | --- |
-| `cms.shapehive.com` | Main/UAE content | `https://shapehive.com` |
-| `cms.shapehive.com/qa` | Qatar content | `https://shapehive.com/qa` |
-| `cms.shapehive.com/om` | Oman content | `https://shapehive.com/om` |
-| `cms.shapehive.com/sa` | Saudi content | `https://shapehive.com/sa` |
+| `cms.sasanperfumes.com` | Main/UAE content | `https://store.sasanperfumes.com` |
+| `cms.sasanperfumes.com/qa` | Qatar content | `https://store.sasanperfumes.com/qa` |
+| `cms.sasanperfumes.com/om` | Oman content | `https://store.sasanperfumes.com/om` |
+| `cms.sasanperfumes.com/sa` | Saudi content | `https://store.sasanperfumes.com/sa` |
 
 ## Pushed Code Record
 
@@ -91,13 +91,13 @@ Note: one basic headless screenshot of `/en` briefly captured the global error s
 
 Checked on 2026-06-21 with the provided WordPress admin credentials:
 
-- `https://cms.shapehive.com/wp-admin/` logs in successfully.
-- `https://cms.shapehive.com/qa/wp-admin/`, `/om/wp-admin/`, and `/sa/wp-admin/` open dashboards after login.
+- `https://cms.sasanperfumes.com/wp-admin/` logs in successfully.
+- `https://cms.sasanperfumes.com/qa/wp-admin/`, `/om/wp-admin/`, and `/sa/wp-admin/` open dashboards after login.
 - The root dashboard does not expose `sasanperfumes` admin links.
 - Direct plugin settings pages return `403 Forbidden`, including:
-  - `https://cms.shapehive.com/wp-admin/admin.php?page=sasanperfumes-settings`
-  - `https://cms.shapehive.com/wp-admin/admin.php?page=sasanperfumes-feature-toggles`
-  - `https://cms.shapehive.com/qa/wp-admin/admin.php?page=sasanperfumes-settings`
+  - `https://cms.sasanperfumes.com/wp-admin/admin.php?page=sasanperfumes-settings`
+  - `https://cms.sasanperfumes.com/wp-admin/admin.php?page=sasanperfumes-feature-toggles`
+  - `https://cms.sasanperfumes.com/qa/wp-admin/admin.php?page=sasanperfumes-settings`
 
 Repo fix:
 
@@ -113,35 +113,35 @@ wp eval-file scripts/setup-multisite-network.php
 
 Then re-check:
 
-- `https://cms.shapehive.com/wp-admin/admin.php?page=sasanperfumes-settings`
-- `https://cms.shapehive.com/qa/wp-admin/admin.php?page=sasanperfumes-settings`
-- `https://cms.shapehive.com/om/wp-admin/admin.php?page=sasanperfumes-settings`
-- `https://cms.shapehive.com/sa/wp-admin/admin.php?page=sasanperfumes-settings`
+- `https://cms.sasanperfumes.com/wp-admin/admin.php?page=sasanperfumes-settings`
+- `https://cms.sasanperfumes.com/qa/wp-admin/admin.php?page=sasanperfumes-settings`
+- `https://cms.sasanperfumes.com/om/wp-admin/admin.php?page=sasanperfumes-settings`
+- `https://cms.sasanperfumes.com/sa/wp-admin/admin.php?page=sasanperfumes-settings`
 
 ### 2. WordPress network settings
 
 Open:
 
-`https://cms.shapehive.com/wp-admin/network/admin.php?page=sasanperfumes-frontend-network`
+`https://cms.sasanperfumes.com/wp-admin/network/admin.php?page=sasanperfumes-frontend-network`
 
 Checked on 2026-06-21: the network page loaded successfully and contained the expected path-based map values:
 
-- `cms.shapehive.com` -> `https://shapehive.com`
-- `cms.shapehive.com/qa` -> `https://shapehive.com/qa`
-- `cms.shapehive.com/om` -> `https://shapehive.com/om`
-- `cms.shapehive.com/sa` -> `https://shapehive.com/sa`
-- `shapehive.com/qa` -> `https://shapehive.com/qa`
-- `shapehive.com/om` -> `https://shapehive.com/om`
-- `shapehive.com/sa` -> `https://shapehive.com/sa`
+- `cms.sasanperfumes.com` -> `https://store.sasanperfumes.com`
+- `cms.sasanperfumes.com/qa` -> `https://store.sasanperfumes.com/qa`
+- `cms.sasanperfumes.com/om` -> `https://store.sasanperfumes.com/om`
+- `cms.sasanperfumes.com/sa` -> `https://store.sasanperfumes.com/sa`
+- `store.sasanperfumes.com/qa` -> `https://store.sasanperfumes.com/qa`
+- `store.sasanperfumes.com/om` -> `https://store.sasanperfumes.com/om`
+- `store.sasanperfumes.com/sa` -> `https://store.sasanperfumes.com/sa`
 
 Repo fix:
 
 - `wordpress/sasanperfumes-frontend-settings/includes/class-sasanperfumes-multisite.php` now uses path-based CMS examples only.
-- `scripts/setup-multisite-network.php` creates/updates `cms.shapehive.com/qa`, `/om`, and `/sa`.
-- Frontend CMS requests now use market-aware paths such as `https://cms.shapehive.com/qa/wp-json`.
+- `scripts/setup-multisite-network.php` creates/updates `cms.sasanperfumes.com/qa`, `/om`, and `/sa`.
+- Frontend CMS requests now use market-aware paths such as `https://cms.sasanperfumes.com/wp-json`.
 - Frontend content/product fetchers prefer market CMS paths first and fall back to the root CMS API with market headers if a market path temporarily returns HTML instead of JSON.
 
-Live REST probe on 2026-06-21: `https://cms.shapehive.com/qa/wp-json/...`, `/om/wp-json/...`, and `/sa/wp-json/...` returned HTML, not JSON. After deploying the plugin/scripts, verify server rewrites, permalink flushes, and cache/CDN rules until these paths return JSON. The fallback prevents hard page breaks, but fully separate products/content require the market CMS REST paths to work.
+Live REST probe on 2026-06-21: `https://cms.sasanperfumes.com/wp-json/...`, `/om/wp-json/...`, and `/sa/wp-json/...` returned HTML, not JSON. After deploying the plugin/scripts, verify server rewrites, permalink flushes, and cache/CDN rules until these paths return JSON. The fallback prevents hard page breaks, but fully separate products/content require the market CMS REST paths to work.
 
 Important: an older live plugin build normalized mappings by host only, which could collapse path rows. The current code preserves path-aware keys; keep this on the deployment verification list after future plugin updates.
 

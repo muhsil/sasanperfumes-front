@@ -8,9 +8,9 @@ The frontend does not execute PHP files directly. The WordPress plugin runs on t
 
 | Item | Value |
 |---|---|
-| CMS URL | `https://cms.shapehive.com` |
-| Storefront URL | `https://shapehive.com` |
-| REST API base | `https://cms.shapehive.com/wp-json` |
+| CMS URL | `https://cms.sasanperfumes.com` |
+| Storefront URL | `https://store.sasanperfumes.com` |
+| REST API base | `https://cms.sasanperfumes.com/wp-json` |
 | Main custom namespace | `sasanperfumes/v1` |
 | Plugin name | `ShapeHive Frontend Settings` |
 | Local plugin source | `wordpress/sasanperfumes-frontend-settings/` |
@@ -38,11 +38,11 @@ When backend changes are needed:
 
 ### WordPress Multisite Mapping (shapehive network)
 
-The plugin uses one CMS backend (`cms.shapehive.com`) with separate content/product sites for each market and separate market frontends:
+The plugin uses one CMS backend (`cms.sasanperfumes.com`) with separate content/product sites for each market and separate market frontends:
 
 - Path-based markets on the same domain: `/qa`, `/om`, `/sa`
-- CMS market content sites: `cms.shapehive.com/qa`, `cms.shapehive.com/om`, `cms.shapehive.com/sa`
-- Base intl host: `shapehive.com`
+- CMS market content sites: `cms.sasanperfumes.com/qa`, `cms.sasanperfumes.com/om`, `cms.sasanperfumes.com/sa`
+- Base intl host: `store.sasanperfumes.com`
 - Route rule used by the frontend links: `/{market(optional)}/{locale}/{slug}` (locale is `en` or `ar`)
 - Keep URL order as market-first (`/qa/en`, `/om/ar`, `/sa/en`). Any `/en/qa` style request is normalized to market-first by the frontend middleware, but keep canonical content links as market-first.
 - Legacy market subdomain hosts are retired and are not part of the live routing plan.
@@ -60,29 +60,29 @@ wp eval-file scripts/setup-multisite-network.php
 After setup, confirm market REST paths return JSON instead of an HTML/default page:
 
 ```bash
-curl -I https://cms.shapehive.com/qa/wp-json/sasanperfumes/v1/home-settings
-curl -I https://cms.shapehive.com/om/wp-json/wc/store/v1/products?per_page=1
-curl -I https://cms.shapehive.com/sa/wp-json/wc/store/v1/products?per_page=1
+curl -I https://cms.sasanperfumes.com/wp-json/sasanperfumes/v1/home-settings
+curl -I https://cms.sasanperfumes.com/wp-json/wc/store/v1/products?per_page=1
+curl -I https://cms.sasanperfumes.com/wp-json/wc/store/v1/products?per_page=1
 ```
 
 If these paths return HTML, flush WordPress permalinks, clear cache/CDN, and confirm the web server routes `/qa`, `/om`, and `/sa` into WordPress. The frontend has a temporary root-API fallback, but fully separate market content/products require these market REST paths to return JSON.
 
 You can also configure it manually from Network Admin:
 
-1. Log in as super admin at `https://cms.shapehive.com/wp-admin/network/admin.php?page=sasanperfumes-frontend-network`
+1. Log in as super admin at `https://cms.sasanperfumes.com/wp-admin/network/admin.php?page=sasanperfumes-frontend-network`
 2. Click **Frontend Network Settings**.
-3. Set default frontend URL to `https://shapehive.com`.
+3. Set default frontend URL to `https://store.sasanperfumes.com`.
 4. Keep JSON map as:
 
 ```json
 {
-  "cms.shapehive.com": "https://shapehive.com",
-  "cms.shapehive.com/qa": "https://shapehive.com/qa",
-  "cms.shapehive.com/om": "https://shapehive.com/om",
-  "cms.shapehive.com/sa": "https://shapehive.com/sa",
-  "shapehive.com/qa": "https://shapehive.com/qa",
-  "shapehive.com/om": "https://shapehive.com/om",
-  "shapehive.com/sa": "https://shapehive.com/sa"
+  "cms.sasanperfumes.com": "https://store.sasanperfumes.com",
+  "cms.sasanperfumes.com/qa": "https://store.sasanperfumes.com/qa",
+  "cms.sasanperfumes.com/om": "https://store.sasanperfumes.com/om",
+  "cms.sasanperfumes.com/sa": "https://store.sasanperfumes.com/sa",
+  "store.sasanperfumes.com/qa": "https://store.sasanperfumes.com/qa",
+  "store.sasanperfumes.com/om": "https://store.sasanperfumes.com/om",
+  "store.sasanperfumes.com/sa": "https://store.sasanperfumes.com/sa"
 }
 ```
 
@@ -100,22 +100,22 @@ Use `--delete` only if you want to permanently remove those sites instead of arc
 
 After setup, test from each entry point:
 
-- https://shapehive.com/en
-- https://shapehive.com/ar
-- https://shapehive.com/qa/en
-- https://shapehive.com/qa/ar
-- https://shapehive.com/om/en
-- https://shapehive.com/om/ar
-- https://shapehive.com/sa/en
-- https://shapehive.com/sa/ar
+- https://store.sasanperfumes.com/en
+- https://store.sasanperfumes.com/ar
+- https://store.sasanperfumes.com/qa/en
+- https://store.sasanperfumes.com/qa/ar
+- https://store.sasanperfumes.com/om/en
+- https://store.sasanperfumes.com/om/ar
+- https://store.sasanperfumes.com/sa/en
+- https://store.sasanperfumes.com/sa/ar
 
 Primary CMS admin entry points:
 
-- WordPress Admin: `https://cms.shapehive.com/wp-admin`
-- Qatar content/product admin: `https://cms.shapehive.com/qa/wp-admin`
-- Oman content/product admin: `https://cms.shapehive.com/om/wp-admin`
-- Saudi content/product admin: `https://cms.shapehive.com/sa/wp-admin`
-- Network frontend mapping settings: `https://cms.shapehive.com/wp-admin/network/admin.php?page=sasanperfumes-frontend-network`
+- WordPress Admin: `https://cms.sasanperfumes.com/wp-admin`
+- Qatar content/product admin: `https://cms.sasanperfumes.com/qa/wp-admin`
+- Oman content/product admin: `https://cms.sasanperfumes.com/om/wp-admin`
+- Saudi content/product admin: `https://cms.sasanperfumes.com/sa/wp-admin`
+- Network frontend mapping settings: `https://cms.sasanperfumes.com/wp-admin/network/admin.php?page=sasanperfumes-frontend-network`
 
 ### Arabic Content Sync (Products + Pages + CMS)
 
@@ -322,7 +322,7 @@ Next.js pages may cache toggle values through ISR. After changing toggles on pro
 Base:
 
 ```text
-https://cms.shapehive.com/wp-json
+https://cms.sasanperfumes.com/wp-json
 ```
 
 Main settings/content endpoints:
@@ -449,9 +449,9 @@ Previously observed issues and fixture caveats:
 Create `.env.local` in the project root:
 
 ```env
-NEXT_PUBLIC_WC_API_URL=https://cms.shapehive.com
-NEXT_PUBLIC_WORDPRESS_GRAPHQL_URL=https://cms.shapehive.com/graphql
-NEXT_PUBLIC_SITE_URL=https://shapehive.com
+NEXT_PUBLIC_WC_API_URL=https://cms.sasanperfumes.com
+NEXT_PUBLIC_WORDPRESS_GRAPHQL_URL=https://cms.sasanperfumes.com/graphql
+NEXT_PUBLIC_SITE_URL=https://store.sasanperfumes.com
 
 WC_CONSUMER_KEY=ck_xxx
 WC_CONSUMER_SECRET=cs_xxx
@@ -474,7 +474,7 @@ Without private credentials, public APIs work but authenticated/payment routes r
 From PowerShell:
 
 ```powershell
-Invoke-WebRequest -Uri "https://cms.shapehive.com/wp-json/sasanperfumes/v1/home-settings" -UseBasicParsing
+Invoke-WebRequest -Uri "https://cms.sasanperfumes.com/wp-json/sasanperfumes/v1/home-settings" -UseBasicParsing
 Invoke-WebRequest -Uri "http://localhost:3000/api/health" -UseBasicParsing
 Invoke-WebRequest -Uri "http://localhost:3000/api/debug-backend" -UseBasicParsing
 ```

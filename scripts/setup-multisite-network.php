@@ -35,13 +35,13 @@ function shapehive_flag_present(array $args, string $flag): bool {
 
 $network_default = 'https://store.sasanperfumes.com';
 $host_map = [
-    'cms.shapehive.com' => 'https://store.sasanperfumes.com',
-    'cms.shapehive.com/qa' => 'https://store.sasanperfumes.com/qa',
-    'cms.shapehive.com/om' => 'https://store.sasanperfumes.com/om',
-    'cms.shapehive.com/sa' => 'https://store.sasanperfumes.com/sa',
-    'shapehive.com/qa' => 'https://store.sasanperfumes.com/qa',
-    'shapehive.com/om' => 'https://store.sasanperfumes.com/om',
-    'shapehive.com/sa' => 'https://store.sasanperfumes.com/sa',
+    'cms.sasanperfumes.com' => 'https://store.sasanperfumes.com',
+    'cms.sasanperfumes.com/qa' => 'https://store.sasanperfumes.com/qa',
+    'cms.sasanperfumes.com/om' => 'https://store.sasanperfumes.com/om',
+    'cms.sasanperfumes.com/sa' => 'https://store.sasanperfumes.com/sa',
+    'store.sasanperfumes.com/qa' => 'https://store.sasanperfumes.com/qa',
+    'store.sasanperfumes.com/om' => 'https://store.sasanperfumes.com/om',
+    'store.sasanperfumes.com/sa' => 'https://store.sasanperfumes.com/sa',
 ];
 
 update_site_option('sasanperfumes_frontend_url', untrailingslashit($network_default));
@@ -49,19 +49,19 @@ update_site_option('sasanperfumes_frontend_url_map', $host_map);
 
 $market_sites = [
     'qa' => [
-        'domain' => 'cms.shapehive.com',
+        'domain' => 'cms.sasanperfumes.com',
         'path' => '/qa/',
         'title' => 'ShapeHive Qatar',
         'frontend_url' => 'https://store.sasanperfumes.com/qa',
     ],
     'om' => [
-        'domain' => 'cms.shapehive.com',
+        'domain' => 'cms.sasanperfumes.com',
         'path' => '/om/',
         'title' => 'ShapeHive Oman',
         'frontend_url' => 'https://store.sasanperfumes.com/om',
     ],
     'sa' => [
-        'domain' => 'cms.shapehive.com',
+        'domain' => 'cms.sasanperfumes.com',
         'path' => '/sa/',
         'title' => 'ShapeHive Saudi Arabia',
         'frontend_url' => 'https://store.sasanperfumes.com/sa',
@@ -215,7 +215,7 @@ foreach ((array) $sites as $site_id) {
         continue;
     }
 
-    $legacy_fallback = isset($host_map['cms.shapehive.com']) ? $host_map['cms.shapehive.com'] : $network_default;
+    $legacy_fallback = isset($host_map['cms.sasanperfumes.com']) ? $host_map['cms.sasanperfumes.com'] : $network_default;
     update_blog_option($site_id, 'sasanperfumes_frontend_url', untrailingslashit($legacy_fallback));
 }
 

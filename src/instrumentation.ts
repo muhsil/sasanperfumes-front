@@ -30,36 +30,6 @@ export async function register() {
     return marketCodes.has(market) ? market : "";
   };
 
-  const rewriteCmsUrlForMarket = (urlText: string, cmsHost: string, market: string): string => {
-    if (!marketCodes.has(market)) return urlText;
-
-    try {
-      const parsed = new URL(urlText);
-      if (parsed.hostname.toLowerCase() !== cmsHost) {
-        return urlText;
-      }
-
-      const segments = parsed.pathname.split("/").filter(Boolean);
-      if (segments[0] === market) {
-        return parsed.toString();
-      }
-
-      // Do not rewrite CoCart requests to a market-prefixed path; this returns `rest_no_route`.
-      if (segments[0] === "wp-json" && segments[1] === "cocart" && segments[2] === "v2") {
-        return urlText;
-      }
-
-      if (segments[0] === "wp-json" || segments[0] === "graphql") {
-        parsed.pathname = `/${[market, ...segments].join("/")}`;
-        return parsed.toString();
-      }
-    } catch {
-      return urlText;
-    }
-
-    return urlText;
-  };
-
   const headersToRecord = (headers?: HeadersInit): Record<string, string> => {
     if (!headers) return {};
     if (typeof Headers !== "undefined" && headers instanceof Headers) {
@@ -153,9 +123,7 @@ export async function register() {
           if (market && !Object.keys(outputHeaders).some((key) => key.toLowerCase() === "x-market")) {
             outputHeaders["X-Market"] = market;
           }
-          const rewrittenUrl = market ? rewriteCmsUrlForMarket(urlText, cmsHost, market) : urlText;
-          const rewrittenInput = typeof input === "string" || input instanceof URL ? rewrittenUrl : input;
-          return originalFetch(rewrittenInput, { ...init, headers: backendHeaders(outputHeaders) });
+          return originalFetch(input, { ...init, headers: backendHeaders(outputHeaders) });
         }
       } catch {
         // keep existing fetch behavior if URL parsing fails

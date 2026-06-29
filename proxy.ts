@@ -5,21 +5,17 @@ import { proxy as appProxy } from "./src/proxy";
 
 const DEV_ALLOWED_HOSTS = ["localhost", "127.0.0.1", "::1", "localhost:3000"];
 const CANONICAL_HOSTS_ENV = process.env.NEXT_PUBLIC_CANONICAL_HOSTS || process.env.CANONICAL_HOSTS || "";
-const DEFAULT_CANONICAL_HOST = "sasanperfumes.com";
-const REDIRECTABLE_HOST_SUFFIXES = [".shapehive.com", ".sasanperfumes.com"];
+const DEFAULT_CANONICAL_HOST = "store.sasanperfumes.com";
+const REDIRECTABLE_HOST_SUFFIXES = [".sasanperfumes.com"];
 const MARKET_PREFIX_SEGMENTS = new Set<string>(["qa", "om", "sa"]);
 const LOCALE_SEGMENTS = new Set<string>(["en", "ar"]);
 const MARKET_DOMAIN_HOSTS = [
-  "qa.shapehive.com",
-  "om.shapehive.com",
-  "sa.shapehive.com",
   "qa.sasanperfumes.com",
   "om.sasanperfumes.com",
   "sa.sasanperfumes.com",
 ];
 const KNOWN_CANONICAL_HOSTS = [
   "sasanperfumes.com",
-  "shapehive.com",
 ];
 
 function parseHost(value: string | undefined): string {

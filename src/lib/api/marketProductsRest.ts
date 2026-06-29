@@ -1,4 +1,4 @@
-import { backendHeaders, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
+import { backendMarketHeaders, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 
 const MARKET_CODES = new Set(["qa", "om", "sa"]);
@@ -73,7 +73,7 @@ async function fetchWooProducts(
 
   const response = await fetchWithTimeout(`${wpJsonBase}/wc/v3/products?${authenticated.toString()}`, {
     cache: "no-store",
-    headers: backendHeaders({ "x-market": market, "Cache-Control": "no-cache", "Pragma": "no-cache" }),
+    headers: backendMarketHeaders(market, { "Cache-Control": "no-cache", "Pragma": "no-cache" }),
   });
 
   if (!response.ok) {
@@ -110,7 +110,7 @@ async function fetchWooProductsByWpIds(
 
     const response = await fetchWithTimeout(`${wpJsonBase}/wc/v3/products/${id}?${productParams.toString()}`, {
       cache: "no-store",
-      headers: backendHeaders({ "x-market": market, "Cache-Control": "no-cache", "Pragma": "no-cache" }),
+      headers: backendMarketHeaders(market, { "Cache-Control": "no-cache", "Pragma": "no-cache" }),
     });
 
     if (!response.ok) continue;
@@ -140,7 +140,7 @@ async function lookupWpProductIds(
 
   const response = await fetchWithTimeout(`${wpJsonBase}/wp/v2/product?${params.toString()}`, {
     cache: "no-store",
-    headers: backendHeaders({ "Cache-Control": "no-cache", "Pragma": "no-cache" }),
+    headers: backendMarketHeaders(market, { "Cache-Control": "no-cache", "Pragma": "no-cache" }),
   });
 
   if (!response.ok) {

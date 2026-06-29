@@ -491,7 +491,7 @@ $requestedMarkets = array_filter(array_map('trim', explode(',', strtolower($mark
 
 $markets = array(
     'qa' => array(
-        'domain' => 'cms.shapehive.com',
+        'domain' => 'cms.sasanperfumes.com',
         'path' => '/qa/',
         'title' => 'ShapeHive Qatar',
         'frontend_url' => 'https://store.sasanperfumes.com/qa',
@@ -499,7 +499,7 @@ $markets = array(
         'country' => 'QA',
     ),
     'om' => array(
-        'domain' => 'cms.shapehive.com',
+        'domain' => 'cms.sasanperfumes.com',
         'path' => '/om/',
         'title' => 'ShapeHive Oman',
         'frontend_url' => 'https://store.sasanperfumes.com/om',
@@ -507,7 +507,7 @@ $markets = array(
         'country' => 'OM',
     ),
     'sa' => array(
-        'domain' => 'cms.shapehive.com',
+        'domain' => 'cms.sasanperfumes.com',
         'path' => '/sa/',
         'title' => 'ShapeHive Saudi Arabia',
         'frontend_url' => 'https://store.sasanperfumes.com/sa',
@@ -518,7 +518,7 @@ $markets = array(
 
 $sourceSiteId = (int) shapehive_market_arg_get($argv, '--source-site', '0');
 if ($sourceSiteId <= 0) {
-    $sourceSiteId = shapehive_market_get_site_id('cms.shapehive.com', '/');
+    $sourceSiteId = shapehive_market_get_site_id('cms.sasanperfumes.com', '/');
 }
 if ($sourceSiteId <= 0) {
     $sourceSiteId = get_main_site_id();

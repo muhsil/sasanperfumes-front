@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { getRequestMarket } from "@/lib/market/server";
 import { resolveFreightPrice } from "@/config/shipping";
-import { wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
+import { backendMarketHeaders, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -98,7 +98,7 @@ async function findZoneForCountry(country: string, marketCode?: string): Promise
   const zonesUrl = `${wpJsonBaseForMarket(marketCode)}/wc/v3/shipping/zones?${authParams}`;
   const zonesResponse = await fetch(zonesUrl, {
     method: "GET",
-    headers: { "Content-Type": "application/json" },
+    headers: backendMarketHeaders(marketCode, { "Content-Type": "application/json" }),
   });
 
   if (!zonesResponse.ok) return null;
@@ -111,7 +111,7 @@ async function findZoneForCountry(country: string, marketCode?: string): Promise
     const locationsUrl = `${wpJsonBaseForMarket(marketCode)}/wc/v3/shipping/zones/${zone.id}/locations?${authParams}`;
     const locationsResponse = await fetch(locationsUrl, {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
+      headers: backendMarketHeaders(marketCode, { "Content-Type": "application/json" }),
     });
 
     if (!locationsResponse.ok) continue;
@@ -142,7 +142,7 @@ async function getZoneMethods(zoneId: number, marketCode?: string): Promise<Zone
   const methodsUrl = `${wpJsonBaseForMarket(marketCode)}/wc/v3/shipping/zones/${zoneId}/methods?${authParams}`;
   const response = await fetch(methodsUrl, {
     method: "GET",
-    headers: { "Content-Type": "application/json" },
+    headers: backendMarketHeaders(marketCode, { "Content-Type": "application/json" }),
   });
 
   if (!response.ok) return [];

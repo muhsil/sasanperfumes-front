@@ -5,7 +5,6 @@ import {
   backendHeaders,
   extractMarketCode,
   parseBackendJson,
-  wpJsonBaseForMarket,
 } from "@/lib/utils/backendFetch";
 import type {
   HomePageACF,
@@ -775,18 +774,10 @@ async function fetchWPAPI<T>(
 ): Promise<T | null> {
   const { revalidate = 300, tags, locale, noCache = false, frontendHost } = options;
   const market = extractWPMarketFromHost(frontendHost) || await detectMarketFromRequest();
-  const apiBases = market ? [WP_API_BASE, wpJsonBaseForMarket(market)] : [WP_API_BASE];
-  const marketApiBase = market ? wpJsonBaseForMarket(market) : "";
-  const marketCacheBust = market ? `${market}-${Date.now()}` : "";
   const cmsFrontendHost = cmsFrontendHostForMarket(market, frontendHost);
   const urls = uniqueUrls(
-    apiBases.flatMap((apiBase) =>
-      buildWPAPIUrls(endpoint, locale, apiBase).map((url) =>
-        apiBase === marketApiBase
-          ? appendQueryParam(url, "_market_cache_bust", marketCacheBust)
-          : market ? appendQueryParam(url, "_market_cache_bust", marketCacheBust)
-            : cmsFrontendHost ? appendQueryParam(url, "frontend_host", cmsFrontendHost) : url
-      )
+    buildWPAPIUrls(endpoint, locale, WP_API_BASE).map((url) =>
+      cmsFrontendHost ? appendQueryParam(url, "frontend_host", cmsFrontendHost) : url
     )
   );
 
@@ -2463,14 +2454,14 @@ async function fetchBlogAPI(
   frontendHost: string | undefined,
   tags: string[]
 ): Promise<{ response: Response; raw: RawBlogPost[] } | null> {
-  const apiBases = market ? [wpJsonBaseForMarket(market), WP_API_BASE] : [WP_API_BASE];
   const urls = uniqueUrls(
-    apiBases.map((apiBase) => {
-      const url = `${apiBase}${endpoint}`;
-      return frontendHost ? appendQueryParam(url, "frontend_host", frontendHost) : url;
-    })
+    [`${WP_API_BASE}${endpoint}`].map((url) =>
+      frontendHost ? appendQueryParam(url, "frontend_host", frontendHost) : url
+    )
   );
-  const headers = market ? backendHeaders({ "x-market": market }) : backendHeaders();
+  const headers = market && frontendHost
+    ? backendHeaders({ "X-Frontend-Host": frontendHost, "X-Market": market })
+    : backendHeaders();
   const fetchOptions: RequestInit = {
     ...(disableRuntimeCache ? { cache: "no-store" } : { next: { revalidate: 300, tags } }),
     headers,

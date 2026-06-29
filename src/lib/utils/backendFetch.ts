@@ -34,6 +34,19 @@ export function backendHeaders(extra?: HeadersInit): HeadersInit {
   });
 }
 
+export function backendMarketHeaders(market?: string | null, extra?: HeadersInit): HeadersInit {
+  const cleanMarket = extractMarketCode(market);
+  return backendHeaders({
+    ...(cleanMarket
+      ? {
+          "X-Market": cleanMarket,
+          "X-Frontend-Host": `store.sasanperfumes.com/${cleanMarket}`,
+        }
+      : {}),
+    ...headersToRecord(extra),
+  });
+}
+
 export function extractMarketCode(value?: string | null): string {
   if (!value) return "";
 
@@ -63,16 +76,7 @@ export function backendBaseForMarket(market?: string | null): string {
     return base;
   }
 
-  try {
-    const parsed = new URL(base);
-    const segments = parsed.pathname.split("/").filter(Boolean);
-    if (segments[0] !== cleanMarket) {
-      parsed.pathname = `/${[cleanMarket, ...segments].join("/")}`;
-    }
-    return parsed.toString().replace(/\/+$/, "");
-  } catch {
-    return `${base}/${cleanMarket}`;
-  }
+  return base;
 }
 
 export function wpJsonBaseForMarket(market?: string | null): string {
@@ -82,30 +86,20 @@ export function wpJsonBaseForMarket(market?: string | null): string {
 export function rewriteBackendUrlForMarket(url: string, market?: string | null): string {
   const cleanMarket = extractMarketCode(market);
   if (!cleanMarket) return url;
-
-  try {
-    const parsed = new URL(url);
-    const apiHost = new URL(API_BASE).hostname.toLowerCase();
-    if (parsed.hostname.toLowerCase() !== apiHost) {
-      return url;
-    }
-
-    const segments = parsed.pathname.split("/").filter(Boolean);
-    if (segments[0] === cleanMarket) {
-      return parsed.toString();
-    }
-
-    parsed.pathname = `/${[cleanMarket, ...segments].join("/")}`;
-    return parsed.toString();
-  } catch {
-    return url;
-  }
+  return url;
 }
 
 export function backendPostHeaders(extra?: HeadersInit): HeadersInit {
   return backendHeaders({
     "Content-Type": "application/json",
     ...extra,
+  });
+}
+
+export function backendMarketPostHeaders(market?: string | null, extra?: HeadersInit): HeadersInit {
+  return backendMarketHeaders(market, {
+    "Content-Type": "application/json",
+    ...headersToRecord(extra),
   });
 }
 
