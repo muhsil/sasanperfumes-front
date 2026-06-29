@@ -7,6 +7,7 @@ import { Plus, Heart, GitCompare, Search, Check } from "lucide-react";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { CountdownTimer } from "@/components/common/CountdownTimer";
 import { ProductBadges } from "@/components/shop/ProductBadges";
+import { DiscountBadge } from "@/components/shop/DiscountBadge";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useComparison } from "@/contexts/ComparisonContext";
@@ -156,6 +157,10 @@ export function ProductCard({ product, locale, className, wcProduct }: ProductCa
               onSale={product.onSale}
               outOfStock={isOutOfStock}
               className={cn("flex-col flex-nowrap", isAr ? "items-end" : "items-start")}
+            />
+            <DiscountBadge
+              productId={product.databaseId}
+              className="inline-flex items-center rounded-sm border px-2 py-0.5 !text-[9px] font-bold uppercase leading-tight tracking-[0.12em] shadow-sm"
             />
           </div>
 

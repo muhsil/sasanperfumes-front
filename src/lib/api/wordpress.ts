@@ -2773,3 +2773,25 @@ export async function getBrandsSliderData(locale?: Locale): Promise<BrandsSlider
   return rebrandApiContent(data ?? null);
 }
 
+/* ── Discount Rules ── */
+
+import type { DiscountRule } from "@/types/discount";
+
+export async function getDiscountRules(frontendHost?: string): Promise<DiscountRule[]> {
+  const rules = await fetchWPAPI<DiscountRule[]>(
+    "/shapehive/v1/discount-rules",
+    {
+      noCache: true,
+      frontendHost,
+    }
+  );
+  if (!rules || !Array.isArray(rules)) return [];
+
+  const now = new Date();
+  return rules.filter((rule) => {
+    if (rule.start_date && new Date(rule.start_date) > now) return false;
+    if (rule.end_date && new Date(rule.end_date) < now) return false;
+    return true;
+  });
+}
+
