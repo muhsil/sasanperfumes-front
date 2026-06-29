@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { ShoppingBag, X } from "lucide-react";
 import Link from "next/link";
 import { useCart } from "@/contexts/CartContext";
 import { useFreeGift, NEW_GIFT_ADDED_EVENT } from "@/contexts/FreeGiftContext";
+import { useDiscountRules } from "@/contexts/DiscountRulesContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { calculateCartDiscounts } from "@/lib/discountRules";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { CartItemSkeleton } from "@/components/common/Skeleton";
 import MuiDrawer from "@mui/material/Drawer";
@@ -35,6 +37,7 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
   } = useCart();
 
     const { isFreeGiftItem, activeGifts, getGiftProgress } = useFreeGift();
+    const { rules: discountRules } = useDiscountRules();
     const { currency } = useCurrency();
     const giftProgress = getGiftProgress();
     const marketPrefix = useMarketPrefix();
@@ -67,6 +70,10 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
   const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
   const divisor = Math.pow(10, currencyMinorUnit);
   const hasOnlyPendingItems = cartItems.length > 0 && cartItems.every((item) => item.item_key.startsWith("temp-"));
+  const cartDiscounts = useMemo(
+    () => calculateCartDiscounts(cartItems.filter((item) => !isFreeGiftItem(item.item_key)), discountRules),
+    [cartItems, discountRules, isFreeGiftItem]
+  );
 
   const handleQuantityChange = async (itemKey: string, newQuantity: number) => {
     if (newQuantity < 1) return;
@@ -114,6 +121,17 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
           </span>
         </div>
       )}
+      {cartDiscounts.map((discount) => (
+        <div key={discount.ruleId} className="flex items-center justify-between text-green-600">
+          <span className="text-sm font-medium">{discount.label}</span>
+          <span className="inline-flex items-center gap-1 text-sm font-medium">
+            -<FormattedPrice
+              price={discount.amount / divisor}
+              iconSize="xs"
+            />
+          </span>
+        </div>
+      ))}
       {/* Customs Fees */}
       {cart?.fees && cart.fees.length > 0 && cart.fees.map((fee, index) => (
         <div key={index} className="flex items-center justify-between">

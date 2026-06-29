@@ -11,6 +11,7 @@ import { CountrySelect, type CountryOption } from "@/components/common/CountrySe
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { useCart } from "@/contexts/CartContext";
+import { useDiscountRules } from "@/contexts/DiscountRulesContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { getCustomer, getSavedAddressesFromCustomer, saveSavedAddresses, generateAddressId, resolveCountryCode, type Customer, type SavedAddress } from "@/lib/api/customer";
@@ -29,6 +30,7 @@ import { decodeHtmlEntities } from "@/lib/utils";
 import { GiftWrapOption } from "@/components/checkout/GiftWrapOption";
 import { CheckoutLoyaltyPoints } from "@/components/checkout/CheckoutLoyaltyPoints";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
+import { calculateCartDiscounts, getCartDiscountTotal } from "@/lib/discountRules";
 
 interface ShippingRate {
   rate_id: string;
@@ -161,6 +163,7 @@ export default function CheckoutClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
         const { cart, cartItems, cartSubtotal, cartTotal, clearCart, removeCoupon, selectedCoupons, couponDiscount, clearSelectedCoupons, isLoading: isCartLoading } = useCart();
+        const { rules: discountRules } = useDiscountRules();
         const { isAuthenticated, user, isLoading: isAuthLoading } = useAuth();
         const { currency, convertPrice, getCurrencyInfo } = useCurrency();
     // For variable products, use parent_id for brand/category lookup
@@ -212,6 +215,11 @@ export default function CheckoutClient() {
   
   const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
   const divisor = Math.pow(10, currencyMinorUnit);
+  const cartDiscounts = useMemo(
+    () => calculateCartDiscounts(cartItems, discountRules),
+    [cartItems, discountRules]
+  );
+  const promotionalDiscountTotal = getCartDiscountTotal(cartDiscounts);
 
   const [formData, setFormData] = useState<CheckoutFormData>({
     shipping: { ...emptyAddress },
@@ -466,7 +474,7 @@ export default function CheckoutClient() {
           return () => clearInterval(timer);
         }, [emptyCartCountdown, router, locale]);
 
-        const discountedCartSubtotal = Math.max((parseFloat(cartSubtotal) || 0) - couponDiscount, 0);
+        const discountedCartSubtotal = Math.max((parseFloat(cartSubtotal) || 0) - couponDiscount - promotionalDiscountTotal, 0);
 
         const fetchShippingMethods = async (country: string, city: string, postcode: string) => {
           setIsLoadingShipping(true);
@@ -516,7 +524,7 @@ export default function CheckoutClient() {
             return () => clearTimeout(timeoutId);
           }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        }, [couponDiscount, formData.shipping.country, formData.shipping.city, formData.shipping.postalCode, cartSubtotal]);
+        }, [couponDiscount, promotionalDiscountTotal, formData.shipping.country, formData.shipping.city, formData.shipping.postalCode, cartSubtotal]);
 
         // Calculate customs fee client-side when shipping country is not UAE
         // The WooCommerce Extra Fees plugin applies a 20% "Customs fees" for non-UAE countries,
@@ -600,8 +608,8 @@ export default function CheckoutClient() {
         .filter(fee => fee.name.toLowerCase() === "customs fees")
         .reduce((sum, fee) => sum + (parseFloat(fee.fee) || 0), 0);
       const clientCustomsFee = customsFee ? (parseFloat(customsFee.fee) || 0) : 0;
-      return baseTotal - serverCustomsFeeTotal + clientCustomsFee;
-    }, [discountedCartSubtotal, shippingTotal, shippingPackages, cartTotal, cartFeeTotal, customsFee, cart?.fees]);
+      return Math.max(baseTotal - promotionalDiscountTotal - serverCustomsFeeTotal + clientCustomsFee, 0);
+    }, [discountedCartSubtotal, shippingTotal, shippingPackages, cartTotal, cartFeeTotal, customsFee, cart?.fees, promotionalDiscountTotal]);
 
     const breadcrumbItems = [
     { name: isRTL ? "Ø§Ù„Ø³Ù„Ø©" : "Cart", href: `${marketPrefix}/${locale}/cart` },
@@ -1098,6 +1106,15 @@ export default function CheckoutClient() {
                 });
               });
           }
+          cartDiscounts.forEach((discount) => {
+            const discountAmount = convertPrice(discount.amount / divisor);
+            if (discountAmount > 0) {
+              feeLines.push({
+                name: discount.label,
+                total: (-discountAmount).toFixed(getCurrencyInfo().decimals),
+              });
+            }
+          });
           // Add client-side customs fee, or server-side customs fees if no client-side
           if (customsFee) {
             feeLines.push({
@@ -2275,6 +2292,17 @@ export default function CheckoutClient() {
                                   </span>
                                 </div>
                               )}
+                              {cartDiscounts.map((discount) => (
+                                <div key={discount.ruleId} className="flex justify-between text-sm text-green-600">
+                                  <span>{discount.label}</span>
+                                  <span className="inline-flex items-center gap-1">
+                                    -<FormattedPrice
+                                      price={discount.amount / divisor}
+                                      iconSize="xs"
+                                    />
+                                  </span>
+                                </div>
+                              ))}
                               <CheckoutLoyaltyPoints
                                 subtotal={cartSubtotal}
                                 isRTL={isRTL}

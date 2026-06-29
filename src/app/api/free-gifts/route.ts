@@ -5,12 +5,9 @@ export const revalidate = 0;
 import { API_BASE, backendHeaders, noCacheUrl, parseBackendJson } from "@/lib/utils/backendFetch";
 import { normalizeMarketHost } from "@/config/market";
 
-const FREE_GIFTS_CACHE_TTL = 5 * 60 * 1000;
-interface CachedRules {
-  data: { success: boolean; rules: unknown[] };
-  timestamp: number;
-}
-const rulesCache = new Map<string, CachedRules>();
+const NO_STORE_HEADERS = {
+  "Cache-Control": "no-store, max-age=0",
+};
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,15 +19,6 @@ export async function GET(request: NextRequest) {
       request.headers.get("x-forwarded-host") ||
       request.headers.get("host")
     );
-
-    const cacheKey = `${frontendHost || "default"}_${currency || ""}_${locale || ""}`;
-    const cached = rulesCache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < FREE_GIFTS_CACHE_TTL) {
-      return NextResponse.json(cached.data, {
-        headers: {
-        },
-      });
-    }
 
     let url = `${API_BASE}/wp-json/sasanperfumes-free-gifts/v1/rules`;
     const params: string[] = [];
@@ -58,11 +46,9 @@ export async function GET(request: NextRequest) {
         rules: [],
         warning: `Free gift rules endpoint returned ${response.status}`,
       };
-      rulesCache.set(cacheKey, { data: responseData, timestamp: Date.now() });
       return NextResponse.json(responseData, {
         status: 200,
-        headers: {
-        },
+        headers: NO_STORE_HEADERS,
       });
     }
 
@@ -84,11 +70,9 @@ export async function GET(request: NextRequest) {
     }
 
     const responseData = { success: true, rules: (data.rules as unknown[]) || [] };
-    rulesCache.set(cacheKey, { data: responseData, timestamp: Date.now() });
 
     return NextResponse.json(responseData, {
-      headers: {
-      },
+      headers: NO_STORE_HEADERS,
     });
   } catch (error) {
     return NextResponse.json(
@@ -97,7 +81,7 @@ export async function GET(request: NextRequest) {
         rules: [],
         warning: error instanceof Error ? error.message : "Network error occurred",
       },
-      { status: 200 }
+      { status: 200, headers: NO_STORE_HEADERS }
     );
   }
 }

@@ -1,6 +1,10 @@
 export interface DiscountRule {
   id: string;
   name: string;
+  enabled?: boolean | number | string;
+  is_active?: boolean | number | string;
+  active?: boolean | number | string;
+  status?: string | number;
   type: "bogo" | "percentage" | "fixed" | "bulk";
   buy_quantity: number;
   get_quantity: number;

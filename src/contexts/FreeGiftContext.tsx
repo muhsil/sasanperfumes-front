@@ -8,43 +8,6 @@ import { useCurrency, type CurrencyData } from "./CurrencyContext";
 // Event for notifying when a new gift is added (used by MiniCartDrawer)
 export const NEW_GIFT_ADDED_EVENT = "SasanPerfumes:new-gift-added";
 
-const RULES_CACHE_KEY = "sasanperfumes_free_gift_rules_cache";
-const RULES_CACHE_TTL = 5 * 60 * 1000;
-
-interface CachedRulesData {
-  rules: FreeGiftRule[];
-  currency: string;
-  locale: string;
-  timestamp: number;
-}
-
-function getCachedRules(currency: string, locale: string): FreeGiftRule[] | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const cached = sessionStorage.getItem(RULES_CACHE_KEY);
-    if (!cached) return null;
-    const data: CachedRulesData = JSON.parse(cached);
-    if (data.currency !== currency || data.locale !== locale) return null;
-    if (Date.now() - data.timestamp > RULES_CACHE_TTL) {
-      sessionStorage.removeItem(RULES_CACHE_KEY);
-      return null;
-    }
-    return data.rules;
-  } catch {
-    return null;
-  }
-}
-
-function setCachedRules(rules: FreeGiftRule[], currency: string, locale: string): void {
-  if (typeof window === "undefined") return;
-  try {
-    const data: CachedRulesData = { rules, currency, locale, timestamp: Date.now() };
-    sessionStorage.setItem(RULES_CACHE_KEY, JSON.stringify(data));
-  } catch {
-    // Ignore storage errors
-  }
-}
-
 export interface FreeGiftRule {
   id: string;
   enabled: boolean;
@@ -221,13 +184,6 @@ export function FreeGiftProvider({ children, locale }: FreeGiftProviderProps) {
   }, [addToCart, removeCartItem, updateCartItem]);
 
   const fetchRules = useCallback(async () => {
-    const cached = getCachedRules("all", locale);
-    if (cached) {
-      setRules(cached);
-      setIsLoading(false);
-      return;
-    }
-
     try {
       setIsLoading(true);
       const response = await fetch(`/api/free-gifts?locale=${locale}`);
@@ -235,7 +191,6 @@ export function FreeGiftProvider({ children, locale }: FreeGiftProviderProps) {
 
       if (data.success && data.rules) {
         setRules(data.rules);
-        setCachedRules(data.rules, "all", locale);
       }
     } catch (error) {
       console.warn(`Failed to fetch free gift rules: ${error instanceof Error ? error.message : String(error)}`);

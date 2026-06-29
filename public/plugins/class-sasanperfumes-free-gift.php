@@ -175,7 +175,9 @@ function sasanperfumes_free_gifts_render_admin_page() {
             
             <div id="sasanperfumes-free-gifts-rules">
                 <?php if (empty($rules)): ?>
-                    <?php sasanperfumes_free_gifts_render_rule_row(0, array(), $products_en, $products_ar, $currencies); ?>
+                    <div class="notice notice-info inline sasanperfumes-free-gifts-empty" style="margin:0 0 20px;padding:12px 16px;">
+                        <p><strong>No free gift rules are active.</strong> Click "Add New Rule" to create one. A rule only becomes active after a product is selected and the rules are saved.</p>
+                    </div>
                 <?php else: ?>
                     <?php foreach ($rules as $index => $rule): ?>
                         <?php sasanperfumes_free_gifts_render_rule_row($index, $rule, $products_en, $products_ar, $currencies); ?>
@@ -190,7 +192,11 @@ function sasanperfumes_free_gifts_render_admin_page() {
         
         <script>
         jQuery(document).ready(function($) {
-            var ruleIndex = <?php echo max(0, count($rules) - 1); ?>;
+            var ruleIndex = <?php echo empty($rules) ? -1 : count($rules) - 1; ?>;
+
+            function updateEmptyState() {
+                $('.sasanperfumes-free-gifts-empty').toggle($('.sasanperfumes-free-gift-rule').length === 0);
+            }
             
             $('#sasanperfumes-add-free-gift-rule').on('click', function() {
                 ruleIndex++;
@@ -272,13 +278,17 @@ function sasanperfumes_free_gifts_render_admin_page() {
                     </table>
                 </div>`;
                 $('#sasanperfumes-free-gifts-rules').append(template);
+                updateEmptyState();
             });
             
             $(document).on('click', '.sasanperfumes-remove-rule', function() {
                 if (confirm('Are you sure you want to remove this rule?')) {
                     $(this).closest('.sasanperfumes-free-gift-rule').remove();
+                    updateEmptyState();
                 }
             });
+
+            updateEmptyState();
         });
         </script>
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
@@ -12,8 +12,10 @@ import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { BundleItemsList } from "@/components/cart/BundleItemsList";
 import { useCart } from "@/contexts/CartContext";
 import { useFreeGift, getLocalizedProduct, containsArabic } from "@/contexts/FreeGiftContext";
+import { useDiscountRules } from "@/contexts/DiscountRulesContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { calculateCartDiscounts, getCartDiscountTotal } from "@/lib/discountRules";
 import { featureFlags, type Locale } from "@/config/site";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { useProductMeta } from "@/hooks/useProductCategories";
@@ -43,10 +45,16 @@ export default function CartPage() {
   } = useCart();
             const { isAuthenticated, user } = useAuth();
             const { isFreeGiftItem, activeGifts, getGiftProgress, isLoading: isLoadingGiftRules, rules } = useFreeGift();
+            const { rules: discountRules } = useDiscountRules();
             const { currency, convertPrice } = useCurrency();
             const giftProgress = getGiftProgress();
     
       const hasGiftItemsInCart = cartItems.some(item => isFreeGiftItem(item.item_key));
+      const cartDiscounts = useMemo(
+        () => calculateCartDiscounts(cartItems.filter((item) => !isFreeGiftItem(item.item_key)), discountRules),
+        [cartItems, discountRules, isFreeGiftItem]
+      );
+      const promotionalDiscountTotal = getCartDiscountTotal(cartDiscounts);
 
     // For variable products, use parent_id for brand/category lookup since
     // the product-categories API indexes by parent product ID, not variation ID.
@@ -69,6 +77,7 @@ export default function CartPage() {
   
   const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
   const divisor = Math.pow(10, currencyMinorUnit);
+  const adjustedCartTotal = Math.max((parseFloat(cartTotal) || 0) - promotionalDiscountTotal, 0);
 
   const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState("");
@@ -662,6 +671,17 @@ export default function CartPage() {
                       </span>
                     </div>
                   )}
+                {cartDiscounts.map((discount) => (
+                  <div key={discount.ruleId} className="flex justify-between text-green-600">
+                    <span>{discount.label}</span>
+                    <span className="inline-flex items-center gap-1">
+                      -<FormattedPrice
+                        price={discount.amount / divisor}
+                        iconSize="xs"
+                      />
+                    </span>
+                  </div>
+                ))}
                               <div className="flex justify-between text-brand-muted">
                                 <span>{texts.shipping}</span>
                                 <span>
@@ -689,7 +709,7 @@ export default function CartPage() {
                             <div className="flex justify-between py-3 text-base font-semibold text-brand-primary md:py-4 md:text-lg">
                 <span>{texts.orderTotal}</span>
                 <FormattedPrice
-                  price={parseFloat(cartTotal) / divisor}
+                  price={adjustedCartTotal / divisor}
                   iconSize="sm"
                 />
               </div>
@@ -759,7 +779,7 @@ export default function CartPage() {
             <div className="flex flex-col">
               <span className="text-xs text-brand-muted">{texts.orderTotal}</span>
               <FormattedPrice
-                price={parseFloat(cartTotal) / divisor}
+                price={adjustedCartTotal / divisor}
                 className="text-base font-bold text-brand-primary"
                 iconSize="xs"
               />

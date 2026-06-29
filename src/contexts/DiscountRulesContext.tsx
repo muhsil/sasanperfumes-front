@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { getActiveDiscountRules, isDiscountRuleEnabled } from "@/lib/discountRules";
 import type { DiscountRule } from "@/types/discount";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
@@ -25,7 +26,7 @@ export function DiscountRulesProvider({
   children: ReactNode;
   initialRules?: DiscountRule[];
 }) {
-  const [rules, setRules] = useState<DiscountRule[]>(initialRules ?? []);
+  const [rules, setRules] = useState<DiscountRule[]>(() => getActiveDiscountRules(initialRules ?? []));
   const [isLoading, setIsLoading] = useState(!initialRules);
   const marketPrefix = useMarketPrefix();
 
@@ -39,7 +40,7 @@ export function DiscountRulesProvider({
     fetch(`/api/discount-rules?${params.toString()}`)
       .then((res) => res.json())
       .then((data: DiscountRule[]) => {
-        if (Array.isArray(data)) setRules(data);
+        if (Array.isArray(data)) setRules(getActiveDiscountRules(data));
       })
       .catch(() => {})
       .finally(() => setIsLoading(false));
@@ -48,9 +49,10 @@ export function DiscountRulesProvider({
   const getRulesForProduct = useCallback(
     (productId: number, categoryIds?: number[]): DiscountRule[] => {
       return rules.filter((rule) => {
+        if (!isDiscountRuleEnabled(rule)) return false;
         if (rule.applies_to === "all") return true;
-        if (rule.applies_to === "product" && rule.product_ids.includes(productId)) return true;
-        if (rule.applies_to === "category" && categoryIds?.some((id) => rule.category_ids.includes(id))) return true;
+        if (rule.applies_to === "product" && (rule.product_ids || []).includes(productId)) return true;
+        if (rule.applies_to === "category" && categoryIds?.some((id) => (rule.category_ids || []).includes(id))) return true;
         return false;
       });
     },

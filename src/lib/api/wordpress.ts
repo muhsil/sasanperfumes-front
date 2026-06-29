@@ -1283,9 +1283,22 @@ export async function getMenuBySlug(slug: string, locale?: Locale, frontendHost?
   return transformMenu(data);
 }
 
+const LEGACY_CATEGORY_DRAWER_SLUGS = new Set(["flower-scents", "rimal", "serenity", "liwan"]);
+
+function isLegacyCategoryDrawerItem(item: WPMenuItem): boolean {
+  const slug = extractCategorySlugFromUrl(item.url || "").toLowerCase();
+  return LEGACY_CATEGORY_DRAWER_SLUGS.has(slug);
+}
+
 // Fetch categories drawer menu (independent from mobile hamburger and desktop header)
 export async function getCategoriesDrawerMenu(locale?: Locale, frontendHost?: string): Promise<WPMenu | null> {
-  return getMenuBySlug("categories-drawer", locale, frontendHost);
+  const menu = await getMenuBySlug("categories-drawer", locale, frontendHost);
+  if (!menu) return null;
+
+  return {
+    ...menu,
+    items: menu.items.filter((item) => !isLegacyCategoryDrawerItem(item)),
+  };
 }
 
 // Fetch footer menu
@@ -2816,23 +2829,19 @@ export async function getBrandsSliderData(locale?: Locale): Promise<BrandsSlider
 
 /* ── Discount Rules ── */
 
+import { getActiveDiscountRules } from "@/lib/discountRules";
 import type { DiscountRule } from "@/types/discount";
 
 export async function getDiscountRules(frontendHost?: string): Promise<DiscountRule[]> {
   const rules = await fetchWPAPI<DiscountRule[]>(
     "/shapehive/v1/discount-rules",
     {
-      revalidate: 600,
+      noCache: true,
       frontendHost,
     }
   );
   if (!rules || !Array.isArray(rules)) return [];
 
-  const now = new Date();
-  return rules.filter((rule) => {
-    if (rule.start_date && new Date(rule.start_date) > now) return false;
-    if (rule.end_date && new Date(rule.end_date) < now) return false;
-    return true;
-  });
+  return getActiveDiscountRules(rules);
 }
 
