@@ -1294,7 +1294,7 @@ export async function getBundleConfig(
       url = `${url}&lang=${locale}`;
     }
     
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       url,
       {
         next: {
@@ -1379,7 +1379,7 @@ export async function getFreeGiftProductInfo(currency?: string, frontendHost?: s
       url += `${url.includes("?") ? "&" : "?"}currency=${encodeURIComponent(currency)}`;
     }
 
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       headers: backendHeaders(),
       next: {
         revalidate: 600, // Free gift rules rarely change - cache for 10 minutes
@@ -1468,7 +1468,7 @@ export async function getHiddenProductIds(frontendHost?: string): Promise<number
       frontendHost
     );
     
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       headers: {
         ...(backendHeaders(market ? { "Origin": cmsApiOrigin(), "X-Market": market } : undefined) as Record<string, string>),
         Authorization: `Basic ${Buffer.from(`${consumerKey}:${consumerSecret}`).toString("base64")}`,
@@ -1504,7 +1504,7 @@ export async function getHiddenProductIds(frontendHost?: string): Promise<number
 // Used to identify bundle products in shop listings
 export async function getBundleEnabledProductSlugs(frontendHost?: string): Promise<string[]> {
   try {
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       withFrontendHostParam(
         `${siteConfig.apiUrl}/wp-json/sasanperfumes-bundles/v1/enabled-products`,
         frontendHost
@@ -1520,7 +1520,7 @@ export async function getBundleEnabledProductSlugs(frontendHost?: string): Promi
 
     if (!response.ok) {
       // Fallback: try to get from bundles list
-      const bundlesResponse = await fetch(
+      const bundlesResponse = await fetchWithTimeout(
         withFrontendHostParam(
           `${siteConfig.apiUrl}/wp-json/sasanperfumes-bundles/v1/bundles`,
           frontendHost
@@ -1607,7 +1607,7 @@ export async function getProductUpsellIds(
       frontendHost
     );
 
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       headers: {
         ...(backendHeaders() as Record<string, string>),
         Authorization: `Basic ${Buffer.from(`${process.env.WC_CONSUMER_KEY}:${process.env.WC_CONSUMER_SECRET}`).toString("base64")}`,
@@ -1689,7 +1689,7 @@ export async function getFeaturedProducts(params?: {
       params?.frontendHost
     );
     
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       headers: {
         ...(backendHeaders() as Record<string, string>),
         Authorization: `Basic ${Buffer.from(`${process.env.WC_CONSUMER_KEY}:${process.env.WC_CONSUMER_SECRET}`).toString("base64")}`,

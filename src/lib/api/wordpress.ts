@@ -2477,7 +2477,7 @@ async function fetchBlogAPI(
   };
 
   for (const apiUrl of urls) {
-    const response = await fetch(apiUrl, fetchOptions);
+    const response = await fetchWPUrl(apiUrl, fetchOptions);
     if (!response.ok) {
       continue;
     }
