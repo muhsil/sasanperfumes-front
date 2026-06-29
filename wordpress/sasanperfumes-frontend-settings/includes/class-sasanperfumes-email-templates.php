@@ -15,6 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class sasanperfumes_Email_Templates {
 
 	private static $instance = null;
+	private const DEFAULT_FRONTEND_URL = 'https://store.sasanperfumes.com';
 
 	public static function get_instance() {
 		if ( null === self::$instance ) {
@@ -31,6 +32,97 @@ class sasanperfumes_Email_Templates {
 		add_action( 'init', array( $this, 'remove_mobile_app_banner' ) );
 		add_filter( 'woocommerce_email_from_name', array( $this, 'override_email_from_name' ), 999 );
 		add_filter( 'woocommerce_email_from_address', array( $this, 'override_email_from_address' ), 999 );
+		add_filter( 'wp_mail_from_name', array( $this, 'override_email_from_name' ), 999 );
+		add_filter( 'wp_mail_from', array( $this, 'override_email_from_address' ), 999 );
+		add_filter( 'woocommerce_email_enabled_customer_new_account', '__return_true', 999 );
+		add_filter( 'woocommerce_email_enabled_customer_reset_password', '__return_true', 999 );
+		add_filter( 'password_change_email', array( $this, 'rewrite_password_change_email' ), 999, 3 );
+		add_filter( 'email_change_email', array( $this, 'rewrite_email_change_email' ), 999, 3 );
+		add_action( 'rest_api_init', array( $this, 'register_account_email_routes' ) );
+	}
+
+	private function get_frontend_url() {
+		return self::get_customer_frontend_url();
+	}
+
+	public static function get_customer_frontend_url() {
+		if ( function_exists( 'sasanperfumes_get_frontend_url' ) ) {
+			$resolved_url = untrailingslashit( sasanperfumes_get_frontend_url( self::DEFAULT_FRONTEND_URL ) );
+			if ( ! self::is_backend_url( $resolved_url ) ) {
+				return $resolved_url;
+			}
+		}
+
+		$configured_url = trim( (string) get_option( 'sasanperfumes_frontend_url', '' ) );
+		$configured_url = untrailingslashit( $configured_url !== '' ? $configured_url : self::DEFAULT_FRONTEND_URL );
+
+		if ( self::is_backend_url( $configured_url ) ) {
+			return self::DEFAULT_FRONTEND_URL;
+		}
+
+		return $configured_url;
+	}
+
+	private static function is_backend_url( $url ) {
+		$host = wp_parse_url( (string) $url, PHP_URL_HOST );
+		return is_string( $host ) && preg_match( '/(^|\.)cms\.sasanperfumes\.(com|ae)$/i', $host );
+	}
+
+	public function register_account_email_routes() {
+		if ( ! function_exists( 'sasanperfumes_register_rest_route' ) ) {
+			return;
+		}
+
+		sasanperfumes_register_rest_route(
+			'/account/request-password-reset',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'handle_password_reset_request' ),
+				'permission_callback' => '__return_true',
+				'args'                => array(
+					'email' => array(
+						'required'          => true,
+						'sanitize_callback' => 'sanitize_email',
+					),
+				),
+			)
+		);
+	}
+
+	public function handle_password_reset_request( $request ) {
+		$email = sanitize_email( (string) $request->get_param( 'email' ) );
+
+		if ( ! is_email( $email ) ) {
+			return new WP_REST_Response(
+				array(
+					'success' => false,
+					'code'    => 'invalid_email',
+					'message' => 'Please enter a valid email address.',
+				),
+				400
+			);
+		}
+
+		$user = get_user_by( 'email', $email );
+
+		if ( $user instanceof WP_User ) {
+			$reset_key = get_password_reset_key( $user );
+
+			if ( ! is_wp_error( $reset_key ) ) {
+				if ( function_exists( 'WC' ) && WC() ) {
+					WC()->mailer();
+				}
+
+				do_action( 'woocommerce_reset_password_notification', $user->user_login, $reset_key );
+			}
+		}
+
+		return rest_ensure_response(
+			array(
+				'success' => true,
+				'message' => 'If an account exists with this email, you will receive a password reset link shortly.',
+			)
+		);
 	}
 
 	public function remove_app_promo_from_footer( $footer_text ) {
@@ -62,6 +154,38 @@ class sasanperfumes_Email_Templates {
 
 	public function override_email_from_address( $from_address ) {
 		return 'accounts@sasanperfumes.com';
+	}
+
+	public function rewrite_password_change_email( $pass_change_email, $user, $userdata ) {
+		$frontend_url = $this->get_frontend_url();
+
+		$pass_change_email['subject'] = '[%s] Password Changed';
+		$pass_change_email['message'] = "Hi ###USERNAME###,\n\n"
+			. "This notice confirms that your password was changed on ###SITENAME###.\n\n"
+			. "If you did not change your password, please contact us at\n"
+			. "support@sasanperfumes.com\n\n"
+			. "This email has been sent to ###EMAIL###\n\n"
+			. "Regards,\n"
+			. "All at ###SITENAME###\n"
+			. $frontend_url;
+
+		return $pass_change_email;
+	}
+
+	public function rewrite_email_change_email( $email_change_email, $user, $userdata ) {
+		$frontend_url = $this->get_frontend_url();
+
+		$email_change_email['subject'] = '[%s] Email Changed';
+		$email_change_email['message'] = "Hi ###USERNAME###,\n\n"
+			. "This notice confirms that your email address on ###SITENAME### was changed to ###NEW_EMAIL###.\n\n"
+			. "If you did not change your email, please contact us at\n"
+			. "support@sasanperfumes.com\n\n"
+			. "This email has been sent to ###EMAIL###\n\n"
+			. "Regards,\n"
+			. "All at ###SITENAME###\n"
+			. $frontend_url;
+
+		return $email_change_email;
 	}
 
 	public function override_woocommerce_template( $template, $template_name, $template_path ) {

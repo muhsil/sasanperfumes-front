@@ -70,6 +70,32 @@ async function tryWooCommerceLostPassword(email: string): Promise<boolean> {
   }
 }
 
+async function trySasanPasswordReset(email: string): Promise<boolean> {
+  try {
+    const response = await fetch(`${API_BASE}/wp-json/sasanperfumes/v1/account/request-password-reset`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    if (response.ok) {
+      return true;
+    }
+
+    const errorData = await response.json().catch(() => ({}));
+    if (response.status !== 404 && errorData.code !== "rest_no_route") {
+      console.error("Sasan password reset endpoint failed:", response.status, errorData);
+    }
+
+    return false;
+  } catch (error) {
+    console.error("Sasan password reset endpoint error:", error);
+    return false;
+  }
+}
+
 export async function POST(request: NextRequest): Promise<NextResponse<ForgotPasswordResponse>> {
   // Check rate limit
   const rateLimitResult = checkRateLimit(request, FORGOT_PASSWORD_RATE_LIMIT);
@@ -109,6 +135,13 @@ export async function POST(request: NextRequest): Promise<NextResponse<ForgotPas
     }
 
     const trimmedEmail = email.trim();
+
+    if (await trySasanPasswordReset(trimmedEmail)) {
+      return NextResponse.json({
+        success: true,
+        message: "If an account exists with this email, you will receive a password reset link shortly.",
+      });
+    }
 
     const bdpwrResponse = await fetch(`${API_BASE}/wp-json/bdpwr/v1/reset-password`, {
       method: "POST",
