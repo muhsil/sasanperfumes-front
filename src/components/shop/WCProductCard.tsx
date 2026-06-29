@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { Plus, Heart, Search, Check, Star } from "lucide-react";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { ProductBadges } from "@/components/shop/ProductBadges";
+import { DiscountBadge } from "@/components/shop/DiscountBadge";
 import { cn, decodeHtmlEntities, getProductSlugFromPermalink, BLUR_DATA_URL } from "@/lib/utils";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
@@ -228,6 +229,10 @@ export function WCProductCard({
                 outOfStock={isOutOfStock}
                 extraTagSlugs={extraBadgeSlugs}
                 className={cn("flex-col flex-nowrap", isRTL ? "items-end" : "items-start")}
+              />
+              <DiscountBadge
+                productId={product.id}
+                className="inline-flex items-center rounded-sm border px-2 py-0.5 !text-[9px] font-bold uppercase leading-tight tracking-[0.12em] shadow-sm"
               />
             </div>
 

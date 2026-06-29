@@ -20,6 +20,7 @@ import { ProductAddToCartButton } from "@/components/shop/ProductAddToCartButton
 import VariationStockBadge from "@/components/shop/VariationStockBadge";
 import { LoyaltyPointsBadge } from "@/components/shop/LoyaltyPointsBadge";
 import { ProductBadges } from "@/components/shop/ProductBadges";
+import { DiscountInfo } from "@/components/shop/DiscountInfo";
 import { ProductReviews } from "@/components/shop/ProductReviews";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { PaymentWidgets } from "@/components/payment/PaymentWidgets";
@@ -1495,6 +1496,14 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                 locale={locale as Locale}
                 extraTagSlugs={extraBadgeSlugs}
                 variant="detail"
+              />
+            </div>
+
+            <div className="mt-3">
+              <DiscountInfo
+                productId={product.id}
+                categoryIds={product.categories?.map((c) => c.id)}
+                locale={locale}
               />
             </div>
           </div>

@@ -12,11 +12,12 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { FreeGiftProvider } from "@/contexts/FreeGiftContext";
 import { ComparisonProvider } from "@/contexts/ComparisonContext";
+import { DiscountRulesProvider } from "@/contexts/DiscountRulesContext";
 import { getDictionary } from "@/i18n";
 import { siteConfig, localeConfig, type Locale } from "@/config/site";
 import { INDEX_FOLLOW_ROBOTS, generateOrganizationJsonLd, generateWebSiteJsonLd, generateLocalBusinessJsonLd } from "@/lib/utils/seo";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { getSiteSettings, getHeaderSettings, getPrimaryMenu, getMobileHeaderMenu, getMobileBottomBarMenu, getMobileBarSettings, getCategoriesDrawerMenu, getTopbarSettings, getSeoSettings, getFooterSettings, getWhatsAppSettings, getFeatureToggles, getStaticPageContent, mapRepeater, pickLocale } from "@/lib/api/wordpress";
+import { getSiteSettings, getHeaderSettings, getPrimaryMenu, getMobileHeaderMenu, getMobileBottomBarMenu, getMobileBarSettings, getCategoriesDrawerMenu, getTopbarSettings, getSeoSettings, getFooterSettings, getWhatsAppSettings, getFeatureToggles, getStaticPageContent, mapRepeater, pickLocale, getDiscountRules } from "@/lib/api/wordpress";
 import { getRequestMarket, getRequestFrontendHost } from "@/lib/market/server";
 import { getMarketPathPrefix } from "@/config/market";
 import { TrackingScripts } from "@/components/tracking";
@@ -123,6 +124,7 @@ export default async function LocaleLayout({
     platform: item.platform || "",
     url: item.url || "",
   }));
+  const discountRules = await getDiscountRules(frontendHost);
   const showWhatsApp = featureToggles.sasanperfumes_whatsapp_enabled !== false && (whatsAppSettings?.enabled ?? true);
   const showPromotionalPopup = featureToggles.sasanperfumes_popup_enabled === true;
   const showAbandonedCartPopup = featureToggles.sasanperfumes_ab_popup_enabled === true;
@@ -136,6 +138,7 @@ export default async function LocaleLayout({
                                         <CartProvider locale={validLocale}>
                                           <FreeGiftProvider locale={validLocale}>
                       <WishlistProvider locale={validLocale}>
+                        <DiscountRulesProvider initialRules={discountRules}>
               <JsonLd data={generateOrganizationJsonLd()} />
               <JsonLd data={generateWebSiteJsonLd()} />
               {generateLocalBusinessJsonLd().map((schema, i) => (
@@ -248,6 +251,7 @@ export default async function LocaleLayout({
               {showAbandonedCartPopup && <AbandonedCartPopup locale={validLocale} />}
               {showLiveChat && <LiveChatWidget />}
               <CompareDrawer locale={validLocale} />
+                        </DiscountRulesProvider>
                                                         </WishlistProvider>
                                             </FreeGiftProvider>
                     </CartProvider>
