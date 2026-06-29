@@ -9,7 +9,7 @@ const VALID_MARKETS = new Set(["qa", "om", "sa"]);
 export async function GET(request: NextRequest) {
   const rawMarket = request.nextUrl.searchParams.get("market") || "";
   const market = VALID_MARKETS.has(rawMarket) ? rawMarket : "";
-  const baseHost = siteConfig.apiUrl.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+  const baseHost = siteConfig.url.replace(/^https?:\/\//, "").replace(/\/+$/, "");
   const frontendHost = market ? `${baseHost}/${market}` : "";
 
   const rules = await getDiscountRules(frontendHost);

@@ -140,7 +140,12 @@ function sasanperfumes_free_gifts_render_admin_page() {
                     <table class="form-table">
                         <tr>
                             <th>Enabled</th>
-                            <td><label><input type="checkbox" name="sasanperfumes_free_gifts_rules[${ruleIndex}][enabled]" value="1" checked> Active</label></td>
+                            <td>
+                                <label><input type="checkbox" class="sasanperfumes-rule-enabled" name="sasanperfumes_free_gifts_rules[${ruleIndex}][enabled]" value="1" checked> Active</label>
+                                <button type="button" class="button sasanperfumes-toggle-rule-status" style="margin-left:10px;">Disable Rule</button>
+                                <span class="sasanperfumes-rule-status" style="margin-left:8px;font-weight:600;">Enabled</span>
+                                <p class="description">Disabled rules are saved, but they will not add gifts or hide products.</p>
+                            </td>
                         </tr>
                         <tr>
                             <th>Rule Name</th>
@@ -196,6 +201,7 @@ function sasanperfumes_free_gifts_render_admin_page() {
                     </table>
                 </div>`;
                 $('#sasanperfumes-free-gifts-rules').append(template);
+                updateRuleStatus($('.sasanperfumes-free-gift-rule').last());
                 updateEmptyState();
             });
             
@@ -204,6 +210,28 @@ function sasanperfumes_free_gifts_render_admin_page() {
                     $(this).closest('.sasanperfumes-free-gift-rule').remove();
                     updateEmptyState();
                 }
+            });
+
+            function updateRuleStatus($rule) {
+                var $checkbox = $rule.find('.sasanperfumes-rule-enabled');
+                var enabled = $checkbox.is(':checked');
+                $rule.toggleClass('sasanperfumes-rule-disabled', !enabled);
+                $rule.find('.sasanperfumes-rule-status').text(enabled ? 'Enabled' : 'Disabled');
+                $rule.find('.sasanperfumes-toggle-rule-status').text(enabled ? 'Disable Rule' : 'Enable Rule');
+            }
+
+            $(document).on('change', '.sasanperfumes-rule-enabled', function() {
+                updateRuleStatus($(this).closest('.sasanperfumes-free-gift-rule'));
+            });
+
+            $(document).on('click', '.sasanperfumes-toggle-rule-status', function() {
+                var $rule = $(this).closest('.sasanperfumes-free-gift-rule');
+                var $checkbox = $rule.find('.sasanperfumes-rule-enabled');
+                $checkbox.prop('checked', !$checkbox.is(':checked')).trigger('change');
+            });
+
+            $('.sasanperfumes-free-gift-rule').each(function() {
+                updateRuleStatus($(this));
             });
 
             updateEmptyState();
@@ -218,6 +246,7 @@ function sasanperfumes_free_gifts_render_admin_page() {
  */
 function sasanperfumes_free_gifts_render_rule_row($index, $rule, $products, $currencies) {
     $enabled = isset($rule['enabled']) ? $rule['enabled'] : true;
+    $id = isset($rule['id']) ? $rule['id'] : '';
     $name = isset($rule['name']) ? $rule['name'] : '';
     $min_cart_value = isset($rule['min_cart_value']) ? $rule['min_cart_value'] : 0;
     $currency = isset($rule['currency']) ? $rule['currency'] : 'AED';
@@ -232,7 +261,16 @@ function sasanperfumes_free_gifts_render_rule_row($index, $rule, $products, $cur
         <table class="form-table">
             <tr>
                 <th>Enabled</th>
-                <td><label><input type="checkbox" name="sasanperfumes_free_gifts_rules[<?php echo $index; ?>][enabled]" value="1" <?php checked($enabled); ?>> Active</label></td>
+                <td>
+                    <input type="hidden" name="sasanperfumes_free_gifts_rules[<?php echo $index; ?>][id]" value="<?php echo esc_attr($id); ?>">
+                    <label>
+                        <input type="checkbox" class="sasanperfumes-rule-enabled" name="sasanperfumes_free_gifts_rules[<?php echo $index; ?>][enabled]" value="1" <?php checked($enabled); ?>>
+                        Active
+                    </label>
+                    <button type="button" class="button sasanperfumes-toggle-rule-status" style="margin-left:10px;">Disable Rule</button>
+                    <span class="sasanperfumes-rule-status" style="margin-left:8px;font-weight:600;"></span>
+                    <p class="description">Disabled rules are saved, but they will not add gifts or hide products.</p>
+                </td>
             </tr>
             <tr>
                 <th>Rule Name</th>
@@ -444,7 +482,7 @@ function sasanperfumes_free_gifts_get_product_ids() {
     
     foreach ($rules as $rule) {
         // Only include products where hide_from_shop is enabled for this rule
-        if (!empty($rule['product_id']) && !empty($rule['hide_from_shop'])) {
+        if (!empty($rule['enabled']) && !empty($rule['product_id']) && !empty($rule['hide_from_shop'])) {
             $product_ids[] = intval($rule['product_id']);
         }
     }

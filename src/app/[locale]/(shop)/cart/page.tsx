@@ -43,29 +43,33 @@ export default function CartPage() {
     couponDiscount,
     refreshCart,
   } = useCart();
-            const { isAuthenticated, user } = useAuth();
-            const { isFreeGiftItem, activeGifts, getGiftProgress, isLoading: isLoadingGiftRules, rules } = useFreeGift();
-            const { rules: discountRules } = useDiscountRules();
-            const { currency, convertPrice } = useCurrency();
-            const giftProgress = getGiftProgress();
-    
-      const hasGiftItemsInCart = cartItems.some(item => isFreeGiftItem(item.item_key));
-      const cartDiscounts = useMemo(
-        () => calculateCartDiscounts(cartItems.filter((item) => !isFreeGiftItem(item.item_key)), discountRules),
-        [cartItems, discountRules, isFreeGiftItem]
-      );
-      const promotionalDiscountTotal = getCartDiscountTotal(cartDiscounts);
+  const { isAuthenticated, user } = useAuth();
+  const { isFreeGiftItem, activeGifts, getGiftProgress, isLoading: isLoadingGiftRules, rules } = useFreeGift();
+  const { rules: discountRules } = useDiscountRules();
+  const { currency, convertPrice } = useCurrency();
+  const giftProgress = getGiftProgress();
 
-    // For variable products, use parent_id for brand/category lookup since
-    // the product-categories API indexes by parent product ID, not variation ID.
-    const getParentId = (item: CoCartItem): number => {
-      const pid = item.meta?.variation?.Parent_id || item.meta?.variation?.parent_id;
-      return pid ? parseInt(pid, 10) : item.id;
-    };
-    const productIds = cartItems.map((item) => getParentId(item));
-    const { categories: productCategories, brands: productBrands } = useProductMeta(productIds, locale as Locale);
-    // Map each cart item to its lookup ID for brand/category
-    const getItemLookupId = (item: CoCartItem): number => getParentId(item);
+  const hasGiftItemsInCart = cartItems.some(item => isFreeGiftItem(item.item_key));
+
+  // For variable products, use parent_id for brand/category lookup since
+  // the product-categories API indexes by parent product ID, not variation ID.
+  const getParentId = (item: CoCartItem): number => {
+    const pid = item.meta?.variation?.Parent_id || item.meta?.variation?.parent_id;
+    return pid ? parseInt(pid, 10) : item.id;
+  };
+  const productIds = cartItems.map((item) => getParentId(item));
+  const { categories: productCategories, categoryIds: productCategoryIds, brands: productBrands } = useProductMeta(productIds, locale as Locale);
+  // Map each cart item to its lookup ID for brand/category
+  const getItemLookupId = (item: CoCartItem): number => getParentId(item);
+  const cartDiscounts = useMemo(
+    () => calculateCartDiscounts(
+      cartItems.filter((item) => !isFreeGiftItem(item.item_key)),
+      discountRules,
+      { categoryIdsByProductId: productCategoryIds }
+    ),
+    [cartItems, discountRules, isFreeGiftItem, productCategoryIds]
+  );
+  const promotionalDiscountTotal = getCartDiscountTotal(cartDiscounts);
 
   useEffect(() => {
     void refreshCart();

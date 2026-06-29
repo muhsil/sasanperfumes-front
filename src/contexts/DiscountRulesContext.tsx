@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
-import { getActiveDiscountRules, isDiscountRuleEnabled } from "@/lib/discountRules";
+import { getActiveDiscountRules, includesNumericId, isDiscountRuleEnabled } from "@/lib/discountRules";
 import type { DiscountRule } from "@/types/discount";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
@@ -51,8 +51,8 @@ export function DiscountRulesProvider({
       return rules.filter((rule) => {
         if (!isDiscountRuleEnabled(rule)) return false;
         if (rule.applies_to === "all") return true;
-        if (rule.applies_to === "product" && (rule.product_ids || []).includes(productId)) return true;
-        if (rule.applies_to === "category" && categoryIds?.some((id) => (rule.category_ids || []).includes(id))) return true;
+        if (rule.applies_to === "product" && includesNumericId(rule.product_ids, productId)) return true;
+        if (rule.applies_to === "category" && categoryIds?.some((id) => includesNumericId(rule.category_ids, id))) return true;
         return false;
       });
     },

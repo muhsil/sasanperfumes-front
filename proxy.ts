@@ -9,6 +9,7 @@ const DEFAULT_CANONICAL_HOST = "store.sasanperfumes.com";
 const REDIRECTABLE_HOST_SUFFIXES = [".sasanperfumes.com"];
 const MARKET_PREFIX_SEGMENTS = new Set<string>(["qa", "om", "sa"]);
 const LOCALE_SEGMENTS = new Set<string>(["en", "ar"]);
+const LEGACY_BRAND_CATEGORY_SLUGS = new Set<string>(["flower-scents", "rimal", "serenity", "liwan"]);
 const MARKET_DOMAIN_HOSTS = [
   "qa.sasanperfumes.com",
   "om.sasanperfumes.com",
@@ -171,10 +172,36 @@ function enforceCanonicalHost(request: NextRequest) {
   return NextResponse.redirect(redirectUrl, 308);
 }
 
+function redirectLegacyBrandCategoryPaths(request: NextRequest) {
+  const pathname = request.nextUrl.pathname || "/";
+  const segments = pathname.split("/").filter(Boolean);
+  if (segments.length < 3) return;
+
+  const firstSegment = segments[0]?.toLowerCase();
+  const secondSegment = segments[1]?.toLowerCase();
+  const hasMarket = MARKET_PREFIX_SEGMENTS.has(firstSegment || "");
+  const localeIndex = hasMarket ? 1 : 0;
+  const locale = segments[localeIndex]?.toLowerCase();
+  const categorySegment = segments[localeIndex + 1]?.toLowerCase();
+  const slug = segments[localeIndex + 2]?.toLowerCase();
+
+  if (!LOCALE_SEGMENTS.has(locale || "")) return;
+  if (categorySegment !== "category" || !slug || !LEGACY_BRAND_CATEGORY_SLUGS.has(slug)) return;
+
+  const redirectUrl = request.nextUrl.clone();
+  redirectUrl.pathname = `${hasMarket ? `/${firstSegment}` : ""}/${locale}/brands/${slug}`;
+  return NextResponse.redirect(redirectUrl, 308);
+}
+
 export function proxy(request: NextRequest) {
   const marketLocaleOrderRedirect = enforceMarketLocalePathOrder(request);
   if (marketLocaleOrderRedirect) {
     return marketLocaleOrderRedirect;
+  }
+
+  const legacyBrandCategoryRedirect = redirectLegacyBrandCategoryPaths(request);
+  if (legacyBrandCategoryRedirect) {
+    return legacyBrandCategoryRedirect;
   }
 
   const canonicalRedirect = enforceCanonicalHost(request);

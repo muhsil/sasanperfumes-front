@@ -172,7 +172,7 @@ export default function CheckoutClient() {
       return pid ? parseInt(pid, 10) : item.id;
     };
     const productIds = cartItems.map((item) => getParentId(item));
-    const { categories: productCategories, brands: productBrands } = useProductMeta(productIds, locale as Locale);
+    const { categories: productCategories, categoryIds: productCategoryIds, brands: productBrands } = useProductMeta(productIds, locale as Locale);
     const getItemLookupId = (item: CoCartItem): number => getParentId(item);
     const isRTL = locale === "ar";
     const isKeyboardVisible = useKeyboardVisible();
@@ -216,8 +216,8 @@ export default function CheckoutClient() {
   const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
   const divisor = Math.pow(10, currencyMinorUnit);
   const cartDiscounts = useMemo(
-    () => calculateCartDiscounts(cartItems, discountRules),
-    [cartItems, discountRules]
+    () => calculateCartDiscounts(cartItems, discountRules, { categoryIdsByProductId: productCategoryIds }),
+    [cartItems, discountRules, productCategoryIds]
   );
   const promotionalDiscountTotal = getCartDiscountTotal(cartDiscounts);
 

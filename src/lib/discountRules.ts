@@ -8,6 +8,10 @@ export interface CartDiscount {
   freeQuantity: number;
 }
 
+interface CartDiscountOptions {
+  categoryIdsByProductId?: Record<number, number[]>;
+}
+
 const DISABLED_STATUS_VALUES = new Set(["disabled", "inactive", "draft", "trash", "false", "0", "off"]);
 
 function isExplicitFalse(value: unknown): boolean {
@@ -40,6 +44,11 @@ export function getActiveDiscountRules(rules: DiscountRule[] | null | undefined)
   return rules.filter(isDiscountRuleEnabled);
 }
 
+export function includesNumericId(values: readonly unknown[] | null | undefined, id: number): boolean {
+  if (!Array.isArray(values)) return false;
+  return values.some((value) => Number(value) === id);
+}
+
 function getCartItemCandidateIds(item: CoCartItem): number[] {
   const ids = new Set<number>();
   if (Number.isFinite(item.id)) ids.add(item.id);
@@ -52,13 +61,21 @@ function getCartItemCandidateIds(item: CoCartItem): number[] {
   return Array.from(ids);
 }
 
-function isRuleApplicableToItem(rule: DiscountRule, item: CoCartItem): boolean {
+function isRuleApplicableToItem(rule: DiscountRule, item: CoCartItem, options?: CartDiscountOptions): boolean {
   if (rule.applies_to === "all") return true;
 
   const productIds = rule.product_ids || [];
+  const candidateIds = getCartItemCandidateIds(item);
+
   if (rule.applies_to === "product" && productIds.length > 0) {
-    const candidateIds = getCartItemCandidateIds(item);
-    return candidateIds.some((id) => productIds.includes(id));
+    return candidateIds.some((id) => includesNumericId(productIds, id));
+  }
+
+  const categoryIds = rule.category_ids || [];
+  if (rule.applies_to === "category" && categoryIds.length > 0) {
+    return candidateIds.some((id) =>
+      (options?.categoryIdsByProductId?.[id] || []).some((categoryId) => includesNumericId(categoryIds, categoryId))
+    );
   }
 
   return false;
@@ -73,7 +90,11 @@ function getRuleLabel(rule: DiscountRule): string {
   return rule.badge_text || rule.name || "Promotion";
 }
 
-export function calculateCartDiscounts(items: CoCartItem[], rules: DiscountRule[]): CartDiscount[] {
+export function calculateCartDiscounts(
+  items: CoCartItem[],
+  rules: DiscountRule[],
+  options?: CartDiscountOptions
+): CartDiscount[] {
   const activeRules = getActiveDiscountRules(rules);
   const discounts: CartDiscount[] = [];
 
@@ -86,7 +107,7 @@ export function calculateCartDiscounts(items: CoCartItem[], rules: DiscountRule[
 
     for (const item of items) {
       if (item.item_key.startsWith("temp-")) continue;
-      if (!isRuleApplicableToItem(rule, item)) continue;
+      if (!isRuleApplicableToItem(rule, item, options)) continue;
 
       const unitPrice = getCartItemUnitPrice(item);
       if (unitPrice <= 0) continue;
