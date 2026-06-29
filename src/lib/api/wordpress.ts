@@ -2781,7 +2781,7 @@ export async function getDiscountRules(frontendHost?: string): Promise<DiscountR
   const rules = await fetchWPAPI<DiscountRule[]>(
     "/shapehive/v1/discount-rules",
     {
-      noCache: true,
+      revalidate: 600,
       frontendHost,
     }
   );

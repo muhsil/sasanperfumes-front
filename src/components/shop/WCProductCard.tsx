@@ -232,6 +232,7 @@ export function WCProductCard({
               />
               <DiscountBadge
                 productId={product.id}
+                categoryIds={product.categories?.map(c => c.id)}
                 className="inline-flex items-center rounded-sm border px-2 py-0.5 !text-[9px] font-bold uppercase leading-tight tracking-[0.12em] shadow-sm"
               />
             </div>

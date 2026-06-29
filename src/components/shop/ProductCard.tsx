@@ -160,6 +160,7 @@ export function ProductCard({ product, locale, className, wcProduct }: ProductCa
             />
             <DiscountBadge
               productId={product.databaseId}
+              categoryIds={product.productCategories?.nodes?.map(c => c.databaseId)}
               className="inline-flex items-center rounded-sm border px-2 py-0.5 !text-[9px] font-bold uppercase leading-tight tracking-[0.12em] shadow-sm"
             />
           </div>
