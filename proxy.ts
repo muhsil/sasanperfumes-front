@@ -178,7 +178,6 @@ function redirectLegacyBrandCategoryPaths(request: NextRequest) {
   if (segments.length < 3) return;
 
   const firstSegment = segments[0]?.toLowerCase();
-  const secondSegment = segments[1]?.toLowerCase();
   const hasMarket = MARKET_PREFIX_SEGMENTS.has(firstSegment || "");
   const localeIndex = hasMarket ? 1 : 0;
   const locale = segments[localeIndex]?.toLowerCase();

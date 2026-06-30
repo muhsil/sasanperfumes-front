@@ -179,7 +179,7 @@ function applyRequestRoutingHeaders(
   return requestHeaders;
 }
 
-function redirectMarketPathToLocaleRoute(
+function rewriteMarketPathToLocaleRoute(
   request: NextRequest,
   locale: string,
   market: string,
@@ -187,10 +187,11 @@ function redirectMarketPathToLocaleRoute(
 ) {
   const rest = segments.slice(2);
   const isApiRoute = rest[0] === "api";
-  const redirectUrl = request.nextUrl.clone();
-  redirectUrl.pathname = isApiRoute ? `/${rest.join("/")}` : `/${locale}${rest.length ? `/${rest.join("/")}` : ""}`;
-  redirectUrl.searchParams.set("__market", market);
-  const response = NextResponse.redirect(redirectUrl, 307);
+  const rewriteUrl = request.nextUrl.clone();
+  const requestHeaders = applyRequestRoutingHeaders(request, locale, market);
+  rewriteUrl.pathname = isApiRoute ? `/${rest.join("/")}` : `/${locale}${rest.length ? `/${rest.join("/")}` : ""}`;
+  rewriteUrl.searchParams.set("__market", market);
+  const response = NextResponse.rewrite(rewriteUrl, { request: { headers: requestHeaders } });
   return addSecurityHeaders(response);
 }
 
@@ -294,7 +295,7 @@ export function proxy(request: NextRequest) {
 
   // Keep public market URLs (/qa/en/...) while rendering the existing locale route (/en/...).
   if (market && routeLocale) {
-    return redirectMarketPathToLocaleRoute(request, routeLocale, market, segments);
+    return rewriteMarketPathToLocaleRoute(request, routeLocale, market, segments);
   }
 
   // Check if pathname already has a locale (intl).

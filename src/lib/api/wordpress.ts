@@ -224,24 +224,36 @@ interface WPPluginHeroSettings {
 }
 
 interface WPPluginBannerItem {
-  image: string;
-  mobileImage: string;
+  image?: string;
+  mobile?: string;
+  mobileImage?: string;
   imageAr?: string;
+  mobileAr?: string;
   mobileImageAr?: string;
-  title: string;
-  titleAr: string;
-  subtitle: string;
-  subtitleAr: string;
-  link: string;
+  image_ar?: string;
+  mobile_image?: string;
+  image_arabic?: string;
+  mobile_ar?: string;
+  mobile_image_ar?: string;
+  title?: string;
+  titleAr?: string;
+  subtitle?: string;
+  subtitleAr?: string;
+  title_ar?: string;
+  subtitle_ar?: string;
+  link?: string;
 }
 
 interface WPPluginBannersSettings {
-  enabled: boolean;
-  items: WPPluginBannerItem[];
+  enabled?: boolean;
+  items?: WPPluginBannerItem[];
   layout?: string;
   responsive?: { desktop: number; tablet: number; mobile: number };
+  responsive_columns?: { desktop: number; tablet: number; mobile: number };
   hideOnMobile?: boolean;
   hideOnDesktop?: boolean;
+  hide_on_mobile?: boolean;
+  hide_on_desktop?: boolean;
 }
 
 interface WPPluginCollectionItem {
@@ -619,28 +631,76 @@ function transformHeroSettings(pluginHero: WPPluginHeroSettings, locale?: Locale
 
 // Transform WordPress Plugin banners settings to frontend format
 function transformBannersSettings(pluginBanners: WPPluginBannersSettings, locale?: Locale): BannersSettings {
-  const banners: Banner[] = pluginBanners.items
-    .filter(item => item.image)
+  const getBannerValue = (item: WPPluginBannerItem, key: string, fallback: string = ""): string => {
+    const normalized = locale === "ar"
+      ? [
+          `${key}Ar` as keyof WPPluginBannerItem,
+          `${key}_ar` as keyof WPPluginBannerItem,
+          `${key}_arabic` as keyof WPPluginBannerItem,
+          key as keyof WPPluginBannerItem,
+        ]
+      : [
+          key as keyof WPPluginBannerItem,
+          `${key}_en` as keyof WPPluginBannerItem,
+        ];
+    for (const valueKey of normalized) {
+      const value = item[valueKey];
+      if (typeof value === "string" && value.trim()) {
+        return value.trim();
+      }
+    }
+    return fallback;
+  };
+
+  const resolveBannerImage = (item: WPPluginBannerItem, isAr: boolean): string => {
+    const keys = isAr
+      ? [
+          item.imageAr,
+          item.image_ar,
+          item.image_arabic,
+          item.image,
+        ]
+      : [item.image, item.image_ar, item.image_arabic];
+    const imageCandidate = keys.find((url) => typeof url === "string" && url.trim());
+    return imageCandidate ? imageCandidate.trim() : "";
+  };
+
+  const resolveBannerMobileImage = (item: WPPluginBannerItem, isAr: boolean): string => {
+    const keys = isAr
+      ? [item.mobileImageAr, item.mobileAr, item.mobile_ar, item.mobile_image_ar, item.mobileImage, item.mobile, item.mobile_image]
+      : [item.mobileImage, item.mobile, item.mobile_image, item.mobileImageAr, item.mobileAr, item.mobile_ar, item.mobile_image_ar];
+    const imageCandidate = keys.find((url) => typeof url === "string" && url.trim());
+    return imageCandidate ? imageCandidate.trim() : "";
+  };
+
+  const bannerItems = Array.isArray(pluginBanners.items) ? pluginBanners.items : [];
+  const responsiveColumns = pluginBanners.responsive ?? pluginBanners.responsive_columns;
+  const banners: Banner[] = bannerItems
     .map((item, index) => {
       const isAr = locale === "ar";
-      const desktopImg = (isAr && item.imageAr) ? item.imageAr : item.image;
-      const mobileImg = (isAr && item.mobileImageAr) ? item.mobileImageAr : item.mobileImage;
+      const desktopImg = resolveBannerImage(item, isAr);
+      const mobileImg = resolveBannerMobileImage(item, isAr) || desktopImg;
+      const title = getBannerValue(item, "title");
+      const subtitle = getBannerValue(item, "subtitle");
+      const itemLink = getBannerValue(item, "link");
+
       return {
-        image: createWPImage(desktopImg, item.title || `Banner ${index + 1}`) as WPImage,
-        mobile_image: createWPImage(mobileImg, item.title || `Banner ${index + 1} Mobile`) || undefined,
-        link: createWPLink(item.link, item.title),
-        title: isAr ? (item.titleAr || "") : item.title,
-        subtitle: isAr ? (item.subtitleAr || "") : item.subtitle,
+        image: createWPImage(desktopImg, title || `Banner ${index + 1}`) as WPImage,
+        mobile_image: createWPImage(mobileImg, title || `Banner ${index + 1} Mobile`) || undefined,
+        link: createWPLink(itemLink, title),
+        title,
+        subtitle,
       };
-    });
+    })
+    .filter((banner) => Boolean(banner.image?.url));
 
   return {
-    enabled: pluginBanners.enabled,
+    enabled: pluginBanners.enabled ?? true,
     banners,
     layout: 'grid',
-    responsive_columns: pluginBanners.responsive,
-    hide_on_mobile: pluginBanners.hideOnMobile,
-    hide_on_desktop: pluginBanners.hideOnDesktop,
+    responsive_columns: responsiveColumns,
+    hide_on_mobile: pluginBanners.hideOnMobile ?? pluginBanners.hide_on_mobile,
+    hide_on_desktop: pluginBanners.hideOnDesktop ?? pluginBanners.hide_on_desktop,
   };
 }
 
@@ -657,7 +717,7 @@ function transformCollectionsSettings(pluginCollections: WPPluginCollectionsSett
   const fallbackCollections = getSasanDiscoverCollections(locale);
 
   return {
-    enabled: true,
+    enabled: pluginCollections.enabled ?? true,
     section_title: locale === "ar" ? (pluginCollections.titleAr || "اكتشف المزيد") : (pluginCollections.title || "Discover More"),
     section_subtitle: locale === "ar" ? (pluginCollections.subtitleAr || "") : pluginCollections.subtitle,
     collections: collections.length > 0 ? collections : fallbackCollections,
@@ -692,7 +752,7 @@ function transformProductSectionSettings(pluginSection: WPPluginProductSectionSe
 // Transform WordPress Plugin category section settings to frontend format
 function transformCategorySectionSettings(pluginSection: WPPluginProductSectionSettings, locale?: Locale): CategorySectionSettings {
   return {
-    enabled: true,
+    enabled: pluginSection.enabled ?? true,
     section_title: locale === "ar" ? (pluginSection.titleAr || "تسوق حسب الفئة") : (pluginSection.title || "Shop by Category"),
     section_subtitle: locale === "ar" ? (pluginSection.subtitleAr || "") : pluginSection.subtitle,
     categories_count: pluginSection.count,
@@ -707,7 +767,7 @@ function transformCategorySectionSettings(pluginSection: WPPluginProductSectionS
 // Transform WordPress Plugin featured products settings to frontend format
 function transformFeaturedProductsSettings(pluginSection: WPPluginProductSectionSettings, locale?: Locale): FeaturedProductsSettings {
   return {
-    enabled: true,
+    enabled: pluginSection.enabled ?? true,
     section_title: locale === "ar" ? (pluginSection.titleAr || "") : pluginSection.title,
     section_subtitle: locale === "ar" ? (pluginSection.subtitleAr || "") : pluginSection.subtitle,
     products_count: pluginSection.count,

@@ -12,7 +12,6 @@ import { CountdownTimer } from "@/components/common/CountdownTimer";
 import { SocialShareModal } from "@/components/common/SocialShareModal";
 import { BackInStockAlert } from "@/components/common/BackInStockAlert";
 import { ClothingSizeGuideModal } from "@/components/common/ClothingSizeGuideModal";
-import { ScentGuideContent } from "@/components/shop/ScentGuideContent";
 import { RelatedProducts } from "@/components/shop/RelatedProducts";
 import { RecentlyViewed } from "@/components/shop/RecentlyViewed";
 import { ProductAddons } from "@/components/shop/ProductAddons";
@@ -1863,7 +1862,6 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                       {isRTL ? "لا يوجد وصف متاح" : "No description available"}
                     </p>
                   ) : null}
-                  <ScentGuideContent locale={locale as Locale} />
                 </AccordionSection>
 
                 <AccordionSection title={isRTL ? "الخصائص" : "Characteristics"}>
