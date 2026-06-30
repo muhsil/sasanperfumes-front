@@ -1,6 +1,6 @@
 <?php
 /**
- * Customer Reset Password email - ShapeHive Custom Style
+ * Customer Reset Password email - Sasan Perfumes Custom Style
  *
  * This template can be overridden by copying it to yourtheme/woocommerce/emails/customer-reset-password.php.
  *
@@ -22,9 +22,9 @@ $reset_url = $frontend_url . '/en/reset-password/?key=' . rawurlencode( $reset_k
  */
 do_action( 'woocommerce_email_header', $email_heading, $email ); ?>
 
-<p class="email-text" style="font-size: 14px; line-height: 1.7; color: #c0392b; margin: 0 0 15px 0;">Hi <?php echo esc_html( $user_login ); ?>,</p>
+<p class="email-text" style="font-size: 14px; line-height: 1.7; color: #333333; margin: 0 0 15px 0;">Hi <?php echo esc_html( $user_login ); ?>,</p>
 
-<p class="email-text" style="font-size: 14px; line-height: 1.7; color: #c0392b; margin: 0 0 15px 0;">
+<p class="email-text" style="font-size: 14px; line-height: 1.7; color: #333333; margin: 0 0 15px 0;">
 	<?php
 	printf(
 		/* translators: %s: Site title */
@@ -39,7 +39,7 @@ do_action( 'woocommerce_email_header', $email_heading, $email ); ?>
 <p class="username-label" style="font-size: 12px; color: #888888; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 0.5px;"><?php esc_html_e( 'Username:', 'woocommerce' ); ?></p>
 <p class="username-value" style="font-size: 15px; font-weight: 600; color: #1a1a1a; margin: 0 0 20px 0;"><?php echo esc_html( $user_login ); ?></p>
 
-<p class="email-text" style="font-size: 14px; line-height: 1.7; color: #c0392b; margin: 0 0 15px 0;">
+<p class="email-text" style="font-size: 14px; line-height: 1.7; color: #333333; margin: 0 0 15px 0;">
 	<?php esc_html_e( 'If you didn\'t make this request, just ignore this email. If you\'d like to proceed, reset your password via the link below:', 'woocommerce' ); ?>
 </p>
 
