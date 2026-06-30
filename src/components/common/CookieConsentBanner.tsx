@@ -69,7 +69,7 @@ export function CookieConsentBanner({ locale = "en" }: CookieConsentBannerProps)
 
   const translations = {
     en: {
-      message: "This site uses cookies for a smoother shopping experience and traffic insights.",
+      message: "We use cookies to keep your cart, preferences, and store experience working smoothly.",
       accept: "Accept All",
       reject: "Reject",
       learnMore: "Learn More",
@@ -88,8 +88,8 @@ export function CookieConsentBanner({ locale = "en" }: CookieConsentBannerProps)
     <div
       className={cn(
         "fixed z-[60] transform transition-all duration-300 ease-out",
-        "bg-[#111111] text-white shadow-2xl",
-        "left-3 right-3 bottom-16 rounded-xl border border-white/10 md:bottom-4 md:left-auto md:right-4 md:max-w-md"
+        "left-3 right-3 rounded-lg border border-brand-border/80 bg-white/95 text-brand-primary shadow-[0_18px_48px_rgba(20,15,10,0.14)] backdrop-blur-xl",
+        "bottom-[calc(5.75rem+env(safe-area-inset-bottom))] md:bottom-4 md:left-auto md:right-4 md:max-w-md"
       )}
       dir={isRTL ? "rtl" : "ltr"}
     >
@@ -98,7 +98,7 @@ export function CookieConsentBanner({ locale = "en" }: CookieConsentBannerProps)
         <button
           onClick={handleDismiss}
           className={cn(
-            "absolute rounded-full p-1 text-white/50 transition-colors hover:bg-white/10 hover:text-white",
+            "absolute rounded-full p-1 text-brand-muted transition-colors hover:bg-brand-beige hover:text-brand-primary",
             isMobile ? "top-2" : "top-3",
             isRTL ? "left-2" : "right-2"
           )}
@@ -113,28 +113,27 @@ export function CookieConsentBanner({ locale = "en" }: CookieConsentBannerProps)
             isRTL ? "pl-7 md:pl-8" : "pr-7 md:pr-8"
           )}
         >
-          <div className="flex-shrink-0 rounded-full bg-white/10 p-2">
-            <Cookie className={cn("text-brand-gold", isMobile ? "h-4 w-4" : "h-5 w-5")} />
+          <div className="flex-shrink-0 rounded-full bg-brand-beige p-2">
+            <Cookie className={cn("text-brand-primary", isMobile ? "h-4 w-4" : "h-5 w-5")} />
           </div>
 
           <div className="flex-1 min-w-0">
-            <p className={cn("leading-relaxed text-white/80", isMobile ? "text-xs" : "text-sm")}>{t.message}</p>
+            <p className={cn("leading-relaxed text-brand-muted", isMobile ? "text-xs" : "text-sm")}>{t.message}</p>
 
             <div className={cn("mt-3 flex flex-wrap items-center gap-2", isMobile ? "mt-2" : "mt-3")}>
               <button
                 onClick={handleAccept}
                 className={cn(
-                  "rounded-full border border-[#B9A06A] bg-[#B9A06A] font-semibold text-[#111111] shadow-sm transition-colors hover:border-white hover:bg-white",
+                  "rounded-full border border-brand-primary bg-brand-primary font-semibold text-white shadow-sm transition-colors hover:border-brand-primary-dark hover:bg-brand-primary-dark",
                   isMobile ? "px-3 py-1.5 text-xs" : "px-4 py-2 text-sm"
                 )}
-                style={{ backgroundColor: "#B9A06A", borderColor: "#B9A06A", color: "#111111" }}
               >
                 {t.accept}
               </button>
               <button
                 onClick={handleReject}
                 className={cn(
-                  "rounded-full border border-white/20 font-medium text-white/75 transition-colors hover:border-white/40 hover:bg-white/10 hover:text-white",
+                  "rounded-full border border-brand-border bg-brand-ivory font-medium text-brand-muted transition-colors hover:border-brand-primary/30 hover:bg-brand-beige hover:text-brand-primary",
                   isMobile ? "px-3 py-1.5 text-xs" : "px-4 py-2 text-sm"
                 )}
               >
@@ -142,7 +141,7 @@ export function CookieConsentBanner({ locale = "en" }: CookieConsentBannerProps)
               </button>
               <a
                 href={`${marketPrefix}/${locale}/privacy`}
-                className={cn("text-white/60 underline-offset-4 hover:text-brand-gold hover:underline", isMobile ? "text-xs" : "text-sm")}
+                className={cn("text-brand-muted underline-offset-4 hover:text-brand-primary hover:underline", isMobile ? "text-xs" : "text-sm")}
               >
                 {t.learnMore}
               </a>

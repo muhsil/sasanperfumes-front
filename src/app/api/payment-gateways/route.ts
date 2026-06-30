@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { getPaymentGatewayFilters, getPaymentGatewayOverrides } from "@/config/payment";
 import { disableRuntimeCache } from "@/config/site";
@@ -250,9 +250,30 @@ function addStripeFallbackGateway(
   return [...gateways, fallbackGateway].sort((a, b) => a.order - b.order || a.title.localeCompare(b.title));
 }
 
-export async function GET() {
+function logGatewayFetchWarning(stage: string, error: unknown) {
+  if (process.env.NODE_ENV === "production") return;
+  console.warn(
+    `[api/payment-gateways] ${stage} failed:`,
+    error instanceof Error ? error.message : error
+  );
+}
+
+function getConfiguredFallbackGateways(
+  gatewayOverrides: ReturnType<typeof getPaymentGatewayOverrides>,
+  gatewayFilters: ReturnType<typeof getPaymentGatewayFilters>
+): PaymentGatewayResponseItem[] {
+  return addStripeFallbackGateway(
+    applyPaymentGatewayFilters(
+      mergeGatewayOverrides([], gatewayOverrides),
+      gatewayFilters
+    ),
+    gatewayFilters
+  );
+}
+
+export async function GET(request: NextRequest) {
   try {
-    const market = await getRequestMarket();
+    const market = await getRequestMarket(request.nextUrl.searchParams.get("market"));
     const cacheKey = getGatewayCacheKey(market.code);
     const cached = getCachedGateways(cacheKey);
 
@@ -273,14 +294,19 @@ export async function GET() {
     
     if (consumerKey && consumerSecret) {
       const url = `${apiBase}/payment_gateways?${getBasicAuthParams(market.code)}`;
-      
-      const response = await fetch(noCacheUrl(url), {
-        method: "GET",
-        headers: backendMarketHeaders(market.code),
-        cache: "no-store",
-      });
 
-      if (response.ok) {
+      let response: Response | null = null;
+      try {
+        response = await fetch(noCacheUrl(url), {
+          method: "GET",
+          headers: backendMarketHeaders(market.code),
+          cache: "no-store",
+        });
+      } catch (error) {
+        logGatewayFetchWarning("WooCommerce REST gateway fetch", error);
+      }
+
+      if (response?.ok) {
         const data = await safeJsonResponse(response);
 
         if (isGatewayArray(data)) {
@@ -336,23 +362,22 @@ export async function GET() {
     }
     
     const storeUrl = `${storeApiBase}/cart`;
-    
-    const storeResponse = await fetch(noCacheUrl(storeUrl), {
-      method: "GET",
-      headers: backendMarketHeaders(market.code),
-      cache: "no-store",
-    });
 
-    const storeData = await safeJsonResponse(storeResponse);
+    let storeResponse: Response | null = null;
+    let storeData: Record<string, unknown> = {};
+    try {
+      storeResponse = await fetch(noCacheUrl(storeUrl), {
+        method: "GET",
+        headers: backendMarketHeaders(market.code),
+        cache: "no-store",
+      });
+      storeData = await safeJsonResponse(storeResponse);
+    } catch (error) {
+      logGatewayFetchWarning("WooCommerce Store API cart fetch", error);
+    }
 
-    if (!storeResponse.ok) {
-      const envFallbackGateways = addStripeFallbackGateway(
-        applyPaymentGatewayFilters(
-          mergeGatewayOverrides([], gatewayOverrides),
-          gatewayFilters
-        ),
-        gatewayFilters
-      );
+    if (!storeResponse?.ok) {
+      const envFallbackGateways = getConfiguredFallbackGateways(gatewayOverrides, gatewayFilters);
 
       if (envFallbackGateways.length > 0) {
         const fallbackData = {
@@ -366,16 +391,15 @@ export async function GET() {
         return gatewaysJson(fallbackData);
       }
 
-      return gatewaysJson(
-        {
-          success: false,
-          error: {
-            code: "payment_gateways_error",
-            message: "Failed to get payment gateways.",
-          },
-        },
-        { status: storeResponse.status }
-      );
+      const unavailableData = {
+        success: true,
+        gateways: [],
+        source: "backend_unavailable",
+      };
+      if (gatewaysCacheIsEnabled()) {
+        gatewaysCache.set(cacheKey, { data: unavailableData, timestamp: Date.now() });
+      }
+      return gatewaysJson(unavailableData);
     }
 
     const paymentMethodIds = Array.isArray((storeData as CartResponse).payment_methods)
@@ -425,15 +449,24 @@ export async function GET() {
     }
     return gatewaysJson(fallbackData);
   } catch (error) {
-    return gatewaysJson(
-      {
-        success: false,
-        error: {
-          code: "network_error",
-          message: error instanceof Error ? error.message : "Network error occurred",
-        },
-      },
-      { status: 500 }
-    );
+    logGatewayFetchWarning("Payment gateway resolution", error);
+
+    let fallbackGateways: PaymentGatewayResponseItem[] = [];
+    try {
+      const fallbackMarket = request.nextUrl.searchParams.get("market");
+      fallbackGateways = getConfiguredFallbackGateways(
+        getPaymentGatewayOverrides(),
+        getPaymentGatewayFilters(fallbackMarket)
+      );
+    } catch (fallbackError) {
+      logGatewayFetchWarning("Payment gateway fallback resolution", fallbackError);
+    }
+
+    return gatewaysJson({
+      success: true,
+      gateways: fallbackGateways,
+      source: fallbackGateways.length > 0 ? "hostinger_env_fallback+network_error" : "backend_unavailable",
+      warning: "Payment backend unavailable.",
+    });
   }
 }

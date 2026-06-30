@@ -216,8 +216,8 @@ export default function CheckoutClient() {
   const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
   const divisor = Math.pow(10, currencyMinorUnit);
   const cartDiscounts = useMemo(
-    () => calculateCartDiscounts(cartItems, discountRules, { categoryIdsByProductId: productCategoryIds }),
-    [cartItems, discountRules, productCategoryIds]
+    () => calculateCartDiscounts(cartItems, discountRules, { categoryIdsByProductId: productCategoryIds, currencyMinorUnit }),
+    [cartItems, discountRules, productCategoryIds, currencyMinorUnit]
   );
   const promotionalDiscountTotal = getCartDiscountTotal(cartDiscounts);
 
@@ -330,7 +330,9 @@ export default function CheckoutClient() {
           const fetchPaymentGateways = async () => {
             setIsLoadingGateways(true);
             try {
-              const response = await fetch("/api/payment-gateways");
+              const market = marketPrefix.replace(/^\//, "");
+              const query = market ? `?market=${encodeURIComponent(market)}` : "";
+              const response = await fetch(`/api/payment-gateways${query}`);
               const data = await response.json();
               if (data.success && data.gateways) {
                 setPaymentGateways(data.gateways);
@@ -342,7 +344,7 @@ export default function CheckoutClient() {
             }
           };
                   fetchPaymentGateways();
-                }, []);
+                }, [marketPrefix]);
 
         useEffect(() => {
           const fetchShippingCountries = async () => {

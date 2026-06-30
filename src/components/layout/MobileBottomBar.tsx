@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Grid3X3, Heart, User } from "lucide-react";
+import { Home, Grid3X3, Heart, Search, User } from "lucide-react";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useKeyboardVisible } from "@/hooks/useKeyboardVisible";
@@ -49,6 +49,7 @@ function WhatsAppIcon({ className }: { className?: string }) {
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   home: Home,
   grid: Grid3X3,
+  search: Search,
   heart: Heart,
   user: User,
   whatsapp: WhatsAppIcon,

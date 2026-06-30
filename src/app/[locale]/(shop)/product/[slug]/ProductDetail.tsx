@@ -999,24 +999,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
     if (options?.openFullscreen) {
       setIsFullscreen(true);
     }
-
-    const scroller = mobileGalleryScrollerRef.current;
-    if (scroller?.clientWidth) {
-      scroller.scrollTo({ left: nextIndex * scroller.clientWidth, behavior: "smooth" });
-    }
   }, [imageCount]);
-
-  useEffect(() => {
-    if (!isMobileViewport) return;
-
-    const scroller = mobileGalleryScrollerRef.current;
-    if (!scroller || !scroller.clientWidth) return;
-
-    const targetLeft = selectedImage * scroller.clientWidth;
-    if (Math.abs(scroller.scrollLeft - targetLeft) > 2) {
-      scroller.scrollTo({ left: targetLeft, behavior: "smooth" });
-    }
-  }, [imageCount, isMobileViewport, selectedImage]);
 
   const handleMobileGalleryScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
     const { scrollLeft, clientWidth } = event.currentTarget;
@@ -1070,6 +1053,103 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
     const goToNextImage = () => {
       selectGalleryImage(selectedImage >= imageCount - 1 ? 0 : selectedImage + 1);
     };
+
+    const currentImageSrc = activeImage.src;
+
+    if (imageCount > 0) {
+      return (
+        <div className="space-y-3" data-product-gallery={isMobileViewport ? "mobile" : "desktop"}>
+        <div className="relative min-w-0">
+          <button
+            type="button"
+            onClick={() => setIsFullscreen(true)}
+            data-product-gallery-main
+            className="group relative aspect-[4/5] w-full cursor-zoom-in overflow-hidden rounded-lg border border-brand-border/70 bg-brand-beige/20 shadow-[0_18px_42px_rgba(20,15,10,0.08)]"
+            aria-label="Zoom image"
+          >
+            <Image
+              key={`${activeImage.id}-${currentImageSrc}`}
+              src={currentImageSrc}
+              alt={activeImage.alt || productDisplayName}
+              fill
+              data-product-gallery-image={selectedImage}
+              sizes="(max-width: 1023px) 100vw, 54vw"
+              className="object-contain p-4 transition-transform duration-300 group-hover:scale-[1.015] sm:p-6 lg:p-8"
+              priority={selectedImage === 0}
+              placeholder="blur"
+              blurDataURL={BLUR_DATA_URL}
+              unoptimized={shouldUseUnoptimizedImage(currentImageSrc)}
+            />
+            {showThumbnails && (
+              <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-brand-primary shadow-sm backdrop-blur-sm">
+                {selectedImage + 1} / {imageCount}
+              </span>
+            )}
+            <span className="absolute right-3 top-3 rounded-full bg-white/90 p-2 text-brand-primary shadow-sm transition group-hover:scale-105">
+              <ZoomIn className="h-4 w-4" />
+            </span>
+          </button>
+
+          {showThumbnails && (
+            <>
+              <button
+                type="button"
+                onClick={goToPreviousImage}
+                className="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-brand-border/70 bg-white/90 text-brand-primary shadow-md backdrop-blur-sm transition hover:border-brand-primary/45 hover:bg-brand-beige"
+                aria-label="Previous image"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={goToNextImage}
+                className="absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-brand-border/70 bg-white/90 text-brand-primary shadow-md backdrop-blur-sm transition hover:border-brand-primary/45 hover:bg-brand-beige"
+                aria-label="Next image"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </>
+          )}
+        </div>
+
+        {showThumbnails && (
+          <div
+            ref={galleryThumbsRef}
+            className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            aria-label="Product images"
+          >
+            {images.map((image, index) => (
+              <button
+                key={`${image.id}-simple-thumb-${index}`}
+                type="button"
+                onClick={() => selectGalleryImage(index)}
+                data-gallery-thumb={index}
+                className={cn(
+                  "relative h-16 w-16 shrink-0 overflow-hidden rounded-md border bg-brand-beige/20 transition-all md:h-20 md:w-20",
+                  selectedImage === index
+                    ? "border-brand-primary ring-2 ring-brand-primary/15"
+                    : "border-brand-border/70 opacity-75 hover:border-brand-primary/45 hover:opacity-100"
+                )}
+                aria-label={`View image ${index + 1}`}
+                aria-current={selectedImage === index ? "true" : "false"}
+              >
+                <Image
+                  src={image.src}
+                  alt={image.alt || `${productDisplayName} thumbnail ${index + 1}`}
+                  fill
+                  sizes="80px"
+                  className="object-contain p-1.5"
+                  placeholder="blur"
+                  blurDataURL={BLUR_DATA_URL}
+                  unoptimized={shouldUseUnoptimizedImage(image.src)}
+                />
+              </button>
+            ))}
+          </div>
+        )}
+        </div>
+      );
+    }
 
     if (isMobileViewport) {
       return (

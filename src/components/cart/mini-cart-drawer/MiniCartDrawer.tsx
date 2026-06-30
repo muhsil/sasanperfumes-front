@@ -18,7 +18,7 @@ import { Button } from "@/components/common/Button";
 import { EmptyCart } from "./EmptyCart";
 import { GiftSection } from "./GiftSection";
 import { CartItem } from "./CartItem";
-import { useProductCategories } from "@/hooks/useProductCategories";
+import { useProductMeta } from "@/hooks/useProductCategories";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 import type { MiniCartDrawerProps } from "./types";
 
@@ -70,9 +70,19 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
   const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
   const divisor = Math.pow(10, currencyMinorUnit);
   const hasOnlyPendingItems = cartItems.length > 0 && cartItems.every((item) => item.item_key.startsWith("temp-"));
+  const getParentId = (item: typeof cartItems[number]): number => {
+    const pid = item.meta?.variation?.Parent_id || item.meta?.variation?.parent_id;
+    return pid ? parseInt(pid, 10) : item.id;
+  };
+  const productIds = cartItems.map((item) => getParentId(item));
+  const { categories: productCategories, categoryIds: productCategoryIds } = useProductMeta(productIds, locale);
   const cartDiscounts = useMemo(
-    () => calculateCartDiscounts(cartItems.filter((item) => !isFreeGiftItem(item.item_key)), discountRules),
-    [cartItems, discountRules, isFreeGiftItem]
+    () => calculateCartDiscounts(
+      cartItems.filter((item) => !isFreeGiftItem(item.item_key)),
+      discountRules,
+      { categoryIdsByProductId: productCategoryIds, currencyMinorUnit }
+    ),
+    [cartItems, discountRules, isFreeGiftItem, productCategoryIds, currencyMinorUnit]
   );
 
   const handleQuantityChange = async (itemKey: string, newQuantity: number) => {
@@ -159,9 +169,6 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
     </div>
   ) : undefined;
 
-  const productIds = cartItems.map((item) => item.id);
-  const productCategories = useProductCategories(productIds, locale);
-
   const renderCartItems = () => (
     <ul className="divide-y divide-brand-border/60">
       {cartItems.map((item) => {
@@ -188,7 +195,7 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
             isGiftItem={isGiftItem}
             isNewlyAddedGift={isNewlyAddedGift}
             divisor={divisor}
-            categoryName={productCategories[item.id]}
+            categoryName={productCategories[getParentId(item)]}
             onQuantityChange={handleQuantityChange}
             onRemove={handleRemoveItem}
           />

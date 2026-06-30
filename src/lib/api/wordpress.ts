@@ -1404,12 +1404,13 @@ export async function getHeaderSettings(frontendHost?: string): Promise<HeaderSe
 }
 
 // Fetch mobile bar settings from WordPress Plugin API
-export async function getMobileBarSettings(locale?: Locale): Promise<MobileBarSettings> {
+export async function getMobileBarSettings(locale?: Locale, frontendHost?: string): Promise<MobileBarSettings> {
   const data = await fetchWPAPI<WPPluginMobileBarSettings>(
     "/sasanperfumes/v1/mobile-bar",
     {
       tags: ["mobile-bar-settings"],
       locale,
+      frontendHost,
       revalidate: 600,
     }
   );

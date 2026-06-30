@@ -61,13 +61,14 @@ export default function CartPage() {
   const { categories: productCategories, categoryIds: productCategoryIds, brands: productBrands } = useProductMeta(productIds, locale as Locale);
   // Map each cart item to its lookup ID for brand/category
   const getItemLookupId = (item: CoCartItem): number => getParentId(item);
+  const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
   const cartDiscounts = useMemo(
     () => calculateCartDiscounts(
       cartItems.filter((item) => !isFreeGiftItem(item.item_key)),
       discountRules,
-      { categoryIdsByProductId: productCategoryIds }
+      { categoryIdsByProductId: productCategoryIds, currencyMinorUnit }
     ),
-    [cartItems, discountRules, isFreeGiftItem, productCategoryIds]
+    [cartItems, discountRules, isFreeGiftItem, productCategoryIds, currencyMinorUnit]
   );
   const promotionalDiscountTotal = getCartDiscountTotal(cartDiscounts);
 
@@ -79,7 +80,6 @@ export default function CartPage() {
   const isInitialCartLoading = isLoading && cartItems.length === 0;
   const isEmpty = !isInitialCartLoading && cartItems.length === 0;
   
-  const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
   const divisor = Math.pow(10, currencyMinorUnit);
   const adjustedCartTotal = Math.max((parseFloat(cartTotal) || 0) - promotionalDiscountTotal, 0);
 

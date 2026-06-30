@@ -37,6 +37,7 @@ const LocationCurrencyBanner = dynamic(() => import("@/components/common/Locatio
 const CookieConsentBanner = dynamic(() => import("@/components/common/CookieConsentBanner").then(mod => mod.CookieConsentBanner));
 const NetworkStatusBanner = dynamic(() => import("@/components/common/NetworkStatusBanner").then(mod => mod.NetworkStatusBanner));
 const MobileEnhancements = dynamic(() => import("@/components/common/MobileEnhancements").then(mod => mod.MobileEnhancements));
+const MobileBottomBar = dynamic(() => import("@/components/layout/MobileBottomBar").then(mod => mod.MobileBottomBar));
 
 interface LocaleLayoutProps {
   children: React.ReactNode;
@@ -104,13 +105,14 @@ export default async function LocaleLayout({
   ]);
 
   // Fetch site settings, header settings, topbar settings, menu, and SEO settings in parallel
-  const [siteSettings, headerSettings, topbarSettings, menuItems, mobileMenuItems, mobileBottomBarMenu, categoriesDrawerMenu, seoSettings, footerSettings, whatsAppSettings, featureToggles, contactPageContent] = await Promise.all([
+  const [siteSettings, headerSettings, topbarSettings, menuItems, mobileMenuItems, mobileBottomBarMenu, mobileBarSettings, categoriesDrawerMenu, seoSettings, footerSettings, whatsAppSettings, featureToggles, contactPageContent] = await Promise.all([
     getSiteSettings(validLocale, frontendHost),
     getHeaderSettings(frontendHost),
     getTopbarSettings(validLocale, frontendHost),
     getPrimaryMenu(validLocale, frontendHost),
     getMobileHeaderMenu(validLocale, frontendHost),
     getMobileBottomBarMenu(validLocale, frontendHost),
+    getMobileBarSettings(validLocale, frontendHost),
     getCategoriesDrawerMenu(validLocale, frontendHost),
     getSeoSettings(validLocale, frontendHost),
     getFooterSettings(frontendHost),
@@ -216,6 +218,17 @@ export default async function LocaleLayout({
                   more: dictionary.common.more,
                 }}
               />
+              <div className="print:hidden">
+                <MobileBottomBar
+                  locale={validLocale}
+                  settings={mobileBarSettings}
+                  dictionary={dictionary}
+                  menuItems={menuItems?.items}
+                  mobileMenuItems={mobileMenuItems?.items}
+                  mobileBottomBarMenuItems={mobileBottomBarMenu?.items}
+                  categoriesDrawerMenuItems={categoriesDrawerMenu?.items}
+                />
+              </div>
               <NetworkStatusBanner locale={validLocale} />
               {market.code === "intl" && <LocationCurrencyBanner locale={validLocale} />}
               <CookieConsentBanner locale={validLocale} />

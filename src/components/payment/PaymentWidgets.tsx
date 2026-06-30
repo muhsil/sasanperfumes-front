@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { TamaraPromoWidget } from "./TamaraPromoWidget";
+import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface PaymentWidgetsProps {
   price: number;
@@ -17,13 +18,16 @@ interface PaymentGateway {
 }
 
 export function PaymentWidgets({ price, currency, locale }: PaymentWidgetsProps) {
+  const marketPrefix = useMarketPrefix();
   const [enabledGateways, setEnabledGateways] = useState<PaymentGateway[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchPaymentGateways = async () => {
       try {
-        const response = await fetch("/api/payment-gateways");
+        const market = marketPrefix.replace(/^\//, "");
+        const query = market ? `?market=${encodeURIComponent(market)}` : "";
+        const response = await fetch(`/api/payment-gateways${query}`);
         const data = await response.json();
         if (data.success && data.gateways) {
           setEnabledGateways(data.gateways);
@@ -35,7 +39,7 @@ export function PaymentWidgets({ price, currency, locale }: PaymentWidgetsProps)
       }
     };
     fetchPaymentGateways();
-  }, []);
+  }, [marketPrefix]);
 
   // Don't render widgets for very low prices
   if (price <= 0) return null;
