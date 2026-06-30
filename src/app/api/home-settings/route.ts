@@ -89,7 +89,9 @@ export async function GET(request: NextRequest) {
     request.headers.get("x-forwarded-host") ||
     request.headers.get("host")
   );
-  const queryMarket = request.nextUrl.searchParams.get("market")?.toLowerCase();
+  const queryMarket =
+    request.nextUrl.searchParams.get("__market")?.toLowerCase() ||
+    request.nextUrl.searchParams.get("market")?.toLowerCase();
   const explicitMarket = request.headers.get("x-market")?.toLowerCase();
   const market =
     extractRouteMarket(queryMarket) ||
