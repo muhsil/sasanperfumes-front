@@ -3,7 +3,7 @@
  * Plugin Name: sasanperfumes
  * Plugin URI: https://cms.sasanperfumes.com
  * Description: Admin dashboard and REST API endpoints for sasanperfumes with Media Library upload, dynamic slides, layout options, Bundles Creator, and Free Gift functionality.
- * Version: 6.6.9
+ * Version: 6.6.10
  * Author: ShapeHive
  * License: GPL v2 or later
  */
@@ -18,12 +18,92 @@ if (defined('sasanperfumes_FRONTEND_SETTINGS_LOADED')) {
     return;
 }
 define('sasanperfumes_FRONTEND_SETTINGS_LOADED', true);
-define('sasanperfumes_SETTINGS_VERSION', '6.6.9');
+define('sasanperfumes_SETTINGS_VERSION', '6.6.10');
 define('sasanperfumes_SETTINGS_PATH', plugin_dir_path(__FILE__));
 
 define('SASANPERFUMES_REST_NAMESPACE', 'sasanperfumes/v1');
 define('SASANPERFUMES_BUNDLES_REST_NAMESPACE', 'sasanperfumes-bundles/v1');
 define('SASANPERFUMES_FREE_GIFTS_REST_NAMESPACE', 'sasanperfumes-free-gifts/v1');
+
+function sasanperfumes_order_number_meta_value($order) {
+    if (!$order || !is_a($order, 'WC_Order')) return '';
+
+    foreach (array('legacy_order_number', 'legacy_order_id', '_sasan_order_number') as $key) {
+        $value = trim((string) $order->get_meta($key, true));
+        if ($value !== '') {
+            return $value;
+        }
+    }
+
+    return '';
+}
+
+function sasanperfumes_find_highest_order_number() {
+    if (!function_exists('wc_get_orders')) return 0;
+
+    $highest = 0;
+    $page = 1;
+
+    do {
+        $order_ids = wc_get_orders(array(
+            'limit' => 200,
+            'paged' => $page,
+            'return' => 'ids',
+            'status' => array_keys(wc_get_order_statuses()),
+            'orderby' => 'date',
+            'order' => 'DESC',
+        ));
+
+        foreach ((array) $order_ids as $order_id) {
+            $order = wc_get_order($order_id);
+            if (!$order) continue;
+
+            foreach (array('legacy_order_number', 'legacy_order_id', '_sasan_order_number') as $key) {
+                $value = trim((string) $order->get_meta($key, true));
+                if (preg_match('/^\d+$/', $value)) {
+                    $highest = max($highest, (int) $value);
+                }
+            }
+        }
+
+        $page++;
+    } while (is_array($order_ids) && count($order_ids) === 200);
+
+    return $highest;
+}
+
+function sasanperfumes_next_order_number() {
+    $next = absint(get_option('sasanperfumes_next_order_number', 0));
+
+    if ($next < 1) {
+        $next = sasanperfumes_find_highest_order_number() + 1;
+    }
+
+    update_option('sasanperfumes_next_order_number', $next + 1, false);
+
+    return $next;
+}
+
+function sasanperfumes_assign_order_number($order) {
+    if (!$order || !is_a($order, 'WC_Order')) {
+        $order = wc_get_order(absint($order));
+    }
+
+    if (!$order || !is_a($order, 'WC_Order')) return;
+    if (sasanperfumes_order_number_meta_value($order) !== '') return;
+
+    $order->update_meta_data('_sasan_order_number', (string) sasanperfumes_next_order_number());
+    $order->save();
+}
+
+add_action('woocommerce_checkout_order_created', 'sasanperfumes_assign_order_number', 20);
+add_action('woocommerce_store_api_checkout_order_processed', 'sasanperfumes_assign_order_number', 20);
+add_action('woocommerce_new_order', 'sasanperfumes_assign_order_number', 20, 2);
+
+add_filter('woocommerce_order_number', function($order_number, $order) {
+    $custom_order_number = sasanperfumes_order_number_meta_value($order);
+    return $custom_order_number !== '' ? $custom_order_number : $order_number;
+}, 20, 2);
 
 function sasanperfumes_register_rest_route($route, $args = array(), $override = false) {
     register_rest_route(SASANPERFUMES_REST_NAMESPACE, $route, $args, $override);
