@@ -1,6 +1,6 @@
 <?php
 /**
- * Customer new account email - ShapeHive Custom Style
+ * Customer new account email - Sasan Perfumes Custom Style
  *
  * This template can be overridden by copying it to yourtheme/woocommerce/emails/customer-new-account.php.
  *
@@ -23,9 +23,9 @@ $login_url = $frontend_url . '/en/login/';
  */
 do_action( 'woocommerce_email_header', $email_heading, $email ); ?>
 
-<p class="email-text" style="font-size: 14px; line-height: 1.7; color: #c0392b; margin: 0 0 15px 0;">Hi <?php echo esc_html( $user_login ); ?>,</p>
+<p class="email-text" style="font-size: 14px; line-height: 1.7; color: #333333; margin: 0 0 15px 0;">Hi <?php echo esc_html( $user_login ); ?>,</p>
 
-<p class="email-text" style="font-size: 14px; line-height: 1.7; color: #c0392b; margin: 0 0 15px 0;">
+<p class="email-text" style="font-size: 14px; line-height: 1.7; color: #333333; margin: 0 0 15px 0;">
 	<?php
 	printf(
 		/* translators: %s: Site title */
@@ -41,7 +41,7 @@ do_action( 'woocommerce_email_header', $email_heading, $email ); ?>
 <p class="username-value" style="font-size: 15px; font-weight: 600; color: #1a1a1a; margin: 0 0 20px 0;"><?php echo esc_html( $user_login ); ?></p>
 
 <?php if ( 'yes' === get_option( 'woocommerce_registration_generate_password' ) && $password_generated && $set_password_url ) : ?>
-<p class="email-text" style="font-size: 14px; line-height: 1.7; color: #c0392b; margin: 0 0 15px 0;">
+<p class="email-text" style="font-size: 14px; line-height: 1.7; color: #333333; margin: 0 0 15px 0;">
 	<?php esc_html_e( 'To set your password, visit the following address:', 'woocommerce' ); ?>
 </p>
 <p style="margin: 20px 0;">
@@ -49,7 +49,7 @@ do_action( 'woocommerce_email_header', $email_heading, $email ); ?>
 </p>
 <?php endif; ?>
 
-<p class="email-text" style="font-size: 14px; line-height: 1.7; color: #c0392b; margin: 0 0 15px 0;">
+<p class="email-text" style="font-size: 14px; line-height: 1.7; color: #333333; margin: 0 0 15px 0;">
 	<?php esc_html_e( 'You can access your account area to view orders, change your password, and more at:', 'woocommerce' ); ?>
 </p>
 

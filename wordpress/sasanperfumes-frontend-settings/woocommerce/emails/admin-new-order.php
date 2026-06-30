@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin new order email - ShapeHive Custom Style
+ * Admin new order email - Sasan Perfumes Custom Style
  *
  * This template can be overridden by copying it to yourtheme/woocommerce/emails/admin-new-order.php.
  *
@@ -19,7 +19,7 @@ $order_url = $frontend_url . '/en/account/orders/' . $order->get_id() . '/';
  */
 do_action( 'woocommerce_email_header', $email_heading, $email ); ?>
 
-<p class="email-text" style="font-size: 14px; line-height: 1.7; color: #c0392b; margin: 0 0 15px 0;">
+<p class="email-text" style="font-size: 14px; line-height: 1.7; color: #333333; margin: 0 0 15px 0;">
 	<?php
 	printf(
 		/* translators: %s: Customer billing full name */

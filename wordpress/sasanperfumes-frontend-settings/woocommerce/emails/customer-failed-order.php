@@ -1,6 +1,6 @@
 <?php
 /**
- * Customer failed order email - ShapeHive Custom Style
+ * Customer failed order email - Sasan Perfumes Custom Style
  *
  * This template can be overridden by copying it to yourtheme/woocommerce/emails/customer-failed-order.php.
  *
@@ -21,9 +21,9 @@ $checkout_url = $frontend_url . '/en/checkout/';
  */
 do_action( 'woocommerce_email_header', $email_heading, $email ); ?>
 
-<p class="email-text" style="font-size: 14px; line-height: 1.7; color: #c0392b; margin: 0 0 15px 0;">Hi <?php echo esc_html( $order->get_billing_first_name() ); ?>,</p>
+<p class="email-text" style="font-size: 14px; line-height: 1.7; color: #333333; margin: 0 0 15px 0;">Hi <?php echo esc_html( $order->get_billing_first_name() ); ?>,</p>
 
-<p class="email-text" style="font-size: 14px; line-height: 1.7; color: #c0392b; margin: 0 0 15px 0;">
+<p class="email-text" style="font-size: 14px; line-height: 1.7; color: #333333; margin: 0 0 15px 0;">
 	<?php
 	printf(
 		/* translators: %1$s: Order number, %2$s: Site title */
