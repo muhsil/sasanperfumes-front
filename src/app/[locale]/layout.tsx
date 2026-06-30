@@ -65,9 +65,9 @@ export async function generateMetadata({
   const proxiedFaviconUrl = faviconUrl
     ? faviconUrl.replace(/^https?:\/\/[^/]+\/wp-content\/uploads\//, '/cms-media/')
     : undefined;
-  const faviconWithCacheBust = proxiedFaviconUrl 
-    ? `${proxiedFaviconUrl}${proxiedFaviconUrl.includes('?') ? '&' : '?'}v=${siteSettings.favicon?.id || Date.now()}`
-    : undefined;
+  const faviconWithCacheBust = proxiedFaviconUrl
+    ? `${proxiedFaviconUrl}${proxiedFaviconUrl.includes("?") ? "&" : "?"}v=${siteSettings.favicon?.id || Date.now()}`
+    : "/sasan-fav.png";
 
   return {
     title: {
@@ -77,11 +77,11 @@ export async function generateMetadata({
     description: metadataDescription,
     metadataBase: new URL(siteConfig.url),
     robots: INDEX_FOLLOW_ROBOTS,
-    icons: faviconWithCacheBust ? {
+    icons: {
       icon: faviconWithCacheBust,
       shortcut: faviconWithCacheBust,
       apple: faviconWithCacheBust,
-    } : undefined,
+    },
   };
 }
 

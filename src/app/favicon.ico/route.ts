@@ -3,11 +3,6 @@ import type { NextRequest } from "next/server";
 import { siteConfig } from "@/config/site";
 import { getSiteSettings } from "@/lib/api/wordpress";
 
-const faviconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#2b1f18"/>
-  <path d="M18 46V18h30v7H27v7h18v7H27v7h-9Z" fill="#f4eadf"/>
-</svg>`;
-
 export async function GET(request: NextRequest) {
   const siteSettings = await getSiteSettings(siteConfig.defaultLocale);
   const faviconUrl = siteSettings.favicon?.url;
@@ -31,10 +26,10 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  return new NextResponse(faviconSvg, {
+  return NextResponse.redirect(new URL("/sasan-fav.png", request.url), {
+    status: 307,
     headers: {
-      "Content-Type": "image/svg+xml",
       "Cache-Control": "public, max-age=86400",
-    },
+    }
   });
 }

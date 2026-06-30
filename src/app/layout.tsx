@@ -25,6 +25,11 @@ export const metadata: Metadata = {
   description: siteConfig.description,
   metadataBase: new URL(siteConfig.url),
   robots: INDEX_FOLLOW_ROBOTS,
+  icons: {
+    icon: "/sasan-fav.png",
+    shortcut: "/sasan-fav.png",
+    apple: "/sasan-fav.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
