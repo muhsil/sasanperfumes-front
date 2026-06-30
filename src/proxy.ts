@@ -6,7 +6,6 @@ const locales = siteConfig.locales;
 const defaultLocale = siteConfig.defaultLocale;
 const MARKET_PREFIX_SEGMENTS = new Set<string>(["qa", "om", "sa"]);
 const LOCALE_SEGMENTS = new Set<string>(["en", "ar"]);
-const LEGACY_BRAND_CATEGORY_SLUGS = new Set<string>(["flower-scents", "rimal", "serenity", "liwan"]);
 
 const BLOCKED_PATHS = [
   "/wp-admin",
@@ -195,21 +194,6 @@ function redirectMarketPathToLocaleRoute(
   return addSecurityHeaders(response);
 }
 
-function getLegacyBrandCategoryRedirectPath(segments: string[]): string | null {
-  const first = segments[0]?.toLowerCase();
-  const second = segments[1]?.toLowerCase();
-  const hasMarket = MARKET_PREFIX_SEGMENTS.has(first || "");
-  const localeIndex = hasMarket ? 1 : 0;
-  const locale = segments[localeIndex]?.toLowerCase();
-  const categorySegment = segments[localeIndex + 1]?.toLowerCase();
-  const slug = segments[localeIndex + 2]?.toLowerCase();
-
-  if (!LOCALE_SEGMENTS.has(locale || "")) return null;
-  if (categorySegment !== "category" || !slug || !LEGACY_BRAND_CATEGORY_SLUGS.has(slug)) return null;
-
-  return `${hasMarket ? `/${first}` : ""}/${locale}/brands/${slug}`;
-}
-
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const { market: routeMarket, locale: routeLocale } = getMarketAndLocale(pathname);
@@ -253,11 +237,6 @@ export function proxy(request: NextRequest) {
     }
     const response = NextResponse.next({ request: { headers: requestHeaders } });
     return addNoStoreHeaders(addSecurityHeaders(response));
-  }
-
-  const legacyBrandCategoryRedirectPath = getLegacyBrandCategoryRedirectPath(segments);
-  if (legacyBrandCategoryRedirectPath) {
-    return redirectToPath(request, legacyBrandCategoryRedirectPath, 308);
   }
 
   // Fix malformed locale-first market URLs: /ar/qa/en/... -> /qa/ar/...

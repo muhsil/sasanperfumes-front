@@ -231,7 +231,7 @@ class sasanperfumes_Security {
      */
     private function force_mail_from() {
         add_filter('wp_mail_from', function() {
-            return 'accounts@sasanperfumes.com';
+            return 'support@sasanperfumes.com';
         }, 999);
 
         add_filter('wp_mail_from_name', function($name) {

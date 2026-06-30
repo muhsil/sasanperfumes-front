@@ -93,7 +93,7 @@ class sasanperfumes_Forms {
     }
 
 	private function get_from_address(): string {
-		return 'accounts@sasanperfumes.com';
+		return 'support@sasanperfumes.com';
 	}
 
     private function get_from_name(): string {

@@ -18,7 +18,7 @@ The legacy `asl-security` plugin is still installed and active on the staging se
 3. Restart WordPress or clear any caching
 
 ### Option 2: Via WordPress Admin Dashboard
-1. Log into `https://cms.shapehive.com/wp-admin`
+1. Log into `https://cms.sasanperfumes.com/wp-admin`
 2. Go to **Plugins** → **Installed Plugins**
 3. Find and **Deactivate** any of these plugins:
    - `asl-security`
@@ -48,7 +48,7 @@ After applying the fix:
 
 1. Check REST API response:
    ```bash
-   curl https://cms.shapehive.com/wp-json/sasanperfumes/v1/home-settings?lang=en
+   curl https://cms.sasanperfumes.com/wp-json/sasanperfumes/v1/home-settings?lang=en
    ```
    Should return JSON with hero settings (not 500 error)
 

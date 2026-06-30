@@ -1,6 +1,8 @@
 ﻿import { disableRuntimeCache, siteConfig, type Locale } from "@/config/site";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { translateToArabic } from "@/config/menu";
+import { getActiveDiscountRules } from "@/lib/discountRules";
+import type { DiscountRule } from "@/types/discount";
 import {
   backendHeaders,
   extractMarketCode,
@@ -1289,22 +1291,12 @@ export async function getMenuBySlug(slug: string, locale?: Locale, frontendHost?
   return transformMenu(data);
 }
 
-const LEGACY_CATEGORY_DRAWER_SLUGS = new Set(["flower-scents", "rimal", "serenity", "liwan"]);
-
-function isLegacyCategoryDrawerItem(item: WPMenuItem): boolean {
-  const slug = extractCategorySlugFromUrl(item.url || "").toLowerCase();
-  return LEGACY_CATEGORY_DRAWER_SLUGS.has(slug);
-}
-
 // Fetch categories drawer menu (independent from mobile hamburger and desktop header)
 export async function getCategoriesDrawerMenu(locale?: Locale, frontendHost?: string): Promise<WPMenu | null> {
   const menu = await getMenuBySlug("categories-drawer", locale, frontendHost);
   if (!menu) return null;
 
-  return {
-    ...menu,
-    items: menu.items.filter((item) => !isLegacyCategoryDrawerItem(item)),
-  };
+  return menu;
 }
 
 // Fetch footer menu
@@ -2835,17 +2827,33 @@ export async function getBrandsSliderData(locale?: Locale): Promise<BrandsSlider
 
 /* ── Discount Rules ── */
 
-import { getActiveDiscountRules } from "@/lib/discountRules";
-import type { DiscountRule } from "@/types/discount";
+const DISCOUNT_RULE_ENDPOINTS = [
+  "/sasanperfumes/v1/discount-rules",
+  "/shapehive/v1/discount-rules",
+];
 
 export async function getDiscountRules(frontendHost?: string): Promise<DiscountRule[]> {
-  const rules = await fetchWPAPI<DiscountRule[]>(
-    "/shapehive/v1/discount-rules",
-    {
-      noCache: true,
-      frontendHost,
+  const uniqueEndpoints = new Set(DISCOUNT_RULE_ENDPOINTS);
+  let rules: DiscountRule[] | null = null;
+
+  for (const endpoint of uniqueEndpoints) {
+    try {
+      const data = await fetchWPAPI<DiscountRule[]>(endpoint, {
+        noCache: true,
+        frontendHost,
+      });
+      if (Array.isArray(data)) {
+        rules = data;
+        break;
+      }
+    } catch (error) {
+      if (process.env.NODE_ENV !== "production") {
+        console.warn(`[wordpress.getDiscountRules] endpoint failed`, endpoint, error);
+      }
     }
-  );
+  }
+
+  if (!rules) return [];
   if (!rules || !Array.isArray(rules)) return [];
 
   return getActiveDiscountRules(rules);

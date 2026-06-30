@@ -153,7 +153,7 @@ class sasanperfumes_Email_Templates {
 	}
 
 	public function override_email_from_address( $from_address ) {
-		return 'accounts@sasanperfumes.com';
+		return 'support@sasanperfumes.com';
 	}
 
 	public function rewrite_password_change_email( $pass_change_email, $user, $userdata ) {

@@ -83,7 +83,7 @@ export const siteConfig = {
     whatsapp: "0567394314",
     phone: "0563982953",
     callPhone: "0563982953",
-    email: "accounts@sasanperfumes.com",
+    email: "support@sasanperfumes.com",
     address: "United Arab Emirates",
   },
   

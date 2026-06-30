@@ -20,7 +20,6 @@ function isNonAsciiSlug(slug: string): boolean {
   return /[^\x00-\x7F]/.test(slug);
 }
 
-const LEGACY_BRAND_CATEGORY_SLUGS = new Set(["flower-scents", "rimal", "serenity", "liwan"]);
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -127,10 +126,6 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     getRequestFrontendHost(marketHint),
   ]);
   const pathPrefix = getMarketPathPrefix(market.code);
-
-  if (LEGACY_BRAND_CATEGORY_SLUGS.has(slug.toLowerCase())) {
-    redirect(`${pathPrefix}/${locale}/brands/${slug.toLowerCase()}`);
-  }
 
   // If the URL contains a non-ASCII slug (e.g., Arabic), redirect to the English slug
   // This prevents duplicate content issues where both Arabic-slug and English-slug URLs get indexed

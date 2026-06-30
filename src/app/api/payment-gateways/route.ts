@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { getEnvVar, getWcCredentials } from "@/lib/utils/loadEnv";
+import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { getPaymentGatewayFilters, getPaymentGatewayOverrides } from "@/config/payment";
+import { disableRuntimeCache } from "@/config/site";
 import {
   backendMarketHeaders,
   noCacheUrl,
@@ -10,19 +11,38 @@ import {
 import { getRequestMarket } from "@/lib/market/server";
 import { isStripeConfigured } from "@/lib/stripe/config";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const dynamic = "auto";
+export const revalidate = 120;
 
-const GATEWAYS_CACHE_TTL = 0;
+const GATEWAYS_CACHE_TTL = 180;
 interface CachedGateways {
   data: Record<string, unknown>;
   timestamp: number;
 }
-let gatewaysCache: CachedGateways | null = null;
+const gatewaysCache = new Map<string, CachedGateways>();
+
+function getGatewayCacheKey(marketCode: string) {
+  return `gateways_${marketCode || "intl"}`;
+}
+
+function gatewaysCacheIsEnabled() {
+  const disable = process.env.PAYMENT_GATEWAYS_CACHE_DISABLED === "true" || process.env.DISABLE_RUNTIME_CACHE === "true";
+  return !disableRuntimeCache && !disable;
+}
+
+function getCachedGateways(cacheKey: string): CachedGateways | null {
+  const entry = gatewaysCache.get(cacheKey);
+  if (!entry) return null;
+  if (Date.now() - entry.timestamp > GATEWAYS_CACHE_TTL * 1000) return null;
+  return entry;
+}
 
 function gatewaysJson(data: Record<string, unknown>, init?: ResponseInit) {
   const headers = new Headers(init?.headers);
-  headers.set("Cache-Control", "no-store, no-cache, max-age=0, must-revalidate");
+  headers.set("Cache-Control", gatewaysCacheIsEnabled()
+    ? "public, s-maxage=180, stale-while-revalidate=360"
+    : "no-store, no-cache, max-age=0, must-revalidate"
+  );
   headers.set("Pragma", "no-cache");
   headers.set("Vary", "Host, X-Frontend-Host, Referer");
   return NextResponse.json(data, { ...init, headers });
@@ -233,15 +253,18 @@ function addStripeFallbackGateway(
 export async function GET() {
   try {
     const market = await getRequestMarket();
+    const cacheKey = getGatewayCacheKey(market.code);
+    const cached = getCachedGateways(cacheKey);
+
+    if (cached && gatewaysCacheIsEnabled()) {
+      return gatewaysJson(cached.data);
+    }
+
     const gatewayOverrides = getPaymentGatewayOverrides();
     const gatewayFilters = getPaymentGatewayFilters(market.code);
     const wpJsonBase = wpJsonBaseForMarket(market.code);
     const apiBase = `${wpJsonBase}/wc/v3`;
     const storeApiBase = `${wpJsonBase}/wc/store/v1`;
-
-    if (gatewaysCache && Date.now() - gatewaysCache.timestamp < GATEWAYS_CACHE_TTL) {
-      return gatewaysJson(gatewaysCache.data);
-    }
 
     const { consumerKey, consumerSecret } = getWcCredentials(market.code);
     const allowedGatewaySet = expandPaymentGatewayIdAliases(gatewayFilters.allowed);
@@ -299,12 +322,14 @@ export async function GET() {
             gatewayFilters
           );
 
-            const responseData = {
-              success: true,
-              gateways: mergedGateways,
-              source: gatewayOverrides.length > 0 ? "woocommerce_rest_api+hostinger_env" : "woocommerce_rest_api",
-            };
-          gatewaysCache = { data: responseData, timestamp: Date.now() };
+          const responseData = {
+            success: true,
+            gateways: mergedGateways,
+            source: gatewayOverrides.length > 0 ? "woocommerce_rest_api+hostinger_env" : "woocommerce_rest_api",
+          };
+          if (gatewaysCacheIsEnabled()) {
+            gatewaysCache.set(cacheKey, { data: responseData, timestamp: Date.now() });
+          }
           return gatewaysJson(responseData);
         }
       }
@@ -335,7 +360,9 @@ export async function GET() {
           gateways: envFallbackGateways,
           source: gatewayOverrides.length > 0 ? "hostinger_env_fallback+overrides" : "hostinger_env_fallback",
         };
-        gatewaysCache = { data: fallbackData, timestamp: Date.now() };
+        if (gatewaysCacheIsEnabled()) {
+          gatewaysCache.set(cacheKey, { data: fallbackData, timestamp: Date.now() });
+        }
         return gatewaysJson(fallbackData);
       }
 
@@ -393,7 +420,9 @@ export async function GET() {
       gateways,
       source: gatewayOverrides.length > 0 ? "store_api_fallback+hostinger_env" : "store_api_fallback",
     };
-    gatewaysCache = { data: fallbackData, timestamp: Date.now() };
+    if (gatewaysCacheIsEnabled()) {
+      gatewaysCache.set(cacheKey, { data: fallbackData, timestamp: Date.now() });
+    }
     return gatewaysJson(fallbackData);
   } catch (error) {
     return gatewaysJson(
