@@ -14,7 +14,6 @@ export const marketConfigs: MarketConfig[] = [
     code: "qa",
     hostnames: [
       "sasanperfumes.com/qa",
-      "store.sasanperfumes.com/qa",
       "localhost/qa",
       "127.0.0.1/qa",
     ],
@@ -25,7 +24,6 @@ export const marketConfigs: MarketConfig[] = [
     code: "om",
     hostnames: [
       "sasanperfumes.com/om",
-      "store.sasanperfumes.com/om",
       "localhost/om",
       "127.0.0.1/om",
     ],
@@ -36,7 +34,6 @@ export const marketConfigs: MarketConfig[] = [
     code: "sa",
     hostnames: [
       "sasanperfumes.com/sa",
-      "store.sasanperfumes.com/sa",
       "localhost/sa",
       "127.0.0.1/sa",
     ],
@@ -47,7 +44,6 @@ export const marketConfigs: MarketConfig[] = [
     code: "intl",
     hostnames: [
       "sasanperfumes.com",
-      "store.sasanperfumes.com",
       "localhost",
       "127.0.0.1",
     ],
