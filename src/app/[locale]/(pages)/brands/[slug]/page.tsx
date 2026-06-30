@@ -2,9 +2,9 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
-import { getBrand, getBrands, getFeatureToggles, pickLocale } from "@/lib/api/wordpress";
+import { getBrand, getFeatureToggles, pickLocale } from "@/lib/api/wordpress";
 import { getProducts } from "@/lib/api/woocommerce";
-import { getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
+import { getMarketHintFromSearchParams, getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
 import { shouldUseUnoptimizedImage } from "@/lib/utils/image";
 import { ProductListing } from "@/components/shop/ProductListing";
 import { BLUR_DATA_URL, cn, decodeHtmlEntities } from "@/lib/utils";
@@ -12,20 +12,12 @@ import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
 import { getMarketPathPrefix } from "@/config/market";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 interface BrandPageProps {
   params: Promise<{ locale: string; slug: string }>;
-}
-
-export async function generateStaticParams() {
-  const brands = await getBrands();
-  const params: { locale: string; slug: string }[] = [];
-  for (const brand of brands) {
-    params.push({ locale: "en", slug: brand.slug });
-    params.push({ locale: "ar", slug: brand.slug });
-  }
-  return params;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export async function generateMetadata({ params }: BrandPageProps): Promise<Metadata> {
@@ -50,20 +42,21 @@ export async function generateMetadata({ params }: BrandPageProps): Promise<Meta
   });
 }
 
-export default async function BrandDetailPage({ params }: BrandPageProps) {
+export default async function BrandDetailPage({ params, searchParams }: BrandPageProps) {
   const { locale, slug } = await params;
+  const marketHint = getMarketHintFromSearchParams(await searchParams);
   const toggles = await getFeatureToggles();
   if (!toggles.sasanperfumes_brands_page_enabled) notFound();
   const brand = await getBrand(slug);
   if (!brand) notFound();
   const [market, frontendHost] = await Promise.all([
-    getRequestMarket(),
-    getRequestFrontendHost(),
+    getRequestMarket(marketHint),
+    getRequestFrontendHost(marketHint),
   ]);
   const pathPrefix = getMarketPathPrefix(market.code);
 
   const isRTL = locale === "ar";
-  const brandName = decodeHtmlEntities(brand.name);
+  const brandName = decodeHtmlEntities(brand.name || slug);
 
   const aboutTitle = decodeHtmlEntities(pickLocale(brand.aboutTitle, locale, `About ${brandName}`));
   const aboutContent = decodeHtmlEntities(pickLocale(brand.aboutContent, locale, brand.description || ""));
@@ -84,6 +77,7 @@ export default async function BrandDetailPage({ params }: BrandPageProps) {
 
   const brandImage = brand.logo || brand.banner || brand.image;
   const aboutBackgroundImage = brand.banner || brand.image || "";
+  const notes = Array.isArray(brand.notes) ? brand.notes : [];
   const aboutParagraphs = aboutContent
     .split(/\n+/)
     .map((paragraph) => paragraph.trim())
@@ -195,7 +189,7 @@ export default async function BrandDetailPage({ params }: BrandPageProps) {
         </section>
       )}
 
-      {brand.notes.length > 0 && (
+      {notes.length > 0 && (
         <section className="bg-[#232323] px-4 pb-8 pt-8 text-white md:pb-10 md:pt-10">
           <div>
             <div className="mb-8 flex flex-col gap-3 md:mb-10">
@@ -207,7 +201,7 @@ export default async function BrandDetailPage({ params }: BrandPageProps) {
               </h2>
             </div>
             <div className="grid gap-0 border-t border-white/10 sm:grid-cols-2 lg:grid-cols-3">
-              {brand.notes.map((note, idx) => {
+              {notes.map((note, idx) => {
                 const noteTitle = decodeHtmlEntities(pickLocale(note.title, locale, ""));
                 const noteDesc = decodeHtmlEntities(pickLocale(note.description, locale, ""));
                 const noteImage = note.image?.trim() || "";

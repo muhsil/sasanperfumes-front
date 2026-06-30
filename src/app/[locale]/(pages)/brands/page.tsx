@@ -9,13 +9,15 @@ import { decodeHtmlEntities } from "@/lib/utils";
 import { shouldUseUnoptimizedImage } from "@/lib/utils/image";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
-import { getRequestMarket } from "@/lib/market/server";
+import { getMarketHintFromSearchParams, getRequestMarket } from "@/lib/market/server";
 import { getMarketPathPrefix } from "@/config/market";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 interface BrandsPageProps {
   params: Promise<{ locale: string }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export async function generateMetadata({ params }: BrandsPageProps): Promise<Metadata> {
@@ -37,8 +39,9 @@ export async function generateMetadata({ params }: BrandsPageProps): Promise<Met
   });
 }
 
-export default async function BrandsPage({ params }: BrandsPageProps) {
-  const market = await getRequestMarket();
+export default async function BrandsPage({ params, searchParams }: BrandsPageProps) {
+  const marketHint = getMarketHintFromSearchParams(await searchParams);
+  const market = await getRequestMarket(marketHint);
   const pathPrefix = getMarketPathPrefix(market.code);
   const { locale } = await params;
   const isRTL = locale === "ar";
@@ -71,7 +74,7 @@ export default async function BrandsPage({ params }: BrandsPageProps) {
           {brands.length > 0 ? (
             <div className="grid gap-x-4 gap-y-10 sm:grid-cols-2 md:gap-x-6 lg:grid-cols-4 xl:grid-cols-5">
               {brands.map((brand) => {
-                const brandName = decodeHtmlEntities(brand.name);
+                const brandName = decodeHtmlEntities(brand.name || brand.slug);
                 const brandDesc = decodeHtmlEntities(pickLocale(brand.shortDesc, locale, brand.description || ""));
                 const brandImage = brand.image || brand.logo || brand.banner || "";
                 return (
