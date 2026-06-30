@@ -608,11 +608,11 @@ if (is_multisite()) {
         return $result;
     }, 0, 3);
 
-    add_filter('rest_post_dispatch', function($result, $server, $request, $response) {
+    add_filter('rest_post_dispatch', function($result, $server, $request) {
         if (!empty($GLOBALS['sasanperfumes_rest_blog_switched_id'])) {
             sasanperfumes_restore_rest_blog_switch((int) $GLOBALS['sasanperfumes_rest_blog_switched_id']);
             $GLOBALS['sasanperfumes_rest_blog_switched_id'] = 0;
         }
         return $result;
-    }, 0, 4);
+    }, 0, 3);
 }
