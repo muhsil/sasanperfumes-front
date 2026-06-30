@@ -9,7 +9,7 @@ import type { Currency } from "@/config/site";
 const PRODUCT_PAGE_SIZE = 100;
 
 function marketFrontendHost(marketCode: string): string {
-  return marketCode === "intl" ? "store.sasanperfumes.com" : `store.sasanperfumes.com/${marketCode}`;
+  return marketCode === "intl" ? "sasanperfumes.com" : `sasanperfumes.com/${marketCode}`;
 }
 
 function marketUrl(baseUrl: string, marketCode: MarketCode, locale: string, path = ""): string {

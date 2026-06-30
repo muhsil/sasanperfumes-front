@@ -240,13 +240,13 @@ function sasanperfumes_get_frontend_url_map(): array {
 
 function sasanperfumes_get_frontend_url_map_example(): array {
     return array(
-        'cms.sasanperfumes.com' => 'https://store.sasanperfumes.com',
-        'cms.sasanperfumes.com/qa' => 'https://store.sasanperfumes.com/qa',
-        'cms.sasanperfumes.com/om' => 'https://store.sasanperfumes.com/om',
-        'cms.sasanperfumes.com/sa' => 'https://store.sasanperfumes.com/sa',
-        'sasanperfumes.com/qa' => 'https://store.sasanperfumes.com/qa',
-        'sasanperfumes.com/om' => 'https://store.sasanperfumes.com/om',
-        'sasanperfumes.com/sa' => 'https://store.sasanperfumes.com/sa',
+        'cms.sasanperfumes.com' => 'https://sasanperfumes.com',
+        'cms.sasanperfumes.com/qa' => 'https://sasanperfumes.com/qa',
+        'cms.sasanperfumes.com/om' => 'https://sasanperfumes.com/om',
+        'cms.sasanperfumes.com/sa' => 'https://sasanperfumes.com/sa',
+        'sasanperfumes.com/qa' => 'https://sasanperfumes.com/qa',
+        'sasanperfumes.com/om' => 'https://sasanperfumes.com/om',
+        'sasanperfumes.com/sa' => 'https://sasanperfumes.com/sa',
     );
 }
 
@@ -259,7 +259,7 @@ function sasanperfumes_render_multisite_frontend_settings_page() {
         echo '<div class="notice notice-success is-dismissible"><p>Frontend network mapping saved.</p></div>';
     }
 
-    $network_default = untrailingslashit(trim((string) get_site_option('sasanperfumes_frontend_url', 'https://store.sasanperfumes.com')));
+    $network_default = untrailingslashit(trim((string) get_site_option('sasanperfumes_frontend_url', 'https://sasanperfumes.com')));
     $network_map     = sasanperfumes_get_frontend_url_map();
     $map_text        = sasanperfumes_format_frontend_url_map_text(
         !empty($network_map) ? $network_map : sasanperfumes_get_frontend_url_map_example()
@@ -280,7 +280,7 @@ function sasanperfumes_render_multisite_frontend_settings_page() {
                             name="sasanperfumes_frontend_url"
                             value="<?php echo esc_attr($network_default); ?>"
                             class="regular-text"
-                            placeholder="https://store.sasanperfumes.com"
+                            placeholder="https://sasanperfumes.com"
                         >
                         <p class="description">Used if a site does not define its own Frontend URL.</p>
                     </td>
@@ -299,13 +299,13 @@ function sasanperfumes_render_multisite_frontend_settings_page() {
                             Map incoming WP host to frontend URL, for example:
                         </p>
                         <pre><code>{
-  "cms.sasanperfumes.com": "https://store.sasanperfumes.com",
-  "cms.sasanperfumes.com/qa": "https://store.sasanperfumes.com/qa",
-  "cms.sasanperfumes.com/om": "https://store.sasanperfumes.com/om",
-  "cms.sasanperfumes.com/sa": "https://store.sasanperfumes.com/sa",
-  "sasanperfumes.com/qa": "https://store.sasanperfumes.com/qa",
-  "sasanperfumes.com/om": "https://store.sasanperfumes.com/om",
-  "sasanperfumes.com/sa": "https://store.sasanperfumes.com/sa"
+  "cms.sasanperfumes.com": "https://sasanperfumes.com",
+  "cms.sasanperfumes.com/qa": "https://sasanperfumes.com/qa",
+  "cms.sasanperfumes.com/om": "https://sasanperfumes.com/om",
+  "cms.sasanperfumes.com/sa": "https://sasanperfumes.com/sa",
+  "sasanperfumes.com/qa": "https://sasanperfumes.com/qa",
+  "sasanperfumes.com/om": "https://sasanperfumes.com/om",
+  "sasanperfumes.com/sa": "https://sasanperfumes.com/sa"
 }</code></pre>
                         <p class="description">
                             Enter host names exactly as used by each site (without ports).
@@ -346,7 +346,7 @@ function sasanperfumes_save_multisite_frontend_settings() {
 
     $site_url = isset($_POST['sasanperfumes_frontend_url']) ? esc_url_raw(trim(sanitize_text_field(wp_unslash($_POST['sasanperfumes_frontend_url'])))) : '';
     if ($site_url === '') {
-        $site_url = 'https://store.sasanperfumes.com';
+        $site_url = 'https://sasanperfumes.com';
     }
     update_site_option('sasanperfumes_frontend_url', untrailingslashit($site_url));
 
@@ -375,8 +375,8 @@ if (is_multisite()) {
  * 3) multisite network default option `sasanperfumes_frontend_url`
  * 4) supplied fallback
  */
-function sasanperfumes_get_frontend_url($fallback = 'https://store.sasanperfumes.com'): string {
-    $fallback_url = untrailingslashit((string) $fallback ?: 'https://store.sasanperfumes.com');
+function sasanperfumes_get_frontend_url($fallback = 'https://sasanperfumes.com'): string {
+    $fallback_url = untrailingslashit((string) $fallback ?: 'https://sasanperfumes.com');
 
     $site_url = trim((string) get_option('sasanperfumes_frontend_url', ''));
     if ($site_url !== '') {

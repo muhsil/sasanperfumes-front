@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) exit;
 
 class sasanperfumes_Security {
 
-    private $frontend_redirect_url = 'https://store.sasanperfumes.com';
+    private $frontend_redirect_url = 'https://sasanperfumes.com';
 
     public function __construct() {
         $this->frontend_redirect_url = untrailingslashit(

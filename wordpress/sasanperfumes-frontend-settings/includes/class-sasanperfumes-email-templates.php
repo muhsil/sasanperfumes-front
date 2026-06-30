@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class sasanperfumes_Email_Templates {
 
 	private static $instance = null;
-	private const DEFAULT_FRONTEND_URL = 'https://store.sasanperfumes.com';
+	private const DEFAULT_FRONTEND_URL = 'https://sasanperfumes.com';
 
 	public static function get_instance() {
 		if ( null === self::$instance ) {

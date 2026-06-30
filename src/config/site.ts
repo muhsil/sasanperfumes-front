@@ -5,7 +5,7 @@
  * These values are read from environment variables when available,
  * with fallbacks for local development.
  */
-const DEFAULT_SITE_URL = "https://store.sasanperfumes.com";
+const DEFAULT_SITE_URL = "https://sasanperfumes.com";
 const DEFAULT_CMS_URL = "https://cms.sasanperfumes.com";
 
 function safeUrl(value: string | undefined, fallback: string): string {

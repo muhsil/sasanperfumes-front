@@ -13,7 +13,7 @@ defined( 'ABSPATH' ) || exit;
 // Frontend app URL for headless setup
 $frontend_url = class_exists( 'sasanperfumes_Email_Templates' )
 	? sasanperfumes_Email_Templates::get_customer_frontend_url()
-	: ( function_exists( 'sasanperfumes_get_frontend_url' ) ? sasanperfumes_get_frontend_url( 'https://store.sasanperfumes.com' ) : 'https://store.sasanperfumes.com' );
+	: ( function_exists( 'sasanperfumes_get_frontend_url' ) ? sasanperfumes_get_frontend_url( 'https://sasanperfumes.com' ) : 'https://sasanperfumes.com' );
 // Correct URL structure: /en/account/
 $account_url = $frontend_url . '/en/account/';
 $login_url = $frontend_url . '/en/login/';

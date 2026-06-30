@@ -65,7 +65,7 @@ class sasanperfumes_Frontend_Urls {
         register_setting('sasanperfumes_frontend_url_group', 'sasanperfumes_frontend_url', array(
             'type' => 'string',
             'sanitize_callback' => 'esc_url_raw',
-            'default' => 'https://store.sasanperfumes.com',
+            'default' => 'https://sasanperfumes.com',
         ));
     }
 
@@ -81,7 +81,7 @@ class sasanperfumes_Frontend_Urls {
                     <tr>
                         <th scope="row"><label for="sasanperfumes_frontend_url">Frontend URL</label></th>
                         <td>
-                            <input type="url" id="sasanperfumes_frontend_url" name="sasanperfumes_frontend_url" value="<?php echo esc_attr($this->frontend_url); ?>" class="regular-text" placeholder="https://store.sasanperfumes.com">
+                            <input type="url" id="sasanperfumes_frontend_url" name="sasanperfumes_frontend_url" value="<?php echo esc_attr($this->frontend_url); ?>" class="regular-text" placeholder="https://sasanperfumes.com">
                             <p class="description">The public URL of your Next.js frontend (no trailing slash).</p>
                         </td>
                     </tr>

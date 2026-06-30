@@ -173,7 +173,7 @@ export function MegaMenu({
   const marketPrefix = useMarketPrefix();
   const displayMode = megaMenuSettings?.displayMode || "child-based";
   const cacheKey = `${marketPrefix || "main"}:${locale}`;
-  const fallbackFrontendHost = marketPrefix ? `store.sasanperfumes.com${marketPrefix}` : "store.sasanperfumes.com";
+  const fallbackFrontendHost = marketPrefix ? `sasanperfumes.com${marketPrefix}` : "sasanperfumes.com";
 
   const [menuData, setMenuData] = useState<MegaMenuData | null>(null);
   const [menuLoading, setMenuLoading] = useState(false);

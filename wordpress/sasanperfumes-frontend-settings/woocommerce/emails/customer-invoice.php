@@ -11,7 +11,7 @@
 defined( 'ABSPATH' ) || exit;
 
 // Frontend app URL for headless setup
-$frontend_url = function_exists( 'sasanperfumes_get_frontend_url' ) ? sasanperfumes_get_frontend_url( 'https://store.sasanperfumes.com' ) : 'https://store.sasanperfumes.com';
+$frontend_url = function_exists( 'sasanperfumes_get_frontend_url' ) ? sasanperfumes_get_frontend_url( 'https://sasanperfumes.com' ) : 'https://sasanperfumes.com';
 // Correct URL structure: /en/account/orders/{id}/
 $order_url = $frontend_url . '/en/account/orders/' . $order->get_id() . '/';
 $checkout_url = $frontend_url . '/en/checkout/';

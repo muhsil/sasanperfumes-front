@@ -85,7 +85,7 @@ async function getProductPageMarketContext(searchParams?: ProductPageProps["sear
   const internalMarket = (Array.isArray(rawMarket) ? rawMarket[0] : rawMarket)?.toLowerCase();
 
   if (internalMarket && MARKET_CODES.has(internalMarket)) {
-    const frontendHost = `store.sasanperfumes.com/${internalMarket}`;
+    const frontendHost = `sasanperfumes.com/${internalMarket}`;
     return {
       market: getMarketByHost(frontendHost),
       frontendHost,

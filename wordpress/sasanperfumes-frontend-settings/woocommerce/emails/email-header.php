@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 $header_text = $email_heading;
 
 // Frontend URL for storefront links
-$frontend_url = function_exists( 'sasanperfumes_get_frontend_url' ) ? sasanperfumes_get_frontend_url( 'https://store.sasanperfumes.com' ) : 'https://store.sasanperfumes.com';
+$frontend_url = function_exists( 'sasanperfumes_get_frontend_url' ) ? sasanperfumes_get_frontend_url( 'https://sasanperfumes.com' ) : 'https://sasanperfumes.com';
 
 // Use the WooCommerce email logo when set, then fall back to the site logo.
 $logo_url = (string) get_option( 'woocommerce_email_header_image', '' );
@@ -30,7 +30,7 @@ if ( ! $logo_url && $custom_logo_id ) {
 }
 
 if ( ! $logo_url ) {
-	$logo_url = 'https://store.sasanperfumes.com/wp-content/uploads/2025/08/Sasan-logo-03-1.png';
+	$logo_url = 'https://cms.sasanperfumes.com/wp-content/uploads/2026/05/Sasan-logo-03-1.png';
 }
 ?>
 <!DOCTYPE html>

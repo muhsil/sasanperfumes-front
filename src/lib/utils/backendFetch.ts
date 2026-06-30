@@ -40,7 +40,7 @@ export function backendMarketHeaders(market?: string | null, extra?: HeadersInit
     ...(cleanMarket
       ? {
           "X-Market": cleanMarket,
-          "X-Frontend-Host": `store.sasanperfumes.com/${cleanMarket}`,
+          "X-Frontend-Host": `sasanperfumes.com/${cleanMarket}`,
         }
       : {}),
     ...headersToRecord(extra),

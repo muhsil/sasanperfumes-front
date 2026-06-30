@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
         market
           ? {
               "X-Market": market,
-              "X-Frontend-Host": `store.sasanperfumes.com/${market}`,
+              "X-Frontend-Host": `sasanperfumes.com/${market}`,
             }
           : undefined
       ),

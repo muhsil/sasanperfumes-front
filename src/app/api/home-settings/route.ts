@@ -58,7 +58,7 @@ function publicFrontendHostName(): string {
   try {
     return new URL(siteConfig.url).hostname;
   } catch {
-    return "store.sasanperfumes.com";
+    return "sasanperfumes.com";
   }
 }
 
