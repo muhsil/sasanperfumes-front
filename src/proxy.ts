@@ -196,13 +196,8 @@ function rewriteMarketPathToLocaleRoute(
     rewriteUrl.hostname !== "127.0.0.1" &&
     rewriteUrl.hostname !== "::1"
   ) {
-    const forwardedHost = normalizeHostHeader(
-      request.headers.get("x-forwarded-host") || request.headers.get("host") || request.nextUrl.host
-    );
-    const forwardedProto = request.headers.get("x-forwarded-proto") || "https";
-    rewriteUrl.protocol = forwardedProto.endsWith(":") ? forwardedProto : `${forwardedProto}:`;
-    rewriteUrl.hostname = forwardedHost || rewriteUrl.hostname;
-    rewriteUrl.port = "";
+    rewriteUrl.protocol = "http:";
+    rewriteUrl.hostname = "127.0.0.1";
   }
 
   rewriteUrl.pathname = isApiRoute ? `/${rest.join("/")}` : `/${locale}${rest.length ? `/${rest.join("/")}` : ""}`;
