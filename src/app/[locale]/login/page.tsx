@@ -18,7 +18,9 @@ export default function LoginPage({ params }: LoginPageProps) {
   const marketPrefix = useMarketPrefix();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectUrl = searchParams.get("redirect");
+  const rawRedirect = searchParams.get("redirect");
+  // Only allow relative paths to prevent open redirect attacks
+  const redirectUrl = rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//") ? rawRedirect : null;
   const { login, googleLogin, isLoading } = useAuth();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [locale, setLocale] = useState<string>("en");
