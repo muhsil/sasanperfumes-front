@@ -140,12 +140,17 @@ export async function POST(request: NextRequest) {
     const data = await safeJsonResponse(response);
 
     if (!response.ok) {
+      let errorMessage = String(data.message || "Failed to create customer.");
+      // Replace raw WP auth errors with user-friendly messages
+      if (/unknown username/i.test(errorMessage) || String(data.code) === "invalid_username") {
+        errorMessage = "Could not create account. Please try again or continue as a guest.";
+      }
       return NextResponse.json(
         {
           success: false,
           error: {
             code: String(data.code || "customer_create_error"),
-            message: String(data.message || "Failed to create customer."),
+            message: errorMessage,
           },
         },
         { status: response.status }

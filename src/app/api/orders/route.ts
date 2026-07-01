@@ -453,12 +453,20 @@ export async function POST(request: NextRequest) {
     const data = await response.json();
 
     if (!response.ok) {
+      const errorCode = data.code || "order_creation_error";
+      let errorMessage = data.message || "Failed to create order.";
+
+      // Replace raw WP auth errors with user-friendly messages
+      if (/unknown username/i.test(errorMessage) || errorCode === "invalid_username") {
+        errorMessage = "Could not process your order. Please try again or use a different email address.";
+      }
+
       return NextResponse.json(
         {
           success: false,
           error: {
-            code: data.code || "order_creation_error",
-            message: data.message || "Failed to create order.",
+            code: errorCode,
+            message: errorMessage,
           },
         },
         { status: response.status }
