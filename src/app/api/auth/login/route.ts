@@ -25,6 +25,44 @@ export interface LoginResponse {
   };
 }
 
+function canRetrySiteCustomerAttach(data: Record<string, unknown>): boolean {
+  const code = String(data.code || "").toLowerCase();
+  const message = String(data.message || "").toLowerCase();
+
+  return (
+    code.includes("invalid_email") ||
+    code.includes("invalid_username") ||
+    code.includes("unknown") ||
+    message.includes("unknown username") ||
+    message.includes("unknown email")
+  );
+}
+
+async function attachCustomerToCurrentStore(
+  wpJsonBase: string,
+  marketCode: string,
+  username: string,
+  password: string
+): Promise<boolean> {
+  const email = username.trim();
+  if (!email.includes("@")) {
+    return false;
+  }
+
+  const response = await fetch(noCacheUrl(`${wpJsonBase}/sasanperfumes/v1/customers/ensure`), {
+    method: "POST",
+    headers: backendMarketPostHeaders(marketCode),
+    body: JSON.stringify({
+      email,
+      username: email,
+      password,
+      attach_only: true,
+    }),
+  });
+
+  return response.ok;
+}
+
 export async function POST(request: NextRequest): Promise<NextResponse<LoginResponse>> {
   // Check rate limit
   const rateLimitResult = checkRateLimit(request, LOGIN_RATE_LIMIT);
@@ -64,13 +102,25 @@ export async function POST(request: NextRequest): Promise<NextResponse<LoginResp
       );
     }
 
-    const response = await fetch(noCacheUrl(`${wpJsonBase}/cocart/v2/login`), {
+    let response = await fetch(noCacheUrl(`${wpJsonBase}/cocart/v2/login`), {
       method: "POST",
       headers: backendMarketPostHeaders(market.code),
       body: JSON.stringify({ username: username.trim(), password }),
     });
 
-    const data = await safeJsonResponse(response);
+    let data = await safeJsonResponse(response);
+
+    if (!response.ok && canRetrySiteCustomerAttach(data)) {
+      const attached = await attachCustomerToCurrentStore(wpJsonBase, market.code, username, password);
+      if (attached) {
+        response = await fetch(noCacheUrl(`${wpJsonBase}/cocart/v2/login`), {
+          method: "POST",
+          headers: backendMarketPostHeaders(market.code),
+          body: JSON.stringify({ username: username.trim(), password }),
+        });
+        data = await safeJsonResponse(response);
+      }
+    }
 
     if (!response.ok) {
       return NextResponse.json(

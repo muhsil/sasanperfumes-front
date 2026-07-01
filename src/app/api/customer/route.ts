@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
-import { backendMarketHeaders, backendMarketPostHeaders, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
+import { backendMarketHeaders, backendMarketPostHeaders, safeJsonResponse, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
 import { getRequestMarket } from "@/lib/market/server";
 
 function getCustomersApiBase(marketCode?: string | null): string {
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     const response = await fetch(
-      `${getCustomersApiBase(market.code)}/customers?${getBasicAuthParams(market.code)}`,
+      `${wpJsonBaseForMarket(market.code)}/sasanperfumes/v1/customers/ensure`,
       {
         method: "POST",
         headers: backendMarketPostHeaders(market.code, {
@@ -137,15 +137,15 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    const data = await response.json();
+    const data = await safeJsonResponse(response);
 
     if (!response.ok) {
       return NextResponse.json(
         {
           success: false,
           error: {
-            code: data.code || "customer_create_error",
-            message: data.message || "Failed to create customer.",
+            code: String(data.code || "customer_create_error"),
+            message: String(data.message || "Failed to create customer."),
           },
         },
         { status: response.status }

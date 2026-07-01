@@ -117,6 +117,219 @@ function sasanperfumes_register_free_gifts_rest_route($route, $args = array(), $
     register_rest_route(SASANPERFUMES_FREE_GIFTS_REST_NAMESPACE, $route, $args, $override);
 }
 
+function sasanperfumes_add_customer_to_current_site(int $user_id): void {
+    if ($user_id <= 0) {
+        return;
+    }
+
+    $blog_id = get_current_blog_id();
+    if (is_multisite() && $blog_id > 0 && function_exists('add_user_to_blog') && !is_user_member_of_blog($user_id, $blog_id)) {
+        add_user_to_blog($blog_id, $user_id, 'customer');
+        return;
+    }
+
+    $user = get_userdata($user_id);
+    if ($user instanceof WP_User && !in_array('customer', (array) $user->roles, true)) {
+        $user->add_role('customer');
+    }
+}
+
+function sasanperfumes_apply_customer_request_fields(WC_Customer $customer, array $payload): void {
+    $first_name = isset($payload['first_name']) ? wc_clean((string) $payload['first_name']) : '';
+    $last_name  = isset($payload['last_name']) ? wc_clean((string) $payload['last_name']) : '';
+
+    if ($first_name !== '') {
+        $customer->set_first_name($first_name);
+    }
+
+    if ($last_name !== '') {
+        $customer->set_last_name($last_name);
+    }
+
+    $billing = isset($payload['billing']) && is_array($payload['billing']) ? $payload['billing'] : array();
+    foreach (array('first_name', 'last_name', 'company', 'address_1', 'address_2', 'city', 'state', 'postcode', 'country', 'email', 'phone') as $field) {
+        if (!array_key_exists($field, $billing)) {
+            continue;
+        }
+
+        $setter = 'set_billing_' . $field;
+        if (is_callable(array($customer, $setter))) {
+            $customer->{$setter}(wc_clean((string) $billing[$field]));
+        }
+    }
+
+    $shipping = isset($payload['shipping']) && is_array($payload['shipping']) ? $payload['shipping'] : array();
+    foreach (array('first_name', 'last_name', 'company', 'address_1', 'address_2', 'city', 'state', 'postcode', 'country', 'phone') as $field) {
+        if (!array_key_exists($field, $shipping)) {
+            continue;
+        }
+
+        $setter = 'set_shipping_' . $field;
+        if (is_callable(array($customer, $setter))) {
+            $customer->{$setter}(wc_clean((string) $shipping[$field]));
+        }
+    }
+
+    $meta_data = isset($payload['meta_data']) && is_array($payload['meta_data']) ? $payload['meta_data'] : array();
+    foreach ($meta_data as $meta) {
+        if (!is_array($meta) || empty($meta['key'])) {
+            continue;
+        }
+
+        $meta_key = sanitize_text_field((string) $meta['key']);
+        if ($meta_key === '') {
+            continue;
+        }
+
+        $customer->update_meta_data($meta_key, isset($meta['value']) ? wp_unslash($meta['value']) : '');
+    }
+}
+
+function sasanperfumes_prepare_customer_response(int $user_id): array {
+    $customer = new WC_Customer($user_id);
+
+    return array(
+        'id'         => $customer->get_id(),
+        'email'      => $customer->get_email(),
+        'first_name' => $customer->get_first_name(),
+        'last_name'  => $customer->get_last_name(),
+        'username'   => $customer->get_username(),
+        'billing'    => array(
+            'first_name' => $customer->get_billing_first_name(),
+            'last_name'  => $customer->get_billing_last_name(),
+            'company'    => $customer->get_billing_company(),
+            'address_1'  => $customer->get_billing_address_1(),
+            'address_2'  => $customer->get_billing_address_2(),
+            'city'       => $customer->get_billing_city(),
+            'state'      => $customer->get_billing_state(),
+            'postcode'   => $customer->get_billing_postcode(),
+            'country'    => $customer->get_billing_country(),
+            'email'      => $customer->get_billing_email(),
+            'phone'      => $customer->get_billing_phone(),
+        ),
+        'shipping'   => array(
+            'first_name' => $customer->get_shipping_first_name(),
+            'last_name'  => $customer->get_shipping_last_name(),
+            'company'    => $customer->get_shipping_company(),
+            'address_1'  => $customer->get_shipping_address_1(),
+            'address_2'  => $customer->get_shipping_address_2(),
+            'city'       => $customer->get_shipping_city(),
+            'state'      => $customer->get_shipping_state(),
+            'postcode'   => $customer->get_shipping_postcode(),
+            'country'    => $customer->get_shipping_country(),
+            'phone'      => $customer->get_shipping_phone(),
+        ),
+    );
+}
+
+function sasanperfumes_handle_site_customer_access(WP_REST_Request $request) {
+    if (!class_exists('WC_Customer')) {
+        return new WP_Error(
+            'sasanperfumes_wc_unavailable',
+            'WooCommerce customer support is not available.',
+            array('status' => 503)
+        );
+    }
+
+    $payload = $request->get_json_params();
+    $payload = is_array($payload) ? $payload : array();
+
+    $email       = sanitize_email((string) ($payload['email'] ?? ''));
+    $password    = (string) ($payload['password'] ?? '');
+    $username    = trim((string) ($payload['username'] ?? ''));
+    $attach_only = !empty($payload['attach_only']);
+
+    if (!is_email($email)) {
+        return new WP_Error(
+            'invalid_email',
+            'Please provide a valid email address.',
+            array('status' => 400)
+        );
+    }
+
+    if ($password === '') {
+        return new WP_Error(
+            'missing_password',
+            'Password is required.',
+            array('status' => 400)
+        );
+    }
+
+    try {
+        $existing_user = get_user_by('email', $email);
+
+        if ($existing_user instanceof WP_User) {
+            if (!wp_check_password($password, $existing_user->user_pass, $existing_user->ID)) {
+                return new WP_Error(
+                    'sasanperfumes_existing_account_password_mismatch',
+                    'This email already exists on another Sasan site. Use the same password to sign in here, or use a different email for a fully separate account.',
+                    array('status' => 409)
+                );
+            }
+
+            sasanperfumes_add_customer_to_current_site((int) $existing_user->ID);
+
+            $customer = new WC_Customer((int) $existing_user->ID);
+            sasanperfumes_apply_customer_request_fields($customer, $payload);
+            $customer->save();
+
+            return rest_ensure_response(sasanperfumes_prepare_customer_response((int) $existing_user->ID));
+        }
+
+        if ($attach_only) {
+            return new WP_Error(
+                'sasanperfumes_account_not_found',
+                'No existing account was found for this email.',
+                array('status' => 404)
+            );
+        }
+
+        if (strlen($password) < 6) {
+            return new WP_Error(
+                'invalid_password',
+                'Password must be at least 6 characters.',
+                array('status' => 400)
+            );
+        }
+
+        $customer = new WC_Customer();
+        $customer->set_email($email);
+        $customer->set_username($username !== '' ? $username : $email);
+        $customer->set_password($password);
+        sasanperfumes_apply_customer_request_fields($customer, $payload);
+        $customer->save();
+
+        $customer_id = (int) $customer->get_id();
+        if ($customer_id <= 0) {
+            return new WP_Error(
+                'woocommerce_rest_cannot_create',
+                'This customer could not be created.',
+                array('status' => 400)
+            );
+        }
+
+        sasanperfumes_add_customer_to_current_site($customer_id);
+
+        return rest_ensure_response(sasanperfumes_prepare_customer_response($customer_id));
+    } catch (Exception $exception) {
+        return new WP_Error(
+            method_exists($exception, 'getErrorCode') ? $exception->getErrorCode() : 'sasanperfumes_customer_access_error',
+            $exception->getMessage(),
+            array('status' => (int) $exception->getCode() ?: 500)
+        );
+    }
+}
+
+function sasanperfumes_register_customer_access_routes() {
+    sasanperfumes_register_rest_route('/customers/ensure', array(
+        'methods'             => 'POST',
+        'callback'            => 'sasanperfumes_handle_site_customer_access',
+        'permission_callback' => '__return_true',
+    ));
+}
+
+add_action('rest_api_init', 'sasanperfumes_register_customer_access_routes');
+
 /**
  * Disable the block editor for plugin-owned CPTs that use metaboxes.
  * The block editor (Gutenberg) crashes on this WP install (moment.js not loading),
