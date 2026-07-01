@@ -10,5 +10,9 @@ export async function GET() {
     image: b.image || "",
     logo: b.logo || "",
   }));
-  return NextResponse.json(data);
+  return NextResponse.json(data, {
+    headers: {
+      "Cache-Control": "public, s-maxage=600, stale-while-revalidate=1200",
+    },
+  });
 }

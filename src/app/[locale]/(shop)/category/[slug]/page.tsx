@@ -64,10 +64,8 @@ export async function generateMetadata({
   const category = await getCategoryBySlug(slug, locale as Locale, market.defaultCurrency, frontendHost);
   const categoryName = decodeHtmlEntities(category?.name || slug.charAt(0).toUpperCase() + slug.slice(1));
 
-  // Use English slug for canonical URL to prevent duplicate content
   const canonicalSlug = getEnglishSlugFromLocalizedSlug(slug) || slug;
 
-  // Generate unique, category-specific descriptions that differentiate each category in search results
   const categoryCount = category?.count || 0;
   const description =
     locale === "ar"
@@ -79,8 +77,10 @@ export async function generateMetadata({
       ? `${categoryName} | تسوق أون لاين`
       : `${categoryName} | Shop Online`,
     description,
+    image: category?.image?.src || undefined,
     locale: locale as Locale,
     pathname: `/category/${canonicalSlug}`,
+    marketCode: market.code,
     keywords: locale === "ar"
       ? [categoryName, "عطور", "عطور فاخرة", "منتجات عطرية", "Sasan Perfumes", "عطور الإمارات", "شراء عطور اون لاين", "عود عربي", "هدايا عطرية", "عطور مسك", "عطور عنبر", "عطور دبي", "أفضل عطور", "عطور نسائية", "عطور رجالية", `أروماتيك ${categoryName}`, `أفضل ${categoryName} الإمارات`, `${categoryName} بأسعار مناسبة`, "عطور أروماتيك أصلية", "روائح عطرية فاخرة", "تسوق عطور أروماتيك"]
       : [categoryName, "perfume", "premium fragrance", "aromatic products", "Sasan Perfumes", "UAE perfume shop", "buy perfume online", "Arabian oud", "fragrance gifts", "musk perfume", "amber fragrance", "Dubai perfume", "best perfume", "women perfume", "men cologne", `aromatic ${categoryName.toLowerCase()}`, `best ${categoryName.toLowerCase()} UAE`, `${categoryName.toLowerCase()} affordable price`, "aromatic original perfume", "luxury aromatic scents", "shop aromatic fragrances"],

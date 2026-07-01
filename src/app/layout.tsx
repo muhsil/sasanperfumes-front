@@ -65,6 +65,8 @@ export default async function RootLayout({
       >
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+        <link rel="dns-prefetch" href="https://cms.sasanperfumes.com" />
+        <link rel="preconnect" href="https://cms.sasanperfumes.com" crossOrigin="anonymous" />
         <style dangerouslySetInnerHTML={{ __html: `
           :root {
             --font-jost: var(--font-poppins);

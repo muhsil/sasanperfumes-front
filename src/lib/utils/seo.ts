@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { siteConfig, type Locale } from "@/config/site";
+import { getMarketPathPrefix, type MarketCode } from "@/config/market";
 
 interface AlternateUrls {
   en?: string;
@@ -15,6 +16,7 @@ interface GenerateMetadataParams {
   noIndex?: boolean;
   alternatePathnames?: AlternateUrls;
   keywords?: string[];
+  marketCode?: MarketCode;
 }
 
 export const INDEX_FOLLOW_ROBOTS = {
@@ -32,18 +34,53 @@ export const NOINDEX_NOFOLLOW_ROBOTS = {
 export function generateMetadata({
   title,
   description,
+  image,
+  locale,
+  pathname,
   noIndex,
+  alternatePathnames,
+  keywords,
+  marketCode,
 }: GenerateMetadataParams): Metadata {
-  // Don't append site name here - the layout template already does this
-  // Layout uses: template: `%s | ${siteConfig.name}`
   const fullTitle = title || siteConfig.name;
   const fullDescription = description || siteConfig.description;
+  const ogImage = image || siteConfig.ogImage;
+  const marketPrefix = marketCode ? getMarketPathPrefix(marketCode) : "";
+  const canonicalUrl = `${siteConfig.url}${marketPrefix}/${locale}${pathname}`;
+
+  const altEn = alternatePathnames?.en || `${siteConfig.url}${marketPrefix}/en${pathname}`;
+  const altAr = alternatePathnames?.ar || `${siteConfig.url}${marketPrefix}/ar${pathname}`;
 
   return {
     title: fullTitle,
     description: fullDescription,
     metadataBase: new URL(siteConfig.url),
     robots: noIndex ? NOINDEX_NOFOLLOW_ROBOTS : INDEX_NOFOLLOW_ROBOTS,
+    ...(keywords && keywords.length > 0 ? { keywords } : {}),
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        en: altEn,
+        ar: altAr,
+        "x-default": altEn,
+      },
+    },
+    openGraph: {
+      title: fullTitle,
+      description: fullDescription,
+      url: canonicalUrl,
+      siteName: siteConfig.name,
+      locale: locale === "ar" ? "ar_AE" : "en_AE",
+      alternateLocale: locale === "ar" ? "en_AE" : "ar_AE",
+      type: "website",
+      ...(ogImage ? { images: [{ url: ogImage, width: 1200, height: 630, alt: fullTitle }] } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: fullTitle,
+      description: fullDescription,
+      ...(ogImage ? { images: [ogImage] } : {}),
+    },
   };
 }
 
