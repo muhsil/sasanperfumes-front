@@ -3,7 +3,7 @@ name: testing-storefront
 description: Test storefront flows end-to-end — shop infinite scroll, product variations, cart/checkout, reviews, Arabic RTL. Use when verifying product page, cart, or checkout changes.
 ---
 
-# Testing ShapeHive Storefront
+# Testing Sasan Perfumes Storefront
 
 ## Environment Setup
 
@@ -136,6 +136,7 @@ fetch('/api/product-variations?product_id=10345')
 - **OOS message**: Should show Arabic message (e.g., "هذا المزيج غير متوفر حالياً")
 - **Topbar**: Should show interpolated Arabic text (e.g., "شحن مجاني للطلبات فوق 700 AED")
 - **Multi-market AR**: Also test `/qa/ar`, `/sa/ar`, `/om/ar` — each should have RTL layout, market-prefixed canonical, and correct currency (QAR/SAR/OMR)
+- **Product price currency**: Verify product OG tags show market-correct currency: intl=AED, qa=QAR, sa=SAR, om=OMR. The backend returns AED for all subsites — frontend uses `market.defaultCurrency` from config.
 
 ### 8. Language Switch
 - Navigate to `/en` — note all English nav items
@@ -241,6 +242,6 @@ fetch('/api/product-variations?product_id=10345')
 
 ## Minor Known Issues
 - Hero text on `/en` homepage shows `&#39;` (HTML entity) — this is backend content from WordPress that may intermittently have HTML entities; the `decodeHtmlEntities` function handles known patterns but new entity formats from the CMS might appear
-- WPML has an unrelated JS error — do not treat as ShapeHive plugin issue
+- WPML has an unrelated JS error — do not treat as Sasan Perfumes plugin issue
 - Pre-existing React hydration mismatch (#418) on production — console error on page load, not related to any specific PR
 - Review images: Code exists in `ProductReviews.tsx` but no test reviews with images in backend — mark UNTESTED if testing review images

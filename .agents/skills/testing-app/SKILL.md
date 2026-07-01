@@ -158,7 +158,7 @@ curl -s http://localhost:3001/en/shipping | grep -o 'Order Processing'
 curl -s http://localhost:3001/en/returns | grep -o '14-Day Return Window'
 curl -s http://localhost:3001/en/privacy | grep -o 'Information We Collect'
 curl -s http://localhost:3001/en/terms-and-conditions | grep -o 'General Terms'
-curl -s http://localhost:3001/en/faq | grep -o 'What is ShapeHive'
+curl -s http://localhost:3001/en/faq | grep -o 'What is Sasan'
 curl -s http://localhost:3001/en/contact | grep -o 'Visit Us'
 
 # Verify no double locale prefix in CTA links
@@ -313,7 +313,7 @@ Each market (QA, OM, SA) is a separate WordPress subsite. To verify content isol
 # Check site names per market
 curl -s -H "x-market: intl" "https://cms.sasanperfumes.com/wp-json/sasanperfumes/v1/site-settings" | python3 -c "import sys,json; print(json.load(sys.stdin).get('name','?'))"
 curl -s -H "x-market: qa" "https://cms.sasanperfumes.com/wp-json/sasanperfumes/v1/site-settings" | python3 -c "import sys,json; print(json.load(sys.stdin).get('name','?'))"
-# Expected: "ShapeHive" vs "ShapeHive Qatar"
+# Expected: "Sasan Perfumes" vs "Sasan Perfumes Qatar"
 
 # Check hero slider per market
 curl -s -H "x-market: qa" "https://cms.sasanperfumes.com/wp-json/sasanperfumes/v1/home-settings" | python3 -c "import sys,json; d=json.load(sys.stdin); slides=d.get('hero',{}).get('slides',[]); print(f'{len(slides)} slides'); [print(f'  {s.get(\"image\",\"?\")[:100]}') for s in slides]"
@@ -322,13 +322,13 @@ curl -s -H "x-market: qa" "https://cms.sasanperfumes.com/wp-json/sasanperfumes/v
 **Frontend verification** (dev server must be running):
 ```bash
 # Title check — each market should show its own site name
-curl -s http://localhost:3003/en | grep -o '<title>[^<]*</title>'       # Expected: <title>ShapeHive</title>
-curl -s http://localhost:3003/qa/en | grep -o '<title>[^<]*</title>'   # Expected: <title>ShapeHive Qatar</title>
-curl -s http://localhost:3003/sa/en | grep -o '<title>[^<]*</title>'   # Expected: <title>ShapeHive Saudi Arabia</title>
-curl -s http://localhost:3003/om/en | grep -o '<title>[^<]*</title>'   # Expected: <title>ShapeHive Oman</title>
+curl -s http://localhost:3001/en | grep -o '<title>[^<]*</title>'       # Expected: <title>Sasan Perfumes</title>
+curl -s http://localhost:3001/qa/en | grep -o '<title>[^<]*</title>'   # Expected: <title>Sasan Perfumes Qatar</title>
+curl -s http://localhost:3001/sa/en | grep -o '<title>[^<]*</title>'   # Expected: <title>Sasan Perfumes Saudi Arabia</title>
+curl -s http://localhost:3001/om/en | grep -o '<title>[^<]*</title>'   # Expected: <title>Sasan Perfumes Oman</title>
 
 # Hero image check — QA should NOT show main site's BUY banner
-curl -s http://localhost:3003/qa/en | grep -oP 'src="[^"]*(?:ornate|lantern|BUY|hero)[^"]*"' | head -3
+curl -s http://localhost:3001/qa/en | grep -oP 'src="[^"]*(?:ornate|lantern|BUY|hero)[^"]*"' | head -3
 ```
 
 **Key architecture**: WordPress API functions accept `frontendHost` parameter explicitly from page components. The `detectMarketFromRequest()` dynamic import of `next/headers` is kept as fallback but may fail on Hostinger production. Always pass `frontendHost` explicitly for reliable market detection.
@@ -389,6 +389,81 @@ curl -s "https://cms.sasanperfumes.com/wp-json/shapehive/v1/discount-rules" | he
 ### Sub-site Backend 500 Errors
 The `sasanperfumes/v1/*` REST endpoints may return 500 for sub-site markets (QA/OM/SA). This is a pre-existing backend configuration issue. The `shapehive/v1/discount-rules` endpoint typically works independently of the main plugin endpoints.
 
+## Verifying JSON-LD Structured Data
+
+The `JsonLd` component (`src/components/seo/JsonLd.tsx`) renders `<script type="application/ld+json">` tags. Test with curl since JSON-LD is server-rendered:
+
+### Counting JSON-LD blocks per page
+```bash
+curl -s http://localhost:3001/en | grep -oP '<script type="application/ld\+json">[^<]+</script>' | python3 -c "
+import sys, json
+for i, line in enumerate(sys.stdin):
+    raw = line.strip().replace('<script type=\"application/ld+json\">','').replace('</script>','')
+    data = json.loads(raw)
+    print(f'Block {i+1}: @type={data.get(\"@type\",\"?\")}')
+print(f'Total: {i+1}')
+"
+```
+
+**Expected blocks per page:**
+| Page | Expected JSON-LD types |
+|------|----------------------|
+| Homepage (`/en`) | Organization, WebSite, Store |
+| Shop (`/en/shop`) | Organization, WebSite, Store, ItemList, BreadcrumbList |
+| Category (`/en/category/perfumes`) | Organization, WebSite, Store, CollectionPage, ItemList, BreadcrumbList |
+| Product (`/en/product/1957`) | Organization, WebSite, Store, Product, BreadcrumbList |
+
+**IMPORTANT — Duplicate BreadcrumbList pitfall:** The `Breadcrumbs` component (`src/components/seo/Breadcrumbs.tsx`) internally renders its own BreadcrumbList JSON-LD. On pages where the server component already renders a `<JsonLd data={breadcrumbJsonLd}>`, pass `skipJsonLd` to the client-side `<Breadcrumbs>` to prevent duplicates. Product detail pages (`page.tsx`) render the canonical BreadcrumbList from the server component using `siteConfig.url + pathPrefix`; the client `ProductDetail.tsx` uses `<Breadcrumbs skipJsonLd>` for visual-only breadcrumbs. Do NOT add a manual `<JsonLd data={breadcrumbJsonLd}>` on pages that also use `<Breadcrumbs>` without `skipJsonLd` — this creates duplicate BreadcrumbList markup that Google Search Console flags.
+
+### Market-specific Store JSON-LD
+```bash
+# Verify each market shows correct country/currency
+for market in "" "qa/" "om/" "sa/"; do
+  echo "=== ${market:-intl} ==="
+  curl -s "http://localhost:3001/${market}en" | grep -oP '<script type="application/ld\+json">[^<]+</script>' | grep '"Store"' | python3 -c "
+import sys,json
+data=json.loads(sys.stdin.read().replace('<script type=\"application/ld+json\">','').replace('</script>',''))
+print(f'addressCountry={data[\"address\"][\"addressCountry\"]}')
+print(f'currenciesAccepted={data[\"currenciesAccepted\"]}')
+print(f'areaServed={data[\"areaServed\"][\"name\"]}')
+"
+done
+```
+
+**Expected values:**
+| Market | addressCountry | currenciesAccepted | areaServed |
+|--------|---------------|-------------------|------------|
+| intl | AE | AED | United Arab Emirates |
+| qa | QA | QAR | Qatar |
+| om | OM | OMR | Oman |
+| sa | SA | SAR | Saudi Arabia |
+
+## Verifying Per-Market Sitemaps
+
+Each market has a dedicated XML sitemap:
+- `/sitemap-index.xml` — links all sub-sitemaps
+- `/sitemap-intl.xml`, `/sitemap-qa.xml`, `/sitemap-om.xml`, `/sitemap-sa.xml`
+- `/image-sitemap.xml`
+
+### Verify URL prefixes
+```bash
+# All QA sitemap URLs must contain /qa/
+curl -s http://localhost:3001/sitemap-qa.xml | grep -oP '<loc>[^<]+</loc>' | grep -cv '/qa/'
+# Expected output: 0 (no URLs without /qa/ prefix)
+```
+
+### Verify hreflang alternates
+```bash
+curl -s http://localhost:3001/sitemap-sa.xml | head -15
+# Each <url> should have xhtml:link hreflang="en" and hreflang="ar"
+```
+
+### Verify robots.txt
+```bash
+curl -s http://localhost:3001/robots.txt | grep Sitemap
+# Should list: sitemap-index.xml, sitemap.xml, sitemap-intl.xml, sitemap-qa.xml, sitemap-om.xml, sitemap-sa.xml, image-sitemap.xml
+```
+
 ## Known Issues
 
 - **Hostinger Rate Limiting**: The server rate-limits at ~10 requests per 5 minutes by default. Fix applied: `.htaccess` has `WordPressProtect throttle, 500`. If you get HTTP 429 errors, wait or use API endpoints directly.
@@ -402,3 +477,18 @@ The `sasanperfumes/v1/*` REST endpoints may return 500 for sub-site markets (QA/
 - **Cache headers in dev mode**: Next.js dev server overrides all cache headers to `no-store, no-cache`. Cache headers added via `next.config.ts` can only be verified in production build mode. Code review is valid verification for cache config.
 - **instrumentation.ts Edge Runtime warnings**: The dev server shows warnings about `process.cwd`, `node:fs`, and `node:path` being used in Edge Runtime. These are non-blocking warnings and don't affect functionality.
 - **ar.json BOM issue**: `src/i18n/dictionaries/ar.json` may have a UTF-8 BOM (`ef bb bf`) at the start of the file, which causes Turbopack to fail with "Unable to make a module from invalid JSON". Fix with `sed -i '1s/^\xEF\xBB\xBF//' src/i18n/dictionaries/ar.json`. This is a pre-existing issue unrelated to any specific PR.
+- **Product price currency**: WooCommerce backend returns `currency_code=AED` for ALL subsites (including QA, OM, SA). The frontend uses `market.defaultCurrency` from `src/config/market.ts` for OG tags (`product:price:currency`) and Product JSON-LD (`priceCurrency`). Never use `product.prices.currency_code` for multi-market currency display — always use the market config.
+- **Product JSON-LD URLs**: The product page `frontendBaseUrl` is built from `siteConfig.url + pathPrefix` (not from request host). This ensures JSON-LD URLs always use `sasanperfumes.com` with correct market prefix, even in dev mode.
+
+## Verifying Product Currency Per Market
+
+```bash
+# OG meta tag currency per market
+for market in "en/product/1957|intl|AED" "qa/en/product/1957|qa|QAR" "sa/en/product/1957|sa|SAR" "om/en/product/1957|om|OMR"; do
+  IFS='|' read -r url label expected <<< "$market"
+  result=$(curl -s "http://localhost:3001/${url}" | grep -oP 'product:price:currency" content="\K[^"]*')
+  echo "${label}: ${result} (expected ${expected}) — $([ "$result" = "$expected" ] && echo PASS || echo FAIL)"
+done
+```
+
+**Expected:** intl=AED, qa=QAR, sa=SAR, om=OMR. If all return AED, the code is using `product.prices.currency_code` instead of `market.defaultCurrency`.
