@@ -249,7 +249,7 @@ If `cms.sasanperfumes.com` is unreachable (timeout), pages cannot render server-
 
 **Hostinger Resource Limits**: The CMS may go down due to Hostinger Cloud Professional plan resource limits. Signs:
 - All curl requests to `cms.sasanperfumes.com` timeout
-- `store.sasanperfumes.com` returns 000 (connection timeout)
+- `sasanperfumes.com` returns 000 (connection timeout)
 - Local dev server pages hang indefinitely
 
 ## Devin Secrets Needed
@@ -283,12 +283,12 @@ console.log(JSON.stringify(results, null, 2));
 ### Expected Canonical Patterns
 | Market | EN Canonical | AR Canonical |
 |--------|-------------|-------------|
-| International | `store.sasanperfumes.com/en` | `store.sasanperfumes.com/ar` |
-| Qatar | `store.sasanperfumes.com/qa/en` | `store.sasanperfumes.com/qa/ar` |
-| Saudi Arabia | `store.sasanperfumes.com/sa/en` | `store.sasanperfumes.com/sa/ar` |
-| Oman | `store.sasanperfumes.com/om/en` | `store.sasanperfumes.com/om/ar` |
+| International | `sasanperfumes.com/en` | `sasanperfumes.com/ar` |
+| Qatar | `sasanperfumes.com/qa/en` | `sasanperfumes.com/qa/ar` |
+| Saudi Arabia | `sasanperfumes.com/sa/en` | `sasanperfumes.com/sa/ar` |
+| Oman | `sasanperfumes.com/om/en` | `sasanperfumes.com/om/ar` |
 
-**Key check**: Content pages (FAQ, About, etc.) on sub-markets must include the market prefix in their canonical. E.g., `/sa/en/faq` canonical must be `store.sasanperfumes.com/sa/en/faq`, NOT `store.sasanperfumes.com/en/faq`. This was fixed in PR #25 by passing `marketCode` to `generateSeoMetadata` on all 26+ pages.
+**Key check**: Content pages (FAQ, About, etc.) on sub-markets must include the market prefix in their canonical. E.g., `/sa/en/faq` canonical must be `sasanperfumes.com/sa/en/faq`, NOT `sasanperfumes.com/en/faq`. This was fixed in PR #25 by passing `marketCode` to `generateSeoMetadata` on all 26+ pages.
 
 ### Product Price OG Tags
 Product pages should render `product:price:amount` and `product:price:currency` as `<meta name="...">` tags (via `metadata.other`), NOT as `<meta property="...">` (Next.js silently drops unknown OG namespace properties). Verify with:
@@ -394,10 +394,11 @@ The `sasanperfumes/v1/*` REST endpoints may return 500 for sub-site markets (QA/
 - **Hostinger Rate Limiting**: The server rate-limits at ~10 requests per 5 minutes by default. Fix applied: `.htaccess` has `WordPressProtect throttle, 500`. If you get HTTP 429 errors, wait or use API endpoints directly.
 - **GSAP Animations**: Elements with `data-animate` attribute start with `opacity: 0` — inject CSS to override when taking screenshots.
 - **Build Cache**: `npm run build` uses `build-preserve-chunks.js` which can serve stale content. Always verify with dev server or use `npx next build --webpack`.
-- **CMS URL**: The backend API URL is now `https://cms.sasanperfumes.com`. Check `.env.local` for the correct URL. The `NEXT_PUBLIC_SITE_URL` should be `https://store.sasanperfumes.com` in production (canonical URLs are generated from this).
+- **CMS URL**: The backend API URL is now `https://cms.sasanperfumes.com`. Check `.env.local` for the correct URL. The `NEXT_PUBLIC_SITE_URL` should be `https://sasanperfumes.com` in production (canonical URLs are generated from this).
 - **Production build error page**: The production build (`npx next start`) may show "Something went wrong" if API calls fail at build time. Use dev server (`npm run dev`) for testing that requires fresh API calls.
 - **Dynamic import of next/headers**: The `detectMarketFromRequest()` function uses `await import("next/headers")` which works locally but may fail silently on Hostinger. WordPress API functions should always receive `frontendHost` explicitly from page components rather than relying on this fallback.
-- **Production unreachable from Devin VM**: `store.sasanperfumes.com` may return HTTP 000 (connection timeout) from the Devin VM due to firewall/DNS restrictions. Use the local dev server (`npm run dev -p 3001`) which connects to the live CMS backend for testing.
-- **Canonical domain**: Both `.env.local` and production should use `NEXT_PUBLIC_SITE_URL=https://store.sasanperfumes.com`. Canonicals will show `store.sasanperfumes.com` in both environments.
+- **Production unreachable from Devin VM**: `sasanperfumes.com` may return HTTP 000 (connection timeout) from the Devin VM due to firewall/DNS restrictions. Use the local dev server (`npm run dev -p 3001`) which connects to the live CMS backend for testing.
+- **Canonical domain**: Both `.env.local` and production should use `NEXT_PUBLIC_SITE_URL=https://sasanperfumes.com`. Canonicals will show `sasanperfumes.com` in both environments.
 - **Cache headers in dev mode**: Next.js dev server overrides all cache headers to `no-store, no-cache`. Cache headers added via `next.config.ts` can only be verified in production build mode. Code review is valid verification for cache config.
 - **instrumentation.ts Edge Runtime warnings**: The dev server shows warnings about `process.cwd`, `node:fs`, and `node:path` being used in Edge Runtime. These are non-blocking warnings and don't affect functionality.
+- **ar.json BOM issue**: `src/i18n/dictionaries/ar.json` may have a UTF-8 BOM (`ef bb bf`) at the start of the file, which causes Turbopack to fail with "Unable to make a module from invalid JSON". Fix with `sed -i '1s/^\xEF\xBB\xBF//' src/i18n/dictionaries/ar.json`. This is a pre-existing issue unrelated to any specific PR.

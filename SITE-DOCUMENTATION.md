@@ -9,7 +9,7 @@ Sasan Perfumes is a headless ecommerce storefront. The frontend is a Next.js app
 | Project | Sasan Perfumes |
 | Frontend | Next.js 16, React 19, TypeScript |
 | Backend | WordPress, WooCommerce, CoCart, WPGraphQL, custom plugin |
-| Production storefront(s) | `https://store.sasanperfumes.com`, `https://store.sasanperfumes.com/en`, `https://store.sasanperfumes.com/ar`, `https://store.sasanperfumes.com/qa/en`, `https://store.sasanperfumes.com/qa/ar`, `https://store.sasanperfumes.com/om/en`, `https://store.sasanperfumes.com/om/ar`, `https://store.sasanperfumes.com/sa/en`, `https://store.sasanperfumes.com/sa/ar` |
+| Production storefront(s) | `https://sasanperfumes.com`, `https://sasanperfumes.com/en`, `https://sasanperfumes.com/ar`, `https://sasanperfumes.com/qa/en`, `https://sasanperfumes.com/qa/ar`, `https://sasanperfumes.com/om/en`, `https://sasanperfumes.com/om/ar`, `https://sasanperfumes.com/sa/en`, `https://sasanperfumes.com/sa/ar` |
 | CMS/API | `https://cms.sasanperfumes.com` |
 | WordPress REST base | `https://cms.sasanperfumes.com/wp-json` |
 | Custom REST namespace | `sasanperfumes/v1` |
@@ -161,19 +161,19 @@ Common values for shared CMS multi-market setup:
 ```env
 NEXT_PUBLIC_WC_API_URL=https://cms.sasanperfumes.com
 NEXT_PUBLIC_WORDPRESS_GRAPHQL_URL=https://cms.sasanperfumes.com/graphql
-NEXT_PUBLIC_SITE_URL=https://store.sasanperfumes.com
-NEXT_PUBLIC_CANONICAL_HOST=https://store.sasanperfumes.com
-NEXT_PUBLIC_CANONICAL_HOSTS=store.sasanperfumes.com
-NEXT_PUBLIC_ALLOWED_HOSTS=localhost,127.0.0.1,::1,store.sasanperfumes.com,cms.sasanperfumes.com,localhost:3000,localhost:3001
+NEXT_PUBLIC_SITE_URL=https://sasanperfumes.com
+NEXT_PUBLIC_CANONICAL_HOST=sasanperfumes.com
+NEXT_PUBLIC_CANONICAL_HOSTS=sasanperfumes.com
+NEXT_PUBLIC_ALLOWED_HOSTS=localhost,127.0.0.1,::1,sasanperfumes.com,cms.sasanperfumes.com,localhost:3000,localhost:3001
 ```
 
 Market entry URLs:
 
 ```text
-https://store.sasanperfumes.com/
-https://store.sasanperfumes.com/qa
-https://store.sasanperfumes.com/om
-https://store.sasanperfumes.com/sa
+https://sasanperfumes.com/
+https://sasanperfumes.com/qa
+https://sasanperfumes.com/om
+https://sasanperfumes.com/sa
 ```
 
 CMS content/admin market sites:
@@ -245,8 +245,8 @@ Market routing:
  - Legacy market subdomain hosts are retired.
  - Market prefixes are optional; supported prefixes: `qa`, `om`, `sa`.
 - URL pattern is `/{market}/{locale}/...` (for market routes) or `/{locale}/...` for default intl.
-- Market is resolved by the first path segment (`/qa`, `/om`, `/sa`) under `store.sasanperfumes.com`.
-- Example: `https://store.sasanperfumes.com/qa/en/product/{market-product-slug}`.
+- Market is resolved by the first path segment (`/qa`, `/om`, `/sa`) under `sasanperfumes.com`.
+- Example: `https://sasanperfumes.com/qa/en/product/{market-product-slug}`.
 
 Locale routing:
 

@@ -33,15 +33,15 @@ function shapehive_flag_present(array $args, string $flag): bool {
     return false;
 }
 
-$network_default = 'https://store.sasanperfumes.com';
+$network_default = 'https://sasanperfumes.com';
 $host_map = [
-    'cms.sasanperfumes.com' => 'https://store.sasanperfumes.com',
-    'cms.sasanperfumes.com/qa' => 'https://store.sasanperfumes.com/qa',
-    'cms.sasanperfumes.com/om' => 'https://store.sasanperfumes.com/om',
-    'cms.sasanperfumes.com/sa' => 'https://store.sasanperfumes.com/sa',
-    'store.sasanperfumes.com/qa' => 'https://store.sasanperfumes.com/qa',
-    'store.sasanperfumes.com/om' => 'https://store.sasanperfumes.com/om',
-    'store.sasanperfumes.com/sa' => 'https://store.sasanperfumes.com/sa',
+    'cms.sasanperfumes.com' => 'https://sasanperfumes.com',
+    'cms.sasanperfumes.com/qa' => 'https://sasanperfumes.com/qa',
+    'cms.sasanperfumes.com/om' => 'https://sasanperfumes.com/om',
+    'cms.sasanperfumes.com/sa' => 'https://sasanperfumes.com/sa',
+    'sasanperfumes.com/qa' => 'https://sasanperfumes.com/qa',
+    'sasanperfumes.com/om' => 'https://sasanperfumes.com/om',
+    'sasanperfumes.com/sa' => 'https://sasanperfumes.com/sa',
 ];
 
 update_site_option('sasanperfumes_frontend_url', untrailingslashit($network_default));
@@ -52,19 +52,19 @@ $market_sites = [
         'domain' => 'cms.sasanperfumes.com',
         'path' => '/qa/',
         'title' => 'ShapeHive Qatar',
-        'frontend_url' => 'https://store.sasanperfumes.com/qa',
+        'frontend_url' => 'https://sasanperfumes.com/qa',
     ],
     'om' => [
         'domain' => 'cms.sasanperfumes.com',
         'path' => '/om/',
         'title' => 'ShapeHive Oman',
-        'frontend_url' => 'https://store.sasanperfumes.com/om',
+        'frontend_url' => 'https://sasanperfumes.com/om',
     ],
     'sa' => [
         'domain' => 'cms.sasanperfumes.com',
         'path' => '/sa/',
         'title' => 'ShapeHive Saudi Arabia',
-        'frontend_url' => 'https://store.sasanperfumes.com/sa',
+        'frontend_url' => 'https://sasanperfumes.com/sa',
     ],
 ];
 

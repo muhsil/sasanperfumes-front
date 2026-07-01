@@ -11,19 +11,19 @@ Verified on live production on 2026-06-19:
 
 | Route | Status | Market signal |
 | --- | --- | --- |
-| `https://store.sasanperfumes.com/en` | 200, homepage renders | AED |
-| `https://store.sasanperfumes.com/ar` | 200, Arabic RTL renders | AED |
-| `https://store.sasanperfumes.com/qa/en` | 200, homepage renders | QAR |
-| `https://store.sasanperfumes.com/qa/ar` | 200, Arabic RTL renders | QAR |
-| `https://store.sasanperfumes.com/om/en` | 200, homepage renders | OMR |
-| `https://store.sasanperfumes.com/om/ar` | 200, Arabic RTL renders | OMR |
-| `https://store.sasanperfumes.com/sa/en` | 200, homepage renders | SAR |
-| `https://store.sasanperfumes.com/sa/ar` | 200, Arabic RTL renders | SAR |
+| `https://sasanperfumes.com/en` | 200, homepage renders | AED |
+| `https://sasanperfumes.com/ar` | 200, Arabic RTL renders | AED |
+| `https://sasanperfumes.com/qa/en` | 200, homepage renders | QAR |
+| `https://sasanperfumes.com/qa/ar` | 200, Arabic RTL renders | QAR |
+| `https://sasanperfumes.com/om/en` | 200, homepage renders | OMR |
+| `https://sasanperfumes.com/om/ar` | 200, Arabic RTL renders | OMR |
+| `https://sasanperfumes.com/sa/en` | 200, homepage renders | SAR |
+| `https://sasanperfumes.com/sa/ar` | 200, Arabic RTL renders | SAR |
 
 The frontend API check is also healthy:
 
-- `https://store.sasanperfumes.com/api/home-settings?lang=en` returns valid JSON.
-- `https://store.sasanperfumes.com/api/home-settings?lang=ar` returns valid JSON.
+- `https://sasanperfumes.com/api/home-settings?lang=en` returns valid JSON.
+- `https://sasanperfumes.com/api/home-settings?lang=ar` returns valid JSON.
 - The previous `{"code":"invalid_response"}` problem is fixed on live.
 
 ### Routing behavior implemented in code
@@ -37,7 +37,7 @@ The frontend API check is also healthy:
 - Market routes internally resolve to the existing locale pages while preserving market context through request headers.
 - `x-market` and `x-frontend-host` are propagated to backend/API calls.
 - Backend JSON parsing now strips hidden WordPress BOM/zero-width characters before parsing, preventing frontend crashes from malformed response prefixes.
-- CORS defaults are narrowed to `https://store.sasanperfumes.com`, `https://cms.sasanperfumes.com`, and local development origins.
+- CORS defaults are narrowed to `https://sasanperfumes.com`, `https://cms.sasanperfumes.com`, and local development origins.
 
 ### Backend network changes already performed
 
@@ -45,10 +45,10 @@ The WordPress multisite network was restored to include the main CMS plus QA, OM
 
 | Backend site | Purpose | Frontend path |
 | --- | --- | --- |
-| `cms.sasanperfumes.com` | Main/UAE content | `https://store.sasanperfumes.com` |
-| `cms.sasanperfumes.com/qa` | Qatar content | `https://store.sasanperfumes.com/qa` |
-| `cms.sasanperfumes.com/om` | Oman content | `https://store.sasanperfumes.com/om` |
-| `cms.sasanperfumes.com/sa` | Saudi content | `https://store.sasanperfumes.com/sa` |
+| `cms.sasanperfumes.com` | Main/UAE content | `https://sasanperfumes.com` |
+| `cms.sasanperfumes.com/qa` | Qatar content | `https://sasanperfumes.com/qa` |
+| `cms.sasanperfumes.com/om` | Oman content | `https://sasanperfumes.com/om` |
+| `cms.sasanperfumes.com/sa` | Saudi content | `https://sasanperfumes.com/sa` |
 
 ## Pushed Code Record
 
@@ -126,13 +126,13 @@ Open:
 
 Checked on 2026-06-21: the network page loaded successfully and contained the expected path-based map values:
 
-- `cms.sasanperfumes.com` -> `https://store.sasanperfumes.com`
-- `cms.sasanperfumes.com/qa` -> `https://store.sasanperfumes.com/qa`
-- `cms.sasanperfumes.com/om` -> `https://store.sasanperfumes.com/om`
-- `cms.sasanperfumes.com/sa` -> `https://store.sasanperfumes.com/sa`
-- `store.sasanperfumes.com/qa` -> `https://store.sasanperfumes.com/qa`
-- `store.sasanperfumes.com/om` -> `https://store.sasanperfumes.com/om`
-- `store.sasanperfumes.com/sa` -> `https://store.sasanperfumes.com/sa`
+- `cms.sasanperfumes.com` -> `https://sasanperfumes.com`
+- `cms.sasanperfumes.com/qa` -> `https://sasanperfumes.com/qa`
+- `cms.sasanperfumes.com/om` -> `https://sasanperfumes.com/om`
+- `cms.sasanperfumes.com/sa` -> `https://sasanperfumes.com/sa`
+- `sasanperfumes.com/qa` -> `https://sasanperfumes.com/qa`
+- `sasanperfumes.com/om` -> `https://sasanperfumes.com/om`
+- `sasanperfumes.com/sa` -> `https://sasanperfumes.com/sa`
 
 Repo fix:
 

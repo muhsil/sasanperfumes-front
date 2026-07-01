@@ -18,7 +18,7 @@ npm run dev -p 3001
 - Do NOT use `npm run build` — it invokes `build-preserve-chunks.js` which may serve stale content
 
 ### Production (For WC-authenticated features)
-- URL: `https://store.sasanperfumes.com`
+- URL: `https://sasanperfumes.com`
 - Has real WC consumer key/secret — needed for reviews API v3
 - Use for testing reviews, any feature requiring WC REST API v3 auth
 - Cache-bust with `?t=<tag>` query param to avoid CDN stale content
