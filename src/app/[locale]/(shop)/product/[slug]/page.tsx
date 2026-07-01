@@ -204,12 +204,17 @@ export async function generateMetadata({
   const olfactoryKeywords = olfactoryFamily ? [olfactoryFamily, `${olfactoryFamily} perfume`] : [];
   const noteKeywords = fragranceNotes.map((n) => n.toLowerCase());
 
+  const minorUnit = product.prices?.currency_minor_unit || 2;
+  const divisorOg = Math.pow(10, minorUnit);
+  const ogPrice = product.prices?.price ? (parseInt(product.prices.price, 10) / divisorOg).toFixed(2) : undefined;
+
   const metadata = generateSeoMetadata({
     title: seoTitle,
     description: trimmedDescription,
     locale: locale as Locale,
     pathname: `/product/${slug}`,
     image: product.images[0]?.src,
+    marketCode: market.code,
     keywords: [
       productName,
       ...categoryNames,
@@ -222,11 +227,17 @@ export async function generateMetadata({
     ],
   });
 
-  // Use absolute title to bypass the layout template (which appends the brand name)
-  // This gives full control over the product page title in Google search results
   return {
     ...metadata,
     title: { absolute: seoTitle },
+    openGraph: {
+      ...metadata.openGraph,
+      type: "website",
+      ...(ogPrice ? {
+        "product:price:amount": ogPrice,
+        "product:price:currency": product.prices.currency_code,
+      } as Record<string, string> : {}),
+    },
   };
 }
 

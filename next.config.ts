@@ -182,14 +182,14 @@ const nextConfig: NextConfig = {
             : []),
         ],
       },
-      // Prevent Cloudflare/CDN from caching HTML pages so users always get fresh
-      // HTML with correct chunk references after a new deployment
+      // Allow short CDN caching with stale-while-revalidate for HTML pages.
+      // Market-specific paths (/qa/en, /om/en, /sa/en) are cached separately by URL.
       {
         source: "/:locale(en|ar)/:path*",
         headers: [
           {
             key: "Cache-Control",
-            value: disableRuntimeCache ? "no-store, max-age=0" : "public, max-age=0, s-maxage=0, must-revalidate",
+            value: disableRuntimeCache ? "no-store, max-age=0" : "public, max-age=0, s-maxage=60, stale-while-revalidate=300",
           },
         ],
       },
@@ -198,7 +198,25 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Cache-Control",
-            value: disableRuntimeCache ? "no-store, max-age=0" : "public, max-age=0, s-maxage=0, must-revalidate",
+            value: disableRuntimeCache ? "no-store, max-age=0" : "public, max-age=0, s-maxage=60, stale-while-revalidate=300",
+          },
+        ],
+      },
+      {
+        source: "/:market(qa|om|sa)/:locale(en|ar)/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: disableRuntimeCache ? "no-store, max-age=0" : "public, max-age=0, s-maxage=60, stale-while-revalidate=300",
+          },
+        ],
+      },
+      {
+        source: "/:market(qa|om|sa)/:locale(en|ar)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: disableRuntimeCache ? "no-store, max-age=0" : "public, max-age=0, s-maxage=60, stale-while-revalidate=300",
           },
         ],
       },
@@ -226,6 +244,87 @@ const nextConfig: NextConfig = {
           {
             key: "Cache-Control",
             value: disableRuntimeCache ? "no-store, max-age=0" : "public, s-maxage=600, stale-while-revalidate=1200",
+          },
+        ],
+      },
+      {
+        source: "/api/brands",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: disableRuntimeCache ? "no-store, max-age=0" : "public, s-maxage=600, stale-while-revalidate=1200",
+          },
+        ],
+      },
+      {
+        source: "/api/home-settings",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: disableRuntimeCache ? "no-store, max-age=0" : "public, s-maxage=600, stale-while-revalidate=1200",
+          },
+        ],
+      },
+      {
+        source: "/api/brands-slider",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: disableRuntimeCache ? "no-store, max-age=0" : "public, s-maxage=600, stale-while-revalidate=1200",
+          },
+        ],
+      },
+      {
+        source: "/api/discount-rules",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: disableRuntimeCache ? "no-store, max-age=0" : "public, s-maxage=300, stale-while-revalidate=600",
+          },
+        ],
+      },
+      {
+        source: "/api/badge-tags",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: disableRuntimeCache ? "no-store, max-age=0" : "public, s-maxage=600, stale-while-revalidate=1200",
+          },
+        ],
+      },
+      {
+        source: "/api/search",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: disableRuntimeCache ? "no-store, max-age=0" : "public, s-maxage=60, stale-while-revalidate=300",
+          },
+        ],
+      },
+      {
+        source: "/sitemap.xml",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=3600, s-maxage=3600, stale-while-revalidate=7200",
+          },
+        ],
+      },
+      {
+        source: "/image-sitemap.xml",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=3600, s-maxage=3600, stale-while-revalidate=7200",
+          },
+        ],
+      },
+      {
+        source: "/robots.txt",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=86400, s-maxage=86400",
           },
         ],
       },

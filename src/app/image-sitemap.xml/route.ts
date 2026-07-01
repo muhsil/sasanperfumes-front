@@ -1,6 +1,7 @@
 import { getProducts, getCategories } from "@/lib/api/woocommerce";
 import { siteConfig } from "@/config/site";
 import { decodeHtmlEntities } from "@/lib/utils";
+import { marketConfigs, getMarketPathPrefix } from "@/config/market";
 
 function escapeXml(str: string): string {
   return str
@@ -11,7 +12,11 @@ function escapeXml(str: string): string {
     .replace(/'/g, "&apos;");
 }
 
-export const revalidate = 3600; // Revalidate every hour
+function marketFrontendHost(marketCode: string): string {
+  return marketCode === "intl" ? "sasanperfumes.com" : `sasanperfumes.com/${marketCode}`;
+}
+
+export const revalidate = 3600;
 
 export async function GET() {
   const baseUrl = siteConfig.url;
@@ -21,63 +26,73 @@ export async function GET() {
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">`;
 
-  // --- Product pages with all product images ---
-  try {
-    const { products } = await getProducts({ per_page: 100, locale: "en" });
+  for (const market of marketConfigs) {
+    const prefix = getMarketPathPrefix(market.code);
+    const frontendHost = marketFrontendHost(market.code);
 
-    for (const product of products) {
-      for (const locale of locales) {
-        const pageUrl = `${baseUrl}/${locale}/product/${product.slug}`;
-        const images = product.images || [];
+    try {
+      let page = 1;
+      let totalPages = 1;
+      const allProducts = [];
+      do {
+        const result = await getProducts({ page, per_page: 100, locale: "en", currency: market.defaultCurrency, frontendHost });
+        allProducts.push(...result.products);
+        totalPages = result.totalPages || 1;
+        page += 1;
+      } while (page <= totalPages);
 
-        if (images.length === 0) continue;
+      for (const product of allProducts) {
+        for (const locale of locales) {
+          const pageUrl = `${baseUrl}${prefix}/${locale}/product/${product.slug}`;
+          const images = product.images || [];
+          if (images.length === 0) continue;
 
-        xml += `
+          xml += `
   <url>
     <loc>${escapeXml(pageUrl)}</loc>`;
 
-        for (const img of images) {
-          if (!img.src) continue;
-          const categoryNames = product.categories?.map((c) => decodeHtmlEntities(c.name)).join(", ") || "Sasan Perfumes";
-          xml += `
+          for (const img of images) {
+            if (!img.src) continue;
+            const categoryNames = product.categories?.map((c) => decodeHtmlEntities(c.name)).join(", ") || siteConfig.name;
+            xml += `
     <image:image>
       <image:loc>${escapeXml(img.src)}</image:loc>
       <image:title>${escapeXml(decodeHtmlEntities(product.name))}</image:title>
       <image:caption>${escapeXml(`${decodeHtmlEntities(product.name)} - ${categoryNames}`)}</image:caption>
     </image:image>`;
-        }
+          }
 
-        xml += `
+          xml += `
   </url>`;
+        }
       }
+    } catch (error) {
+      console.error(`Failed to fetch products for image sitemap (${market.code}):`, error);
     }
-  } catch (error) {
-    console.error("Failed to fetch products for image sitemap:", error);
-  }
 
-  // --- Category pages with category images ---
-  try {
-    const categories = await getCategories("en");
+    try {
+      const categories = await getCategories("en", market.defaultCurrency, frontendHost);
 
-    for (const category of categories) {
-      if (!category.image?.src) continue;
+      for (const category of categories) {
+        if (!category.image?.src) continue;
 
-      for (const locale of locales) {
-        const pageUrl = `${baseUrl}/${locale}/category/${category.slug}`;
+        for (const locale of locales) {
+          const pageUrl = `${baseUrl}${prefix}/${locale}/category/${category.slug}`;
 
-        xml += `
+          xml += `
   <url>
     <loc>${escapeXml(pageUrl)}</loc>
     <image:image>
       <image:loc>${escapeXml(category.image.src)}</image:loc>
       <image:title>${escapeXml(decodeHtmlEntities(category.name))}</image:title>
-      <image:caption>${escapeXml(`${decodeHtmlEntities(category.name)} - Sasan Perfumes`)}</image:caption>
+      <image:caption>${escapeXml(`${decodeHtmlEntities(category.name)} - ${siteConfig.name}`)}</image:caption>
     </image:image>
   </url>`;
+        }
       }
+    } catch (error) {
+      console.error(`Failed to fetch categories for image sitemap (${market.code}):`, error);
     }
-  } catch (error) {
-    console.error("Failed to fetch categories for image sitemap:", error);
   }
 
   xml += `

@@ -69,7 +69,7 @@ function cmsFrontendHostForMarket(market?: string): string {
 function responseHeaders(market?: string) {
   const cmsFrontendHost = cmsFrontendHostForMarket(market);
   return {
-    "Cache-Control": "no-store, max-age=0",
+    "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
     "Vary": "Host, X-Frontend-Host, X-Market",
     "X-SasanPerfumes-Market-Routing": "v3",
     "X-SasanPerfumes-Market": market || "intl",

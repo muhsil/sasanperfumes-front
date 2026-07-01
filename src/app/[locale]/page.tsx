@@ -148,7 +148,10 @@ export async function generateMetadata({
   const validLocale = locale as Locale;
   const isArabic = validLocale === "ar";
 
-  const frontendHost = await getRequestFrontendHost(marketHint);
+  const [frontendHost, market] = await Promise.all([
+    getRequestFrontendHost(marketHint),
+    getRequestMarket(marketHint),
+  ]);
   const seoSettings = await getSeoSettings(validLocale, frontendHost);
 
   const seoTitle = siteConfig.name;
@@ -159,6 +162,7 @@ export async function generateMetadata({
     description: seoDescription,
     locale: validLocale,
     pathname: "",
+    marketCode: market.code,
     keywords: isArabic
       ? [
           "Luxury perfumes",

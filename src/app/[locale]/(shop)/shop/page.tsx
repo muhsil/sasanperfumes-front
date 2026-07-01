@@ -37,14 +37,18 @@ const defaultSeo = {
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: ShopPageProps): Promise<Metadata> {
   const { locale } = await params;
+  const marketHint = getMarketHintFromSearchParams(await searchParams);
   const lang = locale as Locale;
   const isAr = lang === "ar";
-  const toggles = await getFeatureToggles();
+  const [toggles, market] = await Promise.all([
+    getFeatureToggles(),
+    getRequestMarket(marketHint),
+  ]);
   if (!toggles.sasanperfumes_shop_enabled) return {};
 
-  // Fetch SEO data from WordPress page (if exists)
   const wpSeo = await getPageSeo("shop", lang);
 
   return generateSeoMetadata({
@@ -53,6 +57,7 @@ export async function generateMetadata({
     image: wpSeo?.ogImage || undefined,
     locale: lang,
     pathname: "/shop",
+    marketCode: market.code,
     keywords: isAr ? defaultSeo.keywords.ar : defaultSeo.keywords.en,
   });
 }
