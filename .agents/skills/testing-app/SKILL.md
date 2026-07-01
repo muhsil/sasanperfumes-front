@@ -1,9 +1,9 @@
 ---
 name: testing-app
-description: General app testing patterns for ShapeHive — SEO metadata, HTML entity handling, product page verification, cart price normalization, spacing/margin verification. Use when verifying product detail pages, SEO changes, hero slider content, cart/checkout pricing, or layout spacing fixes.
+description: General app testing patterns for Sasan Perfumes — SEO metadata, HTML entity handling, product page verification, cart price normalization, multi-market verification. Use when verifying product detail pages, SEO changes, hero slider content, cart/checkout pricing, or multi-market content isolation.
 ---
 
-# Testing the Application
+# Testing Sasan Perfumes Application
 
 ## Prerequisites
 
@@ -257,9 +257,148 @@ If `cms.shapehive.com` is unreachable (timeout), pages cannot render server-side
 - `HOSTINGER_SSH_PASSWORD`: For SSH access to staging server (WP-CLI, deployment)
 - `WP_ADMIN_PASSWORD`: WordPress admin credentials for CMS backend (username: shapehive_admin_9284)
 
+## Comprehensive Multi-Market SEO Verification
+
+When testing SEO across all 4 markets (International, QA, OM, SA) in both EN and AR, use this browser console snippet on each page:
+
+```js
+const results = {
+  title: document.title,
+  ogTitle: document.querySelector('meta[property="og:title"]')?.content,
+  ogType: document.querySelector('meta[property="og:type"]')?.content,
+  ogUrl: document.querySelector('meta[property="og:url"]')?.content,
+  twitterCard: document.querySelector('meta[name="twitter:card"]')?.content,
+  canonical: document.querySelector('link[rel="canonical"]')?.href,
+  hreflangEn: document.querySelector('link[hreflang="en"]')?.href,
+  hreflangAr: document.querySelector('link[hreflang="ar"]')?.href,
+  hreflangDefault: document.querySelector('link[hreflang="x-default"]')?.href,
+  priceAmount: document.querySelector('meta[name="product:price:amount"]')?.content,
+  priceCurrency: document.querySelector('meta[name="product:price:currency"]')?.content,
+  dir: document.documentElement.getAttribute('dir'),
+  lang: document.documentElement.getAttribute('lang'),
+};
+console.log(JSON.stringify(results, null, 2));
+```
+
+### Expected Canonical Patterns
+| Market | EN Canonical | AR Canonical |
+|--------|-------------|-------------|
+| International | `shapehive.com/en` | `shapehive.com/ar` |
+| Qatar | `shapehive.com/qa/en` | `shapehive.com/qa/ar` |
+| Saudi Arabia | `shapehive.com/sa/en` | `shapehive.com/sa/ar` |
+| Oman | `shapehive.com/om/en` | `shapehive.com/om/ar` |
+
+**Key check**: Content pages (FAQ, About, etc.) on sub-markets must include the market prefix in their canonical. E.g., `/sa/en/faq` canonical must be `shapehive.com/sa/en/faq`, NOT `shapehive.com/en/faq`. This was fixed in PR #25 by passing `marketCode` to `generateSeoMetadata` on all 26+ pages.
+
+### Product Price OG Tags
+Product pages should render `product:price:amount` and `product:price:currency` as `<meta name="...">` tags (via `metadata.other`), NOT as `<meta property="...">` (Next.js silently drops unknown OG namespace properties). Verify with:
+```js
+document.querySelector('meta[name="product:price:amount"]')?.content  // e.g. "75.00"
+document.querySelector('meta[name="product:price:currency"]')?.content  // e.g. "AED"
+```
+
+### Arabic RTL Verification
+For AR pages, verify:
+- `document.documentElement.getAttribute('dir')` === `'rtl'`
+- `document.documentElement.getAttribute('lang')` === `'ar'`
+- Navigation labels are in Arabic (العطور, بخاخ الجسم, معطر الشعر, عطور العود, مجموعات الهدايا)
+- Layout is mirrored (logo on right, cart/icons on left)
+- Section headers in Arabic (منتجات جديدة, الأكثر مبيعاً)
+
+## Verifying Market-Specific Content Isolation
+
+Each market (QA, OM, SA) is a separate WordPress subsite. To verify content isolation:
+
+```bash
+# Check site names per market
+curl -s -H "x-market: intl" "https://cms.shapehive.com/wp-json/sasanperfumes/v1/site-settings" | python3 -c "import sys,json; print(json.load(sys.stdin).get('name','?'))"
+curl -s -H "x-market: qa" "https://cms.shapehive.com/wp-json/sasanperfumes/v1/site-settings" | python3 -c "import sys,json; print(json.load(sys.stdin).get('name','?'))"
+# Expected: "ShapeHive" vs "ShapeHive Qatar"
+
+# Check hero slider per market
+curl -s -H "x-market: qa" "https://cms.shapehive.com/wp-json/sasanperfumes/v1/home-settings" | python3 -c "import sys,json; d=json.load(sys.stdin); slides=d.get('hero',{}).get('slides',[]); print(f'{len(slides)} slides'); [print(f'  {s.get(\"image\",\"?\")[:100]}') for s in slides]"
+```
+
+**Frontend verification** (dev server must be running):
+```bash
+# Title check — each market should show its own site name
+curl -s http://localhost:3003/en | grep -o '<title>[^<]*</title>'       # Expected: <title>ShapeHive</title>
+curl -s http://localhost:3003/qa/en | grep -o '<title>[^<]*</title>'   # Expected: <title>ShapeHive Qatar</title>
+curl -s http://localhost:3003/sa/en | grep -o '<title>[^<]*</title>'   # Expected: <title>ShapeHive Saudi Arabia</title>
+curl -s http://localhost:3003/om/en | grep -o '<title>[^<]*</title>'   # Expected: <title>ShapeHive Oman</title>
+
+# Hero image check — QA should NOT show main site's BUY banner
+curl -s http://localhost:3003/qa/en | grep -oP 'src="[^"]*(?:ornate|lantern|BUY|hero)[^"]*"' | head -3
+```
+
+**Key architecture**: WordPress API functions accept `frontendHost` parameter explicitly from page components. The `detectMarketFromRequest()` dynamic import of `next/headers` is kept as fallback but may fail on Hostinger production. Always pass `frontendHost` explicitly for reliable market detection.
+
+**Blog IDs**: Main=1, QA=5, OM=6, SA=7
+
+## Verifying Discount Rules Frontend
+
+The discount rules system uses a custom mu-plugin (`shapehive/v1/discount-rules`) on the WordPress backend. The frontend fetches rules via `DiscountRulesProvider` (SSR in layout.tsx) and displays them as badges on product cards and info boxes on product detail pages.
+
+### API Route Verification
+```bash
+# Main site discount rules
+curl -s http://localhost:3000/api/discount-rules | python3 -m json.tool
+
+# Per-market discount rules
+curl -s "http://localhost:3000/api/discount-rules?market=qa" | python3 -m json.tool
+curl -s "http://localhost:3000/api/discount-rules?market=sa" | python3 -m json.tool
+curl -s "http://localhost:3000/api/discount-rules?market=om" | python3 -m json.tool
+
+# Security validation — invalid market should return main site rules
+curl -s "http://localhost:3000/api/discount-rules?market=invalid" | python3 -m json.tool
+```
+**Expected**: Each returns a JSON array with at least 1 rule. Invalid market falls back to main site.
+
+### Backend API Verification
+```bash
+# Direct backend check (without frontend)
+curl -s "https://cms.sasanperfumes.com/wp-json/shapehive/v1/discount-rules"
+curl -s -H "X-Market: qa" "https://cms.sasanperfumes.com/wp-json/shapehive/v1/discount-rules"
+```
+
+### Visual Verification — Badges on Product Cards
+```js
+// In browser console on /en/shop
+const articles = document.querySelectorAll('article');
+let badgeCount = 0;
+articles.forEach(art => {
+  const spans = art.querySelectorAll('span');
+  spans.forEach(s => {
+    if (s.textContent.includes('Buy 6') || s.textContent.includes('Get 1 Free')) badgeCount++;
+  });
+});
+console.log('Badge count:', badgeCount); // Should be > 0 if rules apply to "all"
+```
+
+### Visual Verification — DiscountInfo on Product Detail
+Navigate to any product page (e.g. `/en/product/1957`). Look for a green-bordered box below the price section containing the discount title and description.
+
+### Critical: CMS URL Must Match
+The discount rules mu-plugin might only exist on one CMS domain. If `.env.local` points to `cms.shapehive.com` but the mu-plugin was deployed to `cms.sasanperfumes.com`, the API will return 404 and badges won't render. Always verify:
+```bash
+# Check which CMS domain has the discount-rules endpoint
+curl -s "https://cms.shapehive.com/wp-json/shapehive/v1/discount-rules" | head -1
+curl -s "https://cms.sasanperfumes.com/wp-json/shapehive/v1/discount-rules" | head -1
+# Then update .env.local accordingly
+```
+
+### Sub-site Backend 500 Errors
+The `sasanperfumes/v1/*` REST endpoints may return 500 for sub-site markets (QA/OM/SA). This is a pre-existing backend configuration issue. The `shapehive/v1/discount-rules` endpoint typically works independently of the main plugin endpoints.
+
 ## Known Issues
 
 - **Hostinger Rate Limiting**: The server rate-limits at ~10 requests per 5 minutes by default. Fix applied: `.htaccess` has `WordPressProtect throttle, 500`. If you get HTTP 429 errors, wait or use API endpoints directly.
 - **GSAP Animations**: Elements with `data-animate` attribute start with `opacity: 0` — inject CSS to override when taking screenshots.
 - **Build Cache**: `npm run build` uses `build-preserve-chunks.js` which can serve stale content. Always verify with dev server or use `npx next build --webpack`.
-- **CMS URL**: The backend API URL is `https://cms.shapehive.com` (previously was `cms.sasanperfumes.ae`). Check `.env.local` for the correct URL.
+- **CMS URL**: The backend API URL is now `https://cms.sasanperfumes.com`. Check `.env.local` for the correct URL. The `NEXT_PUBLIC_SITE_URL` should be `https://store.sasanperfumes.com` in production (canonical URLs are generated from this).
+- **Production build error page**: The production build (`npx next start`) may show "Something went wrong" if API calls fail at build time. Use dev server (`npm run dev`) for testing that requires fresh API calls.
+- **Dynamic import of next/headers**: The `detectMarketFromRequest()` function uses `await import("next/headers")` which works locally but may fail silently on Hostinger. WordPress API functions should always receive `frontendHost` explicitly from page components rather than relying on this fallback.
+- **Production unreachable from Devin VM**: `store.sasanperfumes.com` may return HTTP 000 (connection timeout) from the Devin VM due to firewall/DNS restrictions. Use the local dev server (`npm run dev -p 3001`) which connects to the live CMS backend for testing.
+- **Canonical domain mismatch**: `.env.local` may have `NEXT_PUBLIC_SITE_URL=https://shapehive.com` while production uses `store.sasanperfumes.com`. Canonicals in dev will show `shapehive.com` — this is expected. The code is correct; only the env var differs between environments.
+- **Cache headers in dev mode**: Next.js dev server overrides all cache headers to `no-store, no-cache`. Cache headers added via `next.config.ts` can only be verified in production build mode. Code review is valid verification for cache config.
+- **instrumentation.ts Edge Runtime warnings**: The dev server shows warnings about `process.cwd`, `node:fs`, and `node:path` being used in Edge Runtime. These are non-blocking warnings and don't affect functionality.
