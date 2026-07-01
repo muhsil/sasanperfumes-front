@@ -25,7 +25,17 @@ curl -s http://localhost:3000/en/product/{slug} | grep -E '<title>|<meta name="d
 
 ## Product API
 
-Products are fetched from WooCommerce at `https://sasanperfumes.example/wp-json/wc/store/v1/products`.
+Products are fetched from WooCommerce at `https://cms.sasanperfumes.com/wp-json/wc/store/v1/products`.
+
+## Multi-Market Development
+| Market | URL | Currency |
+|--------|-----|----------|
+| International | `http://localhost:3000/en` | AED |
+| Qatar | `http://localhost:3000/qa/en` | QAR |
+| Saudi Arabia | `http://localhost:3000/sa/en` | SAR |
+| Oman | `http://localhost:3000/om/en` | OMR |
+
+**Important:** WooCommerce backend returns `currency_code=AED` for all subsites. The frontend uses `market.defaultCurrency` from `src/config/market.ts` for OG tags and JSON-LD. Product page JSON-LD URLs use `siteConfig.url + pathPrefix` (never the request host).
 
 Product attributes available: "Olfactory Family", "Notes", "Item Volume", "HS Code", "What's In The Box".
 

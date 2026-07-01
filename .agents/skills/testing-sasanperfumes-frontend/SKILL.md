@@ -1,11 +1,11 @@
 ---
 name: testing-sasanperfumes-frontend
-description: Test the ShapeHive/Cadvil headless ecommerce frontend and WordPress admin plugin end-to-end. Use when verifying admin settings UI, REST API responses, or Next.js frontend rendering.
+description: Test the Sasan Perfumes headless ecommerce frontend and WordPress admin plugin end-to-end. Use when verifying admin settings UI, REST API responses, or Next.js frontend rendering.
 ---
 
-# Testing ShapeHive Frontend
+# Testing Sasan Perfumes Frontend
 
-Next.js e-commerce frontend for ShapeHive (sasanperfumes.example).
+Next.js e-commerce frontend for Sasan Perfumes (sasanperfumes.com).
 
 ## Local Dev Setup
 
@@ -101,10 +101,10 @@ Use browser `set_mobile` to toggle mobile viewport (390px). Key mobile-specific 
 
 ## WordPress Backend
 
-- URL: https://cms.sasanperfumes.ae/wp-admin
+- URL: https://cms.sasanperfumes.com/wp-admin
 - Credentials: Use saved WordPress admin credentials
 - Plugin: Cadvil Settings (ShapeHive Frontend Settings)
-- Plugin path on server: `/home/u327034204/domains/cms.sasanperfumes.ae/public_html/wp-content/plugins/sasanperfumes-frontend-settings/`
+- Plugin path on server: `/home/u327034204/domains/cms.sasanperfumes.com/public_html/wp-content/plugins/sasanperfumes-frontend-settings/`
 - Local plugin source: `wordpress/sasanperfumes-frontend-settings/`
 
 ### Admin Pages
@@ -169,7 +169,7 @@ Brand edit pages (`term.php?taxonomy=product_brand`) have custom fields managed 
 | `/wp-json/wp/v2/posts` | WordPress blog posts |
 | `/wp-json/wp/v2/posts?slug={slug}` | Single blog post |
 
-**Important:** The REST API namespace is `sasanperfumes/v1` (NOT `sasanperfumes/v1`). This is intentional — the namespace was not changed during rebranding to avoid breaking frontend API calls.
+**Important:** The REST API namespace is `sasanperfumes/v1`. The plugin folder on the server is `anbar-frontend-settings` but the namespace remains `sasanperfumes/v1`.
 
 ## Feature Toggle Testing
 
@@ -180,7 +180,7 @@ Feature toggles control page visibility. When testing toggle changes:
 1. **Via WP-CLI (preferred for speed):**
 ```bash
 sshpass -p '$HOSTINGER_SSH_PASSWORD' ssh -p 65002 -o StrictHostKeyChecking=no u327034204@72.61.121.107 \
-  "cd domains/cms.sasanperfumes.ae/public_html && wp option update sasanperfumes_reviews_enabled 1"
+  "cd domains/cms.sasanperfumes.com/public_html && wp option update sasanperfumes_reviews_enabled 1"
 ```
 
 2. **Via browser (WP Admin → Feature Toggles)** — may trigger rate limiting.
@@ -232,11 +232,11 @@ The Feature Toggles page (`admin.php?page=sasanperfumes-feature-toggles`) has:
 To verify toggles via curl:
 ```bash
 # Check all toggle names and checked/unchecked state in admin HTML
-curl -s -b /tmp/wp_cookies.txt "https://cms.sasanperfumes.ae/wp-admin/admin.php?page=sasanperfumes-feature-toggles" | \
+curl -s -b /tmp/wp_cookies.txt "https://cms.sasanperfumes.com/wp-admin/admin.php?page=sasanperfumes-feature-toggles" | \
   grep -o 'name="sasanperfumes_[^"]*_enabled"[^>]*' | head -20
 
 # Check via REST API
-curl -s "https://cms.sasanperfumes.ae/wp-json/sasanperfumes/v1/feature-toggles" | python3 -m json.tool
+curl -s "https://cms.sasanperfumes.com/wp-json/sasanperfumes/v1/feature-toggles" | python3 -m json.tool
 ```
 
 ### Private Labeling Form Testing
@@ -276,7 +276,7 @@ It must NOT have "Scent & Size Guide" or "Video Hero" tabs. Scent Guides and Siz
 
 ## Hostinger Server Rate Limiting
 
-The Hostinger server at `store.sasanperfumes.ae` and `cms.sasanperfumes.ae` has aggressive rate limiting (HTTP 429) that triggers after ~3-5 rapid requests. Mitigation strategies:
+The Hostinger server at `sasanperfumes.com` and `cms.sasanperfumes.com` has aggressive rate limiting (HTTP 429) that triggers after ~3-5 rapid requests. Mitigation strategies:
 
 1. **Wait 30-60 seconds** between page navigations in the browser
 2. **Use curl from shell** for content verification — curl requests are generally not affected by the same rate limiting as browser sessions
@@ -295,7 +295,7 @@ The Hostinger server at `store.sasanperfumes.ae` and `cms.sasanperfumes.ae` has 
 
 When the WP plugin needs updating on the server:
 1. **Preferred: WP Plugin File Editor** — Navigate to Plugins → Plugin File Editor → select `sasanperfumes-frontend-settings` → edit files directly
-2. **Alternative: SSH** — `scp -P 65002 local-file.php u327034204@72.61.121.107:/home/u327034204/domains/cms.sasanperfumes.ae/public_html/wp-content/plugins/sasanperfumes-frontend-settings/`
+2. **Alternative: SSH** — `scp -P 65002 local-file.php u327034204@72.61.121.107:/home/u327034204/domains/cms.sasanperfumes.com/public_html/wp-content/plugins/sasanperfumes-frontend-settings/`
 3. **Alternative: Hostinger File Manager** — Upload via hPanel file manager (requires Hostinger login)
 4. SSH may time out frequently — use `-o ConnectTimeout=30` and retry
 
@@ -317,7 +317,7 @@ When testing CMS-driven pages, verify:
 
 ## Frontend Verification
 
-- Frontend URL: https://store.sasanperfumes.ae
+- Frontend URL: https://sasanperfumes.com
 - Hero slider renders on `/en` with backend data
 - Verify title/subtitle overlays match saved admin values
 - Check for navigation arrows and slide images
@@ -342,4 +342,15 @@ Next.js uses ISR with `revalidate = 300` (5 minutes). When testing toggle change
 ## Devin Secrets Needed
 
 - `HOSTINGER_SSH_PASSWORD`: SSH access to Hostinger server (port 65002, user u327034204@72.61.121.107) for WP-CLI and deployment
-- WordPress admin credentials: admin / (stored in session) for CMS backend access
+- WordPress admin credentials: shapehive_admin_9284 / (stored in session) for CMS backend access
+
+## Multi-Market Architecture
+
+| Market | Blog ID | Currency | Path Prefix | Country |
+|--------|---------|----------|-------------|--------|
+| International | 1 | AED | (none) | AE |
+| Qatar | 5 | QAR | /qa | QA |
+| Oman | 6 | OMR | /om | OM |
+| Saudi Arabia | 7 | SAR | /sa | SA |
+
+**Important:** WooCommerce backend returns `currency_code=AED` for all subsites. The frontend uses `market.defaultCurrency` from `src/config/market.ts` for OG tags and JSON-LD. Never trust `product.prices.currency_code` for multi-market currency display.

@@ -1,7 +1,7 @@
-# Testing ShapeHive Frontend - Shop Pages & Product Ordering
+# Testing Sasan Perfumes Frontend - Shop Pages & Product Ordering
 
 ## Overview
-The ShapeHive Frontend is a Next.js e-commerce site that connects to a WooCommerce backend at `https://sasanperfumes.example`. It supports two locales: English (`en`) and Arabic (`ar`, RTL).
+The Sasan Perfumes Frontend is a Next.js e-commerce site that connects to a WooCommerce backend at `https://cms.sasanperfumes.com`. It supports two locales: English (`en`) and Arabic (`ar`, RTL), and four markets: International (AED), Qatar (QAR), Oman (OMR), Saudi Arabia (SAR).
 
 ## Local Setup
 1. Copy `.env.example` to `.env.local` (default values point to the live WooCommerce backend)
@@ -32,15 +32,23 @@ The ShapeHive Frontend is a Next.js e-commerce site that connects to a WooCommer
 4. **Infinite scroll**: Shop page loads 12 products initially, more on scroll. Note: `sortBestsellersFirst` only sorts within fetched products, not across pages
 
 ## WordPress Admin
-- URL: `https://sasanperfumes.example/wp-admin`
-- Credentials should be stored as Devin secrets (WP_ADMIN_USERNAME, WP_ADMIN_PASSWORD)
+- URL: `https://cms.sasanperfumes.com/wp-admin`
+- Username: shapehive_admin_9284
+- Credentials should be stored as Devin secrets (WP_ADMIN_PASSWORD)
 - Product ordering in WP admin (Products > Sorting) sets `menu_order` but the frontend currently overrides this with date desc + bestseller sorting
 
 ## Devin Secrets Needed
-- `WP_ADMIN_USERNAME` - WordPress admin username for sasanperfumes.example
-- `WP_ADMIN_PASSWORD` - WordPress admin password for sasanperfumes.example
+- `WP_ADMIN_PASSWORD` - WordPress admin password for cms.sasanperfumes.com (username: shapehive_admin_9284)
+
+## Multi-Market URLs
+| Market | Shop URL | Currency |
+|--------|----------|----------|
+| International | `/en/shop` | AED |
+| Qatar | `/qa/en/shop` | QAR |
+| Saudi Arabia | `/sa/en/shop` | SAR |
+| Oman | `/om/en/shop` | OMR |
 
 ## Lint & Build
 - Lint: `npm run lint` (runs eslint)
-- Build: `npm run build`
+- Build: `npx next build --webpack` (do NOT use `npm run build`)
 - No CI checks are configured on the repo - rely on local lint/build verification

@@ -1,8 +1,8 @@
-# Testing ShapeHive Frontend
+# Testing Sasan Perfumes Frontend
 
 ## Dev Server
 - Run `npm run dev` in the repo root to start Next.js dev server on `http://localhost:3000`
-- The frontend connects to the WordPress/WooCommerce backend at `https://sasanperfumes.example`
+- The frontend connects to the WordPress/WooCommerce backend at `https://cms.sasanperfumes.com`
 - No additional backend setup is needed for local testing — the CMS is remote
 
 ## Supported Locales
@@ -48,12 +48,20 @@
 ## Lint
 - Run `npm run lint` before committing
 - Only 0 errors required; pre-existing warnings are acceptable
-- No CI is configured for this repo as of March 2025
+- No CI is configured for this repo
 
 ## Notes
 - The WooCommerce Store API might return different product counts for EN vs AR locales due to localization
 - Product filtering for notes pages is done client-side by `pa_notes` taxonomy attribute
 - The `1 Issue` / `2 Issues` badge in the bottom-left corner of the dev server is a Next.js dev overlay — not a bug in the app
+
+## Multi-Market Currencies
+| Market | Currency | Path |
+|--------|----------|------|
+| International | AED | /en, /ar |
+| Qatar | QAR | /qa/en, /qa/ar |
+| Oman | OMR | /om/en, /om/ar |
+| Saudi Arabia | SAR | /sa/en, /sa/ar |
 
 ## Devin Secrets Needed
 - No secrets required for local frontend testing — the CMS backend is publicly accessible

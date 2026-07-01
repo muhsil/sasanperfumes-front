@@ -1,13 +1,12 @@
 # Hostinger Deployment & Server Error Troubleshooting
 
 ## Overview
-The ShapeHive Frontend (Next.js) is hosted on Hostinger Cloud Professional plan. The WordPress backend (WooCommerce) is hosted separately on the same Hostinger account. This document captures all known deployment issues and their fixes.
+The Sasan Perfumes Frontend (Next.js) is hosted on Hostinger Cloud Professional plan. The WordPress backend (WooCommerce) is hosted separately on the same Hostinger account. This document captures all known deployment issues and their fixes.
 
 ## Architecture
-- **Frontend**: Next.js app at `sasanperfumes.example` (Hostinger Cloud, Node.js via Phusion Passenger)
-- **Backend**: WordPress/WooCommerce at `sasanperfumes.example` (Hostinger WordPress hosting)
-- **Staging**: `sasanperfumes.example`
-- **App**: `sasanperfumes.example`
+- **Frontend**: Next.js app at `sasanperfumes.com` (Hostinger Cloud, Node.js via Phusion Passenger)
+- **Backend**: WordPress/WooCommerce at `cms.sasanperfumes.com` (Hostinger WordPress hosting)
+- **Markets**: International (AED), Qatar/QAR (/qa), Oman/OMR (/om), Saudi Arabia/SAR (/sa)
 
 ## Hostinger Account
 - Login: `https://hpanel.hostinger.com`
@@ -20,15 +19,15 @@ The ShapeHive Frontend (Next.js) is hosted on Hostinger Cloud Professional plan.
 - Port: `65002`
 - User: `u327034204`
 - Command: `ssh -p 65002 u327034204@72.61.121.107`
-- Frontend root: `/home/u327034204/domains/sasanperfumes.example/public_html`
-- Node.js app root: `/home/u327034204/domains/sasanperfumes.example/nodejs`
+- Frontend root: `/home/u327034204/domains/sasanperfumes.com/public_html`
+- Node.js app root: `/home/u327034204/domains/sasanperfumes.com/nodejs`
 
 ## Known Error #1: 503 Service Unavailable (Most Common)
 
 ### Symptoms
 - Site returns 503 after deployment
 - Response headers show `server: cloudflare`, `platform: hostinger`, `x-turbo-charged-by: LiteSpeed`
-- WordPress backend API at `sasanperfumes.example` responds fine (200)
+- WordPress backend API at `sasanperfumes.com` responds fine (200)
 
 ### Root Cause
 Hostinger uses **Phusion Passenger** to manage Node.js processes. The `.htaccess` file at `public_html/.htaccess` MUST contain `PassengerEnabled on` directive. Without it, Passenger never starts the Next.js app, and LiteSpeed returns 503.
@@ -38,19 +37,19 @@ Hostinger uses **Phusion Passenger** to manage Node.js processes. The `.htaccess
 ssh -p 65002 u327034204@72.61.121.107
 
 # Add PassengerEnabled on to .htaccess if missing
-sed -i '1i PassengerEnabled on' /home/u327034204/domains/sasanperfumes.example/public_html/.htaccess
+sed -i '1i PassengerEnabled on' /home/u327034204/domains/sasanperfumes.com/public_html/.htaccess
 
 # Restart the Passenger process
-touch /home/u327034204/domains/sasanperfumes.example/nodejs/tmp/restart.txt
+touch /home/u327034204/domains/sasanperfumes.com/nodejs/tmp/restart.txt
 
 # Wait ~15 seconds then test
-curl -I https://sasanperfumes.example
+curl -I https://sasanperfumes.com
 ```
 
 ### Prevention
 - After every Hostinger deployment, verify `.htaccess` contains `PassengerEnabled on`
 - Hostinger may regenerate `.htaccess` during deployments and omit this directive
-- The `sasanperfumes.example` site has `PassengerEnabled on` set automatically, but `sasanperfumes.example` does NOT — this is a Hostinger configuration inconsistency
+- The `sasanperfumes.com` site has `PassengerEnabled on` set automatically, but `sasanperfumes.com` does NOT — this is a Hostinger configuration inconsistency
 
 ## Known Error #2: 403 Forbidden After Deployment
 
@@ -107,10 +106,10 @@ Environment variable `PORT=3000` was also added in Hostinger hPanel > Environmen
 1. **Before deploying**: Run `npm run lint` and `npm run build` locally
 2. **After deployment succeeds in Hostinger**:
    - Wait 30-60 seconds for Passenger to start the app
-   - Check if site loads: `curl -I https://sasanperfumes.example`
+   - Check if site loads: `curl -I https://sasanperfumes.com`
    - If 503: SSH in and check `.htaccess` for `PassengerEnabled on`
    - If still 503: Check if Node.js process is running: `ps aux | grep node`
-   - Restart Passenger: `touch /home/u327034204/domains/sasanperfumes.example/nodejs/tmp/restart.txt`
+   - Restart Passenger: `touch /home/u327034204/domains/sasanperfumes.com/nodejs/tmp/restart.txt`
 3. **If site still down after all fixes**: Check Hostinger hPanel > Deployments > Logs for build errors
 
 ## Environment Variables (Hostinger hPanel)
