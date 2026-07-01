@@ -323,6 +323,37 @@ function buildStoreAPIUrls(
   }));
 }
 
+function deduplicateWPMLTranslations(products: WCProduct[], locale?: Locale): WCProduct[] {
+  const hasArSuffix = products.some(p => p.slug.endsWith("-ar"));
+  if (!hasArSuffix) return products;
+
+  const byBaseSlug = new Map<string, WCProduct[]>();
+  for (const product of products) {
+    const base = product.slug.endsWith("-ar") ? product.slug.slice(0, -3) : product.slug;
+    const group = byBaseSlug.get(base) || [];
+    group.push(product);
+    byBaseSlug.set(base, group);
+  }
+
+  const result: WCProduct[] = [];
+  for (const group of byBaseSlug.values()) {
+    if (group.length === 1) {
+      result.push(group[0]);
+      continue;
+    }
+    const arVersion = group.find(p => p.slug.endsWith("-ar"));
+    const enVersion = group.find(p => !p.slug.endsWith("-ar"));
+    if (locale === "ar" && arVersion) {
+      result.push(arVersion);
+    } else if (enVersion) {
+      result.push(enVersion);
+    } else {
+      result.push(group[0]);
+    }
+  }
+  return result;
+}
+
 function getProductUILabels(locale?: Locale) {
   const isArabic = locale === "ar";
   return {
@@ -546,12 +577,15 @@ export async function getProducts(params?: {
         product.catalog_visibility === "visible" ||
         product.catalog_visibility === "catalog"
     );
+
+    const dedupedProducts = deduplicateWPMLTranslations(visibleProducts, params?.locale);
+
     const market = await requestMarketForLocale(params?.locale, params?.frontendHost);
-    const localizedProducts = localizeMarketProducts(visibleProducts, params?.locale, market);
+    const localizedProducts = localizeMarketProducts(dedupedProducts, params?.locale, market);
 
     return {
       products: localizedProducts,
-      total: total - (products.length - visibleProducts.length),
+      total: total - (products.length - dedupedProducts.length),
       totalPages,
     };
   } catch (error) {
@@ -619,6 +653,20 @@ export const getProductBySlug = cache(async function getProductBySlug(
       
       if (localizedProducts.length > 0) {
         return localizeMarketProduct(localizedProducts[0], locale, market);
+      }
+
+      // For Arabic locale, try the -ar suffixed slug (used on OM/SA subsites)
+      if (locale === "ar" && !slug.endsWith("-ar")) {
+        const arSlug = `${slug}-ar`;
+        const arProducts = await fetchAPI<WCProduct[]>(`/products?slug=${encodeURIComponent(arSlug)}`, {
+          tags: ["products", `product-${arSlug}-${locale}`],
+          locale,
+          currency,
+          frontendHost,
+        });
+        if (arProducts.length > 0) {
+          return localizeMarketProduct(arProducts[0], locale, market);
+        }
       }
 
       if (locale !== "en") {
