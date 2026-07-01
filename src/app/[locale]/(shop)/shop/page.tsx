@@ -4,13 +4,15 @@ import { ProductGridSkeleton } from "@/components/common/Skeleton";
 import { CollectionPageHeader } from "@/components/shop/CollectionPageHeader";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { getDictionary } from "@/i18n";
-import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
+import { generateMetadata as generateSeoMetadata, generateBreadcrumbJsonLd, generateItemListJsonLd } from "@/lib/utils/seo";
+import { decodeHtmlEntities } from "@/lib/utils";
 import { getProducts, getFreeGiftProductInfo, getBundleEnabledProductSlugs } from "@/lib/api/woocommerce";
 import { getPageSeo, getStaticPageContent, pickLocale, getFeatureToggles } from "@/lib/api/wordpress";
 import { getMarketHintFromSearchParams, getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
-import type { Locale } from "@/config/site";
+import { siteConfig, type Locale } from "@/config/site";
 import type { Metadata } from "next";
 import { ShopClient } from "./ShopClient";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { getMarketPathPrefix } from "@/config/market";
 
 export const dynamic = "force-dynamic";
@@ -108,8 +110,29 @@ export default async function ShopPage({ params, searchParams }: ShopPageProps) 
   // Adjust total count to exclude gift products
   const filteredTotal = productsResult.total - (productsResult.products.length - filteredProducts.length);
 
+  const shopUrl = `${siteConfig.url}${pathPrefix}/${locale}/shop`;
+
+  const breadcrumbJsonLd = generateBreadcrumbJsonLd([
+    { name: dictionary.common.home, url: `${siteConfig.url}${pathPrefix}/${locale}` },
+    { name: dictionary.common.shop, url: shopUrl },
+  ]);
+
+  const itemListJsonLd = generateItemListJsonLd({
+    name: dictionary.common.shop,
+    description: subtitle,
+    url: shopUrl,
+    items: filteredProducts.slice(0, 20).map((product, index) => ({
+      name: decodeHtmlEntities(product.name),
+      url: `${siteConfig.url}${pathPrefix}/${locale}/product/${product.slug}`,
+      image: product.images[0]?.src || "",
+      position: index + 1,
+    })),
+  });
+
   return (
     <div className="page-flush container mx-auto px-4 bg-transparent text-brand-primary">
+      <JsonLd data={breadcrumbJsonLd} />
+      <JsonLd data={itemListJsonLd} />
       <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} className="sr-only" />
 
       <CollectionPageHeader

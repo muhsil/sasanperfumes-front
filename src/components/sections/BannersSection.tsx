@@ -107,7 +107,7 @@ export function BannersSection({
                         quality={85}
                         sizes="(max-width: 767px) 100vw, 50vw"
                         className="hidden object-cover transition-transform duration-700 ease-out group-hover:scale-110 md:block"
-                        loading={index < 2 ? "eager" : "lazy"}
+                        loading="lazy"
                         placeholder="blur"
                         blurDataURL={BLUR_DATA_URL}
                         unoptimized={shouldUseUnoptimizedImage(banner.image.url)}
@@ -119,7 +119,7 @@ export function BannersSection({
                         quality={85}
                         sizes="100vw"
                         className="object-cover transition-transform duration-700 ease-out group-hover:scale-110 md:hidden"
-                        loading={index < 2 ? "eager" : "lazy"}
+                        loading="lazy"
                         placeholder="blur"
                         blurDataURL={BLUR_DATA_URL}
                         unoptimized={shouldUseUnoptimizedImage(banner.mobile_image?.url || banner.image.url)}
