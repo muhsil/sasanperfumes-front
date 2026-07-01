@@ -432,9 +432,9 @@ export async function POST(request: NextRequest) {
       orderData.fee_lines = body.fee_lines;
     }
 
-    if (body.customer_id) {
-      orderData.customer_id = body.customer_id;
-    }
+    // Explicitly set customer_id: 0 for guest checkout to prevent WooCommerce
+    // from trying to match the billing email to an existing user account
+    orderData.customer_id = body.customer_id ? body.customer_id : 0;
 
     if (body.meta_data && body.meta_data.length > 0) {
       orderData.meta_data = body.meta_data;
