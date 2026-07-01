@@ -22,7 +22,7 @@ function isNonAsciiSlug(slug: string): boolean {
 }
 
 // Helper to generate product JSON-LD data from WCProduct
-function getProductJsonLdData(product: WCProduct, locale: string, slug: string, baseUrl = siteConfig.url, siteName = siteConfig.name) {
+function getProductJsonLdData(product: WCProduct, locale: string, slug: string, baseUrl: string, siteName: string, currency: string) {
   const minorUnit = product.prices.currency_minor_unit || 2;
   const divisor = Math.pow(10, minorUnit);
   const price = (parseInt(product.prices.price, 10) / divisor).toFixed(2);
@@ -34,7 +34,7 @@ function getProductJsonLdData(product: WCProduct, locale: string, slug: string, 
     image: product.images[0]?.src || "",
     images: product.images.map((img) => img.src).filter(Boolean),
     price,
-    currency: product.prices.currency_code,
+    currency,
     sku: product.sku || undefined,
     availability: product.is_in_stock ? "InStock" : "OutOfStock",
     url: `${baseUrl}/${locale}/product/${slug}`,
@@ -45,7 +45,7 @@ function getProductJsonLdData(product: WCProduct, locale: string, slug: string, 
     sellerName: siteName,
     sellerUrl: baseUrl,
     returnPolicyUrl: `${baseUrl}/${locale}/returns`,
-    shippingCurrency: product.prices.currency_code,
+    shippingCurrency: currency,
   });
 }
 
@@ -192,8 +192,8 @@ export async function generateMetadata({
       : "";
 
     const productDescription = locale === "ar"
-      ? `${rawDescription ? rawDescription + ". " : ""}${productName} من ${siteName}.${olfactorySnippet}${notesSnippet}${priceValue ? " السعر: " + priceValue + " " + product.prices.currency_code + "." : ""}`
-      : `${rawDescription ? rawDescription + ". " : ""}${productName} by ${siteName}.${olfactorySnippet}${notesSnippet}${priceValue ? " Price: " + priceValue + " " + product.prices.currency_code + "." : ""}`;
+      ? `${rawDescription ? rawDescription + ". " : ""}${productName} من ${siteName}.${olfactorySnippet}${notesSnippet}${priceValue ? " السعر: " + priceValue + " " + market.defaultCurrency + "." : ""}`
+      : `${rawDescription ? rawDescription + ". " : ""}${productName} by ${siteName}.${olfactorySnippet}${notesSnippet}${priceValue ? " Price: " + priceValue + " " + market.defaultCurrency + "." : ""}`;
 
     trimmedDescription = productDescription.length > 160
       ? productDescription.slice(0, 160).replace(/\s+\S*$/, "") + "..."
@@ -237,7 +237,7 @@ export async function generateMetadata({
     ...(ogPrice ? {
       other: {
         "product:price:amount": ogPrice,
-        "product:price:currency": product.prices.currency_code,
+        "product:price:currency": market.defaultCurrency,
       },
     } : {}),
   };
@@ -247,7 +247,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   const { locale, slug } = await params;
   const { market, frontendHost } = await getProductPageMarketContext(searchParams);
   const pathPrefix = getMarketPathPrefix(market.code);
-  const frontendBaseUrl = frontendHost ? `https://${frontendHost}` : siteConfig.url;
+  const frontendBaseUrl = `${siteConfig.url}${pathPrefix}`;
   
   // If the URL contains a non-ASCII slug (e.g., Arabic), find the product and redirect to English slug
   if (isNonAsciiSlug(slug)) {
@@ -319,7 +319,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
     
     return (
       <>
-        <JsonLd data={getProductJsonLdData(product, locale, slug, frontendBaseUrl, siteName)} />
+        <JsonLd data={getProductJsonLdData(product, locale, slug, frontendBaseUrl, siteName, market.defaultCurrency)} />
         <div className="container mx-auto px-4 py-3">
           <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} contained={false} />
           <BuildYourOwnSetClient
@@ -390,7 +390,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
 
   return (
     <>
-      <JsonLd data={getProductJsonLdData(product, locale, slug, frontendBaseUrl, siteName)} />
+      <JsonLd data={getProductJsonLdData(product, locale, slug, frontendBaseUrl, siteName, market.defaultCurrency)} />
       <JsonLd data={breadcrumbJsonLd} />
       <ProductDetail
         product={product}

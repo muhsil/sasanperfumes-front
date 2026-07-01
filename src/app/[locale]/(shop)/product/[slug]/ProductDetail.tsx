@@ -1463,7 +1463,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
       <div className="mx-auto w-full max-w-[80rem]">
         <div className="w-full px-4 pb-3 pt-4 md:pb-4 md:pt-6">
           <div className="flex items-center justify-between gap-3">
-            <Breadcrumbs items={breadcrumbItems} locale={locale} contained={false} />
+            <Breadcrumbs items={breadcrumbItems} locale={locale} contained={false} skipJsonLd />
             <SocialShareModal
               url={`${siteConfig.url}/${locale}/product/${product.slug}`}
               title={decodeHtmlEntities(product.name)}
