@@ -124,6 +124,35 @@ fetch('/api/product-variations?product_id=10345')
 - Verify: Gift wrapping option available
 - Same parent_id lookup as cart (`CheckoutClient.tsx`)
 
+### 6a. Checkout — Registered Email Guest Checkout
+- **Email check trigger**: The email check fires on blur (not on type). After typing the email, click on the Phone field or another field to trigger the blur event. Wait 1-2s for the API call.
+- **Registered email (e.g. `muhsilv@gmail.com`)**: Should show a **soft info panel** (muted border, beige background `bg-brand-beige/55`) with text "It looks like you have an account with this email. You can log in to track your orders, or continue as a guest."
+  - "Log In" button (outline variant) — navigates to `/{marketPrefix}/{locale}/login?redirect=/{marketPrefix}/{locale}/checkout`
+  - NO "Use Different Email" button (removed)
+  - Place Order button remains ENABLED (not disabled)
+  - NO red error banner at top
+  - "Create account" checkbox should be HIDDEN (registered users already have an account)
+- **New/unregistered email**: No info panel appears. "Create account" checkbox is visible.
+- **Console validation script:**
+```js
+const infoPanel = document.querySelector('.bg-brand-beige\\/55');
+const placeOrder = document.querySelector('button[type="submit"]');
+const loginBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.trim() === 'Log In');
+console.log('INFO_PANEL:', infoPanel ? 'PRESENT' : 'ABSENT');
+console.log('LOGIN_BTN:', loginBtn ? 'PRESENT' : 'MISSING');
+console.log('PLACE_ORDER_ENABLED:', !placeOrder?.disabled);
+```
+- **Multi-market**: Test on all 4 markets (intl, QA, SA, OM). The Log In button href should include the market prefix (e.g., `/qa/en/login?redirect=%2Fqa%2Fen%2Fcheckout`).
+- **Arabic RTL**: On `/ar/checkout`, info panel shows Arabic text ("يبدو أن لديك حسابًا...") and button shows "تسجيل الدخول".
+
+### 6b. Login Page Redirect Validation
+- Login page accepts `?redirect=` query param
+- **Valid**: `/en/login?redirect=%2Fen%2Fcheckout` — after login, redirects to `/en/checkout`
+- **Invalid (external URL)**: `/en/login?redirect=https://evil.com` — `redirectUrl` should be `null`
+- **Invalid (protocol-relative)**: `/en/login?redirect=//evil.com` — `redirectUrl` should be `null`
+- Validation logic: must start with `/` AND must NOT start with `//`
+- Console check: `new URLSearchParams(location.search).get('redirect')` to see raw value
+
 ### 7. Arabic RTL
 - Navigate to `/ar`
 - Verify: `document.documentElement.getAttribute('dir')` === 'rtl'
