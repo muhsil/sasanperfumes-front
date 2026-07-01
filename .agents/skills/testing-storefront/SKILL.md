@@ -9,18 +9,28 @@ description: Test storefront flows end-to-end — shop infinite scroll, product 
 
 ### Local Dev (Preferred for most tests)
 ```bash
-cd /home/ubuntu/repos/MUHSIL
-npm run build && npx next start -p 3001
+cd /home/ubuntu/repos/sasanperfumes-front
+npm run dev -p 3001
 ```
-- Uses staging backend: `https://cms.sasanperfumes.ae`
-- Production build avoids dev-mode hydration warnings
+- Uses live backend: `https://cms.sasanperfumes.com`
+- Dev server renders fresh per-request (best for testing live API data)
 - Port 3001 avoids conflicts with dev server on 3000
+- Do NOT use `npm run build` — it invokes `build-preserve-chunks.js` which may serve stale content
 
 ### Production (For WC-authenticated features)
-- URL: `https://store.sasanperfumes.ae`
+- URL: `https://store.sasanperfumes.com`
 - Has real WC consumer key/secret — needed for reviews API v3
 - Use for testing reviews, any feature requiring WC REST API v3 auth
 - Cache-bust with `?t=<tag>` query param to avoid CDN stale content
+- **Note**: Production may be unreachable from Devin VM due to firewall/DNS. Use local dev server instead.
+
+### Multi-Market URLs
+| Market | EN URL | AR URL |
+|--------|--------|--------|
+| International | `localhost:3001/en` | `localhost:3001/ar` |
+| Qatar | `localhost:3001/qa/en` | `localhost:3001/qa/ar` |
+| Saudi Arabia | `localhost:3001/sa/en` | `localhost:3001/sa/ar` |
+| Oman | `localhost:3001/om/en` | `localhost:3001/om/ar` |
 
 ## Key Test Products
 
@@ -118,11 +128,14 @@ fetch('/api/product-variations?product_id=10345')
 - Navigate to `/ar`
 - Verify: `document.documentElement.getAttribute('dir')` === 'rtl'
 - Verify: `document.documentElement.getAttribute('lang')` === 'ar'
-- Check Arabic navigation labels, product names, section headings
+- Check Arabic navigation labels: العطور, بخاخ الجسم, معطر الشعر, عطور العود, مجموعات الهدايا
+- Check section headers: منتجات جديدة (New Products), الأكثر مبيعاً (Bestsellers)
+- Layout should be mirrored: logo on right, cart/wishlist icons on left
 - Hero slider might show English fallback if AR translations not set in backend
 - **Loyalty badge**: Should show Arabic label (e.g., "نقاط عنبر") from backend `label_ar`
 - **OOS message**: Should show Arabic message (e.g., "هذا المزيج غير متوفر حالياً")
 - **Topbar**: Should show interpolated Arabic text (e.g., "شحن مجاني للطلبات فوق 700 AED")
+- **Multi-market AR**: Also test `/qa/ar`, `/sa/ar`, `/om/ar` — each should have RTL layout, market-prefixed canonical, and correct currency (QAR/SAR/OMR)
 
 ### 8. Language Switch
 - Navigate to `/en` — note all English nav items
