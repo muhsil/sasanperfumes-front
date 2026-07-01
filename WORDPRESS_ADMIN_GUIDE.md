@@ -9,7 +9,7 @@ The frontend does not execute PHP files directly. The WordPress plugin runs on t
 | Item | Value |
 |---|---|
 | CMS URL | `https://cms.sasanperfumes.com` |
-| Storefront URL | `https://store.sasanperfumes.com` |
+| Storefront URL | `https://sasanperfumes.com` |
 | REST API base | `https://cms.sasanperfumes.com/wp-json` |
 | Main custom namespace | `sasanperfumes/v1` |
 | Plugin name | `ShapeHive Frontend Settings` |
@@ -42,7 +42,7 @@ The plugin uses one CMS backend (`cms.sasanperfumes.com`) with separate content/
 
 - Path-based markets on the same domain: `/qa`, `/om`, `/sa`
 - CMS market content sites: `cms.sasanperfumes.com/qa`, `cms.sasanperfumes.com/om`, `cms.sasanperfumes.com/sa`
-- Base intl host: `store.sasanperfumes.com`
+- Base intl host: `sasanperfumes.com`
 - Route rule used by the frontend links: `/{market(optional)}/{locale}/{slug}` (locale is `en` or `ar`)
 - Keep URL order as market-first (`/qa/en`, `/om/ar`, `/sa/en`). Any `/en/qa` style request is normalized to market-first by the frontend middleware, but keep canonical content links as market-first.
 - Legacy market subdomain hosts are retired and are not part of the live routing plan.
@@ -71,18 +71,18 @@ You can also configure it manually from Network Admin:
 
 1. Log in as super admin at `https://cms.sasanperfumes.com/wp-admin/network/admin.php?page=sasanperfumes-frontend-network`
 2. Click **Frontend Network Settings**.
-3. Set default frontend URL to `https://store.sasanperfumes.com`.
+3. Set default frontend URL to `https://sasanperfumes.com`.
 4. Keep JSON map as:
 
 ```json
 {
-  "cms.sasanperfumes.com": "https://store.sasanperfumes.com",
-  "cms.sasanperfumes.com/qa": "https://store.sasanperfumes.com/qa",
-  "cms.sasanperfumes.com/om": "https://store.sasanperfumes.com/om",
-  "cms.sasanperfumes.com/sa": "https://store.sasanperfumes.com/sa",
-  "store.sasanperfumes.com/qa": "https://store.sasanperfumes.com/qa",
-  "store.sasanperfumes.com/om": "https://store.sasanperfumes.com/om",
-  "store.sasanperfumes.com/sa": "https://store.sasanperfumes.com/sa"
+  "cms.sasanperfumes.com": "https://sasanperfumes.com",
+  "cms.sasanperfumes.com/qa": "https://sasanperfumes.com/qa",
+  "cms.sasanperfumes.com/om": "https://sasanperfumes.com/om",
+  "cms.sasanperfumes.com/sa": "https://sasanperfumes.com/sa",
+  "sasanperfumes.com/qa": "https://sasanperfumes.com/qa",
+  "sasanperfumes.com/om": "https://sasanperfumes.com/om",
+  "sasanperfumes.com/sa": "https://sasanperfumes.com/sa"
 }
 ```
 
@@ -100,14 +100,14 @@ Use `--delete` only if you want to permanently remove those sites instead of arc
 
 After setup, test from each entry point:
 
-- https://store.sasanperfumes.com/en
-- https://store.sasanperfumes.com/ar
-- https://store.sasanperfumes.com/qa/en
-- https://store.sasanperfumes.com/qa/ar
-- https://store.sasanperfumes.com/om/en
-- https://store.sasanperfumes.com/om/ar
-- https://store.sasanperfumes.com/sa/en
-- https://store.sasanperfumes.com/sa/ar
+- https://sasanperfumes.com/en
+- https://sasanperfumes.com/ar
+- https://sasanperfumes.com/qa/en
+- https://sasanperfumes.com/qa/ar
+- https://sasanperfumes.com/om/en
+- https://sasanperfumes.com/om/ar
+- https://sasanperfumes.com/sa/en
+- https://sasanperfumes.com/sa/ar
 
 Primary CMS admin entry points:
 
@@ -451,7 +451,7 @@ Create `.env.local` in the project root:
 ```env
 NEXT_PUBLIC_WC_API_URL=https://cms.sasanperfumes.com
 NEXT_PUBLIC_WORDPRESS_GRAPHQL_URL=https://cms.sasanperfumes.com/graphql
-NEXT_PUBLIC_SITE_URL=https://store.sasanperfumes.com
+NEXT_PUBLIC_SITE_URL=https://sasanperfumes.com
 
 WC_CONSUMER_KEY=ck_xxx
 WC_CONSUMER_SECRET=cs_xxx

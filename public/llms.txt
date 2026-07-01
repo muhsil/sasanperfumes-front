@@ -4,37 +4,37 @@ Sasan Perfumes is a UAE fragrance store offering perfumes, hair mist, all over s
 
 ## Website
 
-- Homepage: https://store.sasanperfumes.com
-- English: https://store.sasanperfumes.com/en
-- Arabic: https://store.sasanperfumes.com/ar
-- Shop: https://store.sasanperfumes.com/en/shop
-- Contact: https://store.sasanperfumes.com/en/contact
+- Homepage: https://sasanperfumes.com
+- English: https://sasanperfumes.com/en
+- Arabic: https://sasanperfumes.com/ar
+- Shop: https://sasanperfumes.com/en/shop
+- Contact: https://sasanperfumes.com/en/contact
 
 ## Product Categories
 
-- Perfumes: https://store.sasanperfumes.com/en/category/perfumes
-- All Over Spray: https://store.sasanperfumes.com/en/category/all-over-spray
-- Hair Mist: https://store.sasanperfumes.com/en/category/sasan-hair-mist
-- Gift Sets: https://store.sasanperfumes.com/en/category/gift-set
+- Perfumes: https://sasanperfumes.com/en/category/perfumes
+- All Over Spray: https://sasanperfumes.com/en/category/all-over-spray
+- Hair Mist: https://sasanperfumes.com/en/category/sasan-hair-mist
+- Gift Sets: https://sasanperfumes.com/en/category/gift-set
 
 ## Services
 
-- Private labeling: https://store.sasanperfumes.com/en/private-labeling
-- Services: https://store.sasanperfumes.com/en/services
+- Private labeling: https://sasanperfumes.com/en/private-labeling
+- Services: https://sasanperfumes.com/en/services
 
 ## Customer Support
 
 - WhatsApp: 0567394314
 - Complaints & Calls: 0563982953
-- Shipping: https://store.sasanperfumes.com/en/shipping
-- Returns: https://store.sasanperfumes.com/en/returns
-- Privacy: https://store.sasanperfumes.com/en/privacy
-- Terms: https://store.sasanperfumes.com/en/terms-and-conditions
+- Shipping: https://sasanperfumes.com/en/shipping
+- Returns: https://sasanperfumes.com/en/returns
+- Privacy: https://sasanperfumes.com/en/privacy
+- Terms: https://sasanperfumes.com/en/terms-and-conditions
 
 ## Arabic
 
 ساسان للعطور متجر عطور في الإمارات يقدم العطور، معطرات الشعر، بخاخات الجسم، ومجموعات الهدايا العطرية عبر الإنترنت.
 
-- المتجر: https://store.sasanperfumes.com/ar/shop
-- تواصل معنا: https://store.sasanperfumes.com/ar/contact
-- التصنيع الخاص: https://store.sasanperfumes.com/ar/private-labeling
+- المتجر: https://sasanperfumes.com/ar/shop
+- تواصل معنا: https://sasanperfumes.com/ar/contact
+- التصنيع الخاص: https://sasanperfumes.com/ar/private-labeling

@@ -8,7 +8,7 @@ A modern, bilingual (English/Arabic) headless e-commerce frontend built with Nex
 - **Bilingual Support** - English and Arabic (RTL) with seamless language switching
 - **Multi-Currency** - Support for AED, BHD, KWD, OMR, QAR, SAR, USD with persistent selection
 - **WordPress/WooCommerce Backend** - Headless CMS via REST API, Store API, and CoCart
-- **Market-aware Frontend Routing** - Shared CMS with separate frontends at `/qa`, `/om`, and `/sa` (plus base `https://store.sasanperfumes.com`)
+- **Market-aware Frontend Routing** - Shared CMS with separate frontends at `/qa`, `/om`, and `/sa` (plus base `https://sasanperfumes.com`)
 - **Multisite market separation** - One WordPress host (`cms.sasanperfumes.com`) with market-specific content, pages, products, and SEO returned by market context.
 - **Tailwind CSS** - Utility-first styling with RTL support
 - **TypeScript** - Full type safety throughout the codebase
@@ -84,24 +84,24 @@ cp .env.example .env.local
 
 4. Update `.env.local` with your WordPress backend and market frontend details:
 ```
-NEXT_PUBLIC_SITE_URL=https://store.sasanperfumes.com
+NEXT_PUBLIC_SITE_URL=https://sasanperfumes.com
 NEXT_PUBLIC_WC_API_URL=https://cms.sasanperfumes.com
-NEXT_PUBLIC_CANONICAL_HOST=https://store.sasanperfumes.com
+NEXT_PUBLIC_CANONICAL_HOST=sasanperfumes.com
 WC_CONSUMER_KEY=ck_xxxxx
 WC_CONSUMER_SECRET=cs_xxxxx
 ```
 
 Market frontends:
 ```
-https://store.sasanperfumes.com/        -> intl market (default currency/country logic)
-https://store.sasanperfumes.com/en      -> intl in English
-https://store.sasanperfumes.com/ar      -> intl in Arabic
-https://store.sasanperfumes.com/qa/en   -> Qatar market in English
-https://store.sasanperfumes.com/qa/ar   -> Qatar market in Arabic
-https://store.sasanperfumes.com/om/en   -> Oman market in English
-https://store.sasanperfumes.com/om/ar   -> Oman market in Arabic
-https://store.sasanperfumes.com/sa/en   -> Saudi market in English
-https://store.sasanperfumes.com/sa/ar   -> Saudi market in Arabic
+https://sasanperfumes.com/        -> intl market (default currency/country logic)
+https://sasanperfumes.com/en      -> intl in English
+https://sasanperfumes.com/ar      -> intl in Arabic
+https://sasanperfumes.com/qa/en   -> Qatar market in English
+https://sasanperfumes.com/qa/ar   -> Qatar market in Arabic
+https://sasanperfumes.com/om/en   -> Oman market in English
+https://sasanperfumes.com/om/ar   -> Oman market in Arabic
+https://sasanperfumes.com/sa/en   -> Saudi market in English
+https://sasanperfumes.com/sa/ar   -> Saudi market in Arabic
 ```
 
 All market routes use one backend:
@@ -160,10 +160,10 @@ Note: Currencies and SEO/content are loaded per market context from the shared b
 ## Frontend Market URLs
 
 Use one canonical backend and separate frontend market routes:
-- `https://store.sasanperfumes.com/`
-- `https://store.sasanperfumes.com/qa`
-- `https://store.sasanperfumes.com/om`
-- `https://store.sasanperfumes.com/sa`
+- `https://sasanperfumes.com/`
+- `https://sasanperfumes.com/qa`
+- `https://sasanperfumes.com/om`
+- `https://sasanperfumes.com/sa`
 
 Market-specific hostnames are not used for frontend routing now; use path-based market routes (`/qa`, `/om`, `/sa`).
 
