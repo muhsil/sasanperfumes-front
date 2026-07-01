@@ -141,7 +141,7 @@ export default async function LocaleLayout({
                         <DiscountRulesProvider initialRules={discountRules}>
               <JsonLd data={generateOrganizationJsonLd()} />
               <JsonLd data={generateWebSiteJsonLd()} />
-              {generateLocalBusinessJsonLd().map((schema, i) => (
+              {generateLocalBusinessJsonLd(market.code).map((schema, i) => (
                 <JsonLd key={`local-business-${i}`} data={schema} />
               ))}
               <TrackingScripts

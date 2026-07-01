@@ -37,141 +37,127 @@ async function getAllProductsForMarket(marketCode: string, currency: Currency, f
   return products;
 }
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+const staticPages = [
+  "",
+  "/shop",
+  "/about-us",
+  "/contact-us",
+  "/faq",
+  "/new-products",
+  "/featured-products",
+  "/build-your-own-set",
+  "/store-listing",
+  "/shipping",
+  "/returns",
+  "/privacy",
+  "/terms-and-conditions",
+];
+
+async function generateMarketSitemap(marketCode: MarketCode, currency: Currency): Promise<MetadataRoute.Sitemap> {
   const baseUrl = siteConfig.url;
   const locales = siteConfig.locales;
+  const frontendHost = marketFrontendHost(marketCode);
+  const entries: MetadataRoute.Sitemap = [];
 
-  // Static pages that should be indexed
-  const staticPages = [
-    "",
-    "/shop",
-    "/about-us",
-    "/contact-us",
-    "/faq",
-    "/new-products",
-    "/featured-products",
-    "/build-your-own-set",
-    "/store-listing",
-    "/shipping",
-    "/returns",
-    "/privacy",
-    "/terms-and-conditions",
-  ];
+  for (const locale of locales) {
+    for (const page of staticPages) {
+      entries.push({
+        url: marketUrl(baseUrl, marketCode, locale, page),
+        lastModified: new Date(),
+        changeFrequency: page === "" ? "daily" : "weekly",
+        priority: marketCode === "intl" && page === "" ? 1.0 : page === "" ? 0.95 : 0.8,
+        alternates: {
+          languages: {
+            en: marketUrl(baseUrl, marketCode, "en", page),
+            ar: marketUrl(baseUrl, marketCode, "ar", page),
+          },
+        },
+      });
+    }
+  }
 
-  // Generate static page entries for all locales and markets.
-  const staticEntries: MetadataRoute.Sitemap = [];
-  for (const market of marketConfigs) {
-    for (const locale of locales) {
-      for (const page of staticPages) {
-        staticEntries.push({
-          url: marketUrl(baseUrl, market.code, locale, page),
+  try {
+    const products = await getAllProductsForMarket(marketCode, currency, frontendHost);
+    for (const product of products) {
+      for (const locale of locales) {
+        entries.push({
+          url: marketUrl(baseUrl, marketCode, locale, `/product/${product.slug}`),
           lastModified: new Date(),
-          changeFrequency: page === "" ? "daily" : "weekly",
-          priority: market.code === "intl" && page === "" ? 1.0 : page === "" ? 0.95 : 0.8,
+          changeFrequency: "weekly",
+          priority: 0.9,
           alternates: {
             languages: {
-              en: marketUrl(baseUrl, market.code, "en", page),
-              ar: marketUrl(baseUrl, market.code, "ar", page),
+              en: marketUrl(baseUrl, marketCode, "en", `/product/${product.slug}`),
+              ar: marketUrl(baseUrl, marketCode, "ar", `/product/${product.slug}`),
             },
           },
         });
       }
     }
-  }
-
-  // Fetch products and categories for dynamic pages
-  const productEntries: MetadataRoute.Sitemap = [];
-  const categoryEntries: MetadataRoute.Sitemap = [];
-
-  try {
-    for (const market of marketConfigs) {
-      const frontendHost = marketFrontendHost(market.code);
-      const products = await getAllProductsForMarket(
-        market.code,
-        market.defaultCurrency,
-        frontendHost
-      );
-
-      // Generate product page entries for all locales.
-      for (const product of products) {
-        for (const locale of locales) {
-          productEntries.push({
-            url: marketUrl(baseUrl, market.code, locale, `/product/${product.slug}`),
-            lastModified: new Date(),
-            changeFrequency: "weekly",
-            priority: 0.9,
-            alternates: {
-              languages: {
-                en: marketUrl(baseUrl, market.code, "en", `/product/${product.slug}`),
-                ar: marketUrl(baseUrl, market.code, "ar", `/product/${product.slug}`),
-              },
-            },
-          });
-        }
-      }
-    }
   } catch (error) {
-    console.error("Failed to fetch products for sitemap:", error);
+    console.error(`Failed to fetch products for ${marketCode} sitemap:`, error);
   }
 
   try {
-    for (const market of marketConfigs) {
-      const frontendHost = marketFrontendHost(market.code);
-      const categories = await getCategories("en", market.defaultCurrency, frontendHost);
-
-      // Generate category page entries for all locales.
-      for (const category of categories) {
-        for (const locale of locales) {
-          categoryEntries.push({
-            url: marketUrl(baseUrl, market.code, locale, `/category/${category.slug}`),
-            lastModified: new Date(),
-            changeFrequency: "weekly",
-            priority: 0.8,
-            alternates: {
-              languages: {
-                en: marketUrl(baseUrl, market.code, "en", `/category/${category.slug}`),
-                ar: marketUrl(baseUrl, market.code, "ar", `/category/${category.slug}`),
-              },
+    const categories = await getCategories("en", currency, frontendHost);
+    for (const category of categories) {
+      for (const locale of locales) {
+        entries.push({
+          url: marketUrl(baseUrl, marketCode, locale, `/category/${category.slug}`),
+          lastModified: new Date(),
+          changeFrequency: "weekly",
+          priority: 0.8,
+          alternates: {
+            languages: {
+              en: marketUrl(baseUrl, marketCode, "en", `/category/${category.slug}`),
+              ar: marketUrl(baseUrl, marketCode, "ar", `/category/${category.slug}`),
             },
-          });
-        }
+          },
+        });
       }
     }
   } catch (error) {
-    console.error("Failed to fetch categories for sitemap:", error);
+    console.error(`Failed to fetch categories for ${marketCode} sitemap:`, error);
   }
 
-  // Generate guide page entries for all locales (fetched from WordPress)
-  const guideEntries: MetadataRoute.Sitemap = [];
   try {
     const wpGuides = await getGuidePages();
-    for (const market of marketConfigs) {
-      for (const guide of wpGuides) {
-        for (const locale of locales) {
-          guideEntries.push({
-            url: marketUrl(baseUrl, market.code, locale, `/guides/${guide.slug}`),
-            lastModified: new Date(),
-            changeFrequency: "weekly",
-            priority: 0.8,
-            alternates: {
-              languages: {
-                en: marketUrl(baseUrl, market.code, "en", `/guides/${guide.slug}`),
-                ar: marketUrl(baseUrl, market.code, "ar", `/guides/${guide.slug}`),
-              },
+    for (const guide of wpGuides) {
+      for (const locale of locales) {
+        entries.push({
+          url: marketUrl(baseUrl, marketCode, locale, `/guides/${guide.slug}`),
+          lastModified: new Date(),
+          changeFrequency: "weekly",
+          priority: 0.8,
+          alternates: {
+            languages: {
+              en: marketUrl(baseUrl, marketCode, "en", `/guides/${guide.slug}`),
+              ar: marketUrl(baseUrl, marketCode, "ar", `/guides/${guide.slug}`),
             },
-          });
-        }
+          },
+        });
       }
     }
   } catch (error) {
-    console.error("Failed to fetch guides for sitemap:", error);
+    console.error(`Failed to fetch guides for ${marketCode} sitemap:`, error);
   }
 
-  // Combine all entries, removing duplicates by URL
-  const allEntries = [...staticEntries, ...productEntries, ...categoryEntries, ...guideEntries];
+  return entries;
+}
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const allEntries: MetadataRoute.Sitemap = [];
+
+  for (const market of marketConfigs) {
+    const marketEntries = await generateMarketSitemap(market.code, market.defaultCurrency);
+    allEntries.push(...marketEntries);
+  }
+
   const uniqueEntries = allEntries.filter(
     (entry, index, self) => index === self.findIndex((e) => e.url === entry.url)
   );
 
   return uniqueEntries;
 }
+
+export { generateMarketSitemap };

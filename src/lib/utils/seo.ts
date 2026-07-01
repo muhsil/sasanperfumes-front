@@ -255,30 +255,37 @@ export function generateWebSiteJsonLd() {
   };
 }
 
-export function generateLocalBusinessJsonLd() {
+const marketLocationData: Record<MarketCode, { country: string; currency: string; addressCountry: string }> = {
+  intl: { country: "United Arab Emirates", currency: "AED", addressCountry: "AE" },
+  qa: { country: "Qatar", currency: "QAR", addressCountry: "QA" },
+  om: { country: "Oman", currency: "OMR", addressCountry: "OM" },
+  sa: { country: "Saudi Arabia", currency: "SAR", addressCountry: "SA" },
+};
+
+export function generateLocalBusinessJsonLd(marketCode: MarketCode = "intl") {
   const socialLinks = Object.values(siteConfig.links).filter(Boolean);
   const logo = siteConfig.logoUrl || siteConfig.faviconUrl;
+  const location = marketLocationData[marketCode];
+  const prefix = getMarketPathPrefix(marketCode);
+  const storeUrl = `${siteConfig.url}${prefix}`;
 
   return [
-    // Parent organization / online store
     {
       "@context": "https://schema.org",
       "@type": "Store",
-      "@id": `${siteConfig.url}/#organization`,
+      "@id": `${storeUrl}/#organization`,
       name: siteConfig.name,
-      url: siteConfig.url,
+      url: storeUrl,
       ...(logo ? { image: logo } : {}),
       description: siteConfig.description,
       priceRange: "$$",
       telephone: siteConfig.contact.phone,
-      areaServed: [
-        { "@type": "Country", name: "United Arab Emirates" },
-        { "@type": "Country", name: "Saudi Arabia" },
-        { "@type": "Country", name: "Kuwait" },
-        { "@type": "Country", name: "Bahrain" },
-        { "@type": "Country", name: "Qatar" },
-        { "@type": "Country", name: "Oman" },
-      ],
+      address: {
+        "@type": "PostalAddress",
+        addressCountry: location.addressCountry,
+      },
+      areaServed: { "@type": "Country", name: location.country },
+      currenciesAccepted: location.currency,
       hasOfferCatalog: {
         "@type": "OfferCatalog",
         name: "Premium Fragrances",

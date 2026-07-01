@@ -311,6 +311,24 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        source: "/sitemap-index.xml",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=3600, s-maxage=3600, stale-while-revalidate=7200",
+          },
+        ],
+      },
+      {
+        source: "/sitemap-:market(intl|qa|om|sa).xml",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=3600, s-maxage=3600, stale-while-revalidate=7200",
+          },
+        ],
+      },
+      {
         source: "/image-sitemap.xml",
         headers: [
           {

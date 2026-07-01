@@ -3,6 +3,10 @@ interface JsonLdProps {
 }
 
 export function JsonLd({ data }: JsonLdProps) {
-  void data;
-  return null;
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+    />
+  );
 }
