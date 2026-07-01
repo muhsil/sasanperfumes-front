@@ -159,7 +159,12 @@ const emptyAddress: AddressFormData = {
 
 const sanitizeCheckoutMessage = (message: string): string => {
   const decoded = decodeHtmlEntities(message || "");
-  return decoded.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  const cleaned = decoded.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  // Replace raw WordPress authentication errors with user-friendly messages
+  if (/unknown username/i.test(cleaned) || /invalid_username/i.test(cleaned)) {
+    return "Could not process your order. Please try again or use a different email address.";
+  }
+  return cleaned;
 };
 
 export default function CheckoutClient() {
@@ -700,13 +705,13 @@ export default function CheckoutClient() {
       if (data.success && data.data.isRegistered) {
         setIsEmailRegistered(true);
         // Auto-uncheck create account if email is already registered
-        // This allows seamless guest checkout without extra clicks
         if (createAccount) {
           setCreateAccount(false);
           setAccountPassword("");
           setConfirmPassword("");
           setPasswordError(null);
         }
+        // Show non-blocking login suggestion (does not prevent guest checkout)
         setShowLoginPrompt(true);
       } else {
         setIsEmailRegistered(false);
@@ -848,17 +853,6 @@ export default function CheckoutClient() {
 
       if (!isAuthenticated && isCheckingEmail) {
         setError(isRTL ? "يرجى الانتظار لحظة حتى نتحقق من البريد الإلكتروني." : "Please wait a moment while we verify your email address.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (!isAuthenticated && isEmailRegistered) {
-        setShowLoginPrompt(true);
-        setError(
-          isRTL
-            ? "هذا البريد الإلكتروني مسجل بالفعل. يرجى تسجيل الدخول للمتابعة بهذا البريد، أو استخدام بريد إلكتروني مختلف لإتمام الطلب كضيف."
-            : "This email is already registered for this store. Please log in to continue with this email, or use a different email address to check out as a guest."
-        );
         setIsSubmitting(false);
         return;
       }
@@ -1563,44 +1557,29 @@ export default function CheckoutClient() {
                 />
               </div>
               
-              {/* Login Prompt for Registered Email */}
+              {/* Login Suggestion for Registered Email (non-blocking — guest checkout still allowed) */}
               {showLoginPrompt && !isAuthenticated && (
-                <div className="mt-4 rounded-lg border border-brand-primary bg-brand-beige p-4">
+                <div className="mt-4 rounded-lg border border-brand-border/70 bg-brand-beige/55 p-4">
                   <div className="flex items-start gap-3">
                     <div className="flex-shrink-0">
                       <svg className="h-5 w-5 text-brand-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-sm font-medium text-brand-primary">
-                        {isRTL ? "هذا البريد الإلكتروني مسجل لهذا المتجر" : "This email is already registered for this store"}
-                      </h3>
-                      <p className="mt-1 text-sm text-brand-primary">
+                      <p className="text-sm text-brand-muted">
                         {isRTL 
-                          ? "يرجى تسجيل الدخول للمتابعة بهذا البريد الإلكتروني. إذا كنت تريد إتمام الطلب كضيف، فاستخدم بريدًا إلكترونيًا مختلفًا."
-                          : "Please log in to continue with this email address. If you want to check out as a guest, use a different email address."}
+                          ? "يبدو أن لديك حسابًا بهذا البريد الإلكتروني. يمكنك تسجيل الدخول لتتبع طلباتك، أو المتابعة كضيف."
+                          : "It looks like you have an account with this email. You can log in to track your orders, or continue as a guest."}
                       </p>
                       <div className="mt-3 flex flex-wrap gap-2">
                         <Button
                           type="button"
-                          variant="primary"
+                          variant="outline"
                           size="sm"
                           onClick={() => router.push(`${marketPrefix}/${locale}/login?redirect=${encodeURIComponent(`${marketPrefix}/${locale}/checkout`)}`)}
                         >
-                          {isRTL ? "ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„" : "Log In"}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            handleShippingChange("email", "");
-                            setIsEmailRegistered(false);
-                            setShowLoginPrompt(false);
-                          }}
-                        >
-                          {isRTL ? "استخدام بريد مختلف" : "Use Different Email"}
+                          {isRTL ? "تسجيل الدخول" : "Log In"}
                         </Button>
                       </div>
                     </div>

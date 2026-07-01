@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/common/Input";
 import { Button } from "@/components/common/Button";
 import { AuthCard } from "@/components/auth/AuthCard";
@@ -17,6 +17,10 @@ interface LoginPageProps {
 export default function LoginPage({ params }: LoginPageProps) {
   const marketPrefix = useMarketPrefix();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const rawRedirect = searchParams.get("redirect");
+  // Only allow relative paths to prevent open redirect attacks
+  const redirectUrl = rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//") ? rawRedirect : null;
   const { login, googleLogin, isLoading } = useAuth();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [locale, setLocale] = useState<string>("en");
@@ -151,7 +155,7 @@ export default function LoginPage({ params }: LoginPageProps) {
     });
 
     if (response.success) {
-      router.push(`${marketPrefix}/${locale}/account`);
+      router.push(redirectUrl || `${marketPrefix}/${locale}/account`);
     } else {
       if (response.error?.code === "rate_limit_exceeded" && response.error.retry_after) {
         startCountdown(response.error.retry_after);
@@ -194,7 +198,7 @@ export default function LoginPage({ params }: LoginPageProps) {
           try {
             const response = await googleLogin(credential);
             if (response.success) {
-              router.push(`${marketPrefix}/${locale}/account`);
+              router.push(redirectUrl || `${marketPrefix}/${locale}/account`);
             } else {
               setErrors({ general: response.error?.message || texts.googleSignInError });
             }
