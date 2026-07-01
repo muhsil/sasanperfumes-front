@@ -233,11 +233,13 @@ export async function generateMetadata({
     openGraph: {
       ...metadata.openGraph,
       type: "website",
-      ...(ogPrice ? {
+    },
+    ...(ogPrice ? {
+      other: {
         "product:price:amount": ogPrice,
         "product:price:currency": product.prices.currency_code,
-      } as Record<string, string> : {}),
-    },
+      },
+    } : {}),
   };
 }
 

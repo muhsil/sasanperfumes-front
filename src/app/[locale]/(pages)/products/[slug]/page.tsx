@@ -49,6 +49,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     .map((k: string) => k.trim())
     .filter(Boolean);
 
+  const market = await getRequestMarket();
   return generateSeoMetadata({
     title,
     description,
@@ -56,6 +57,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     pathname: `/products/${slug}`,
     keywords,
     image: page.seo.ogImage || page.hero.image || undefined,
+    marketCode: market.code,
   });
 }
 

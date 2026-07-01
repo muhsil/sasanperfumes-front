@@ -34,6 +34,7 @@ export async function generateMetadata({
 
   const wpSeo = await getPageSeo("terms-and-conditions", lang);
 
+  const market = await getRequestMarket();
   return generateSeoMetadata({
     title: wpSeo?.title || pageContent.seo.title,
     description: wpSeo?.description || pageContent.seo.description,
@@ -41,6 +42,7 @@ export async function generateMetadata({
     locale: lang,
     pathname: "/terms-and-conditions",
     keywords: isAr ? defaultKeywords.ar : defaultKeywords.en,
+    marketCode: market.code,
   });
 }
 

@@ -37,12 +37,14 @@ export async function generateMetadata({ params }: ServicePageProps): Promise<Me
   const title = pickLocale(service.seo?.title, locale, "") || pickLocale(service.title, locale, "");
   const description = pickLocale(service.seo?.description, locale, "") || pickLocale(service.excerpt, locale, "");
 
+  const market = await getRequestMarket();
   return generateSeoMetadata({
     title,
     description,
     locale: lang,
     pathname: `/services/${slug}`,
     image: service.bannerImage || service.image || undefined,
+    marketCode: market.code,
   });
 }
 

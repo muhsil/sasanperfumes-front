@@ -204,6 +204,7 @@ export async function generateMetadata({
   const pageContent = dictionary.pages.about;
   const wpSeo = (await getPageSeo("about", lang)) ?? (await getPageSeo("about-us", lang));
 
+  const market = await getRequestMarket();
   return generateSeoMetadata({
     title: wpSeo?.title || pageContent.seo.title,
     description: wpSeo?.description || pageContent.seo.description,
@@ -211,6 +212,7 @@ export async function generateMetadata({
     locale: lang,
     pathname: "/about-us",
     keywords: lang === "ar" ? arabicKeywords : defaultKeywords.en,
+    marketCode: market.code,
   });
 }
 

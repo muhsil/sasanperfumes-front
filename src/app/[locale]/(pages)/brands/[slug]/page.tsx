@@ -33,12 +33,14 @@ export async function generateMetadata({ params }: BrandPageProps): Promise<Meta
     decodeHtmlEntities(pickLocale(brand.seo?.description, locale, "") ||
     pickLocale(brand.shortDesc, locale, brand.description || ""));
 
+  const market = await getRequestMarket();
   return generateSeoMetadata({
     title: seoTitle,
     description: seoDesc,
     locale: lang,
     pathname: `/brands/${slug}`,
     image: brand.banner || brand.image || undefined,
+    marketCode: market.code,
   });
 }
 

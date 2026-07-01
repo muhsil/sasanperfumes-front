@@ -101,6 +101,7 @@ export async function generateMetadata({
 
   const validLocale = locale as Locale;
 
+  const market = await getRequestMarket();
   return generateSeoMetadata({
     title: guide.title[validLocale],
     description: guide.metaDescription[validLocale],
@@ -108,6 +109,7 @@ export async function generateMetadata({
     pathname: `/guides/${slug}`,
     keywords: guide.keywords[validLocale],
     image: guide.ogImage,
+    marketCode: market.code,
   });
 }
 export default async function GuidePage({ params }: GuidePageProps) {

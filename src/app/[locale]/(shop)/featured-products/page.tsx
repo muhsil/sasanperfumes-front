@@ -41,6 +41,7 @@ export async function generateMetadata({
 
   const wpSeo = await getPageSeo("featured-products", lang);
 
+  const market = await getRequestMarket();
   return generateSeoMetadata({
     title: wpSeo?.title || (isAr ? defaultSeo.title.ar : defaultSeo.title.en),
     description: wpSeo?.description || (isAr ? defaultSeo.description.ar : defaultSeo.description.en),
@@ -48,6 +49,7 @@ export async function generateMetadata({
     locale: lang,
     pathname: "/featured-products",
     keywords: isAr ? defaultSeo.keywords.ar : defaultSeo.keywords.en,
+    marketCode: market.code,
   });
 }
 

@@ -35,6 +35,7 @@ export async function generateMetadata({
 
   const wpSeo = await getPageSeo("faq", lang);
 
+  const market = await getRequestMarket();
   return generateSeoMetadata({
     title: wpSeo?.title || pageContent.seo.title,
     description: wpSeo?.description || pageContent.seo.description,
@@ -42,6 +43,7 @@ export async function generateMetadata({
     locale: lang,
     pathname: "/faq",
     keywords: isAr ? defaultKeywords.ar : defaultKeywords.en,
+    marketCode: market.code,
   });
 }
 

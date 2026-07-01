@@ -23,6 +23,7 @@ export async function generateMetadata({ params }: BlogPageProps): Promise<Metad
   const frontendHost = await getRequestFrontendHost();
   const toggles = await getFeatureToggles(frontendHost);
   if (!toggles.sasanperfumes_blog_enabled) return {};
+  const market = await getRequestMarket();
   return generateSeoMetadata({
     title: lang === "ar" ? "المدونة" : "Blog",
     description: lang === "ar"
@@ -30,6 +31,7 @@ export async function generateMetadata({ params }: BlogPageProps): Promise<Metad
       : "Latest articles and news from Sasan Perfumes",
     locale: lang,
     pathname: "/blog",
+    marketCode: market.code,
   });
 }
 
