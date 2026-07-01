@@ -20,7 +20,7 @@ ORDER BY id ASC;
 5. Save as `orders-backup.sql`
 
 ## STEP 3: Import into ShapeHive
-1. In phpMyAdmin, select the **shapehive.com database** (u346814456_XhYmf - same account)
+1. In phpMyAdmin, select the **sasanperfumes.com database** (u346814456_XhYmf - same account)
 2. Click **Import** tab
 3. Click **Choose File** and select the `orders-backup.sql` file
 4. Click **Import**
@@ -58,7 +58,7 @@ mysql -u u346814456_LWBvM -p u346814456_XhYmf < orders_import.sql
 
 ## Summary:
 - **Source DB**: sasanperfumes.com database (u346814456_XhYmf)
-- **Dest DB**: shapehive.com database (same: u346814456_XhYmf)
+- **Dest DB**: sasanperfumes.com database (same: u346814456_XhYmf)
 - **Table**: `wc_orders`
 - **Statuses**: completed, processing, pending, on-hold
 - **Method**: phpMyAdmin Export/Import

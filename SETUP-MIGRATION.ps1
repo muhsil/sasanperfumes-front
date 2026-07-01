@@ -34,7 +34,7 @@ Write-Host "3. Click table: wc_orders" -ForegroundColor White
 Write-Host "4. Click tab: Export" -ForegroundColor White
 Write-Host "5. Add WHERE clause: status IN ('wc-completed','wc-processing','wc-pending','wc-on-hold')" -ForegroundColor White
 Write-Host "6. Click GO and save file" -ForegroundColor White
-Write-Host "7. Import the file to shapehive.com database" -ForegroundColor White
+Write-Host "7. Import the file to sasanperfumes.com database" -ForegroundColor White
 Write-Host ""
 
 Write-Host "METHOD B: MySQL CLI (SSH - Fastest)" -ForegroundColor Yellow

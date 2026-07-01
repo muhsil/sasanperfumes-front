@@ -26,7 +26,7 @@ OR use the **Export tab** in phpMyAdmin:
 ---
 
 #### **Step 2: Import Orders into ShapeHive**
-1. Go to Hostinger hPanel → shapehive.com → Databases → phpMyAdmin
+1. Go to Hostinger hPanel → sasanperfumes.com → Databases → phpMyAdmin
 2. Select database: `u346814456_XhYmf`
 3. Go to **Import** tab
 4. Upload the exported SQL file
@@ -36,10 +36,10 @@ OR use the **Export tab** in phpMyAdmin:
 
 ### **Alternative: WordPress WP-CLI (Simplest)**
 
-If you have SSH/CLI access to shapehive.com:
+If you have SSH/CLI access to sasanperfumes.com:
 
 ```bash
-# On shapehive.com server
+# On sasanperfumes.com server
 wp woocommerce order list --format=json > orders_list.json
 
 # Then import via REST API or database directly
@@ -72,7 +72,7 @@ wp woocommerce order list --format=json > orders_list.json
 - ✅ Shipping info
 
 ### **Safety Notes**
-- ⚠️ Backup shapehive.com first (already done)
+- ⚠️ Backup sasanperfumes.com first (already done)
 - ⚠️ Test with 1 order first
 - ⚠️ Preserve order IDs exactly
 - ⚠️ Check for duplicate customers

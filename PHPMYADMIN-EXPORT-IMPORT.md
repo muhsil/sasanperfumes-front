@@ -13,7 +13,7 @@
 2. Login with your Hostinger account (2FA if required)
 3. You should see both sites:
    - sasanperfumes.com
-   - shapehive.com
+   - sasanperfumes.com
 
 ---
 
@@ -49,7 +49,7 @@
 ## **STEP 3: Import Orders to ShapeHive**
 
 ### 3a. Open phpMyAdmin for ShapeHive
-1. In Hostinger hPanel, find **shapehive.com**
+1. In Hostinger hPanel, find **sasanperfumes.com**
 2. Click "Manage" → "Databases"
 3. Click **phpMyAdmin** button
 4. Database selected: `u346814456_XhYmf` (same database as source!)
@@ -90,7 +90,7 @@
 4. Verify you see orders with preserved IDs and dates
 
 ### 4c. Verify in WordPress Admin
-1. Go to: https://cms.shapehive.com/wp-admin/admin.php?page=wc-orders
+1. Go to: https://cms.sasanperfumes.com/wp-admin/admin.php?page=wc-orders
 2. You should see the imported orders in the list
 3. Click on one order to verify full data is present
 
@@ -116,7 +116,7 @@
 - Custom order actions/notes added after export
 
 🔄 **Rollback Plan**:
-- If import fails, the backup at `sasanperfumes.shapehive.com` still has all data
+- If import fails, the backup at `sasanperfumes.com` still has all data
 - Delete imported orders and retry
 
 ---

@@ -2,7 +2,7 @@
 /**
  * Retire deprecated public ShapeHive market storefront subdomains from the multisite network.
  *
- * Active market CMS content sites use subdirectories on cms.shapehive.com:
+ * Active market CMS content sites use subdirectories on cms.sasanperfumes.com:
  * /qa, /om, and /sa.
  *
  * Usage examples (WP-CLI):

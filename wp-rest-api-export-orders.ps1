@@ -3,7 +3,7 @@
 .SYNOPSIS
 Export Orders from SasanPerfumes via WooCommerce REST API
 .DESCRIPTION
-Fetches orders from sasanperfumes.com REST API and exports as JSON for import to shapehive.com
+Fetches orders from sasanperfumes.com REST API and exports as JSON for import to sasanperfumes.com
 .PARAMETER OutputFile
 Output file path for JSON export
 .NOTES
@@ -15,7 +15,7 @@ param(
 )
 
 $sasanApiUrl = "https://sasanperfumes.com/wp-json/wc/v3/orders"
-$shapehiveApiUrl = "https://cms.shapehive.com/wp-json/wc/v3/orders"
+$shapehiveApiUrl = "https://cms.sasanperfumes.com/wp-json/wc/v3/orders"
 
 # REST API credentials (if needed for authentication)
 # You may need Basic Auth or Bearer token

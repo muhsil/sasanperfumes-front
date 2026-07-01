@@ -24,8 +24,8 @@ echo "📥 Downloading export file..."
 scp user@sasanperfumes.com:/tmp/orders_export.csv ./orders_export.csv
 
 # STEP 3: Import to ShapeHive (destination)
-echo "📤 Step 2: Importing to shapehive.com..."
-ssh user@shapehive.com << 'EOF'
+echo "📤 Step 2: Importing to sasanperfumes.com..."
+ssh user@sasanperfumes.com << 'EOF'
 cd /home/user/public_html
 
 # Import orders from CSV

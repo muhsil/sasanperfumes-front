@@ -25,7 +25,7 @@ DEFAULT_DUMPS = {
     "order_itemmeta": Path(r"C:\Users\muhas\Downloads\wp_woocommerce_order_itemmeta (1).sql"),
 }
 
-BASE_URL = "https://cms.shapehive.com/wp-json/wc/v3"
+BASE_URL = "https://cms.sasanperfumes.com/wp-json/wc/v3"
 AUTH = (
     "ck_918287ec21bc479541bbba2540a54da8cf98a914",
     "cs_a7e96d7581cb259b9f8d6fd26e9e281508886dec",
@@ -452,7 +452,7 @@ def import_customers(
         if (
             not email
             or "@example.com" in email
-            or email in {"admin@shapehive.com", "orders"}
+            or email in {"admin@sasanperfumes.com", "orders"}
             or not EMAIL_RE.match(email)
         ):
             continue
@@ -590,7 +590,7 @@ def delete_test_orders(session: requests.Session, order_ids: list[int]) -> list[
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Import legacy Sasan Perfumes orders into cms.shapehive.com via WooCommerce REST.")
+    parser = argparse.ArgumentParser(description="Import legacy Sasan Perfumes orders into cms.sasanperfumes.com via WooCommerce REST.")
     parser.add_argument("--execute", action="store_true", help="Actually create customers, products, orders, and refunds.")
     parser.add_argument("--limit", type=int, default=0, help="Import only the first N orders after sorting by legacy order id.")
     parser.add_argument("--delete-test-orders", nargs="*", type=int, default=[13626, 13627], help="Delete temporary probe orders before running.")

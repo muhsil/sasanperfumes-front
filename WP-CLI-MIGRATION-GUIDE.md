@@ -129,10 +129,10 @@ wp woocommerce order list \
 Using SCP (Secure Copy):
 
 ```bash
-scp /tmp/orders_export.json user@shapehive.com:/tmp/
+scp /tmp/orders_export.json user@sasanperfumes.com:/tmp/
 ```
 
-When prompted, enter your shapehive.com SSH password.
+When prompted, enter your sasanperfumes.com SSH password.
 
 Expected: 
 ```
@@ -144,7 +144,7 @@ orders_export.json        100%  250KB
 ## STEP 7: Connect to ShapeHive Server
 
 ```bash
-ssh user@shapehive.com
+ssh user@sasanperfumes.com
 ```
 
 Enter your ShapeHive SSH password.
@@ -249,7 +249,7 @@ mysqldump -u u346814456_LWBvM -p u346814456_XhYmf wc_orders \
   > /tmp/orders.sql
 
 # Copy to ShapeHive
-scp /tmp/orders.sql user@shapehive.com:/tmp/
+scp /tmp/orders.sql user@sasanperfumes.com:/tmp/
 
 # On ShapeHive server
 mysql -u u346814456_LWBvM -p u346814456_XhYmf < /tmp/orders.sql
@@ -278,7 +278,7 @@ wp woocommerce order get 12991 --format=json
 
 ## STEP 12: Verify in WordPress Admin
 
-1. Go to: https://cms.shapehive.com/wp-admin/admin.php?page=wc-orders
+1. Go to: https://cms.sasanperfumes.com/wp-admin/admin.php?page=wc-orders
 2. Check: Orders appear in list
 3. Click: One order to verify data
 4. Check: Customer info, items, totals all correct
@@ -343,7 +343,7 @@ Save as `migrate-orders.sh` on your local computer:
 
 # Configuration
 SOURCE_SERVER="user@sasanperfumes.com"
-DEST_SERVER="user@shapehive.com"
+DEST_SERVER="user@sasanperfumes.com"
 EXPORT_FILE="/tmp/orders_export.json"
 
 echo "Step 1: Connect to SasanPerfumes and export orders..."
@@ -364,7 +364,7 @@ ssh $DEST_SERVER "cd public_html && wp woocommerce order import $EXPORT_FILE --f
 echo "Step 5: Verify import..."
 ssh $DEST_SERVER "cd public_html && wp woocommerce order list --format=count"
 
-echo "Done! Check https://cms.shapehive.com/wp-admin/admin.php?page=wc-orders"
+echo "Done! Check https://cms.sasanperfumes.com/wp-admin/admin.php?page=wc-orders"
 ```
 
 Run it:

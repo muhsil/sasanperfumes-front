@@ -6,7 +6,7 @@ set -e
 
 # Configuration
 SASAN_API="https://sasanperfumes.com/wp-json/wc/v3/orders"
-SHAPEHIVE_API="https://cms.shapehive.com/wp-json/wc/v3/orders"
+SHAPEHIVE_API="https://cms.sasanperfumes.com/wp-json/wc/v3/orders"
 OUTPUT_FILE="orders_export_$(date +%Y%m%d_%H%M%S).json"
 TEMP_FILE="/tmp/orders_combined.json"
 
