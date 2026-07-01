@@ -320,10 +320,45 @@ function sasanperfumes_handle_site_customer_access(WP_REST_Request $request) {
     }
 }
 
+function sasanperfumes_handle_customer_email_check(WP_REST_Request $request) {
+    $email = sanitize_email((string) $request->get_param('email'));
+
+    if (!is_email($email)) {
+        return new WP_Error(
+            'invalid_email',
+            'Please provide a valid email address.',
+            array('status' => 400)
+        );
+    }
+
+    $user_id = (int) email_exists($email);
+    $is_current_site_customer = false;
+
+    if ($user_id > 0) {
+        $blog_id = get_current_blog_id();
+        $is_current_site_customer = is_multisite()
+            ? is_user_member_of_blog($user_id, $blog_id)
+            : true;
+    }
+
+    return rest_ensure_response(array(
+        'isRegistered'          => $user_id > 0,
+        'is_registered'         => $user_id > 0,
+        'isCurrentSiteCustomer' => $is_current_site_customer,
+        'is_current_site_customer' => $is_current_site_customer,
+    ));
+}
+
 function sasanperfumes_register_customer_access_routes() {
     sasanperfumes_register_rest_route('/customers/ensure', array(
         'methods'             => 'POST',
         'callback'            => 'sasanperfumes_handle_site_customer_access',
+        'permission_callback' => '__return_true',
+    ));
+
+    sasanperfumes_register_rest_route('/customers/check-email', array(
+        'methods'             => 'GET',
+        'callback'            => 'sasanperfumes_handle_customer_email_check',
         'permission_callback' => '__return_true',
     ));
 }

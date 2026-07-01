@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getWcCredentials } from "@/lib/utils/loadEnv";
-import { backendMarketHeaders, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
+import { backendMarketHeaders, safeJsonResponse, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
 import { getRequestMarket } from "@/lib/market/server";
-
-function getBasicAuthParams(marketCode?: string | null): string {
-  const { consumerKey, consumerSecret } = getWcCredentials(marketCode);
-  return `consumer_key=${consumerKey}&consumer_secret=${consumerSecret}`;
-}
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -30,11 +24,9 @@ export async function GET(request: NextRequest) {
 
   try {
     const market = await getRequestMarket();
-    const apiBase = `${wpJsonBaseForMarket(market.code)}/wc/v3`;
 
-    // Search for customers with this email
     const response = await fetch(
-      `${apiBase}/customers?email=${encodeURIComponent(email)}&${getBasicAuthParams(market.code)}`,
+      `${wpJsonBaseForMarket(market.code)}/sasanperfumes/v1/customers/check-email?email=${encodeURIComponent(email)}`,
       {
         method: "GET",
         headers: backendMarketHeaders(market.code, {
@@ -43,7 +35,7 @@ export async function GET(request: NextRequest) {
       }
     );
 
-    const data = await response.json();
+    const data = await safeJsonResponse(response);
 
     if (!response.ok) {
       return NextResponse.json(
@@ -58,8 +50,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check if any customers were found with this email
-    const isRegistered = Array.isArray(data) && data.length > 0;
+    const isRegistered = Boolean(data.isRegistered || data.is_registered);
 
     return NextResponse.json({ 
       success: true, 
