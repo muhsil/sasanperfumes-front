@@ -227,7 +227,7 @@ export function formatProductDisplayName(name: string): string {
  * @returns The extracted slug or the fallback slug
  */
 export function getProductSlugFromPermalink(permalink: string, fallbackSlug: string): string {
-  if (!permalink) return fallbackSlug;
+  if (!permalink) return stripArSuffix(fallbackSlug);
   
   try {
     // Remove trailing slash and get the last path segment
@@ -238,18 +238,22 @@ export function getProductSlugFromPermalink(permalink: string, fallbackSlug: str
     // e.g., /product/white-bouquet/ or /ar/product/white-bouquet/
     const productIndex = pathSegments.indexOf('product');
     if (productIndex !== -1 && productIndex < pathSegments.length - 1) {
-      return pathSegments[productIndex + 1];
+      return stripArSuffix(pathSegments[productIndex + 1]);
     }
     
     // Fallback: return the last segment if "product" not found
     if (pathSegments.length > 0) {
-      return pathSegments[pathSegments.length - 1];
+      return stripArSuffix(pathSegments[pathSegments.length - 1]);
     }
   } catch {
     // If URL parsing fails, return the fallback
   }
   
-  return fallbackSlug;
+  return stripArSuffix(fallbackSlug);
+}
+
+function stripArSuffix(slug: string): string {
+  return slug.endsWith("-ar") ? slug.slice(0, -3) : slug;
 }
 
 /**
