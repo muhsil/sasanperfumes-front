@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { API_BASE, backendPostHeaders, noCacheUrl, safeJsonResponse } from "@/lib/utils/backendFetch";
+import { backendMarketPostHeaders, noCacheUrl, safeJsonResponse, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
+import { getRequestMarket } from "@/lib/market/server";
 
 export async function POST(request: NextRequest) {
   try {
+    const market = await getRequestMarket();
+    const wpJsonBase = wpJsonBaseForMarket(market.code);
     const body = await request.json();
     const { refresh_token } = body;
 
@@ -16,9 +19,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const response = await fetch(noCacheUrl(`${API_BASE}/wp-json/cocart/jwt/refresh-token`), {
+    const response = await fetch(noCacheUrl(`${wpJsonBase}/cocart/jwt/refresh-token`), {
       method: "POST",
-      headers: backendPostHeaders(),
+      headers: backendMarketPostHeaders(market.code),
       body: JSON.stringify({ refresh_token }),
     });
 

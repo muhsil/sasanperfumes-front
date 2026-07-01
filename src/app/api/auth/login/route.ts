@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit, rateLimitResponse, LOGIN_RATE_LIMIT } from "@/lib/security";
-import { API_BASE, backendPostHeaders, noCacheUrl, safeJsonResponse } from "@/lib/utils/backendFetch";
+import { backendMarketPostHeaders, noCacheUrl, safeJsonResponse, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
+import { getRequestMarket } from "@/lib/market/server";
 
 export interface LoginRequest {
   username: string;
@@ -32,6 +33,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<LoginResp
   }
 
   try {
+    const market = await getRequestMarket();
+    const wpJsonBase = wpJsonBaseForMarket(market.code);
     const body: LoginRequest = await request.json();
     const { username, password } = body;
 
@@ -61,9 +64,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<LoginResp
       );
     }
 
-    const response = await fetch(noCacheUrl(`${API_BASE}/wp-json/cocart/v2/login`), {
+    const response = await fetch(noCacheUrl(`${wpJsonBase}/cocart/v2/login`), {
       method: "POST",
-      headers: backendPostHeaders(),
+      headers: backendMarketPostHeaders(market.code),
       body: JSON.stringify({ username: username.trim(), password }),
     });
 
@@ -84,9 +87,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<LoginResp
 
     let wpToken: string | undefined;
     try {
-      const wpResponse = await fetch(noCacheUrl(`${API_BASE}/wp-json/jwt-auth/v1/token`), {
+      const wpResponse = await fetch(noCacheUrl(`${wpJsonBase}/jwt-auth/v1/token`), {
         method: "POST",
-        headers: backendPostHeaders(),
+        headers: backendMarketPostHeaders(market.code),
         body: JSON.stringify({ username: username.trim(), password }),
       });
       if (wpResponse.ok) {

@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
-import { API_BASE as BASE_URL } from "@/lib/utils/backendFetch";
+import { backendMarketHeaders, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
+import { getRequestMarket } from "@/lib/market/server";
 
-const API_BASE = `${BASE_URL}/wp-json/wc/v3`;
-
-function getBasicAuthParams(): string {
-  const { consumerKey, consumerSecret } = getWcCredentials();
+function getBasicAuthParams(marketCode?: string | null): string {
+  const { consumerKey, consumerSecret } = getWcCredentials(marketCode);
   return `consumer_key=${consumerKey}&consumer_secret=${consumerSecret}`;
 }
 
@@ -30,14 +29,17 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const market = await getRequestMarket();
+    const apiBase = `${wpJsonBaseForMarket(market.code)}/wc/v3`;
+
     // Search for customers with this email
     const response = await fetch(
-      `${API_BASE}/customers?email=${encodeURIComponent(email)}&${getBasicAuthParams()}`,
+      `${apiBase}/customers?email=${encodeURIComponent(email)}&${getBasicAuthParams(market.code)}`,
       {
         method: "GET",
-        headers: {
+        headers: backendMarketHeaders(market.code, {
           "Content-Type": "application/json",
-        },
+        }),
       }
     );
 

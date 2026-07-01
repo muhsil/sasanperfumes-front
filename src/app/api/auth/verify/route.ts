@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { API_BASE, backendPostHeaders, noCacheUrl } from "@/lib/utils/backendFetch";
+import { backendMarketPostHeaders, noCacheUrl, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
+import { getRequestMarket } from "@/lib/market/server";
 
 export async function POST(request: NextRequest) {
   try {
+    const market = await getRequestMarket();
+    const wpJsonBase = wpJsonBaseForMarket(market.code);
     const authHeader = request.headers.get("Authorization");
 
     if (!authHeader) {
@@ -12,9 +15,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const response = await fetch(noCacheUrl(`${API_BASE}/wp-json/cocart/jwt/validate-token`), {
+    const response = await fetch(noCacheUrl(`${wpJsonBase}/cocart/jwt/validate-token`), {
       method: "POST",
-      headers: backendPostHeaders({ "Authorization": authHeader }),
+      headers: backendMarketPostHeaders(market.code, { "Authorization": authHeader }),
       body: JSON.stringify({}),
     });
 

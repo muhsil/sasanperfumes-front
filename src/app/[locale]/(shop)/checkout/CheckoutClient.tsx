@@ -157,6 +157,11 @@ const emptyAddress: AddressFormData = {
   email: "",
 };
 
+const sanitizeCheckoutMessage = (message: string): string => {
+  const decoded = decodeHtmlEntities(message || "");
+  return decoded.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+};
+
 export default function CheckoutClient() {
   const marketPrefix = useMarketPrefix();
   const { locale } = useParams<{ locale: string }>();
@@ -841,6 +846,23 @@ export default function CheckoutClient() {
         return;
       }
 
+      if (!isAuthenticated && isCheckingEmail) {
+        setError(isRTL ? "يرجى الانتظار لحظة حتى نتحقق من البريد الإلكتروني." : "Please wait a moment while we verify your email address.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!isAuthenticated && isEmailRegistered) {
+        setShowLoginPrompt(true);
+        setError(
+          isRTL
+            ? "هذا البريد الإلكتروني مسجل بالفعل. يرجى تسجيل الدخول للمتابعة بهذا البريد، أو استخدام بريد إلكتروني مختلف لإتمام الطلب كضيف."
+            : "This email is already registered for this store. Please log in to continue with this email, or use a different email address to check out as a guest."
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
       // Validate password if creating account
       let newCustomerId: number | undefined;
       
@@ -901,7 +923,9 @@ export default function CheckoutClient() {
           const customerData = await customerResponse.json();
           
           if (!customerData.success) {
-            const errorMessage = customerData.error?.message || (isRTL ? "ÙØ´Ù„ Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„Ø­Ø³Ø§Ø¨" : "Failed to create account");
+            const errorMessage = sanitizeCheckoutMessage(
+              customerData.error?.message || (isRTL ? "ÙØ´Ù„ Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„Ø­Ø³Ø§Ø¨" : "Failed to create account")
+            );
             setPasswordError(errorMessage);
             setIsSubmitting(false);
             setIsCreatingAccount(false);
@@ -1151,7 +1175,7 @@ export default function CheckoutClient() {
       const data = await response.json();
 
       if (!data.success) {
-        throw new Error(data.error?.message || "Failed to create order");
+        throw new Error(sanitizeCheckoutMessage(data.error?.message || "Failed to create order"));
       }
 
       if (isAuthenticated && user?.user_id) {
@@ -1372,7 +1396,7 @@ export default function CheckoutClient() {
               router.push(`${marketPrefix}/${locale}/order-confirmation?order_id=${data.order_id}&order_key=${data.order_key}`);
             }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred while placing your order");
+      setError(sanitizeCheckoutMessage(err instanceof Error ? err.message : "An error occurred while placing your order"));
       setIsSubmitting(false);
     }
   };
@@ -1550,12 +1574,12 @@ export default function CheckoutClient() {
                     </div>
                     <div className="flex-1">
                       <h3 className="text-sm font-medium text-brand-primary">
-                        {isRTL ? "Ù‡Ø°Ø§ Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ Ù…Ø³Ø¬Ù„ Ø¨Ø§Ù„ÙØ¹Ù„" : "This email is already registered"}
+                        {isRTL ? "هذا البريد الإلكتروني مسجل لهذا المتجر" : "This email is already registered for this store"}
                       </h3>
                       <p className="mt-1 text-sm text-brand-primary">
                         {isRTL 
-                          ? "ÙŠØ±Ø¬Ù‰ ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„ Ù„Ø±Ø¨Ø· Ù‡Ø°Ø§ Ø§Ù„Ø·Ù„Ø¨ Ø¨Ø­Ø³Ø§Ø¨Ùƒ ÙˆØªØªØ¨Ø¹ Ø·Ù„Ø¨Ø§ØªÙƒ Ø¨Ø³Ù‡ÙˆÙ„Ø©."
-                          : "Please log in to link this order to your account and easily track your orders."}
+                          ? "يرجى تسجيل الدخول للمتابعة بهذا البريد الإلكتروني. إذا كنت تريد إتمام الطلب كضيف، فاستخدم بريدًا إلكترونيًا مختلفًا."
+                          : "Please log in to continue with this email address. If you want to check out as a guest, use a different email address."}
                       </p>
                       <div className="mt-3 flex flex-wrap gap-2">
                         <Button
@@ -1570,9 +1594,13 @@ export default function CheckoutClient() {
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => setShowLoginPrompt(false)}
+                          onClick={() => {
+                            handleShippingChange("email", "");
+                            setIsEmailRegistered(false);
+                            setShowLoginPrompt(false);
+                          }}
                         >
-                          {isRTL ? "Ø§Ù„Ù…ØªØ§Ø¨Ø¹Ø© ÙƒØ¶ÙŠÙ" : "Continue as Guest"}
+                          {isRTL ? "استخدام بريد مختلف" : "Use Different Email"}
                         </Button>
                       </div>
                     </div>
