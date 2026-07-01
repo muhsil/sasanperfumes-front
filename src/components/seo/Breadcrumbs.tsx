@@ -16,6 +16,7 @@ interface BreadcrumbsProps {
   className?: string;
   contained?: boolean;
   pathPrefix?: string;
+  skipJsonLd?: boolean;
 }
 
 function inferMarketPathPrefix(items: BreadcrumbItem[], pathPrefix: string): string {
@@ -26,7 +27,7 @@ function inferMarketPathPrefix(items: BreadcrumbItem[], pathPrefix: string): str
   return match ? `/${match[1]}` : "";
 }
 
-export function Breadcrumbs({ items, locale, className, contained = true, pathPrefix = "" }: BreadcrumbsProps) {
+export function Breadcrumbs({ items, locale, className, contained = true, pathPrefix = "", skipJsonLd = false }: BreadcrumbsProps) {
   const isRTL = locale === "ar";
   const isVisuallyHidden = typeof className === "string" && className.split(/\s+/).includes("sr-only");
   const resolvedPathPrefix = inferMarketPathPrefix(items, pathPrefix);
@@ -43,7 +44,7 @@ export function Breadcrumbs({ items, locale, className, contained = true, pathPr
 
   return (
     <>
-      <JsonLd data={generateBreadcrumbJsonLd(jsonLdItems)} />
+      {!skipJsonLd && <JsonLd data={generateBreadcrumbJsonLd(jsonLdItems)} />}
       <nav
         aria-label="Breadcrumb"
         className={cn(
