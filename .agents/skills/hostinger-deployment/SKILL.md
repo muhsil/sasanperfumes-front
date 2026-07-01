@@ -49,7 +49,7 @@ curl -I https://sasanperfumes.com
 ### Prevention
 - After every Hostinger deployment, verify `.htaccess` contains `PassengerEnabled on`
 - Hostinger may regenerate `.htaccess` during deployments and omit this directive
-- The `sasanperfumes.com` site has `PassengerEnabled on` set automatically, but `sasanperfumes.com` does NOT — this is a Hostinger configuration inconsistency
+- Hostinger may not set `PassengerEnabled on` automatically for all domains — always verify after deployment
 
 ## Known Error #2: 403 Forbidden After Deployment
 
