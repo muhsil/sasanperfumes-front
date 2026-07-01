@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { ProductGridSkeleton } from "@/components/common/Skeleton";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { getDictionary } from "@/i18n";
-import { generateMetadata as generateSeoMetadata, generateCollectionPageJsonLd, generateItemListJsonLd, generateBreadcrumbJsonLd } from "@/lib/utils/seo";
+import { generateMetadata as generateSeoMetadata, generateCollectionPageJsonLd, generateItemListJsonLd } from "@/lib/utils/seo";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getCategoryBySlug, getProductsByCategory, getCategories, getFreeGiftProductInfo, getBundleEnabledProductSlugs, getEnglishSlugFromLocalizedSlug } from "@/lib/api/woocommerce";
 import { siteConfig, type Locale } from "@/config/site";
@@ -225,17 +225,10 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     })),
   });
 
-  const breadcrumbJsonLd = generateBreadcrumbJsonLd([
-    { name: dictionary.common.home, url: `${siteConfig.url}/${locale}` },
-    { name: dictionary.common.shop, url: `${siteConfig.url}/${locale}/shop` },
-    { name: categoryName, url: categoryUrl },
-  ]);
-
   return (
     <div className="page-flush container mx-auto px-4 bg-transparent text-brand-primary">
       <JsonLd data={collectionJsonLd} />
       <JsonLd data={itemListJsonLd} />
-      <JsonLd data={breadcrumbJsonLd} />
       <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} className="sr-only" />
 
       <Suspense fallback={<ProductGridSkeleton count={12} columns={6} />}>
