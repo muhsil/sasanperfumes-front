@@ -24,7 +24,7 @@ You have 3 methods available. Choose ONE:
 11. Save file: orders_export.sql
 
 ### STEP 2 - Import (2 min)
-1. In Hostinger: Go to shapehive.com
+1. In Hostinger: Go to sasanperfumes.com
 2. Click: Databases
 3. Click: phpMyAdmin button
 4. Click: "Import" tab
@@ -38,7 +38,7 @@ You have 3 methods available. Choose ONE:
 2. Paste: SELECT COUNT(*) FROM wc_orders;
 3. Click "GO"
 4. Note the count number
-5. Go to: https://cms.shapehive.com/wp-admin/admin.php?page=wc-orders
+5. Go to: https://cms.sasanperfumes.com/wp-admin/admin.php?page=wc-orders
 6. Verify orders appear in WordPress
 
 ---
@@ -77,10 +77,10 @@ wp woocommerce order list --status=completed,processing \
   --format=json > /tmp/orders.json
 
 # Step 3: Copy to destination
-scp /tmp/orders.json user@shapehive.com:/tmp/
+scp /tmp/orders.json user@sasanperfumes.com:/tmp/
 
 # Step 4: Import on destination
-ssh user@shapehive.com
+ssh user@sasanperfumes.com
 cd /home/user/public_html
 wp import orders /tmp/orders.json
 ```
@@ -102,12 +102,12 @@ wp import orders /tmp/orders.json
 Before you start:
 - [ ] You're logged into Hostinger hPanel
 - [ ] You have access to sasanperfumes.com dashboard
-- [ ] You have access to shapehive.com dashboard
+- [ ] You have access to sasanperfumes.com dashboard
 - [ ] You chose your method (1, 2, or 3 above)
 
 After import:
 - [ ] Orders count matches between source and destination
-- [ ] Orders visible in WordPress admin (cms.shapehive.com/wp-admin)
+- [ ] Orders visible in WordPress admin (cms.sasanperfumes.com/wp-admin)
 - [ ] Order IDs are preserved (same numbers)
 - [ ] Order dates are correct
 
@@ -141,14 +141,14 @@ After import:
 - Don't share in public
 
 ⚠️ **Data Safety**
-- Backup exists at: sasanperfumes.shapehive.com
+- Backup exists at: sasanperfumes.sasanperfumes.com
 - No data loss risk
 - Can always restore from backup
 
 ⚠️ **Read-Only Requirements**
 - After import: Mark sasanperfumes.com as read-only
 - Disable plugins: Disable all except essential
-- Redirect: Optionally redirect to sasanperfumes.shapehive.com
+- Redirect: Optionally redirect to sasanperfumes.sasanperfumes.com
 
 ---
 

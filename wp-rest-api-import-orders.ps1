@@ -3,7 +3,7 @@
 .SYNOPSIS
 Import Orders to ShapeHive via WooCommerce REST API
 .DESCRIPTION
-Takes JSON export from wp-rest-api-export-orders.ps1 and imports to shapehive.com
+Takes JSON export from wp-rest-api-export-orders.ps1 and imports to sasanperfumes.com
 .PARAMETER InputFile
 JSON file path from export
 .NOTES
@@ -15,10 +15,10 @@ param(
     [string]$TargetSite = "shapehive"  # shapehive, qa, om, sa
 )
 
-$shapehiveApiUrl = "https://cms.shapehive.com/wp-json/wc/v3/orders"
-$qaApiUrl = "https://cms.shapehive.com/qa/wp-json/wc/v3/orders"
-$omApiUrl = "https://cms.shapehive.com/om/wp-json/wc/v3/orders"
-$saApiUrl = "https://cms.shapehive.com/sa/wp-json/wc/v3/orders"
+$shapehiveApiUrl = "https://cms.sasanperfumes.com/wp-json/wc/v3/orders"
+$qaApiUrl = "https://cms.sasanperfumes.com/qa/wp-json/wc/v3/orders"
+$omApiUrl = "https://cms.sasanperfumes.com/om/wp-json/wc/v3/orders"
+$saApiUrl = "https://cms.sasanperfumes.com/sa/wp-json/wc/v3/orders"
 
 $apiUrls = @{
     'shapehive' = $shapehiveApiUrl

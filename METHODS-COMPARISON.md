@@ -24,7 +24,7 @@ Direct database export/import via Hostinger control panel. No WordPress involved
 ### Steps
 1. Hostinger hPanel → sasanperfumes.com → phpMyAdmin
 2. Export `wc_orders` table with SQL format
-3. Hostinger hPanel → shapehive.com → phpMyAdmin
+3. Hostinger hPanel → sasanperfumes.com → phpMyAdmin
 4. Import the SQL file
 5. Verify with SELECT COUNT query
 
@@ -106,7 +106,7 @@ wp woocommerce order list \
 exit
 
 # Import to shapehive
-ssh user@shapehive.com
+ssh user@sasanperfumes.com
 cd /home/user/public_html
 wp import orders_export.csv --skip-comments
 ```
@@ -141,7 +141,7 @@ Use WordPress built-in export feature (if UI responds).
 1. Go to sasanperfumes.com/wp-admin/export.php
 2. Select "Orders" content type
 3. Click Download XML
-4. Go to shapehive.com/wp-admin/import.php
+4. Go to sasanperfumes.com/wp-admin/import.php
 5. Choose WordPress as importer
 6. Upload XML file
 7. Map authors and import
@@ -229,7 +229,7 @@ Use WordPress built-in export feature (if UI responds).
    SELECT COUNT(*) FROM wc_orders;
    SELECT id, total, customer_id FROM wc_orders ORDER BY id DESC LIMIT 10;
    ```
-4. **Check WordPress admin**: cms.shapehive.com/wp-admin/admin.php?page=wc-orders
+4. **Check WordPress admin**: cms.sasanperfumes.com/wp-admin/admin.php?page=wc-orders
 
 ---
 

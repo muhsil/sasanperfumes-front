@@ -30,7 +30,7 @@ The WordPress `/SasanPerfumes/v1/pages/{slug}` API returns repeater fields with 
 
 **Pattern**: Repeater fields are prefixed with `{page_slug}_` in the API response. When adding new CMS pages, always check the API response first:
 ```bash
-curl -s https://cms.shapehive.com/wp-json/SasanPerfumes/v1/pages/{slug} | python3 -c "import sys,json; print(list(json.load(sys.stdin).keys()))"
+curl -s https://cms.sasanperfumes.com/wp-json/SasanPerfumes/v1/pages/{slug} | python3 -c "import sys,json; print(list(json.load(sys.stdin).keys()))"
 ```
 
 ## Test Product URLs
@@ -173,24 +173,24 @@ curl -s http://localhost:3001/en/size-guide | grep -o 'drifted away'
 
 ```bash
 # Feature toggles
-curl -s https://cms.shapehive.com/wp-json/SasanPerfumes/v1/feature-toggles | python3 -m json.tool
+curl -s https://cms.sasanperfumes.com/wp-json/SasanPerfumes/v1/feature-toggles | python3 -m json.tool
 
 # Homepage blog section check (both toggles must be true)
-curl -s https://cms.shapehive.com/wp-json/SasanPerfumes/v1/feature-toggles | \
+curl -s https://cms.sasanperfumes.com/wp-json/SasanPerfumes/v1/feature-toggles | \
   python3 -c "import sys,json; d=json.load(sys.stdin); print('blog:', d.get('sasanperfumes_blog_enabled'), 'home_blog:', d.get('sasanperfumes_home_blog_enabled'))"
 
 # Private labeling content
-curl -s https://cms.shapehive.com/wp-json/SasanPerfumes/v1/private-labeling | python3 -c "import sys,json; d=json.load(sys.stdin); print(list(d.keys())[:10])"
+curl -s https://cms.sasanperfumes.com/wp-json/SasanPerfumes/v1/private-labeling | python3 -c "import sys,json; d=json.load(sys.stdin); print(list(d.keys())[:10])"
 
 # Brands API (used by mega menu)
 curl -s http://localhost:3001/api/brands | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d), 'brands')"
 
 # Arabic products verification
-curl -s 'https://cms.shapehive.com/wp-json/wc/store/v1/products?per_page=30&lang=ar' | \
+curl -s 'https://cms.sasanperfumes.com/wp-json/wc/store/v1/products?per_page=30&lang=ar' | \
   python3 -c "import sys,json; d=json.load(sys.stdin); print(f'{len(d)} Arabic products'); [print(f'  - {p[\"name\"]}') for p in d[:5]]"
 
 # Our Story stats check
-curl -s https://cms.shapehive.com/wp-json/SasanPerfumes/v1/home-sections | \
+curl -s https://cms.sasanperfumes.com/wp-json/SasanPerfumes/v1/home-sections | \
   python3 -c "import sys,json; d=json.load(sys.stdin); stats=d.get('ourStory',{}).get('stats',[]); [print(f'{s[\"value\"]} - {s[\"label\"][\"en\"]}') for s in stats]"
 ```
 
@@ -239,7 +239,7 @@ document.querySelectorAll('[data-animate]').forEach(el => {
 
 ## When CMS is Down (Fallback Testing)
 
-If `cms.shapehive.com` is unreachable (timeout), pages cannot render server-side. In this case:
+If `cms.sasanperfumes.com` is unreachable (timeout), pages cannot render server-side. In this case:
 - **Code-level verification IS valid** for pure CSS class changes (Tailwind utilities have deterministic pixel values)
 - `npx tsc --noEmit` verifies TypeScript compilation
 - `npx eslint src/` verifies lint passes
@@ -248,8 +248,8 @@ If `cms.shapehive.com` is unreachable (timeout), pages cannot render server-side
 - The local dev server will hang on page loads waiting for API responses
 
 **Hostinger Resource Limits**: The CMS may go down due to Hostinger Cloud Professional plan resource limits. Signs:
-- All curl requests to `cms.shapehive.com` timeout
-- `shapehive.com` returns 000 (connection timeout)
+- All curl requests to `cms.sasanperfumes.com` timeout
+- `store.sasanperfumes.com` returns 000 (connection timeout)
 - Local dev server pages hang indefinitely
 
 ## Devin Secrets Needed
@@ -283,12 +283,12 @@ console.log(JSON.stringify(results, null, 2));
 ### Expected Canonical Patterns
 | Market | EN Canonical | AR Canonical |
 |--------|-------------|-------------|
-| International | `shapehive.com/en` | `shapehive.com/ar` |
-| Qatar | `shapehive.com/qa/en` | `shapehive.com/qa/ar` |
-| Saudi Arabia | `shapehive.com/sa/en` | `shapehive.com/sa/ar` |
-| Oman | `shapehive.com/om/en` | `shapehive.com/om/ar` |
+| International | `store.sasanperfumes.com/en` | `store.sasanperfumes.com/ar` |
+| Qatar | `store.sasanperfumes.com/qa/en` | `store.sasanperfumes.com/qa/ar` |
+| Saudi Arabia | `store.sasanperfumes.com/sa/en` | `store.sasanperfumes.com/sa/ar` |
+| Oman | `store.sasanperfumes.com/om/en` | `store.sasanperfumes.com/om/ar` |
 
-**Key check**: Content pages (FAQ, About, etc.) on sub-markets must include the market prefix in their canonical. E.g., `/sa/en/faq` canonical must be `shapehive.com/sa/en/faq`, NOT `shapehive.com/en/faq`. This was fixed in PR #25 by passing `marketCode` to `generateSeoMetadata` on all 26+ pages.
+**Key check**: Content pages (FAQ, About, etc.) on sub-markets must include the market prefix in their canonical. E.g., `/sa/en/faq` canonical must be `store.sasanperfumes.com/sa/en/faq`, NOT `store.sasanperfumes.com/en/faq`. This was fixed in PR #25 by passing `marketCode` to `generateSeoMetadata` on all 26+ pages.
 
 ### Product Price OG Tags
 Product pages should render `product:price:amount` and `product:price:currency` as `<meta name="...">` tags (via `metadata.other`), NOT as `<meta property="...">` (Next.js silently drops unknown OG namespace properties). Verify with:
@@ -311,12 +311,12 @@ Each market (QA, OM, SA) is a separate WordPress subsite. To verify content isol
 
 ```bash
 # Check site names per market
-curl -s -H "x-market: intl" "https://cms.shapehive.com/wp-json/sasanperfumes/v1/site-settings" | python3 -c "import sys,json; print(json.load(sys.stdin).get('name','?'))"
-curl -s -H "x-market: qa" "https://cms.shapehive.com/wp-json/sasanperfumes/v1/site-settings" | python3 -c "import sys,json; print(json.load(sys.stdin).get('name','?'))"
+curl -s -H "x-market: intl" "https://cms.sasanperfumes.com/wp-json/sasanperfumes/v1/site-settings" | python3 -c "import sys,json; print(json.load(sys.stdin).get('name','?'))"
+curl -s -H "x-market: qa" "https://cms.sasanperfumes.com/wp-json/sasanperfumes/v1/site-settings" | python3 -c "import sys,json; print(json.load(sys.stdin).get('name','?'))"
 # Expected: "ShapeHive" vs "ShapeHive Qatar"
 
 # Check hero slider per market
-curl -s -H "x-market: qa" "https://cms.shapehive.com/wp-json/sasanperfumes/v1/home-settings" | python3 -c "import sys,json; d=json.load(sys.stdin); slides=d.get('hero',{}).get('slides',[]); print(f'{len(slides)} slides'); [print(f'  {s.get(\"image\",\"?\")[:100]}') for s in slides]"
+curl -s -H "x-market: qa" "https://cms.sasanperfumes.com/wp-json/sasanperfumes/v1/home-settings" | python3 -c "import sys,json; d=json.load(sys.stdin); slides=d.get('hero',{}).get('slides',[]); print(f'{len(slides)} slides'); [print(f'  {s.get(\"image\",\"?\")[:100]}') for s in slides]"
 ```
 
 **Frontend verification** (dev server must be running):
@@ -379,10 +379,10 @@ console.log('Badge count:', badgeCount); // Should be > 0 if rules apply to "all
 Navigate to any product page (e.g. `/en/product/1957`). Look for a green-bordered box below the price section containing the discount title and description.
 
 ### Critical: CMS URL Must Match
-The discount rules mu-plugin might only exist on one CMS domain. If `.env.local` points to `cms.shapehive.com` but the mu-plugin was deployed to `cms.sasanperfumes.com`, the API will return 404 and badges won't render. Always verify:
+The discount rules mu-plugin might only exist on one CMS domain. If `.env.local` points to `cms.sasanperfumes.com` but the mu-plugin was deployed to `cms.sasanperfumes.com`, the API will return 404 and badges won't render. Always verify:
 ```bash
 # Check which CMS domain has the discount-rules endpoint
-curl -s "https://cms.shapehive.com/wp-json/shapehive/v1/discount-rules" | head -1
+curl -s "https://cms.sasanperfumes.com/wp-json/shapehive/v1/discount-rules" | head -1
 curl -s "https://cms.sasanperfumes.com/wp-json/shapehive/v1/discount-rules" | head -1
 # Then update .env.local accordingly
 ```
@@ -399,6 +399,6 @@ The `sasanperfumes/v1/*` REST endpoints may return 500 for sub-site markets (QA/
 - **Production build error page**: The production build (`npx next start`) may show "Something went wrong" if API calls fail at build time. Use dev server (`npm run dev`) for testing that requires fresh API calls.
 - **Dynamic import of next/headers**: The `detectMarketFromRequest()` function uses `await import("next/headers")` which works locally but may fail silently on Hostinger. WordPress API functions should always receive `frontendHost` explicitly from page components rather than relying on this fallback.
 - **Production unreachable from Devin VM**: `store.sasanperfumes.com` may return HTTP 000 (connection timeout) from the Devin VM due to firewall/DNS restrictions. Use the local dev server (`npm run dev -p 3001`) which connects to the live CMS backend for testing.
-- **Canonical domain mismatch**: `.env.local` may have `NEXT_PUBLIC_SITE_URL=https://shapehive.com` while production uses `store.sasanperfumes.com`. Canonicals in dev will show `shapehive.com` — this is expected. The code is correct; only the env var differs between environments.
+- **Canonical domain mismatch**: `.env.local` may have `NEXT_PUBLIC_SITE_URL=https://store.sasanperfumes.com` while production uses `store.sasanperfumes.com`. Canonicals in dev will show `store.sasanperfumes.com` — this is expected. The code is correct; only the env var differs between environments.
 - **Cache headers in dev mode**: Next.js dev server overrides all cache headers to `no-store, no-cache`. Cache headers added via `next.config.ts` can only be verified in production build mode. Code review is valid verification for cache config.
 - **instrumentation.ts Edge Runtime warnings**: The dev server shows warnings about `process.cwd`, `node:fs`, and `node:path` being used in Edge Runtime. These are non-blocking warnings and don't affect functionality.

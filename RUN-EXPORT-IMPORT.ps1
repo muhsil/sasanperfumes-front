@@ -21,7 +21,7 @@ Write-Host ""
 
 Write-Host "STEP 2: Import Orders to ShapeHive (2 min)" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "1. Go to: https://hpanel.hostinger.com/websites/shapehive.com/databases/php-my-admin"
+Write-Host "1. Go to: https://hpanel.hostinger.com/websites/sasanperfumes.com/databases/php-my-admin"
 Write-Host "2. Click database: u346814456_XhYmf"
 Write-Host "3. Click tab: Import (top)"
 Write-Host "4. Click: Choose File"
@@ -39,7 +39,7 @@ Write-Host "4. Compare with SasanPerfumes count (should match)"
 Write-Host ""
 
 Write-Host "VERIFICATION:" -ForegroundColor Green
-Write-Host "✅ Check: https://cms.shapehive.com/wp-admin/admin.php?page=wc-orders"
+Write-Host "✅ Check: https://cms.sasanperfumes.com/wp-admin/admin.php?page=wc-orders"
 Write-Host "✅ Orders should appear in WordPress admin"
 Write-Host ""
 

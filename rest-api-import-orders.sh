@@ -8,10 +8,10 @@ INPUT_FILE="${1:-orders_export.json}"
 TARGET_SITE="${2:-shapehive}"
 
 # API URLs
-SHAPEHIVE_API="https://cms.shapehive.com/wp-json/wc/v3/orders"
-QA_API="https://cms.shapehive.com/qa/wp-json/wc/v3/orders"
-OM_API="https://cms.shapehive.com/om/wp-json/wc/v3/orders"
-SA_API="https://cms.shapehive.com/sa/wp-json/wc/v3/orders"
+SHAPEHIVE_API="https://cms.sasanperfumes.com/wp-json/wc/v3/orders"
+QA_API="https://cms.sasanperfumes.com/qa/wp-json/wc/v3/orders"
+OM_API="https://cms.sasanperfumes.com/om/wp-json/wc/v3/orders"
+SA_API="https://cms.sasanperfumes.com/sa/wp-json/wc/v3/orders"
 
 # Colors
 GREEN='\033[0;32m'
@@ -107,4 +107,4 @@ echo "   ✓ Successful: $success"
 echo "   ✗ Failed: $failed"
 echo ""
 echo -e "${CYAN}📋 Verification:${NC}"
-echo "   Check: https://cms.shapehive.com/$([[ $TARGET_SITE != "shapehive" ]] && echo "$TARGET_SITE/")/wp-admin/admin.php?page=wc-orders"
+echo "   Check: https://cms.sasanperfumes.com/$([[ $TARGET_SITE != "shapehive" ]] && echo "$TARGET_SITE/")/wp-admin/admin.php?page=wc-orders"

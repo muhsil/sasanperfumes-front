@@ -10,7 +10,7 @@ Requires Playwright or browser automation capabilities
 
 $hostingerUrl = "https://hpanel.hostinger.com/"
 $phpMyAdminSasan = "https://hpanel.hostinger.com/websites/sasanperfumes.com/databases/php-my-admin"
-$phpMyAdminShapeHive = "https://hpanel.hostinger.com/websites/shapehive.com/databases/php-my-admin"
+$phpMyAdminShapeHive = "https://hpanel.hostinger.com/websites/sasanperfumes.com/databases/php-my-admin"
 
 Write-Host "`n╔════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
 Write-Host "║  phpMyAdmin Browser-Based Export/Import                    ║" -ForegroundColor Cyan
@@ -58,7 +58,7 @@ Write-Host "2. Paste this query:" -ForegroundColor White
 Write-Host "   SELECT COUNT(*) as total_orders FROM wc_orders;" -ForegroundColor White
 Write-Host "3. Click: GO" -ForegroundColor White
 Write-Host "4. You should see the same order count as SasanPerfumes" -ForegroundColor White
-Write-Host "5. Then check WordPress: https://cms.shapehive.com/wp-admin/admin.php?page=wc-orders" -ForegroundColor White
+Write-Host "5. Then check WordPress: https://cms.sasanperfumes.com/wp-admin/admin.php?page=wc-orders" -ForegroundColor White
 Write-Host "" -ForegroundColor White
 Write-Host "⏱️  Time: 1 minute" -ForegroundColor Gray
 

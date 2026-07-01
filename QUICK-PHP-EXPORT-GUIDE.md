@@ -63,7 +63,7 @@ A small PHP script that exports all WooCommerce orders from your database with O
 
 1. **Go to ShapeHive phpMyAdmin**:
    - https://hpanel.hostinger.com
-   - Select: shapehive.com
+   - Select: sasanperfumes.com
    - Click: Databases
    - Click: phpMyAdmin
 
@@ -85,7 +85,7 @@ A small PHP script that exports all WooCommerce orders from your database with O
 ## STEP 4: Verify Import
 
 1. **Check in WordPress admin**:
-   - https://cms.shapehive.com/wp-admin/admin.php?page=wc-orders
+   - https://cms.sasanperfumes.com/wp-admin/admin.php?page=wc-orders
    - Should show: New orders in the list
    - Click: One order to verify data
 
@@ -176,7 +176,7 @@ After import succeeds:
    - Click: Delete
 
 2. **Verify orders imported**:
-   - https://cms.shapehive.com/wp-admin/admin.php?page=wc-orders
+   - https://cms.sasanperfumes.com/wp-admin/admin.php?page=wc-orders
    - Look for new orders
 
 3. **Mark source as read-only** (optional):

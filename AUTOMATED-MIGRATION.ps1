@@ -94,7 +94,7 @@ Option B: Using WordPress WP-CLI (via SSH on Hostinger)
      --format=json > /tmp/orders.json
 
 3. Copy to destination:
-   scp /tmp/orders.json user@shapehive.com:/tmp/
+   scp /tmp/orders.json user@sasanperfumes.com:/tmp/
 
 4. Import on destination server:
    wp import orders /tmp/orders.json --update=skip
@@ -119,14 +119,14 @@ The SIMPLEST method that doesn't require SSH:
    - Save file: orders_export.sql
 
 5. Now import the file:
-   - Go to: shapehive.com site management  
+   - Go to: sasanperfumes.com site management  
    - Click: Databases → phpMyAdmin
    - Click: Import tab
    - Upload: orders_export.sql
    - Click: Import
 
 6. Verify in WordPress:
-   - Go to: cms.shapehive.com/wp-admin/admin.php?page=wc-orders
+   - Go to: cms.sasanperfumes.com/wp-admin/admin.php?page=wc-orders
    - You should see all imported orders
 
 "@
