@@ -141,14 +141,14 @@ After import:
 - Don't share in public
 
 ⚠️ **Data Safety**
-- Backup exists at: sasanperfumes.sasanperfumes.com
+- Backup exists at: sasanperfumes.com (legacy backup)
 - No data loss risk
 - Can always restore from backup
 
 ⚠️ **Read-Only Requirements**
 - After import: Mark sasanperfumes.com as read-only
 - Disable plugins: Disable all except essential
-- Redirect: Optionally redirect to sasanperfumes.sasanperfumes.com
+- Redirect: Optionally redirect to sasanperfumes.com
 
 ---
 

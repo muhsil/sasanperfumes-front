@@ -116,7 +116,7 @@
 - Custom order actions/notes added after export
 
 🔄 **Rollback Plan**:
-- If import fails, the backup at `sasanperfumes.sasanperfumes.com` still has all data
+- If import fails, the backup at `sasanperfumes.com` still has all data
 - Delete imported orders and retry
 
 ---

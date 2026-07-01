@@ -379,12 +379,11 @@ console.log('Badge count:', badgeCount); // Should be > 0 if rules apply to "all
 Navigate to any product page (e.g. `/en/product/1957`). Look for a green-bordered box below the price section containing the discount title and description.
 
 ### Critical: CMS URL Must Match
-The discount rules mu-plugin might only exist on one CMS domain. If `.env.local` points to `cms.sasanperfumes.com` but the mu-plugin was deployed to `cms.sasanperfumes.com`, the API will return 404 and badges won't render. Always verify:
+The discount rules mu-plugin must be deployed to the same CMS domain that `.env.local` points to (`NEXT_PUBLIC_WC_API_URL`). If the mu-plugin is missing, the API will return 404 and badges won't render. Verify:
 ```bash
-# Check which CMS domain has the discount-rules endpoint
+# Confirm the discount-rules endpoint is reachable
 curl -s "https://cms.sasanperfumes.com/wp-json/shapehive/v1/discount-rules" | head -1
-curl -s "https://cms.sasanperfumes.com/wp-json/shapehive/v1/discount-rules" | head -1
-# Then update .env.local accordingly
+# Should return JSON array of rules, not 404 or empty
 ```
 
 ### Sub-site Backend 500 Errors
@@ -399,6 +398,6 @@ The `sasanperfumes/v1/*` REST endpoints may return 500 for sub-site markets (QA/
 - **Production build error page**: The production build (`npx next start`) may show "Something went wrong" if API calls fail at build time. Use dev server (`npm run dev`) for testing that requires fresh API calls.
 - **Dynamic import of next/headers**: The `detectMarketFromRequest()` function uses `await import("next/headers")` which works locally but may fail silently on Hostinger. WordPress API functions should always receive `frontendHost` explicitly from page components rather than relying on this fallback.
 - **Production unreachable from Devin VM**: `store.sasanperfumes.com` may return HTTP 000 (connection timeout) from the Devin VM due to firewall/DNS restrictions. Use the local dev server (`npm run dev -p 3001`) which connects to the live CMS backend for testing.
-- **Canonical domain mismatch**: `.env.local` may have `NEXT_PUBLIC_SITE_URL=https://store.sasanperfumes.com` while production uses `store.sasanperfumes.com`. Canonicals in dev will show `store.sasanperfumes.com` — this is expected. The code is correct; only the env var differs between environments.
+- **Canonical domain**: Both `.env.local` and production should use `NEXT_PUBLIC_SITE_URL=https://store.sasanperfumes.com`. Canonicals will show `store.sasanperfumes.com` in both environments.
 - **Cache headers in dev mode**: Next.js dev server overrides all cache headers to `no-store, no-cache`. Cache headers added via `next.config.ts` can only be verified in production build mode. Code review is valid verification for cache config.
 - **instrumentation.ts Edge Runtime warnings**: The dev server shows warnings about `process.cwd`, `node:fs`, and `node:path` being used in Edge Runtime. These are non-blocking warnings and don't affect functionality.

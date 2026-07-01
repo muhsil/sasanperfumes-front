@@ -21,9 +21,9 @@ if (!is_multisite()) {
 }
 
 $legacy_hosts = array(
-    'qa.sasanperfumes.com',
-    'om.sasanperfumes.com',
-    'sa.sasanperfumes.com',
+    'qa.shapehive.com',
+    'om.shapehive.com',
+    'sa.shapehive.com',
 );
 
 $argv = isset($argv) ? array_slice((array) $argv, 1) : array();
