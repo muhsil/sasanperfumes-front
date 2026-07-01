@@ -49,11 +49,13 @@ export async function generateMetadata({
     ? stripHtmlTags(page.excerpt.rendered)
     : page.yoast_head_json?.description || "";
 
+  const market = await getRequestMarket();
   return generateSeoMetadata({
     title,
     description: description.slice(0, 160),
     locale: locale as Locale,
     pathname: `/${slug}`,
+    marketCode: market.code,
   });
 }
 

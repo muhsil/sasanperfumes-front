@@ -57,6 +57,7 @@ export async function generateMetadata({
       ? `تسوق عطور ${noteName} من Sasan Perfumes. اكتشف مجموعتنا من العطور الفاخرة بنوتة ${noteName}. توصيل مجاني للطلبات فوق 500 درهم.`
       : `Shop ${noteName} perfumes at Sasan Perfumes. Explore our collection of luxury fragrances featuring ${noteName} notes. Free delivery on orders over 500 AED.`;
 
+  const market = await getRequestMarket();
   return generateSeoMetadata({
     title,
     description,
@@ -65,6 +66,7 @@ export async function generateMetadata({
     keywords: locale === "ar"
       ? [noteName, `عطور ${noteName}`, "عطور", "عطور فاخرة", "Sasan Perfumes", "عطور الإمارات", `${noteName} عطر`, "نوتات عطرية", "عطور أروماتيك", "شراء عطور أون لاين"]
       : [noteName, `${noteName} perfume`, "perfume", "luxury fragrance", "Sasan Perfumes", "UAE perfume", `${noteName} fragrance`, "fragrance notes", "aromatic perfume", "buy perfume online"],
+    marketCode: market.code,
   });
 }
 

@@ -1,6 +1,7 @@
 ﻿import type { Metadata } from "next";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { type Locale } from "@/config/site";
+import { getRequestMarket } from "@/lib/market/server";
 
 interface StoreLocatorLayoutProps {
   children: React.ReactNode;
@@ -14,6 +15,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const isRTL = locale === "ar";
+  const market = await getRequestMarket();
 
   return generateSeoMetadata({
     title: isRTL ? "ساسان للعطور | مواقعنا" : "Sasan Perfumes | Our Stores",
@@ -25,6 +27,7 @@ export async function generateMetadata({
     keywords: isRTL
       ? ["Sasan Perfumes", "مواقعنا", "الفروع", "الإمارات", "عطور", "معطر الشعر", "بخاخ الجسم", "أطقم هدايا", "تواصل معنا"]
       : ["Sasan Perfumes", "Our Stores", "store listing", "store locations", "UAE perfume store", "hair mist", "all over spray", "gift sets"],
+    marketCode: market.code,
   });
 }
 

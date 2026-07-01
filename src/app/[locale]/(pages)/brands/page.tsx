@@ -31,11 +31,13 @@ export async function generateMetadata({ params }: BrandsPageProps): Promise<Met
   const description = pickLocale(pageSettings?.seo?.description, locale, "") ||
     pickLocale(pageSettings?.description, locale, "");
 
+  const market = await getRequestMarket();
   return generateSeoMetadata({
     title,
     description,
     locale: lang,
     pathname: "/brands",
+    marketCode: market.code,
   });
 }
 

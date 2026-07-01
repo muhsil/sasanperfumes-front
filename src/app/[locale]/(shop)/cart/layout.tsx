@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { type Locale } from "@/config/site";
+import { getRequestMarket } from "@/lib/market/server";
 
 interface CartLayoutProps {
   children: React.ReactNode;
@@ -13,12 +14,14 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
+  const market = await getRequestMarket();
   return generateSeoMetadata({
     title: locale === "ar" ? "سلة التسوق" : "Shopping Cart",
     description: locale === "ar" ? "عرض سلة التسوق الخاصة بك" : "View your shopping cart",
     locale: locale as Locale,
     pathname: "/cart",
     noIndex: true,
+    marketCode: market.code,
   });
 }
 

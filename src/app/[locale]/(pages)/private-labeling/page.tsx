@@ -123,11 +123,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const description = pickLocale(data?.seo?.description, locale, "") ||
     pickLocale(data?.hero?.subtitle, locale, "");
 
+  const market = await getRequestMarket();
   return generateSeoMetadata({
     title,
     description,
     locale: lang,
     pathname: "/private-labeling",
+    marketCode: market.code,
   });
 }
 

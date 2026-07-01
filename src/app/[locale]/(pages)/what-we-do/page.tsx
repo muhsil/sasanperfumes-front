@@ -26,11 +26,13 @@ export async function generateMetadata({ params }: WhatWeDoPageProps): Promise<M
   const title = wpSeo?.title || pickLocale(wp?.title, locale, "");
   const description = wpSeo?.description || pickLocale(wp?.hero_description, locale, "");
 
+  const market = await getRequestMarket();
   return generateSeoMetadata({
     title,
     description,
     locale: lang,
     pathname: "/what-we-do",
+    marketCode: market.code,
   });
 }
 

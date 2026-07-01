@@ -41,12 +41,14 @@ export async function generateMetadata({ params }: BlogDetailPageProps): Promise
   const post = await getBlogPost(slug, frontendHost);
   if (!post) return {};
 
+  const market = await getRequestMarket();
   return generateSeoMetadata({
     title: stripHtml(post.title),
     description: stripHtml(post.excerpt).slice(0, 160),
     locale: lang,
     pathname: `/blog/${slug}`,
     image: post.featuredImage || undefined,
+    marketCode: market.code,
   });
 }
 

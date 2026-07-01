@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { CheckoutFooter } from "@/components/layout/CheckoutFooter";
 import { getDictionary } from "@/i18n";
 import { getSiteSettings } from "@/lib/api/wordpress";
-import { getRequestFrontendHost } from "@/lib/market/server";
+import { getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { type Locale } from "@/config/site";
 
@@ -17,12 +17,14 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
+  const market = await getRequestMarket();
   return generateSeoMetadata({
     title: locale === "ar" ? "الدفع" : "Checkout",
     description: locale === "ar" ? "أكمل طلبك" : "Complete your order",
     locale: locale as Locale,
     pathname: "/checkout",
     noIndex: true,
+    marketCode: market.code,
   });
 }
 

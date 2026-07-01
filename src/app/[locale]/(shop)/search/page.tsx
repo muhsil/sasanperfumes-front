@@ -43,6 +43,7 @@ export async function generateMetadata({
     ? (isAr ? `نتائج البحث عن: ${query}` : `Search results for: ${query}`)
     : (wpSeo?.title || (isAr ? defaultSeo.title.ar : defaultSeo.title.en));
 
+  const market = await getRequestMarket();
   return generateSeoMetadata({
     title,
     description: wpSeo?.description || (isAr ? defaultSeo.description.ar : defaultSeo.description.en),
@@ -51,6 +52,7 @@ export async function generateMetadata({
     pathname: "/search",
     noIndex: true,
     keywords: isAr ? defaultSeo.keywords.ar : defaultSeo.keywords.en,
+    marketCode: market.code,
   });
 }
 
