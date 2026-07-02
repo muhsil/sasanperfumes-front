@@ -264,6 +264,59 @@ console.log('PLACE_ORDER_ENABLED:', !placeOrder?.disabled);
 - `stock_quantity` mapping — API returns `null` (not from `low_stock_remaining`)
 - AR hero — Arabic text displayed (not English fallback)
 
+## Cart/Checkout Testing via localStorage Injection
+
+When CMS is unreachable, test cart and checkout flows by injecting mock cart data into localStorage:
+
+```js
+// Inject 7-item cart with valid fees
+const mockCart = {
+  cart: {
+    cart_hash: "test_hash",
+    cart_key: "test_key",
+    currency: { currency_code: "AED", currency_symbol: "د.إ", currency_minor_unit: 2, currency_decimal_separator: ".", currency_thousand_separator: ",", currency_prefix: "", currency_suffix: " د.إ" },
+    items: [
+      { item_key: "item1", id: 101, name: "Product Name", price: "22000", quantity: { value: 1 }, totals: { total: "22000" }, featured_image: "", meta: { variation: {}, sku: "SKU-001" }, regular_price: "22000", sale_price: "" }
+      // ... add more items as needed
+    ],
+    item_count: 7,
+    items_weight: 0,
+    needs_payment: true,
+    needs_shipping: true,
+    totals: { subtotal: "158000", subtotal_tax: "0", fee_total: "0", fee_tax: "0", discount_total: "0", discount_tax: "0", shipping_total: "0", shipping_tax: "0", total: "158000", total_tax: "0" },
+    fees: [],  // MUST be array, not string or null
+    coupons: [],
+    shipping: { packages: [] }
+  },
+  locale: "en",
+  timestamp: Date.now()
+};
+localStorage.setItem('sasanperfumes_cart_cache', JSON.stringify(mockCart));
+```
+
+**Key:** Prices are in minor units (fils). `22000` = 220.00 AED. The `currency_minor_unit: 2` means divide by 100.
+
+**cart.fees pitfall:** `fees` MUST be an array (even empty `[]`). If it's a string, null, or any non-array value, code like `cart.fees.map()` will throw `TypeError`. The guard `Array.isArray(cart?.fees)` was added in PR #42 to prevent this crash.
+
+**Testing malformed data:** To test defensive guards, inject `fees: "INVALID"` — if the guard works, the page should NOT crash with "Something went wrong".
+
+## Turbopack Dev Server Cache Issues
+
+The Next.js dev server (Turbopack) uses stable chunk filenames based on module paths, not content hashes. After restarting the dev server, the browser may serve cached old JS chunks from its HTTP cache.
+
+**Symptoms:** Source code has the fix (verified via grep), compiled `.next/` chunk file has the fix, but the browser still executes old code. The Next.js error overlay may show "(stale)" indicator.
+
+**Fix:** Use `Ctrl+Shift+R` (hard refresh) to bypass browser HTTP cache. This forces the browser to re-download all JS chunks from the server.
+
+```bash
+# Via xdotool (when using browser tool)
+xdotool key ctrl+shift+r
+```
+
+**Alternative:** Clear `.next/` directory, restart dev server, then navigate to the page fresh. If the browser still caches old chunks, the hard refresh is required.
+
+**Do NOT** assume the fix is wrong just because the browser shows old errors. Always verify: (1) source code has the fix, (2) compiled chunk on disk has the fix, (3) the server serves the fixed chunk (curl the chunk URL).
+
 ## Rate Limiting
 - Staging backend might return HTTP 429
 - Wait 30-60 seconds between rapid API requests
