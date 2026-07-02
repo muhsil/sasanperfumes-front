@@ -468,7 +468,7 @@ export default function CheckoutClient() {
             setCartInitReady(true);
             return;
           }
-          const timer = setTimeout(() => setCartInitReady(true), 2500);
+          const timer = setTimeout(() => setCartInitReady(true), 5000);
           return () => clearTimeout(timer);
         }, [isCartLoading, cartItems.length]);
 
@@ -1499,7 +1499,7 @@ export default function CheckoutClient() {
         )}
 
               {/* Cart still initializing (grace period for SWR + localStorage hydration) */}
-              {!cartInitReady && isCartLoading && (
+              {!cartInitReady && (isCartLoading || cartItems.length === 0) && (
                 <div className="mb-6 flex items-center justify-center py-8">
                   <div className="h-8 w-8 animate-spin rounded-full border-3 border-brand-border border-t-brand-primary"></div>
                   <span className="ml-3 text-brand-muted">{isRTL ? "جاري تحميل سلة التسوق..." : "Loading your cart..."}</span>

@@ -43,51 +43,6 @@ function normalizeHostWithMarketFallback(rawHost: string | null, marketCode: str
   return `${host}/${marketCode}`;
 }
 
-function createEmptyCart() {
-  return {
-    cart_hash: "No items in cart so no hash",
-    cart_key: "",
-    currency: {
-      currency_code: "AED",
-      currency_symbol: "AED",
-      currency_symbol_pos: "currency_suffix",
-      currency_minor_unit: 2,
-      currency_decimal_separator: ".",
-      currency_thousand_separator: ",",
-      currency_prefix: "",
-      currency_suffix: " AED",
-    },
-    customer: {
-      billing_address: {},
-      shipping_address: {},
-    },
-    items: [],
-    item_count: 0,
-    items_weight: "0",
-    coupons: [],
-    needs_payment: false,
-    needs_shipping: false,
-    shipping: [],
-    fees: [],
-    taxes: [],
-    totals: {
-      subtotal: "0",
-      subtotal_tax: "0",
-      fee_total: "0",
-      fee_tax: "0",
-      discount_total: "0",
-      discount_tax: "0",
-      shipping_total: "0",
-      shipping_tax: "0",
-      total: "0",
-      total_tax: "0",
-    },
-    removed_items: [],
-    cross_sells: [],
-    notices: [],
-  };
-}
-
 async function getCartKey(): Promise<string | null> {
   const cookieStore = await cookies();
   return cookieStore.get(CART_KEY_COOKIE)?.value || null;
@@ -370,9 +325,9 @@ export async function GET(request: NextRequest) {
 
     if (!response.ok) {
       return createResponseWithCartKey({
-        success: true,
-        cart: createEmptyCart(),
-        warning: (data.message as string) || "Cart backend unavailable.",
+        success: false,
+        cart: null,
+        error: { code: "backend_unavailable", message: (data.message as string) || "Cart backend unavailable." },
       }, null);
     }
 
