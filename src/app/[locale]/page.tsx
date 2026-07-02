@@ -53,7 +53,7 @@ function WhyChooseSection({
             </p>
           )}
           {hasText(t(section.title)) && (
-            <h2 className="font-title text-[28px] leading-tight text-brand-primary md:text-[34px]">
+            <h2 className="font-title text-2xl leading-tight text-brand-primary md:text-3xl">
               {t(section.title)}
             </h2>
           )}
@@ -102,7 +102,7 @@ function FAQSection({
             </p>
           )}
           {hasText(t(section.title)) && (
-            <h2 className="font-title text-[28px] leading-tight text-brand-primary md:text-[34px]">
+            <h2 className="font-title text-2xl leading-tight text-brand-primary md:text-3xl">
               {t(section.title)}
             </h2>
           )}

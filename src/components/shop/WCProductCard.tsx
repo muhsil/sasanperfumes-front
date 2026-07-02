@@ -291,7 +291,7 @@ export function WCProductCard({
                 ) : isOutOfStock ? (
                   <span className="truncate">{labels.outOfStock}</span>
                 ) : !canPurchase ? (
-                  <span className="truncate">{isRTL ? "ØºÙŠØ± Ù…ØªØ§Ø­" : "Unavailable"}</span>
+                  <span className="truncate">{isRTL ? "غير متاح" : "Unavailable"}</span>
                 ) : (
                   <>
                     <Plus className={cn("h-3.5 w-3.5 shrink-0", isAddingToCart && "animate-pulse")} />

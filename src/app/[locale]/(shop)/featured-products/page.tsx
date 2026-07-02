@@ -91,7 +91,7 @@ export default async function FeaturedProductsPage({ params, searchParams }: Fea
       <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} contained={false} />
 
       <div className="mb-4 md:mb-6">
-        <h1 className="font-title text-[30px] leading-none text-brand-primary md:text-5xl">
+        <h1 className="font-title text-3xl leading-none text-brand-primary md:text-5xl">
           {dictionary.sections.featuredProducts.title}
         </h1>
         <p className="mt-2 text-sm text-brand-muted md:mt-3 md:text-base">

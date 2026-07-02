@@ -170,7 +170,7 @@ export default async function ReturnsPage({ params }: ReturnsPageProps) {
                 <p className="mb-3 text-xs font-normal uppercase tracking-[0.14em] text-brand-primary/50">
                   {dictionary.footer.returnPolicy}
                 </p>
-                <h2 className="text-[28px] font-normal leading-tight text-brand-primary md:text-[34px]">
+                <h2 className="text-2xl font-normal leading-tight text-brand-primary md:text-3xl">
                   {processTitle}
                 </h2>
               </div>

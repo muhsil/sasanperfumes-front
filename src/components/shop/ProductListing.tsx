@@ -172,7 +172,7 @@ export function ProductListing({
         <div className={cn("mb-3 md:mb-6", toolbarClassName)}>
           {toolbarTitle ? (
             <div className="section-band relative flex items-center justify-between gap-3 py-2 text-brand-primary md:gap-4 md:py-3">
-              <h2 className="truncate text-[15px] font-semibold leading-tight md:text-[17px] lg:text-[20px]">
+              <h2 className="truncate text-base font-semibold leading-tight md:text-lg lg:text-xl">
                 {toolbarTitle}
               </h2>
               <ProductViewToggle

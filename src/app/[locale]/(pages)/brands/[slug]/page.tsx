@@ -73,7 +73,7 @@ export default async function BrandDetailPage({ params, searchParams }: BrandPag
   });
 
   const breadcrumbItems = [
-    { name: isRTL ? "Ø§Ù„Ø¹Ù„Ø§Ù…Ø§Øª Ø§Ù„ØªØ¬Ø§Ø±ÙŠØ©" : "Brands", href: `${pathPrefix}/${locale}/brands` },
+    { name: isRTL ? "العلامات التجارية" : "Brands", href: `${pathPrefix}/${locale}/brands` },
     { name: brandName, href: `${pathPrefix}/${locale}/brands/${slug}` },
   ];
 
@@ -128,7 +128,7 @@ export default async function BrandDetailPage({ params, searchParams }: BrandPag
       <section className="bg-[#f8f3ef] pb-0 pt-3 md:pt-4 lg:pt-5">
         <div className="mb-5 px-4 md:mb-6">
           <h2 className="text-2xl font-normal text-brand-primary md:text-3xl">
-            {isRTL ? `Ù…Ù†ØªØ¬Ø§Øª ${brandName}` : `${brandName} Products`}
+            {isRTL ? `منتجات ${brandName}` : `${brandName} Products`}
           </h2>
         </div>
         {products.length > 0 ? (
@@ -136,7 +136,7 @@ export default async function BrandDetailPage({ params, searchParams }: BrandPag
         ) : (
           <div className="py-12 text-center">
             <p className="text-brand-primary/50">
-              {isRTL ? "Ù„Ø§ ØªÙˆØ¬Ø¯ Ù…Ù†ØªØ¬Ø§Øª Ø­Ø§Ù„ÙŠØ§Ù‹" : "No products available yet"}
+              {isRTL ? "لا توجد منتجات حالياً" : "No products available yet"}
             </p>
           </div>
         )}
@@ -196,10 +196,10 @@ export default async function BrandDetailPage({ params, searchParams }: BrandPag
           <div>
             <div className="mb-8 flex flex-col gap-3 md:mb-10">
               <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-white/50">
-                {isRTL ? "Ù…Ù„Ø§Ø­Ø¸Ø§Øª Ø§Ù„Ø¹Ø·Ø±" : "Scent Profile"}
+                {isRTL ? "ملاحظات العطر" : "Scent Profile"}
               </p>
               <h2 className="text-2xl font-normal text-white md:text-3xl">
-                {isRTL ? "Ù…ÙƒÙˆÙ†Ø§Øª Ø§Ù„Ø¹Ø·Ø±" : "Perfume Notes"}
+                {isRTL ? "مكونات العطر" : "Perfume Notes"}
               </h2>
             </div>
             <div className="grid gap-0 border-t border-white/10 sm:grid-cols-2 lg:grid-cols-3">
