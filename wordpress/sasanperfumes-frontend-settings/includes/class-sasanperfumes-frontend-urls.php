@@ -396,6 +396,58 @@ class sasanperfumes_Frontend_Urls {
                 }
             }
         }
+
+        // Rewrite "Visit Site" links in the My Sites dropdown
+        // so each subsite points to its headless frontend URL.
+        if (is_multisite() && function_exists('get_sites')) {
+            $sites = get_sites(array('number' => 0, 'fields' => 'ids'));
+            foreach ((array) $sites as $site_id) {
+                $site_id = (int) $site_id;
+                $site_frontend = $this->get_frontend_url_for_site($site_id);
+                if (!$site_frontend) {
+                    continue;
+                }
+
+                $visit_node = $wp_admin_bar->get_node('blog-' . $site_id . '-v');
+                if ($visit_node) {
+                    $visit_node->href = $site_frontend;
+                    $wp_admin_bar->add_node((array) $visit_node);
+                }
+            }
+        }
+    }
+
+    /**
+     * Resolve the headless frontend URL for a specific site in the network.
+     */
+    private function get_frontend_url_for_site(int $site_id): string {
+        $site_frontend = trim((string) get_blog_option($site_id, 'sasanperfumes_frontend_url', ''));
+        if ($site_frontend !== '') {
+            return untrailingslashit($site_frontend);
+        }
+
+        if (!function_exists('sasanperfumes_get_frontend_url_map')) {
+            return '';
+        }
+
+        $details = get_blog_details($site_id);
+        if (!$details) {
+            return '';
+        }
+
+        $domain = strtolower(trim((string) ($details->domain ?? '')));
+        $path = strtolower(trim((string) ($details->path ?? ''), '/'));
+        $map = sasanperfumes_get_frontend_url_map();
+
+        $domain_path = $path !== '' ? $domain . '/' . $path : $domain;
+        if (!empty($map[$domain_path])) {
+            return untrailingslashit($map[$domain_path]);
+        }
+        if (!empty($map[$domain])) {
+            return untrailingslashit($map[$domain]);
+        }
+
+        return '';
     }
 
     public function rewrite_wc_product_permalink($permalink, $product) {
