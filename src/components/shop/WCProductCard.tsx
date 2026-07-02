@@ -8,7 +8,6 @@ import { useRouter } from "next/navigation";
 import { Plus, Heart, Search, Check, Star } from "lucide-react";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { ProductBadges } from "@/components/shop/ProductBadges";
-import { DiscountBadge } from "@/components/shop/DiscountBadge";
 import { cn, decodeHtmlEntities, getProductSlugFromPermalink, BLUR_DATA_URL } from "@/lib/utils";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
@@ -230,11 +229,6 @@ export function WCProductCard({
                 extraTagSlugs={extraBadgeSlugs}
                 className={cn("flex-col flex-nowrap", isRTL ? "items-end" : "items-start")}
               />
-              <DiscountBadge
-                productId={product.id}
-                categoryIds={product.categories?.map(c => c.id)}
-                className="inline-flex items-center rounded-sm border px-2 py-0.5 !text-[9px] font-bold uppercase leading-tight tracking-[0.12em] shadow-sm"
-              />
             </div>
 
             {/* Hover icons — top right */}
@@ -367,9 +361,48 @@ export function WCProductCard({
                 <FormattedPrice price={price} sourceCurrency={priceSourceCurrency} className="text-[11px] font-bold text-brand-primary sm:text-xs" iconSize="xs" />
               )}
               </div>
-            </div>
 
-            {/* Add to Cart button hidden on hover */}
+            {/* Mobile Add to Cart button */}
+            <div className="mt-1.5 w-full sm:hidden">
+              {showAsVariable ? (
+                <Link
+                  href={productHref}
+                  onFocus={prefetchProduct}
+                  onMouseEnter={prefetchProduct}
+                  onTouchStart={prefetchProduct}
+                  className="flex h-7 w-full items-center justify-center gap-1 rounded-md bg-brand-primary text-[10px] font-bold uppercase text-white active:bg-brand-primary-dark"
+                  aria-label={isBundleProduct ? labels.customize : labels.chooseOptions}
+                >
+                  <Plus className="h-3 w-3 shrink-0" />
+                  <span className="truncate">{isBundleProduct ? labels.customize : labels.chooseOptions}</span>
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleAddToCart}
+                  disabled={!canPurchase || isAddingToCart}
+                  className="flex h-7 w-full items-center justify-center gap-1 rounded-md bg-brand-primary text-[10px] font-bold uppercase text-white active:bg-brand-primary-dark disabled:cursor-not-allowed disabled:bg-brand-primary/70"
+                  aria-label={labels.addToCart}
+                >
+                  {isAddedToCart ? (
+                    <>
+                      <Check className="h-3 w-3 shrink-0" />
+                      <span className="truncate">{labels.added}</span>
+                    </>
+                  ) : isOutOfStock ? (
+                    <span className="truncate">{labels.outOfStock}</span>
+                  ) : !canPurchase ? (
+                    <span className="truncate">{isRTL ? "غير متاح" : "Unavailable"}</span>
+                  ) : (
+                    <>
+                      <Plus className={cn("h-3 w-3 shrink-0", isAddingToCart && "animate-pulse")} />
+                      <span className="truncate">{labels.addToCart}</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+            </div>
           </div>
         </div>
       </article>

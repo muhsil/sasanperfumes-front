@@ -194,19 +194,24 @@ function getHeaders(): HeadersInit {
 
 // Fetcher that extracts locale from the cache key URL
 async function cartFetcher(url: string): Promise<CoCartResponse | null> {
-  const response = await fetch(url, {
-    method: "GET",
-    headers: getHeaders(),
-  });
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: getHeaders(),
+    });
 
-  const data = await response.json();
-  
-  if (!data.success) {
-    console.warn(`Failed to fetch cart: ${data.error?.message || "Unknown cart error"}`);
+    const data = await response.json();
+
+    if (!data.success) {
+      console.warn(`Failed to fetch cart: ${data.error?.message || "Unknown cart error"}`);
+      return null;
+    }
+
+    return data.cart || null;
+  } catch (error) {
+    console.warn("Cart fetch failed:", error instanceof Error ? error.message : "Network error");
     return null;
   }
-  
-  return data.cart || null;
 }
 
 export interface SelectedCoupon {
