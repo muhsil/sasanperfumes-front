@@ -226,7 +226,14 @@ export default function CheckoutClient() {
   const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
   const divisor = Math.pow(10, currencyMinorUnit);
   const cartDiscounts = useMemo(
-    () => calculateCartDiscounts(cartItems, discountRules, { categoryIdsByProductId: productCategoryIds, currencyMinorUnit }),
+    () => {
+      try {
+        return calculateCartDiscounts(cartItems, discountRules, { categoryIdsByProductId: productCategoryIds, currencyMinorUnit });
+      } catch (err) {
+        console.error("[Checkout] Failed to calculate cart discounts:", err);
+        return [];
+      }
+    },
     [cartItems, discountRules, productCategoryIds, currencyMinorUnit]
   );
   const promotionalDiscountTotal = getCartDiscountTotal(cartDiscounts);
@@ -600,40 +607,48 @@ export default function CheckoutClient() {
 
 
 
-    // Calculate total fees â€” merge client-side customs fee with any existing cart.fees
+    // Calculate total fees -- merge client-side customs fee with any existing cart.fees
     const cartFeeTotal = useMemo(() => {
-      let total = 0;
-      // Add any existing cart fees from CoCart (excluding customs fees to avoid double-counting)
-      if (cart?.fees && cart.fees.length > 0) {
-        total += cart.fees
-          .filter(fee => fee.name.toLowerCase() !== "customs fees")
-          .reduce((sum, fee) => sum + (parseFloat(fee.fee) || 0), 0);
+      try {
+        let total = 0;
+        const fees = Array.isArray(cart?.fees) ? cart.fees : [];
+        if (fees.length > 0) {
+          total += fees
+            .filter(fee => fee?.name?.toLowerCase() !== "customs fees")
+            .reduce((sum, fee) => sum + (parseFloat(fee?.fee) || 0), 0);
+        }
+        if (customsFee) {
+          total += parseFloat(customsFee.fee) || 0;
+        } else if (fees.length > 0) {
+          total += fees
+            .filter(fee => fee?.name?.toLowerCase() === "customs fees")
+            .reduce((sum, fee) => sum + (parseFloat(fee?.fee) || 0), 0);
+        }
+        return total;
+      } catch (err) {
+        console.error("[Checkout] Failed to calculate fees:", err);
+        return 0;
       }
-      // Add client-side customs fee if present
-      if (customsFee) {
-        total += parseFloat(customsFee.fee) || 0;
-      } else if (cart?.fees && cart.fees.length > 0) {
-        // If no client-side customs fee, include any server-side customs fees
-        total += cart.fees
-          .filter(fee => fee.name.toLowerCase() === "customs fees")
-          .reduce((sum, fee) => sum + (parseFloat(fee.fee) || 0), 0);
-      }
-      return total;
     }, [customsFee, cart?.fees]);
 
     const checkoutTotal = useMemo(() => {
-      if (shippingPackages.length > 0) {
-        const shipping = parseFloat(shippingTotal) || 0;
-        return discountedCartSubtotal + shipping + cartFeeTotal;
+      try {
+        if (shippingPackages.length > 0) {
+          const shipping = parseFloat(shippingTotal) || 0;
+          return discountedCartSubtotal + shipping + cartFeeTotal;
+        }
+        // cartTotal from CoCart may include server-side fees; subtract server customs fee
+        // before adding client-side customs fee to avoid double-counting
+        const baseTotal = parseFloat(cartTotal) || 0;
+        const serverCustomsFeeTotal = (Array.isArray(cart?.fees) ? cart.fees : [])
+          .filter(fee => fee?.name?.toLowerCase() === "customs fees")
+          .reduce((sum, fee) => sum + (parseFloat(fee?.fee) || 0), 0);
+        const clientCustomsFee = customsFee ? (parseFloat(customsFee.fee) || 0) : 0;
+        return Math.max(baseTotal - promotionalDiscountTotal - serverCustomsFeeTotal + clientCustomsFee, 0);
+      } catch (err) {
+        console.error("[Checkout] Failed to calculate checkout total:", err);
+        return Math.max(parseFloat(cartTotal) || 0, 0);
       }
-      // cartTotal from CoCart may include server-side fees; subtract server customs fee
-      // before adding client-side customs fee to avoid double-counting
-      const baseTotal = parseFloat(cartTotal) || 0;
-      const serverCustomsFeeTotal = (cart?.fees || [])
-        .filter(fee => fee.name.toLowerCase() === "customs fees")
-        .reduce((sum, fee) => sum + (parseFloat(fee.fee) || 0), 0);
-      const clientCustomsFee = customsFee ? (parseFloat(customsFee.fee) || 0) : 0;
-      return Math.max(baseTotal - promotionalDiscountTotal - serverCustomsFeeTotal + clientCustomsFee, 0);
     }, [discountedCartSubtotal, shippingTotal, shippingPackages, cartTotal, cartFeeTotal, customsFee, cart?.fees, promotionalDiscountTotal]);
 
     const breadcrumbItems = [
@@ -2358,14 +2373,14 @@ export default function CheckoutClient() {
                                   <span className="text-green-600 font-medium">{isRTL ? "مجاني" : "Free"}</span>
                                 )}
                               </div>
-                              {/* Fees â€” show non-customs fees from cart, plus client-side customs fee */}
-                              {cart?.fees && cart.fees.length > 0 && cart.fees
-                                .filter(fee => fee.name.toLowerCase() !== "customs fees")
+                              {/* Fees -- show non-customs fees from cart, plus client-side customs fee */}
+                              {Array.isArray(cart?.fees) && cart.fees.length > 0 && cart.fees
+                                .filter(fee => fee?.name?.toLowerCase() !== "customs fees")
                                 .map((fee, index) => (
                                 <div key={`cart-fee-${index}`} className="flex justify-between text-sm text-brand-muted">
-                                  <span>{isRTL ? fee.name : fee.name}</span>
+                                  <span>{fee?.name || ""}</span>
                                   <FormattedPrice
-                                    price={parseFloat(fee.fee) / divisor}
+                                    price={parseFloat(fee?.fee) / divisor}
                                     iconSize="xs"
                                   />
                                 </div>
@@ -2378,11 +2393,11 @@ export default function CheckoutClient() {
                                     iconSize="xs"
                                   />
                                 </div>
-                              ) : cart?.fees && cart.fees.length > 0 && cart.fees
-                                .filter(fee => fee.name.toLowerCase() === "customs fees")
+                              ) : Array.isArray(cart?.fees) && cart.fees.length > 0 && cart.fees
+                                .filter(fee => fee?.name?.toLowerCase() === "customs fees")
                                 .map((fee, index) => (
                                 <div key={`customs-fee-${index}`} className="flex justify-between text-sm text-brand-muted">
-                                  <span>{isRTL ? "رسوم جمركية" : fee.name}</span>
+                                  <span>{isRTL ? "رسوم جمركية" : (fee?.name || "")}</span>
                                   <FormattedPrice
                                     price={parseFloat(fee.fee) / divisor}
                                     iconSize="xs"
