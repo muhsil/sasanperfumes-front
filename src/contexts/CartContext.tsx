@@ -280,8 +280,10 @@ export function CartProvider({ children, locale }: CartProviderProps) {
   );
 
   // Update localStorage cache whenever cart data changes
+  // Only cache carts with items — don't overwrite a good cache with an empty
+  // fallback returned by the API when the backend is temporarily down.
   useEffect(() => {
-    if (cart) {
+    if (cart && cart.items && cart.items.length > 0) {
       setCachedCart(cart, locale);
     }
   }, [cart, locale]);
@@ -289,12 +291,17 @@ export function CartProvider({ children, locale }: CartProviderProps) {
   // Seed SWR cache with localStorage data after hydration to avoid
   // server/client mismatch (React error #418). This runs only on the client
   // after the initial render, so both server and client start with null.
+  // Also re-runs whenever `cart` changes so that if the SWR fetch completed
+  // with null/empty (backend error), we fall back to the localStorage cache
+  // instead of showing an empty cart and redirecting.
   useEffect(() => {
+    // Only apply fallback if the current cart is null or empty
+    if (cart && cart.items && cart.items.length > 0) return;
     const cached = getCachedCart(locale);
-    if (cached) {
-      mutateCart((currentCart) => currentCart ?? cached, { revalidate: false });
+    if (cached && cached.items && cached.items.length > 0) {
+      mutateCart(cached, { revalidate: false });
     }
-  }, [locale, mutateCart]);
+  }, [cart, locale, mutateCart]);
 
   // Refresh cart when user logs in - this ensures the authenticated user's
   // cart is loaded immediately after login
