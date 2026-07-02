@@ -1772,40 +1772,60 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
 
           {/* Add to Cart Section */}
           <div ref={ctaSectionRef} className="flex flex-col gap-4 pt-5">
-            <div className="grid gap-3 sm:grid-cols-[minmax(150px,1fr)_auto]">
-              <div className="flex h-12 items-center justify-between overflow-hidden rounded-full border border-brand-border/80 bg-transparent">
-                <button
-                  type="button"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  disabled={isOutOfStock || quantity <= 1}
-                  className="flex h-12 w-10 items-center justify-center text-brand-primary transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-40"
-                  aria-label={isRTL ? "تقليل الكمية" : "Decrease quantity"}
-                >
-                  <Minus className="h-4 w-4" />
-                </button>
-                <input
-                  type="number"
-                  value={quantity}
-                  onChange={(e) => {
-                    const val = parseInt(e.target.value) || 1;
-                    const max = product.add_to_cart.maximum || 99;
-                    setQuantity(Math.min(Math.max(1, val), max));
-                  }}
-                  disabled={isOutOfStock}
-                  className="h-12 w-12 bg-transparent text-center text-sm font-normal text-brand-primary focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                  min={1}
-                  max={product.add_to_cart.maximum || 99}
-                />
-                <button
-                  type="button"
-                  onClick={() => setQuantity(Math.min(quantity + 1, product.add_to_cart.maximum || 99))}
-                  disabled={isOutOfStock || quantity >= (product.add_to_cart.maximum || 99)}
-                  className="flex h-12 w-10 items-center justify-center text-brand-primary transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-40"
-                  aria-label={isRTL ? "زيادة الكمية" : "Increase quantity"}
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
+            <div className="flex h-12 items-center justify-between overflow-hidden rounded-full border border-brand-border/80 bg-transparent">
+              <button
+                type="button"
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                disabled={isOutOfStock || quantity <= 1}
+                className="flex h-12 w-10 items-center justify-center text-brand-primary transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label={isRTL ? "تقليل الكمية" : "Decrease quantity"}
+              >
+                <Minus className="h-4 w-4" />
+              </button>
+              <input
+                type="number"
+                value={quantity}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value) || 1;
+                  const max = product.add_to_cart.maximum || 99;
+                  setQuantity(Math.min(Math.max(1, val), max));
+                }}
+                disabled={isOutOfStock}
+                className="h-12 w-12 bg-transparent text-center text-sm font-normal text-brand-primary focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                min={1}
+                max={product.add_to_cart.maximum || 99}
+              />
+              <button
+                type="button"
+                onClick={() => setQuantity(Math.min(quantity + 1, product.add_to_cart.maximum || 99))}
+                disabled={isOutOfStock || quantity >= (product.add_to_cart.maximum || 99)}
+                className="flex h-12 w-10 items-center justify-center text-brand-primary transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label={isRTL ? "زيادة الكمية" : "Increase quantity"}
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="flex gap-3">
+              <ProductAddToCartButton
+                type="button"
+                onClick={handleAddToCart}
+                disabled={!canPurchaseProduct || isSelectedVariationOutOfStock || isAddingToCart || !canAddToCart}
+                isAdded={isAddedToCart}
+                isLoading={isAddingToCart}
+                showIcon
+                className="h-12 flex-1 rounded-full text-sm font-semibold uppercase tracking-[0.08em]"
+              >
+                {isAddedToCart ? (
+                  <><Check className="h-4 w-4" />{isRTL ? "تمت الإضافة!" : "added"}</>
+                ) : isAddingToCart ? (
+                  <>{isRTL ? "جاري الإضافة..." : "adding..."}</>
+                ) : isSelectedVariationOutOfStock ? (
+                  <>{isRTL ? "غير متوفر" : "out of stock"}</>
+                ) : (
+                  <>{isRTL ? "أضف إلى السلة" : "add to cart"}</>
+                )}
+              </ProductAddToCartButton>
 
               <button
                 type="button"
@@ -1817,26 +1837,6 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                 <Heart className={`h-5 w-5 ${isWishlisted ? "fill-current" : ""}`} />
               </button>
             </div>
-
-            <ProductAddToCartButton
-              type="button"
-              onClick={handleAddToCart}
-              disabled={!canPurchaseProduct || isSelectedVariationOutOfStock || isAddingToCart || !canAddToCart}
-              isAdded={isAddedToCart}
-              isLoading={isAddingToCart}
-              showIcon
-              className="h-12 w-full rounded-full text-sm font-semibold uppercase tracking-[0.08em]"
-            >
-              {isAddedToCart ? (
-                <><Check className="h-4 w-4" />{isRTL ? "تمت الإضافة!" : "added"}</>
-              ) : isAddingToCart ? (
-                <>{isRTL ? "جاري الإضافة..." : "adding..."}</>
-              ) : isSelectedVariationOutOfStock ? (
-                <>{isRTL ? "غير متوفر" : "out of stock"}</>
-              ) : (
-                <>{isRTL ? "أضف إلى السلة" : "add to cart"}</>
-              )}
-            </ProductAddToCartButton>
           </div>
 
           <div className="mt-5">

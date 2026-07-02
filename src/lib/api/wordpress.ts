@@ -848,13 +848,13 @@ async function fetchWPAPI<T>(
     : backendHeaders(WP_API_HEADERS);
 
   try {
-      const shouldBypassCache = disableRuntimeCache || noCache || CMS_FORCE_DYNAMIC_CACHE || isCmsContentEndpoint(endpoint);
+      const shouldBypassCache = disableRuntimeCache || noCache || CMS_FORCE_DYNAMIC_CACHE;
       const fetchOptions: RequestInit = shouldBypassCache
         ? { headers: apiHeaders, cache: "no-store" }
         : {
           headers: apiHeaders,
           next: {
-            revalidate,
+            revalidate: isCmsContentEndpoint(endpoint) ? Math.min(revalidate, 60) : revalidate,
             tags,
           },
         };

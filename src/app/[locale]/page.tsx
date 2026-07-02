@@ -130,8 +130,7 @@ function FAQSection({
   );
 }
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 const HOME_PRODUCT_COUNT = 5;
 
 interface HomePageProps {
