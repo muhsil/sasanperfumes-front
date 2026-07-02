@@ -15,10 +15,6 @@ function getBasicAuthParams(marketCode?: string): string {
   return `consumer_key=${consumerKey}&consumer_secret=${consumerSecret}`;
 }
 
-function getBasicAuthHeader(marketCode?: string): string {
-  const { consumerKey, consumerSecret } = getWcCredentials(marketCode);
-  return `Basic ${Buffer.from(`${consumerKey}:${consumerSecret}`).toString("base64")}`;
-}
 
 const MARKET_CODES = new Set(["qa", "om", "sa"]);
 const BACKEND_ORIGIN = (() => {
@@ -442,11 +438,13 @@ export async function POST(request: NextRequest) {
 
     const url = `${getOrdersApiBase(market.code)}/orders?${getBasicAuthParams(market.code)}`;
     
+    // Authenticate via query params only (consumer_key/consumer_secret in URL).
+    // Sending an Authorization: Basic header alongside query-param auth causes
+    // WordPress Application Passwords to intercept and reject the request with
+    // "unknown username" before WooCommerce can authenticate via consumer key.
     const response = await fetchOrdersBackend(url, {
       method: "POST",
-      headers: backendPostHeaders({
-        Authorization: getBasicAuthHeader(market.code),
-      }),
+      headers: backendPostHeaders(),
       body: JSON.stringify(orderData),
     }, market.code);
 
@@ -455,6 +453,15 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       const errorCode = data.code || "order_creation_error";
       let errorMessage = data.message || "Failed to create order.";
+
+      console.error("[orders] WooCommerce order creation failed:", {
+        status: response.status,
+        code: errorCode,
+        message: errorMessage,
+        market: market.code,
+        billingEmail: body.billing?.email,
+        customerId: orderData.customer_id,
+      });
 
       // Replace raw WP auth errors with user-friendly messages
       if (/unknown username/i.test(errorMessage) || errorCode === "invalid_username") {
@@ -548,9 +555,7 @@ export async function PUT(request: NextRequest) {
     
     const response = await fetchOrdersBackend(url, {
       method: "PUT",
-      headers: backendPostHeaders({
-        Authorization: getBasicAuthHeader(market.code),
-      }),
+      headers: backendPostHeaders(),
       body: JSON.stringify(updateData),
     }, market.code);
 

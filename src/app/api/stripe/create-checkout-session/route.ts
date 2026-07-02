@@ -13,11 +13,6 @@ function getBasicAuthParams(marketCode?: string): string {
   return `consumer_key=${consumerKey}&consumer_secret=${consumerSecret}`;
 }
 
-function getBasicAuthHeader(marketCode?: string): string {
-  const { consumerKey, consumerSecret } = getWcCredentials(marketCode);
-  return `Basic ${Buffer.from(`${consumerKey}:${consumerSecret}`).toString("base64")}`;
-}
-
 function getOrdersApiBase(marketCode?: string | null): string {
   return `${wpJsonBaseForMarket(marketCode)}/wc/v3`;
 }
@@ -123,9 +118,7 @@ export async function POST(request: NextRequest) {
 
     await fetch(noCacheUrl(`${getOrdersApiBase(market.code)}/orders/${orderId}?${getBasicAuthParams(market.code)}`), {
       method: "PUT",
-      headers: backendMarketPostHeaders(market.code, {
-        Authorization: getBasicAuthHeader(market.code),
-      }),
+      headers: backendMarketPostHeaders(market.code),
       body: JSON.stringify({
         payment_method: "stripe",
         payment_method_title: "Credit/Debit Card",
