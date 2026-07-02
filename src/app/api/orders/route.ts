@@ -15,10 +15,6 @@ function getBasicAuthParams(marketCode?: string): string {
   return `consumer_key=${consumerKey}&consumer_secret=${consumerSecret}`;
 }
 
-function getBasicAuthHeader(marketCode?: string): string {
-  const { consumerKey, consumerSecret } = getWcCredentials(marketCode);
-  return `Basic ${Buffer.from(`${consumerKey}:${consumerSecret}`).toString("base64")}`;
-}
 
 const MARKET_CODES = new Set(["qa", "om", "sa"]);
 const BACKEND_ORIGIN = (() => {
@@ -432,9 +428,34 @@ export async function POST(request: NextRequest) {
       orderData.fee_lines = body.fee_lines;
     }
 
-    // Explicitly set customer_id: 0 for guest checkout to prevent WooCommerce
-    // from trying to match the billing email to an existing user account
-    orderData.customer_id = body.customer_id ? body.customer_id : 0;
+    // For guest checkout, look up existing WooCommerce customer by billing email
+    // so the order is associated with their account instead of being rejected.
+    // WooCommerce may reject orders with customer_id: 0 when the billing email
+    // belongs to a registered user (returns "unknown username" auth error).
+    if (body.customer_id) {
+      orderData.customer_id = body.customer_id;
+    } else {
+      let resolvedCustomerId = 0;
+      const billingEmail = orderData.billing?.email;
+      if (billingEmail) {
+        try {
+          const lookupUrl = `${getOrdersApiBase(market.code)}/customers?email=${encodeURIComponent(billingEmail)}&per_page=1&${getBasicAuthParams(market.code)}`;
+          const lookupRes = await fetchOrdersBackend(lookupUrl, {
+            method: "GET",
+            headers: backendHeaders(),
+          }, market.code);
+          if (lookupRes.ok) {
+            const customers = await lookupRes.json();
+            if (Array.isArray(customers) && customers.length > 0 && customers[0].id) {
+              resolvedCustomerId = customers[0].id;
+            }
+          }
+        } catch {
+          // Lookup failed — fall back to guest (customer_id: 0)
+        }
+      }
+      orderData.customer_id = resolvedCustomerId;
+    }
 
     if (body.meta_data && body.meta_data.length > 0) {
       orderData.meta_data = body.meta_data;
@@ -442,11 +463,13 @@ export async function POST(request: NextRequest) {
 
     const url = `${getOrdersApiBase(market.code)}/orders?${getBasicAuthParams(market.code)}`;
     
+    // Authenticate via query params only (consumer_key/consumer_secret in URL).
+    // Sending an Authorization: Basic header alongside query-param auth causes
+    // WordPress Application Passwords to intercept and reject the request with
+    // "unknown username" before WooCommerce can authenticate via consumer key.
     const response = await fetchOrdersBackend(url, {
       method: "POST",
-      headers: backendPostHeaders({
-        Authorization: getBasicAuthHeader(market.code),
-      }),
+      headers: backendPostHeaders(),
       body: JSON.stringify(orderData),
     }, market.code);
 
@@ -455,6 +478,15 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       const errorCode = data.code || "order_creation_error";
       let errorMessage = data.message || "Failed to create order.";
+
+      console.error("[orders] WooCommerce order creation failed:", {
+        status: response.status,
+        code: errorCode,
+        message: errorMessage,
+        market: market.code,
+        billingEmail: body.billing?.email,
+        customerId: orderData.customer_id,
+      });
 
       // Replace raw WP auth errors with user-friendly messages
       if (/unknown username/i.test(errorMessage) || errorCode === "invalid_username") {
@@ -548,9 +580,7 @@ export async function PUT(request: NextRequest) {
     
     const response = await fetchOrdersBackend(url, {
       method: "PUT",
-      headers: backendPostHeaders({
-        Authorization: getBasicAuthHeader(market.code),
-      }),
+      headers: backendPostHeaders(),
       body: JSON.stringify(updateData),
     }, market.code);
 
