@@ -143,7 +143,7 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
         </div>
       ))}
       {/* Customs Fees */}
-      {cart?.fees && cart.fees.length > 0 && cart.fees.map((fee, index) => (
+      {Array.isArray(cart?.fees) && cart.fees.length > 0 && cart.fees.map((fee, index) => (
         <div key={index} className="flex items-center justify-between">
           <span className="text-sm text-brand-muted">{isRTL ? "رسوم جمركية" : fee.name}</span>
           <FormattedPrice

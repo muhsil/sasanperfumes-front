@@ -699,7 +699,7 @@ export default function CartPage() {
                                 </span>
                               </div>
                               {/* Customs Fees */}
-                              {cart?.fees && cart.fees.length > 0 && cart.fees.map((fee, index) => (
+                              {Array.isArray(cart?.fees) && cart.fees.length > 0 && cart.fees.map((fee, index) => (
                                 <div key={index} className="flex justify-between text-brand-muted">
                                   <span>{isRTL ? "رسوم جمركية" : fee.name}</span>
                                   <FormattedPrice

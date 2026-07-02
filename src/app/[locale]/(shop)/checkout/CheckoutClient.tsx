@@ -1144,9 +1144,9 @@ export default function CheckoutClient() {
         ...(() => {
           const feeLines: Array<{ name: string; total: string }> = [];
           // Add non-customs fees from cart.fees
-          if (cart?.fees && cart.fees.length > 0) {
+          if (Array.isArray(cart?.fees) && cart.fees.length > 0) {
             cart.fees
-              .filter(fee => fee.name.toLowerCase() !== "customs fees")
+              .filter(fee => fee?.name?.toLowerCase() !== "customs fees")
               .forEach(fee => {
                 feeLines.push({
                   name: fee.name,
@@ -1169,9 +1169,9 @@ export default function CheckoutClient() {
               name: customsFee.name,
               total: convertPrice(parseFloat(customsFee.fee) / divisor).toFixed(getCurrencyInfo().decimals),
             });
-          } else if (cart?.fees && cart.fees.length > 0) {
+          } else if (Array.isArray(cart?.fees) && cart.fees.length > 0) {
             cart.fees
-              .filter(fee => fee.name.toLowerCase() === "customs fees")
+              .filter(fee => fee?.name?.toLowerCase() === "customs fees")
               .forEach(fee => {
                 feeLines.push({
                   name: fee.name,
