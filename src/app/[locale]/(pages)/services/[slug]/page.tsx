@@ -81,7 +81,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
         <p className="mb-2 text-xs font-normal uppercase tracking-[0.1em] text-brand-primary/40">
           {isRTL ? "خدمة" : "Service"}
         </p>
-        <h1 className="text-[36px] font-normal leading-none tracking-normal md:text-[48px]">{title}</h1>
+        <h1 className="text-4xl font-normal leading-none tracking-normal md:text-5xl">{title}</h1>
         {excerpt && <p className="mt-2 text-lg font-normal tracking-normal text-brand-primary/60">{excerpt}</p>}
       </section>
 

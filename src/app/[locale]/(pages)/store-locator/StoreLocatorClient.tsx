@@ -134,9 +134,9 @@ export default function StoreLocatorClient({ dict, locale, stores: storeList, co
       {/* Hero Section */}
       <section className="bg-[#f8f3ef] px-4 pb-6 pt-8 text-brand-primary md:pb-8 md:pt-10">
         <p className="mb-2 text-lg font-normal tracking-normal text-brand-primary/60">{content.heroSubtitle}</p>
-        <h1 className="text-[36px] font-normal leading-none tracking-normal md:text-[48px]">{content.heroTitle}</h1>
+        <h1 className="text-4xl font-normal leading-none tracking-normal md:text-5xl">{content.heroTitle}</h1>
         {content.heroDescription && (
-          <p className="mt-4 max-w-[620px] text-[15px] leading-6 tracking-normal text-brand-primary md:text-base">{content.heroDescription}</p>
+          <p className="mt-4 max-w-[620px] text-base leading-6 tracking-normal text-brand-primary md:text-base">{content.heroDescription}</p>
         )}
         <div className="mt-4 flex items-center gap-6 text-xs text-brand-primary/40">
           <span>{content.storesCount}</span>

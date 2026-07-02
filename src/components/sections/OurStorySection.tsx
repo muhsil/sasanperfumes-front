@@ -49,12 +49,12 @@ export function OurStorySection({
                 {(description1 || description2) && (
                   <div className="mt-5 space-y-3 border-s border-brand-primary/10 ps-5 md:mt-6 md:ps-6">
                     {description1 && (
-                      <p className="text-sm leading-7 text-brand-primary/70 md:text-[15px] md:leading-8">
+                      <p className="text-sm leading-7 text-brand-primary/70 md:text-base md:leading-8">
                         {description1}
                       </p>
                     )}
                     {description2 && (
-                      <p className="text-sm leading-7 text-brand-primary/65 md:text-[15px] md:leading-8">
+                      <p className="text-sm leading-7 text-brand-primary/65 md:text-base md:leading-8">
                         {description2}
                       </p>
                     )}

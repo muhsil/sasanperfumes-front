@@ -86,7 +86,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
             </>
           )}
         </div>
-        <h1 className="text-[36px] font-normal leading-none tracking-normal md:text-[48px]">
+        <h1 className="text-4xl font-normal leading-none tracking-normal md:text-5xl">
           {stripHtml(post.title)}
         </h1>
         {post.categories.length > 0 && (

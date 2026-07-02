@@ -73,12 +73,12 @@ function sanitizeProductDescription(html: string): string {
     "why shop with us trust, speed and service",
     "trust speed and service",
     "why shop with us trust speed and service",
-    "ÙºÙ‡ÙˆØµ Ù…Ø¨Ø§ÙØ³",
-    "ÙƒØ§Ù… ÙˆØ´Ø±Ø§Ø¡ ØµØ§Ù„",
-    "ÙºÙ‡ØªÙˆ Ø§Ø²Ù‚ÙˆÙ‚ Ø§Ù†ÙˆÙ† ØÙ…Ø¹Ø±Ø¶",
-    "Ù‚Ù‡Ø§Øª Ø§Ù„ØºØ±Ù Ø§Ù„Ø´Ù‡Ø§Ù‚ ÙˆØ§Ù„Ø£ÙˆØ±",
-    "Ø£Ø¨Ø³Ø±ÙŠØ© ÙŠÙƒÙŠØ± Ù…Ø±ÙŠØ¹",
-    "ÙŠÙ‡Ù†Ø§ÙˆÙ† Ù‚Ù‡Ø§Øª Ø§Ù„ØªØ¹Ø¯Ø§",
+    "ٺهوص مبالس",
+    "كام وشراء صال",
+    "ٺهتو ازقوق انون ؍معرض",
+    "قهات الغرف الشهاق والأور",
+    "أبسرية يكير مريع",
+    "يهناون قهات التعدا",
   ];
 
   blockedHeadingText.push(
@@ -1507,7 +1507,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           </div>
 
           {/* Title */}
-            <h1 className="font-title w-full text-[18px] leading-tight text-brand-primary sm:text-[21px] md:text-[24px] lg:text-[28px]">
+            <h1 className="font-title w-full text-lg leading-tight text-brand-primary sm:text-xl md:text-2xl lg:text-3xl">
               {productDisplayName}
             </h1>
 

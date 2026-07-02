@@ -228,10 +228,10 @@ export default async function GuidePage({ params }: GuidePageProps) {
         <p className="mb-2 text-xs font-normal uppercase tracking-[0.1em] text-brand-primary/40">
           {guide.eyebrow[validLocale]}
         </p>
-        <h1 className="text-[36px] font-normal leading-none tracking-normal md:text-[48px]">
+        <h1 className="text-4xl font-normal leading-none tracking-normal md:text-5xl">
           {guide.title[validLocale]}
         </h1>
-        <p className="mt-2 max-w-[620px] text-[15px] leading-6 tracking-normal text-brand-primary md:text-base">
+        <p className="mt-2 max-w-[620px] text-base leading-6 tracking-normal text-brand-primary md:text-base">
           {guide.intro[validLocale]}
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-brand-primary/40">

@@ -47,6 +47,7 @@
 html {
   scroll-behavior: smooth;
   background: #ffffff;
+  font-size: 14px;
 }
 
 body {
@@ -344,26 +345,22 @@ input::-webkit-credentials-auto-fill-button {
 }
 
 @media (max-width: 1023px) {
-  body {
-    font-size: 14px;
+  html {
+    font-size: 13.5px;
   }
 
-  p,
-  span,
-  a,
-  li,
-  label,
-  input,
-  button,
-  select,
-  textarea {
-    font-size: 0.875rem;
+  body {
+    font-size: 13.5px;
   }
 }
 
 @media (max-width: 767px) {
   :root {
     --page-container-margin: 0.35rem;
+  }
+
+  html {
+    font-size: 13px;
   }
 
   body {

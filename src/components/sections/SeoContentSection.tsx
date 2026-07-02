@@ -30,13 +30,13 @@ export function SeoContentSection({ title, paragraphs, backgroundImage, isRTL = 
                 Fragrance Story
               </p>
               {title && (
-                <h2 className="max-w-xl font-title text-3xl leading-tight text-brand-primary md:text-[38px]">
+                <h2 className="max-w-xl font-title text-3xl leading-tight text-brand-primary md:text-4xl">
                   {title}
                 </h2>
               )}
               <div className="mt-1 h-px w-24 bg-gradient-to-r from-brand-gold to-transparent" />
 
-              <div className="space-y-4 text-sm leading-7 text-brand-muted md:text-[16px] md:leading-8">
+              <div className="space-y-4 text-sm leading-7 text-brand-muted md:text-base md:leading-8">
                 {paragraphs.map((paragraph, idx) => (
                   <p key={`${isRTL ? "ar" : "en"}-paragraph-${idx}`}>
                     {paragraph}

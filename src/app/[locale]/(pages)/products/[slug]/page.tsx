@@ -180,9 +180,9 @@ function HeroSection({ page, isRTL }: { page: ProductPage; isRTL: boolean }) {
       {subtitle && (
         <p className="mb-2 text-xs font-normal uppercase tracking-[0.1em] text-brand-primary/40">{subtitle}</p>
       )}
-      <h1 className="text-[36px] font-normal leading-none tracking-normal md:text-[48px]">{title || page.title}</h1>
+      <h1 className="text-4xl font-normal leading-none tracking-normal md:text-5xl">{title || page.title}</h1>
       {description && (
-        <p className="mt-2 max-w-[620px] text-[15px] leading-6 tracking-normal text-brand-primary md:text-base">{description}</p>
+        <p className="mt-2 max-w-[620px] text-base leading-6 tracking-normal text-brand-primary md:text-base">{description}</p>
       )}
       {ctaText && page.hero.ctaLink && (
         <Link

@@ -364,7 +364,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
                     </p>
                   )}
                   {title && (
-                    <h1 className="max-w-[12ch] text-[28px] font-normal leading-[1.05] tracking-normal text-brand-primary sm:text-[32px] md:text-[42px] lg:text-[56px]">
+                    <h1 className="max-w-[12ch] text-2xl font-normal leading-[1.05] tracking-normal text-brand-primary sm:text-3xl md:text-5xl lg:text-6xl">
                       {title}
                     </h1>
                   )}

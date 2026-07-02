@@ -137,7 +137,7 @@ export function SearchResultsClient({
   return (
     <div className="min-h-screen bg-[#f8f3ef] text-brand-primary" dir={isRTL ? "rtl" : "ltr"}>
       <section className="px-4 pb-10 pt-12 md:pb-12 md:pt-16">
-        <h1 className="max-w-[900px] text-[24px] font-normal leading-tight tracking-normal md:text-[32px] lg:text-[38px]">
+        <h1 className="max-w-[900px] text-2xl font-normal leading-tight tracking-normal md:text-3xl lg:text-4xl">
           {query ? (
             <>
               {t.resultsFor} &ldquo;{query}&rdquo;
@@ -155,7 +155,7 @@ export function SearchResultsClient({
               onChange={(event) => setInputValue(event.target.value)}
               placeholder={t.searchPlaceholder}
               className={cn(
-                "h-[52px] w-full rounded-full border border-[#3b2424] bg-transparent text-[15px] font-normal tracking-normal text-brand-primary placeholder:text-brand-primary/45 focus:outline-none focus:ring-1 focus:ring-brand-primary",
+                "h-[52px] w-full rounded-full border border-[#3b2424] bg-transparent text-base font-normal tracking-normal text-brand-primary placeholder:text-brand-primary/45 focus:outline-none focus:ring-1 focus:ring-brand-primary",
                 isRTL ? "pr-12 pl-12" : "pl-12 pr-12"
               )}
             />

@@ -41,7 +41,7 @@ export function PageHeader({
         </div>
       )}
       <div className={cn("max-w-[820px]", isRTL && "ms-auto text-right")}>
-        <h1 className="font-title text-[26px] leading-tight text-brand-primary md:text-[34px]">
+        <h1 className="font-title text-2xl leading-tight text-brand-primary md:text-3xl">
           {decodeHtmlEntities(title)}
         </h1>
         {subtitle && (
@@ -50,7 +50,7 @@ export function PageHeader({
           </p>
         )}
         {description && (
-          <p className={cn("mt-5 max-w-[660px] text-[15px] leading-7 text-brand-muted md:text-base", isRTL && "ms-auto")}>
+          <p className={cn("mt-5 max-w-[660px] text-base leading-7 text-brand-muted md:text-base", isRTL && "ms-auto")}>
             {description}
           </p>
         )}

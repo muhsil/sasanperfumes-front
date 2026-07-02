@@ -241,7 +241,7 @@ export default function CartPage() {
           </div>
         )}
 
-        <h1 className="mb-3 font-title text-[30px] leading-none text-brand-primary md:mb-5 md:text-5xl">
+        <h1 className="mb-3 font-title text-3xl leading-none text-brand-primary md:mb-5 md:text-5xl">
           {texts.cart}
         </h1>
 
