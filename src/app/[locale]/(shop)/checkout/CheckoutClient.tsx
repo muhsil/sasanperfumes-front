@@ -2020,9 +2020,13 @@ export default function CheckoutClient() {
 
                         {/* Payment Method */}
                         <div className="luxury-panel p-4 md:p-6">
-                                        <h2 className="mb-3 font-title text-xl text-brand-primary md:mb-5 md:text-2xl">
-                                          {isRTL ? "طريقة الدفع" : "Payment Method"}
-                                        </h2>
+                                        <div className="mb-3 flex items-center justify-between md:mb-5">
+                                          <h2 className="font-title text-xl text-brand-primary md:text-2xl">
+                                            {isRTL ? "طريقة الدفع" : "Payment Method"}
+                                          </h2>
+                                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                                          <img src="/images/payment-cards.png" alt="Visa & Mastercard" width={80} height={26} className="h-[22px] w-auto" />
+                                        </div>
                           
                           <div className="space-y-3">
                             {isLoadingGateways ? (
