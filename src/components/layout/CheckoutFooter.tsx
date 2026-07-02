@@ -83,6 +83,18 @@ export function CheckoutFooter({ locale, dictionary, siteSettings, pathPrefix = 
             </div>
           )}
 
+          {/* Payment Methods */}
+          <div className="flex items-center justify-center">
+            <Image
+              src="/images/payment-cards.png"
+              alt="Visa & Mastercard accepted"
+              width={120}
+              height={40}
+              style={{ width: "auto", height: "32px" }}
+              loading="lazy"
+            />
+          </div>
+
           <div className="flex w-full flex-col items-center gap-2 md:flex-row md:justify-between">
             <p className="text-center text-xs text-gray-500 md:text-left">
               &copy; {currentYear}{displaySiteName ? ` ${displaySiteName}.` : ""} {dictionary.footer.copyright}

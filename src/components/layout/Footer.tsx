@@ -250,6 +250,14 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
           <p className="text-center text-xs text-brand-ivory/55 md:text-left">
             &copy; {currentYear}{displaySiteName ? ` ${displaySiteName}.` : ""} {copyrightText}
           </p>
+          <Image
+            src="/images/payment-cards.png"
+            alt="Visa & Mastercard accepted"
+            width={120}
+            height={40}
+            style={{ width: "auto", height: "28px" }}
+            loading="lazy"
+          />
           {poweredByText && poweredByName && (
             <p className="text-center text-xs text-brand-ivory/55">
               {poweredByText}{" "}

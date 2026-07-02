@@ -459,8 +459,21 @@ export default function CheckoutClient() {
           verifyFailedPayment();
         }, [searchParams, isRTL]);
 
+// Grace period: allow cart data (including localStorage seed) to resolve
+        // before treating the cart as truly empty. Prevents false redirects when
+        // the backend is slow or the SWR cache hasn't hydrated from localStorage.
+        const [cartInitReady, setCartInitReady] = useState(false);
+        useEffect(() => {
+          if (!isCartLoading && cartItems.length > 0) {
+            setCartInitReady(true);
+            return;
+          }
+          const timer = setTimeout(() => setCartInitReady(true), 2500);
+          return () => clearTimeout(timer);
+        }, [isCartLoading, cartItems.length]);
+
 // Empty cart detection and auto-redirect
-        const isEmptyCart = !isCartLoading && cartItems.length === 0 && parseFloat(cartTotal) === 0;
+        const isEmptyCart = cartInitReady && !isCartLoading && cartItems.length === 0 && parseFloat(cartTotal) === 0;
         
         useEffect(() => {
           if (isEmptyCart) {
@@ -1485,6 +1498,14 @@ export default function CheckoutClient() {
           </div>
         )}
 
+              {/* Cart still initializing (grace period for SWR + localStorage hydration) */}
+              {!cartInitReady && isCartLoading && (
+                <div className="mb-6 flex items-center justify-center py-8">
+                  <div className="h-8 w-8 animate-spin rounded-full border-3 border-brand-border border-t-brand-primary"></div>
+                  <span className="ml-3 text-brand-muted">{isRTL ? "جاري تحميل سلة التسوق..." : "Loading your cart..."}</span>
+                </div>
+              )}
+
               {isLoadingCustomer && (
                 <div className="mb-6 flex items-center justify-center py-4">
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-border border-t-brand-primary"></div>
@@ -1999,9 +2020,13 @@ export default function CheckoutClient() {
 
                         {/* Payment Method */}
                         <div className="luxury-panel p-4 md:p-6">
-                                        <h2 className="mb-3 font-title text-xl text-brand-primary md:mb-5 md:text-2xl">
-                                          {isRTL ? "طريقة الدفع" : "Payment Method"}
-                                        </h2>
+                                        <div className="mb-3 flex items-center justify-between md:mb-5">
+                                          <h2 className="font-title text-xl text-brand-primary md:text-2xl">
+                                            {isRTL ? "طريقة الدفع" : "Payment Method"}
+                                          </h2>
+                                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                                          <img src="/images/payment-cards.png" alt="Visa & Mastercard" width={80} height={26} className="h-[22px] w-auto" />
+                                        </div>
                           
                           <div className="space-y-3">
                             {isLoadingGateways ? (
