@@ -152,6 +152,7 @@ interface CreateOrderRequest {
   payment_method: string;
   payment_method_title: string;
   set_paid: boolean;
+  status?: string;
   currency?: string;
   billing: OrderAddress;
   shipping: OrderAddress;
@@ -387,10 +388,13 @@ export async function POST(request: NextRequest) {
         ? body.payment_method.trim()
         : "stripe";
     
+    const isCod = paymentMethod.toLowerCase() === "cod";
+
     const orderData: CreateOrderRequest = {
       payment_method: paymentMethod,
       payment_method_title: resolvePaymentMethodTitle(paymentMethod, body.payment_method_title),
       set_paid: false,
+      ...(isCod ? { status: "processing" } : {}),
       ...(body.currency ? { currency: body.currency } : {}),
       billing: {
         first_name: body.billing.first_name,
