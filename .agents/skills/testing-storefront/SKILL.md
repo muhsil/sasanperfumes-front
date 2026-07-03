@@ -45,6 +45,57 @@ npm run dev -p 3001
 - XS + Truffle Spot (variation ID: 10347)
 - S + Pearl (variation ID: 10350)
 
+## Testing Payment Gateway Configuration
+
+### Payment Gateway Env Vars (Production)
+The production Hostinger environment has these env vars that control which payment methods are available:
+```
+PAYMENT_GATEWAYS_BLOCKLIST=cod,bacs,cheque,myfatoorah,myfatoorah_v2,myfatoorah_cards,myfatoorah_embedded
+PAYMENT_GATEWAYS_ALLOWLIST=stripe,woocommerce_payments
+PAYMENT_GATEWAYS_FILTER_MODE=env
+COD_ALLOWED_COUNTRIES=AE
+```
+
+**Important**: As of PR #51, the code always removes COD from the blocklist for the intl market regardless of env vars. `COD_ALLOWED_COUNTRIES` is the sole controller for which countries see COD.
+
+### Testing COD Payment Gateway Logic
+When CMS is unreachable (common from Devin VM), test the payment gateway filtering logic directly:
+
+```bash
+cd /home/ubuntu/repos/sasanperfumes-front
+PAYMENT_GATEWAYS_BLOCKLIST="cod,bacs,cheque,myfatoorah,myfatoorah_v2,myfatoorah_cards,myfatoorah_embedded" \
+PAYMENT_GATEWAYS_ALLOWLIST="stripe,woocommerce_payments" \
+PAYMENT_GATEWAYS_FILTER_MODE="env" \
+COD_ALLOWED_COUNTRIES="AE" \
+npx tsx -e "
+import { getPaymentGatewayFilters, getPaymentMethodCountryAvailability } from './src/config/payment';
+const filters = getPaymentGatewayFilters('intl');
+console.log('Allowed:', filters.allowed);
+console.log('Blocked:', filters.blocked);
+console.log('COD in allowed:', filters.allowed.includes('cod'));
+console.log('COD NOT in blocked:', !filters.blocked.includes('cod'));
+console.log('Country availability:', JSON.stringify(getPaymentMethodCountryAvailability()));
+"
+```
+
+**Expected**:
+- COD IS in `allowed` array for intl market
+- COD NOT in `blocked` array for intl market
+- Country availability shows `{"cod":{"type":"include","countries":["AE"]}}`
+
+### API Endpoint Testing (Requires CMS)
+The `/api/payment-gateways` route has NO fetch timeout on its WooCommerce API call. If CMS is unreachable, requests will hang indefinitely rather than falling through to the env fallback. Test via:
+```bash
+curl -s --max-time 120 http://localhost:3001/api/payment-gateways | python3 -m json.tool
+```
+If this times out, the CMS is unreachable — fall back to direct logic testing (above).
+
+### Frontend COD Visibility Logic
+The checkout frontend (`CheckoutClient.tsx`) uses `apiCountryAvailability` from the payment-gateways API response:
+- If a payment method has `type: "include"`, it's only shown for countries in the list
+- If a payment method has `type: "exclude"`, it's hidden for countries in the list
+- COD with `{type: "include", countries: ["AE"]}` means only UAE shipping addresses see COD
+
 ## Test Flows
 
 ### 1. Shop Infinite Scroll
@@ -114,13 +165,15 @@ fetch('/api/product-variations?product_id=10345')
 
 **Parent_id lookup** (`cart/page.tsx`): Variable products store variation IDs in the cart, but the `product-categories` API returns data keyed by parent product IDs. The `getParentId()` function extracts `Parent_id` from `item.meta.variation` for the lookup. If this is broken, brand/category will be blank for variable products.
 
-### 6. Checkout Flow & Brand/Category Display
+### 6. Checkout Flow & COD Payment
 - Navigate to `/en/checkout`
 - Verify: line items show variation attributes and **brand/category** (`stiletto/Body`)
 - Verify: "Parent_id" does NOT appear in variation attributes
 - Verify: Loyalty Points section present
 - Verify: Coupon is read-only ("Go back to cart to add a coupon")
-- Verify: Payment methods load
+- Verify: Payment methods load (Stripe + COD for UAE)
+- **COD verification**: Select UAE (AE) as shipping country → "Cash on Delivery" payment option should appear
+- **Non-UAE verification**: Select any other country → COD should NOT appear
 - Verify: Gift wrapping option available
 - Same parent_id lookup as cart (`CheckoutClient.tsx`)
 
@@ -340,7 +393,10 @@ The WC REST API order routes authenticate via query params (`consumer_key`/`cons
 - Admin API requests are more likely to be rate-limited
 
 ## Minor Known Issues
-- Hero text on `/en` homepage shows `&#39;` (HTML entity) — this is backend content from WordPress that may intermittently have HTML entities; the `decodeHtmlEntities` function handles known patterns but new entity formats from the CMS might appear
-- WPML has an unrelated JS error — do not treat as Sasan Perfumes plugin issue
-- Pre-existing React hydration mismatch (#418) on production — console error on page load, not related to any specific PR
-- Review images: Code exists in `ProductReviews.tsx` but no test reviews with images in backend — mark UNTESTED if testing review images
+- Hero slider may show English content on AR pages if backend translations not set
+- `stock_quantity` should be `null` in variation API responses (not copied from `low_stock_remaining`)
+
+## Devin Secrets Needed
+
+- `HOSTINGER_SSH_PASSWORD`: For SSH access to staging server (WP-CLI, deployment)
+- `WP_ADMIN_PASSWORD`: WordPress admin credentials for CMS backend (username: shapehive_admin_9284)
