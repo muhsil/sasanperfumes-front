@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
-import { getPaymentGatewayFilters, getPaymentGatewayOverrides } from "@/config/payment";
+import { getPaymentGatewayFilters, getPaymentGatewayOverrides, getPaymentMethodCountryAvailability } from "@/config/payment";
 import { disableRuntimeCache } from "@/config/site";
 import {
   backendMarketHeaders,
@@ -45,7 +45,10 @@ function gatewaysJson(data: Record<string, unknown>, init?: ResponseInit) {
   );
   headers.set("Pragma", "no-cache");
   headers.set("Vary", "Host, X-Frontend-Host, Referer");
-  return NextResponse.json(data, { ...init, headers });
+  return NextResponse.json(
+    { ...data, country_availability: getPaymentMethodCountryAvailability() },
+    { ...init, headers }
+  );
 }
 
 function getBasicAuthParams(marketCode?: string): string {

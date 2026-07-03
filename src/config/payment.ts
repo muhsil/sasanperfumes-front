@@ -130,6 +130,8 @@ function getPaymentEnvValue(key: string): string | undefined {
     NEXT_PUBLIC_PAYMENT_GATEWAYS_BLOCKLIST_OM: process.env.NEXT_PUBLIC_PAYMENT_GATEWAYS_BLOCKLIST_OM,
     NEXT_PUBLIC_PAYMENT_GATEWAYS_BLOCKLIST_SA: process.env.NEXT_PUBLIC_PAYMENT_GATEWAYS_BLOCKLIST_SA,
     NEXT_PUBLIC_PAYMENT_GATEMENTS_BLOCKLIST: process.env.NEXT_PUBLIC_PAYMENT_GATEMENTS_BLOCKLIST,
+    COD_ALLOWED_COUNTRIES: process.env.COD_ALLOWED_COUNTRIES,
+    NEXT_PUBLIC_COD_ALLOWED_COUNTRIES: process.env.NEXT_PUBLIC_COD_ALLOWED_COUNTRIES,
   };
 
   return directValues[key] || getEnvVar(key);
@@ -210,4 +212,26 @@ export function getPaymentGatewayFilters(marketCode?: string | null): PaymentGat
   }
 
   return { allowed, blocked };
+}
+
+export interface PaymentMethodCountryAvailability {
+  type: "include" | "exclude";
+  countries: string[];
+}
+
+export function getCodAllowedCountries(): string[] {
+  const raw = getEnvValueWithAliases([
+    "COD_ALLOWED_COUNTRIES",
+    "NEXT_PUBLIC_COD_ALLOWED_COUNTRIES",
+  ]);
+  if (raw) {
+    return raw.split(",").map((c) => c.trim().toUpperCase()).filter(Boolean);
+  }
+  return ["AE"];
+}
+
+export function getPaymentMethodCountryAvailability(): Record<string, PaymentMethodCountryAvailability> {
+  return {
+    cod: { type: "include", countries: getCodAllowedCountries() },
+  };
 }

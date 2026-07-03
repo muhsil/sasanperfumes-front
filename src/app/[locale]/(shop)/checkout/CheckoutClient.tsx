@@ -73,6 +73,11 @@ interface ShippingPackage {
   shipping_rates: ShippingRate[];
 }
 
+interface PaymentMethodCountryAvailability {
+  type: "include" | "exclude";
+  countries: string[];
+}
+
 interface PaymentGateway {
   id: string;
   title: string;
@@ -90,7 +95,7 @@ const CURRENCY_TO_COUNTRY: Record<string, string> = {
   USD: "US",
 };
 
-const PAYMENT_METHOD_COUNTRY_AVAILABILITY: Record<string, { type: "include" | "exclude"; countries: string[] }> = {
+const PAYMENT_METHOD_COUNTRY_AVAILABILITY: Record<string, PaymentMethodCountryAvailability> = {
   tabby_installments: { type: "include", countries: ["AE", "SA", "KW", "BH", "QA"] },
   tabby_checkout: { type: "include", countries: ["AE", "SA", "KW", "BH", "QA"] },
   tabby: { type: "include", countries: ["AE", "SA", "KW", "BH", "QA"] },
@@ -113,8 +118,12 @@ const isWooPaymentsMethod = (paymentMethod: string): boolean => {
   );
 };
 
-const isPaymentMethodAvailableForCountry = (methodId: string, countryCode: string): boolean => {
-  const availability = PAYMENT_METHOD_COUNTRY_AVAILABILITY[methodId];
+function isPaymentMethodAvailableForCountry(
+  methodId: string,
+  countryCode: string,
+  apiAvailability?: Record<string, PaymentMethodCountryAvailability>
+): boolean {
+  const availability = apiAvailability?.[methodId] ?? PAYMENT_METHOD_COUNTRY_AVAILABILITY[methodId];
   if (!availability) {
     return true;
   }
@@ -122,7 +131,7 @@ const isPaymentMethodAvailableForCountry = (methodId: string, countryCode: strin
     return availability.countries.includes(countryCode);
   }
   return !availability.countries.includes(countryCode);
-};
+}
 
 interface AddressFormData {
   firstName: string;
@@ -202,6 +211,7 @@ export default function CheckoutClient() {
   
             const [giftWrap, setGiftWrap] = useState(false);
         const [paymentGateways, setPaymentGateways] = useState<PaymentGateway[]>([]);
+        const [apiCountryAvailability, setApiCountryAvailability] = useState<Record<string, PaymentMethodCountryAvailability>>({});
         const [isLoadingGateways, setIsLoadingGateways] = useState(true);
         const [shippingPackages, setShippingPackages] = useState<ShippingPackage[]>([]);
         const [isLoadingShipping, setIsLoadingShipping] = useState(false);
@@ -354,6 +364,9 @@ export default function CheckoutClient() {
               const data = await response.json();
               if (data.success && data.gateways) {
                 setPaymentGateways(data.gateways);
+                if (data.country_availability) {
+                  setApiCountryAvailability(data.country_availability);
+                }
               }
             } catch (err) {
               console.error("Failed to fetch payment gateways:", err);
@@ -399,12 +412,12 @@ export default function CheckoutClient() {
         }, [currency]);
 
         const filteredPaymentGateways = paymentGateways.filter((gateway) =>
-          isPaymentMethodAvailableForCountry(gateway.id, formData.shipping.country)
+          isPaymentMethodAvailableForCountry(gateway.id, formData.shipping.country, apiCountryAvailability)
         );
 
         useEffect(() => {
           const available = paymentGateways.filter((gateway) =>
-            isPaymentMethodAvailableForCountry(gateway.id, formData.shipping.country)
+            isPaymentMethodAvailableForCountry(gateway.id, formData.shipping.country, apiCountryAvailability)
           );
           if (available.length > 0) {
             const currentMethodAvailable = available.some(
@@ -417,7 +430,7 @@ export default function CheckoutClient() {
               }));
             }
           }
-        }, [paymentGateways, formData.shipping.country, formData.paymentMethod]);
+        }, [paymentGateways, formData.shipping.country, formData.paymentMethod, apiCountryAvailability]);
 
         // Check for payment error from redirect (Tabby, Tamara)
         useEffect(() => {
@@ -505,7 +518,7 @@ export default function CheckoutClient() {
           }, 1000);
 
           return () => clearInterval(timer);
-        }, [emptyCartCountdown, router, locale]);
+        }, [emptyCartCountdown, router, locale, marketPrefix]);
 
         const discountedCartSubtotal = Math.max((parseFloat(cartSubtotal) || 0) - couponDiscount - promotionalDiscountTotal, 0);
 
