@@ -317,6 +317,23 @@ xdotool key ctrl+shift+r
 
 **Do NOT** assume the fix is wrong just because the browser shows old errors. Always verify: (1) source code has the fix, (2) compiled chunk on disk has the fix, (3) the server serves the fixed chunk (curl the chunk URL).
 
+## Order Submission Auth Testing
+
+The WC REST API order routes authenticate via query params (`consumer_key`/`consumer_secret` in URL). Previously, an `Authorization: Basic` header was also sent, which conflicted with WordPress Application Passwords on market subsites — causing "unknown username" errors.
+
+**What to verify after auth changes:**
+1. `getBasicAuthHeader` function and all `Authorization: Basic` headers are removed from order/Stripe routes
+2. `getBasicAuthParams` (query param auth) is still present in all route URLs
+3. Guest checkout with a registered email (e.g. `muhsilv@gmail.com`) should resolve the existing customer ID via `/wc/v3/customers?email=...` instead of using `customer_id: 0`
+4. If customer lookup fails, it falls back to `customer_id: 0` (true guest)
+
+**Testing limitation:** Order submission requires live CMS. When CMS is unreachable, verify code-level changes and confirm the API returns `network_error` (not `invalid_username` or `unknown username`). Full end-to-end order submission testing must happen on production.
+
+**Key files:**
+- `src/app/api/orders/route.ts` — POST (create) and PUT (update) handlers
+- `src/app/api/stripe/create-checkout-session/route.ts` — Stripe session creation + order update
+- `src/app/api/stripe/verify-session/route.ts` — Stripe payment verification + order status update
+
 ## Rate Limiting
 - Staging backend might return HTTP 429
 - Wait 30-60 seconds between rapid API requests

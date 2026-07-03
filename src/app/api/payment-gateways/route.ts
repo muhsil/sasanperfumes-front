@@ -258,13 +258,39 @@ function logGatewayFetchWarning(stage: string, error: unknown) {
   );
 }
 
+function addCodFallbackGateway(
+  gateways: PaymentGatewayResponseItem[],
+  gatewayFilters: ReturnType<typeof getPaymentGatewayFilters>
+): PaymentGatewayResponseItem[] {
+  const allowedSet = new Set(gatewayFilters.allowed.map((id: string) => id.toLowerCase()));
+  const blockedSet = new Set(gatewayFilters.blocked.map((id: string) => id.toLowerCase()));
+
+  if (!allowedSet.has("cod") || blockedSet.has("cod")) return gateways;
+  if (gateways.some((g) => g.id.toLowerCase() === "cod")) return gateways;
+
+  return [
+    ...gateways,
+    {
+      id: "cod",
+      title: "Cash on Delivery",
+      description: "Pay with cash when your order is delivered",
+      method_title: "Cash on Delivery",
+      order: gateways.length + 1,
+      enabled: true,
+    },
+  ];
+}
+
 function getConfiguredFallbackGateways(
   gatewayOverrides: ReturnType<typeof getPaymentGatewayOverrides>,
   gatewayFilters: ReturnType<typeof getPaymentGatewayFilters>
 ): PaymentGatewayResponseItem[] {
-  return addStripeFallbackGateway(
-    applyPaymentGatewayFilters(
-      mergeGatewayOverrides([], gatewayOverrides),
+  return addCodFallbackGateway(
+    addStripeFallbackGateway(
+      applyPaymentGatewayFilters(
+        mergeGatewayOverrides([], gatewayOverrides),
+        gatewayFilters
+      ),
       gatewayFilters
     ),
     gatewayFilters

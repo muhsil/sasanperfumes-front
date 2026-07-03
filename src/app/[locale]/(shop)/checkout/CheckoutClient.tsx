@@ -398,26 +398,26 @@ export default function CheckoutClient() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [currency]);
 
-        const filteredPaymentGateways = useMemo(() => {
-          const selectedCountry = formData.shipping.country;
-          return paymentGateways.filter((gateway) =>
-            isPaymentMethodAvailableForCountry(gateway.id, selectedCountry)
-          );
-        }, [paymentGateways, formData.shipping.country]);
+        const filteredPaymentGateways = paymentGateways.filter((gateway) =>
+          isPaymentMethodAvailableForCountry(gateway.id, formData.shipping.country)
+        );
 
         useEffect(() => {
-          if (filteredPaymentGateways.length > 0) {
-            const currentMethodAvailable = filteredPaymentGateways.some(
+          const available = paymentGateways.filter((gateway) =>
+            isPaymentMethodAvailableForCountry(gateway.id, formData.shipping.country)
+          );
+          if (available.length > 0) {
+            const currentMethodAvailable = available.some(
               (gateway) => gateway.id === formData.paymentMethod
             );
             if (!currentMethodAvailable) {
               setFormData((prev) => ({
                 ...prev,
-                paymentMethod: filteredPaymentGateways[0].id,
+                paymentMethod: available[0].id,
               }));
             }
           }
-        }, [filteredPaymentGateways, formData.paymentMethod]);
+        }, [paymentGateways, formData.shipping.country, formData.paymentMethod]);
 
         // Check for payment error from redirect (Tabby, Tamara)
         useEffect(() => {
