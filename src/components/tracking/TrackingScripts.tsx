@@ -3,6 +3,7 @@
 import { FacebookPixel } from "./FacebookPixel";
 import { GoogleAnalytics } from "./GoogleAnalytics";
 import { GoogleTagManager } from "./GoogleTagManager";
+import { MicrosoftClarity } from "./MicrosoftClarity";
 import { OmnisendTracking } from "./OmnisendTracking";
 import { SnapchatPixel } from "./SnapchatPixel";
 import { TikTokPixel } from "./TikTokPixel";
@@ -15,6 +16,7 @@ interface TrackingScriptsProps {
   snapPixelId?: string;
   omnisendBrandId?: string;
   gtmId?: string;
+  clarityId?: string;
 }
 
 export function TrackingScripts({
@@ -25,6 +27,7 @@ export function TrackingScripts({
   snapPixelId,
   omnisendBrandId,
   gtmId,
+  clarityId,
 }: TrackingScriptsProps){
   return (
     <>
@@ -34,6 +37,7 @@ export function TrackingScripts({
       <TikTokPixel pixelId={tiktokPixelId || ""} />
       <SnapchatPixel pixelId={snapPixelId || ""} />
       <OmnisendTracking brandId={omnisendBrandId || ""} />
+      <MicrosoftClarity projectId={clarityId || ""} />
     </>
   );
 }

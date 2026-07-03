@@ -5,4 +5,5 @@ export { TikTokPixel } from "./TikTokPixel";
 export { SnapchatPixel } from "./SnapchatPixel";
 export { OmnisendTracking } from "./OmnisendTracking";
 export { GoogleTagManager } from "./GoogleTagManager";
+export { MicrosoftClarity } from "./MicrosoftClarity";
 export { CustomerTracker } from "./CustomerTracker";
