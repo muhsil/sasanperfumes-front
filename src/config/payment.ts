@@ -151,6 +151,11 @@ function shouldApplyEnvGatewayFilters(marketCode?: string | null): boolean {
   return true;
 }
 
+function isInternationalMarket(marketCode?: string | null): boolean {
+  const code = (marketCode || "").toLowerCase();
+  return !code || code === "intl";
+}
+
 export function getPaymentGatewayFilters(marketCode?: string | null): PaymentGatewayFilters {
   const suffix = getMarketplaceSuffix(marketCode);
 
@@ -177,12 +182,18 @@ export function getPaymentGatewayFilters(marketCode?: string | null): PaymentGat
     "NEXT_PUBLIC_PAYMENT_GATEMENTS_BLOCKLIST",
   ]);
 
+  const intl = isInternationalMarket(marketCode);
+
   return {
     allowed: parseGatewayIdList(allowedRaw).length > 0
       ? parseGatewayIdList(allowedRaw)
-      : ["woocommerce_payments", "stripe"],
+      : intl
+        ? ["woocommerce_payments", "stripe", "cod"]
+        : ["woocommerce_payments", "stripe"],
     blocked: parseGatewayIdList(blockedRaw).length > 0
       ? parseGatewayIdList(blockedRaw)
-      : ["cod", "bacs", "cheque", "myfatoorah", "myfatoorah_v2", "myfatoorah_cards", "myfatoorah_embedded"],
+      : intl
+        ? ["bacs", "cheque", "myfatoorah", "myfatoorah_v2", "myfatoorah_cards", "myfatoorah_embedded"]
+        : ["cod", "bacs", "cheque", "myfatoorah", "myfatoorah_v2", "myfatoorah_cards", "myfatoorah_embedded"],
   };
 }

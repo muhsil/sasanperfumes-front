@@ -96,6 +96,7 @@ const PAYMENT_METHOD_COUNTRY_AVAILABILITY: Record<string, { type: "include" | "e
   tabby: { type: "include", countries: ["AE", "SA", "KW", "BH", "QA"] },
   "tamara-gateway": { type: "include", countries: ["AE", "SA", "BH"] },
   tamara: { type: "include", countries: ["AE", "SA", "BH"] },
+  cod: { type: "include", countries: ["AE"] },
 };
 
 const WOO_PAYMENTS_METHODS = new Set(["woocommerce_payments", "stripe", "card"]);
@@ -2062,6 +2063,7 @@ export default function CheckoutClient() {
                                                                     tabby: { en: "Pay with Tabby", ar: "الدفع مع تابي" },
                                                                     tamara: { en: "Tamara - Buy Now Pay Later", ar: "تمارا - اشترِ الآن وادفع لاحقاً" },
                                                                     "tamara-gateway": { en: "Tamara - Buy Now Pay Later", ar: "تمارا - اشترِ الآن وادفع لاحقاً" },
+                                                                    cod: { en: "Cash on Delivery", ar: "الدفع عند الاستلام" },
                                                                     bacs: { en: "Bank Transfer", ar: "تحويل بنكي" },
                                                                     cheque: { en: "Check Payment", ar: "الدفع بشيك" },
                                                                     paypal: { en: "PayPal", ar: "باي بال" },
@@ -2079,6 +2081,7 @@ export default function CheckoutClient() {
                                                                     tabby: { en: "Split your payment into 4 interest-free installments", ar: "قسّم دفعتك إلى 4 أقساط بدون فوائد" },
                                                                     tamara: { en: "Pay in easy installments with Tamara", ar: "ادفع بأقساط سهلة مع تمارا" },
                                                                     "tamara-gateway": { en: "Pay in easy installments with Tamara", ar: "ادفع بأقساط سهلة مع تمارا" },
+                                                                    cod: { en: "Pay with cash when your order is delivered", ar: "ادفع نقداً عند استلام طلبك" },
                                                                     bacs: { en: "Make payment directly to our bank account", ar: "قم بالدفع مباشرة إلى حسابنا البنكي" },
                                                                     cheque: { en: "Pay with a check", ar: "الدفع بشيك" },
                                                                     paypal: { en: "Pay securely with PayPal", ar: "ادفع بأمان مع باي بال" },
@@ -2123,6 +2126,15 @@ export default function CheckoutClient() {
                                                                       />
                                                                     );
                                                                   }
+                                  if (id === "cod") {
+                                    return (
+                                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100">
+                                        <svg className="h-5 w-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                        </svg>
+                                      </div>
+                                    );
+                                  }
                                   if (id === "paypal") {
                                     return (
                                       <div className="flex h-8 w-12 items-center justify-center rounded bg-[#003087] px-1">
