@@ -206,8 +206,9 @@ export function getPaymentGatewayFilters(marketCode?: string | null): PaymentGat
       ? ["bacs", "cheque", "myfatoorah", "myfatoorah_v2", "myfatoorah_cards", "myfatoorah_embedded"]
       : ["cod", "bacs", "cheque", "myfatoorah", "myfatoorah_v2", "myfatoorah_cards", "myfatoorah_embedded"];
 
-  // Never block COD for intl market unless explicitly added to env blocklist
-  if (intl && envBlocked.length === 0) {
+  // For intl market, COD availability is controlled by COD_ALLOWED_COUNTRIES,
+  // not by the gateway blocklist. Always remove COD from blocked list for intl.
+  if (intl) {
     blocked = blocked.filter((id) => id.toLowerCase() !== "cod");
   }
 
