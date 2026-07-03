@@ -152,6 +152,7 @@ export default async function LocaleLayout({
                 snapPixelId={seoSettings.analytics.snapPixelId}
                 omnisendBrandId={process.env.NEXT_PUBLIC_OMNISEND_BRAND_ID}
                 gtmId={seoSettings.analytics.gtmId}
+                clarityId={process.env.NEXT_PUBLIC_CLARITY_ID}
               />
               <Suspense fallback={null}>
                 <CustomerTracker />
