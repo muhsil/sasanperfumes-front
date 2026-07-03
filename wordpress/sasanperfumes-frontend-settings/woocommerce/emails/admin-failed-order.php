@@ -13,6 +13,7 @@ defined( 'ABSPATH' ) || exit;
 // Frontend app URL for headless setup
 $frontend_url = function_exists( 'sasanperfumes_get_frontend_url' ) ? sasanperfumes_get_frontend_url( 'https://sasanperfumes.com' ) : 'https://sasanperfumes.com';
 $order_url = $frontend_url . '/en/account/orders/' . $order->get_id() . '/';
+$admin_order_url = $order->get_edit_order_url();
 
 /*
  * @hooked WC_Emails::email_header() Output the email header
@@ -30,15 +31,33 @@ do_action( 'woocommerce_email_header', $email_heading, $email ); ?>
 	?>
 </p>
 
+<!-- Manage Order Button -->
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 20px 0;">
+	<tr>
+		<td align="center">
+			<a href="<?php echo esc_url( $admin_order_url ); ?>" style="display: inline-block; background-color: #dc2626; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; padding: 12px 32px; border-radius: 6px; letter-spacing: 0.3px;">
+				<?php esc_html_e( 'Manage this order', 'woocommerce' ); ?>
+			</a>
+		</td>
+	</tr>
+</table>
+
 <hr class="divider" style="border: none; border-top: 1px solid #e0e0e0; margin: 25px 0;">
 
-<p class="username-label" style="font-size: 12px; color: #888888; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 0.5px;"><?php esc_html_e( 'Order number:', 'woocommerce' ); ?></p>
-<p class="username-value" style="font-size: 15px; font-weight: 600; color: #1a1a1a; margin: 0 0 20px 0;">
-	<a href="<?php echo esc_url( $order->get_edit_order_url() ); ?>" class="link" style="color: #1a1a1a; text-decoration: underline; font-weight: 500;">#<?php echo esc_html( $order->get_order_number() ); ?></a>
-</p>
-
-<p class="username-label" style="font-size: 12px; color: #888888; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 0.5px;"><?php esc_html_e( 'Order date:', 'woocommerce' ); ?></p>
-<p class="username-value" style="font-size: 15px; font-weight: 600; color: #1a1a1a; margin: 0 0 20px 0;"><?php echo esc_html( wc_format_datetime( $order->get_date_created() ) ); ?></p>
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 0 0 20px 0;">
+	<tr>
+		<td width="50%" valign="top" style="padding-right: 10px;">
+			<p class="username-label" style="font-size: 12px; color: #888888; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 0.5px;"><?php esc_html_e( 'Order number:', 'woocommerce' ); ?></p>
+			<p class="username-value" style="font-size: 15px; font-weight: 600; color: #1a1a1a; margin: 0;">
+				<a href="<?php echo esc_url( $admin_order_url ); ?>" class="link" style="color: #1a1a1a; text-decoration: underline; font-weight: 500;">#<?php echo esc_html( $order->get_order_number() ); ?></a>
+			</p>
+		</td>
+		<td width="50%" valign="top" style="padding-left: 10px;">
+			<p class="username-label" style="font-size: 12px; color: #888888; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 0.5px;"><?php esc_html_e( 'Order date:', 'woocommerce' ); ?></p>
+			<p class="username-value" style="font-size: 15px; font-weight: 600; color: #1a1a1a; margin: 0;"><?php echo esc_html( wc_format_datetime( $order->get_date_created() ) ); ?></p>
+		</td>
+	</tr>
+</table>
 
 <?php
 
