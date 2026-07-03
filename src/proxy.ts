@@ -8,6 +8,13 @@ const MARKET_PREFIX_SEGMENTS = new Set<string>(["qa", "om", "sa"]);
 const LOCALE_SEGMENTS = new Set<string>(["en", "ar"]);
 const LEGACY_BRAND_CATEGORY_SLUGS = new Set<string>(["flower-scents", "rimal", "serenity", "liwan"]);
 
+const COUNTRY_TO_MARKET: Record<string, string> = {
+  OM: "om",
+  SA: "sa",
+  QA: "qa",
+};
+const GEO_REDIRECT_COOKIE = "sp_geo_redirected";
+
 const BLOCKED_PATHS = [
   "/wp-admin",
   "/wp-login.php",
@@ -243,6 +250,28 @@ export function proxy(request: NextRequest) {
     pathname.includes(".") // files with extensions
   ) {
     return addSecurityHeaders(NextResponse.next());
+  }
+
+  // Geo-redirect: visitors from OM/SA/QA on the intl site → their market URL
+  if (!routeMarket && !pathname.startsWith("/api")) {
+    const country = (
+      request.headers.get("cf-ipcountry") ||
+      request.headers.get("x-vercel-ip-country") ||
+      ""
+    ).toUpperCase();
+    const targetMarket = COUNTRY_TO_MARKET[country];
+    if (targetMarket && !request.cookies.get(GEO_REDIRECT_COOKIE)) {
+      const locale = routeLocale || getLocale(request);
+      const rest = routeLocale ? segments.slice(1) : segments;
+      const redirectPath = `/${targetMarket}/${locale}${rest.length ? `/${rest.join("/")}` : ""}`;
+      const response = addSecurityHeaders(redirectToPath(request, redirectPath, 302));
+      response.cookies.set(GEO_REDIRECT_COOKIE, "1", {
+        maxAge: 60 * 60 * 24, // 24 hours
+        path: "/",
+        sameSite: "lax",
+      });
+      return response;
+    }
   }
 
   if (pathname.startsWith("/api")) {
