@@ -11,8 +11,8 @@ import {
 import { getRequestMarket } from "@/lib/market/server";
 import { isStripeConfigured } from "@/lib/stripe/config";
 
-export const dynamic = "auto";
-export const revalidate = 120;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const GATEWAYS_CACHE_TTL = 180;
 interface CachedGateways {
@@ -260,13 +260,17 @@ function logGatewayFetchWarning(stage: string, error: unknown) {
 
 function addCodFallbackGateway(
   gateways: PaymentGatewayResponseItem[],
-  gatewayFilters: ReturnType<typeof getPaymentGatewayFilters>
+  gatewayFilters: ReturnType<typeof getPaymentGatewayFilters>,
+  marketCode?: string | null
 ): PaymentGatewayResponseItem[] {
-  const allowedSet = new Set(gatewayFilters.allowed.map((id: string) => id.toLowerCase()));
   const blockedSet = new Set(gatewayFilters.blocked.map((id: string) => id.toLowerCase()));
-
-  if (!allowedSet.has("cod") || blockedSet.has("cod")) return gateways;
+  if (blockedSet.has("cod")) return gateways;
   if (gateways.some((g) => g.id.toLowerCase() === "cod")) return gateways;
+
+  const allowedSet = new Set(gatewayFilters.allowed.map((id: string) => id.toLowerCase()));
+  const isIntl = !marketCode || marketCode.toLowerCase() === "intl";
+
+  if (!isIntl && !allowedSet.has("cod")) return gateways;
 
   return [
     ...gateways,
@@ -283,7 +287,8 @@ function addCodFallbackGateway(
 
 function getConfiguredFallbackGateways(
   gatewayOverrides: ReturnType<typeof getPaymentGatewayOverrides>,
-  gatewayFilters: ReturnType<typeof getPaymentGatewayFilters>
+  gatewayFilters: ReturnType<typeof getPaymentGatewayFilters>,
+  marketCode?: string | null
 ): PaymentGatewayResponseItem[] {
   return addCodFallbackGateway(
     addStripeFallbackGateway(
@@ -293,7 +298,8 @@ function getConfiguredFallbackGateways(
       ),
       gatewayFilters
     ),
-    gatewayFilters
+    gatewayFilters,
+    marketCode
   );
 }
 
@@ -374,7 +380,8 @@ export async function GET(request: NextRequest) {
               ),
               gatewayFilters
             ),
-            gatewayFilters
+            gatewayFilters,
+            market.code
           );
 
           const responseData = {
@@ -406,7 +413,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (!storeResponse?.ok) {
-      const envFallbackGateways = getConfiguredFallbackGateways(gatewayOverrides, gatewayFilters);
+      const envFallbackGateways = getConfiguredFallbackGateways(gatewayOverrides, gatewayFilters, market.code);
 
       if (envFallbackGateways.length > 0) {
         const fallbackData = {
@@ -442,30 +449,34 @@ export async function GET(request: NextRequest) {
     
     const fallbackPaymentMethodIds = Array.from(new Set([...paymentMethodIds, "cod"]));
 
-    const gateways = addStripeFallbackGateway(
-      applyPaymentGatewayFilters(
-        mergeGatewayOverrides(
-          fallbackPaymentMethodIds
-            .filter((id: string) => !excludedFromFallback.includes(id))
-            .map((id: string, index: number) => {
-              const details = PAYMENT_METHOD_DETAILS[id] || {
-                title: id.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
-                description: "",
-              };
-              return {
-                id,
-                title: details.title,
-                description: details.description,
-                method_title: details.title,
-                order: index,
-                enabled: true, // Assumed enabled since it's in the cart response
-              };
-            }),
-          gatewayOverrides
+    const gateways = addCodFallbackGateway(
+      addStripeFallbackGateway(
+        applyPaymentGatewayFilters(
+          mergeGatewayOverrides(
+            fallbackPaymentMethodIds
+              .filter((id: string) => !excludedFromFallback.includes(id))
+              .map((id: string, index: number) => {
+                const details = PAYMENT_METHOD_DETAILS[id] || {
+                  title: id.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+                  description: "",
+                };
+                return {
+                  id,
+                  title: details.title,
+                  description: details.description,
+                  method_title: details.title,
+                  order: index,
+                  enabled: true, // Assumed enabled since it's in the cart response
+                };
+              }),
+            gatewayOverrides
+          ),
+          gatewayFilters
         ),
         gatewayFilters
       ),
-      gatewayFilters
+      gatewayFilters,
+      market.code
     );
 
     const fallbackData = { 
@@ -485,7 +496,8 @@ export async function GET(request: NextRequest) {
       const fallbackMarket = request.nextUrl.searchParams.get("market");
       fallbackGateways = getConfiguredFallbackGateways(
         getPaymentGatewayOverrides(),
-        getPaymentGatewayFilters(fallbackMarket)
+        getPaymentGatewayFilters(fallbackMarket),
+        fallbackMarket
       );
     } catch (fallbackError) {
       logGatewayFetchWarning("Payment gateway fallback resolution", fallbackError);

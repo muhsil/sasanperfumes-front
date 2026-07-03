@@ -184,16 +184,30 @@ export function getPaymentGatewayFilters(marketCode?: string | null): PaymentGat
 
   const intl = isInternationalMarket(marketCode);
 
-  return {
-    allowed: parseGatewayIdList(allowedRaw).length > 0
-      ? parseGatewayIdList(allowedRaw)
-      : intl
-        ? ["woocommerce_payments", "stripe", "cod"]
-        : ["woocommerce_payments", "stripe"],
-    blocked: parseGatewayIdList(blockedRaw).length > 0
-      ? parseGatewayIdList(blockedRaw)
-      : intl
-        ? ["bacs", "cheque", "myfatoorah", "myfatoorah_v2", "myfatoorah_cards", "myfatoorah_embedded"]
-        : ["cod", "bacs", "cheque", "myfatoorah", "myfatoorah_v2", "myfatoorah_cards", "myfatoorah_embedded"],
-  };
+  const envAllowed = parseGatewayIdList(allowedRaw);
+  let allowed = envAllowed.length > 0
+    ? envAllowed
+    : intl
+      ? ["woocommerce_payments", "stripe", "cod"]
+      : ["woocommerce_payments", "stripe"];
+
+  // COD must always be in the allowed list for intl market (UAE only)
+  // even when env vars override the default allowlist
+  if (intl && !allowed.some((id) => id.toLowerCase() === "cod")) {
+    allowed = [...allowed, "cod"];
+  }
+
+  const envBlocked = parseGatewayIdList(blockedRaw);
+  let blocked = envBlocked.length > 0
+    ? envBlocked
+    : intl
+      ? ["bacs", "cheque", "myfatoorah", "myfatoorah_v2", "myfatoorah_cards", "myfatoorah_embedded"]
+      : ["cod", "bacs", "cheque", "myfatoorah", "myfatoorah_v2", "myfatoorah_cards", "myfatoorah_embedded"];
+
+  // Never block COD for intl market unless explicitly added to env blocklist
+  if (intl && envBlocked.length === 0) {
+    blocked = blocked.filter((id) => id.toLowerCase() !== "cod");
+  }
+
+  return { allowed, blocked };
 }
