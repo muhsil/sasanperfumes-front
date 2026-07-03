@@ -698,3 +698,17 @@ require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-private
 
 // WhatsApp Floating Button: CMS-managed number, message, toggles
 require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-whatsapp.php';
+
+// COD orders: auto-set status to "processing" instead of "pending"
+add_action('woocommerce_thankyou_cod', function ($order_id) {
+    $order = wc_get_order($order_id);
+    if ($order && $order->get_status() === 'pending') {
+        $order->update_status('processing', __('COD order auto-set to Processing.', 'woocommerce'));
+    }
+});
+add_action('woocommerce_checkout_order_created', function ($order) {
+    if ($order->get_payment_method() === 'cod' && $order->get_status() === 'pending') {
+        $order->set_status('processing');
+        $order->save();
+    }
+});
