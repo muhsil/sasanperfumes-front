@@ -366,9 +366,12 @@ export async function GET(request: NextRequest) {
               };
             });
 
-          const mergedGateways = addStripeFallbackGateway(
-            applyPaymentGatewayFilters(
-              mergeGatewayOverrides(enabledGateways, gatewayOverrides),
+          const mergedGateways = addCodFallbackGateway(
+            addStripeFallbackGateway(
+              applyPaymentGatewayFilters(
+                mergeGatewayOverrides(enabledGateways, gatewayOverrides),
+                gatewayFilters
+              ),
               gatewayFilters
             ),
             gatewayFilters
