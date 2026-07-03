@@ -1,6 +1,6 @@
 "use client";
 
-import { Package, Truck, CheckCircle, Clock, XCircle, RefreshCw, CreditCard } from "lucide-react";
+import { Package, Truck, CheckCircle, Clock, XCircle, CreditCard } from "lucide-react";
 import type { Locale } from "@/config/site";
 
 interface OrderNote { id: number; note: string; date_created: string; customer_note: boolean; }
@@ -15,7 +15,7 @@ interface OrderTimelineProps {
 const STATUS_STEPS = [
   { key: "pending",    icon: Clock,        color: "text-yellow-500", bg: "bg-yellow-50",  label_en: "Order Placed",    label_ar: "تم الطلب" },
   { key: "processing", icon: CreditCard,   color: "text-blue-500",   bg: "bg-blue-50",    label_en: "Payment Confirmed", label_ar: "تأكيد الدفع" },
-  { key: "on-hold",   icon: RefreshCw,    color: "text-brand-gold-500", bg: "bg-brand-gold-50",  label_en: "On Hold",         label_ar: "معلق" },
+  { key: "on-hold",   icon: Truck,        color: "text-indigo-500",     bg: "bg-indigo-50",     label_en: "Shipped",         label_ar: "تم الشحن" },
   { key: "preparing", icon: Package,       color: "text-purple-500", bg: "bg-purple-50",  label_en: "Preparing",       label_ar: "قيد التحضير" },
   { key: "shipped",   icon: Truck,         color: "text-indigo-500", bg: "bg-indigo-50",  label_en: "Shipped",         label_ar: "تم الشحن" },
   { key: "completed", icon: CheckCircle,  color: "text-green-500",  bg: "bg-green-50",   label_en: "Delivered",       label_ar: "تم التسليم" },
@@ -24,7 +24,7 @@ const STATUS_STEPS = [
 const FLOW: Record<string, string[]> = {
   "pending":    ["pending"],
   "processing": ["pending", "processing"],
-  "on-hold":    ["pending", "on-hold"],
+  "on-hold":    ["pending", "processing", "on-hold"],
   "preparing":  ["pending", "processing", "preparing"],
   "shipped":    ["pending", "processing", "preparing", "shipped"],
   "completed":  ["pending", "processing", "preparing", "shipped", "completed"],

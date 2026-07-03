@@ -111,7 +111,7 @@ function getStatusStep(status: string): number {
   const statusMap: Record<string, number> = {
     pending: 0,
     processing: 1,
-    "on-hold": 1,
+    "on-hold": 2,
     shipped: 2,
     completed: 3,
     delivered: 3,
