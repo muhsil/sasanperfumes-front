@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { generateMarketSitemap } from "../sitemap";
 import { buildSitemapXml } from "@/lib/utils/sitemap-xml";
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-static";
+export const revalidate = 3600;
 
 export async function GET() {
   const entries = await generateMarketSitemap("sa", "SAR");
