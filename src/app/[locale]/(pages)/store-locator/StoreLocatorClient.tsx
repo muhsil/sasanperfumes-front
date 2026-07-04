@@ -104,15 +104,16 @@ interface StoreLocatorClientProps {
   locale: string;
   stores: Store[];
   content: CMSContent;
+  breadcrumbLabel: string;
 }
 
-export default function StoreLocatorClient({ dict, locale, stores: storeList, content: cms }: StoreLocatorClientProps) {
+export default function StoreLocatorClient({ dict, locale, stores: storeList, content: cms, breadcrumbLabel }: StoreLocatorClientProps) {
   const marketPrefix = useMarketPrefix();
   const isRTL = locale === "ar";
   const countries = buildCountries(storeList);
 
   const breadcrumbItems = [
-    { name: cms.heroSubtitle || dict.heroSubtitle, href: `${marketPrefix}/${locale}/store-listing` },
+    { name: breadcrumbLabel, href: `${marketPrefix}/${locale}/store-listing` },
   ];
 
   const content = {
