@@ -14,12 +14,12 @@ export function GoogleAnalytics({ gaId, googleAdsId }: GoogleAnalyticsProps) {
     <>
       <Script
         src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-        strategy="lazyOnload"
+        strategy="afterInteractive"
       />
-      <Script id="google-analytics" strategy="lazyOnload">
+      <Script id="google-analytics" strategy="afterInteractive">
         {`
           window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
+          window.gtag = function gtag(){window.dataLayer.push(arguments);}
           gtag('consent', 'default', {
             'ad_personalization': 'denied',
             'ad_storage': 'denied',

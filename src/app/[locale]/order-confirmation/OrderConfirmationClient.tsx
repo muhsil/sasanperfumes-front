@@ -8,6 +8,7 @@ import { OrderPrice, OrderCurrencyBadge } from "@/components/common/OrderPrice";
 import { useCart } from "@/contexts/CartContext";
 import { OrderBundleItemsList, isOrderBundleProduct, isOrderFreeGift } from "@/components/cart/OrderBundleItemsList";
 import { fbTrackPurchase } from "@/lib/utils/fbpixel";
+import { trackAnalyticsEvent } from "@/lib/utils/analytics";
 import type { OrderLineItem } from "@/lib/api/customer";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { normalizeFrontendPaymentUrl } from "@/lib/utils/payment";
@@ -455,9 +456,37 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
         }
         if (!purchaseTrackedRef.current && fetchedOrder && isSuccessOrder) {
           purchaseTrackedRef.current = true;
+          const orderTotal = Number.parseFloat(fetchedOrder.total || "0") || 0;
+          const orderTax = Number.parseFloat(fetchedOrder.total_tax || "0") || 0;
+          const orderShipping = Number.parseFloat(fetchedOrder.shipping_total || "0") || 0;
+          const orderDiscount = Number.parseFloat(fetchedOrder.discount_total || "0") || 0;
+          const orderMarket = marketPrefix.replace(/^\//, "") || "ae";
+
+          trackAnalyticsEvent("purchase", {
+            transaction_id: String(fetchedOrder.id),
+            affiliation: "Sasan Perfumes",
+            value: orderTotal,
+            tax: orderTax,
+            shipping: orderShipping,
+            discount: orderDiscount,
+            currency: fetchedOrder.currency || "AED",
+            market: orderMarket,
+            payment_method: paymentMethod || undefined,
+            items: fetchedOrder.line_items.map((item) => {
+              const quantity = Number(item.quantity) || 1;
+              const itemTotal = Number.parseFloat(String(item.total || "0")) || 0;
+
+              return {
+                item_id: String(item.product_id || item.id),
+                item_name: decodeHtmlEntities(item.name || ""),
+                price: itemTotal / quantity,
+                quantity,
+              };
+            }),
+          });
           fbTrackPurchase({
             contentIds: fetchedOrder.line_items.map((item) => String(item.product_id)),
-            value: parseFloat(fetchedOrder.total),
+            value: orderTotal,
             currency: fetchedOrder.currency || "AED",
             numItems: fetchedOrder.line_items.reduce((sum, item) => sum + item.quantity, 0),
           });
