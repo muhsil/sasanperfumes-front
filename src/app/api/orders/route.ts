@@ -147,6 +147,8 @@ interface ShippingLine {
   method_id: string;
   method_title: string;
   total: string;
+  total_tax?: string;
+  taxes?: Array<{ id?: number; total: string }>;
 }
 
 interface CreateOrderRequest {
@@ -220,12 +222,11 @@ function normalizeLineItemsForInclusiveVat(lineItems: OrderLineItem[], vatRate: 
   });
 }
 
-function normalizeShippingLinesForInclusiveVat(shippingLines: ShippingLine[], vatRate: number): ShippingLine[] {
-  if (vatRate <= 0) return shippingLines;
-
+function normalizeShippingLinesForNoTax(shippingLines: ShippingLine[]): ShippingLine[] {
   return shippingLines.map((shippingLine) => ({
     ...shippingLine,
-    total: getTaxExclusiveAmount(shippingLine.total, vatRate) || shippingLine.total,
+    total_tax: "0.00",
+    taxes: [],
   }));
 }
 
@@ -500,7 +501,7 @@ export async function POST(request: NextRequest) {
     };
 
     if (Array.isArray(body.shipping_lines) && body.shipping_lines.length > 0) {
-      orderData.shipping_lines = normalizeShippingLinesForInclusiveVat(body.shipping_lines, inclusiveVatRate);
+      orderData.shipping_lines = normalizeShippingLinesForNoTax(body.shipping_lines);
     }
 
     if (Array.isArray(body.coupon_lines) && body.coupon_lines.length > 0) {
