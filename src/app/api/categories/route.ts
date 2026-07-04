@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { disableRuntimeCache } from "@/config/site";
+import { isLegacyBrandCategory } from "@/config/categoryVisibility";
 import { API_BASE, backendHeaders, extractMarketCode, noCacheUrl, safeJsonResponse, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
 import type { Locale } from "@/config/site";
 
@@ -32,7 +33,11 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await safeJsonResponse(response);
-    return NextResponse.json(Array.isArray(data) ? data : [], {
+    const categories = Array.isArray(data)
+      ? data.filter((category) => !isLegacyBrandCategory(category))
+      : [];
+
+    return NextResponse.json(categories, {
       headers: {
         "Cache-Control": disableRuntimeCache ? "no-store, max-age=0" : "public, s-maxage=600, stale-while-revalidate=1200",
       },

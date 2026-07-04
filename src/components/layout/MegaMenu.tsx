@@ -7,6 +7,7 @@ import type { Locale } from "@/config/site";
 import { cn, decodeHtmlEntities } from "@/lib/utils";
 import { CategoriesGridSkeleton } from "@/components/common/Skeleton";
 import { getMegaMenuCategories, normalizeMenuUrl, translateToArabic } from "@/config/menu";
+import { isLegacyBrandCategory } from "@/config/categoryVisibility";
 import { getMegaMenuData, type MegaMenuColumn, type MegaMenuData, type MegaMenuSettings } from "@/lib/api/wordpress";
 import type { WPMenuItem } from "@/types/wordpress";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
@@ -36,7 +37,11 @@ function extractSlugFromUrl(value: string): string {
 function shouldHideCategory(title: string, slug: string): boolean {
   const cleanTitle = decodeHtmlEntities(title).trim().toLowerCase();
   const cleanSlug = slug.trim().toLowerCase();
-  return hiddenCategorySlugs.has(cleanSlug) || hiddenCategoryTitles.has(cleanTitle);
+  return (
+    hiddenCategorySlugs.has(cleanSlug) ||
+    hiddenCategoryTitles.has(cleanTitle) ||
+    isLegacyBrandCategory({ name: title, slug })
+  );
 }
 
 function displayCategoryName(title: string, locale: Locale): string {
@@ -254,6 +259,7 @@ export function MegaMenu({
         return normalizeColumns(
           (cats as Array<{ id: number; name: string; slug: string; parent: number; count: number }>)
             .filter((category) => category.parent === 0 && category.count > 0)
+            .filter((category) => !isLegacyBrandCategory(category))
             .map((category) => ({
               id: category.id,
               name: category.name,

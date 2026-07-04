@@ -15,6 +15,7 @@ import type { WPMenuItem } from "@/types/wordpress";
 import type { BrandItem } from "@/lib/api/wordpress";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { triggerHaptic } from "@/lib/utils/haptics";
+import { isLegacyBrandCategory } from "@/config/categoryVisibility";
 import { translateToArabic } from "@/config/menu";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
@@ -120,12 +121,12 @@ export function CategoriesDrawer({
   // Falls back to parent categories if no menu items are provided
   const allCategories = categories;
   const getChildCategories = (parentId: number) =>
-    allCategories.filter(cat => cat.parent === parentId);
+    allCategories.filter(cat => cat.parent === parentId && !isLegacyBrandCategory(cat));
 
   const displayCategories = (() => {
     if (!menuItems || menuItems.length === 0) {
       // Fallback: show parent categories as before
-      return allCategories.filter(cat => cat.parent === 0);
+      return allCategories.filter(cat => cat.parent === 0 && !isLegacyBrandCategory(cat));
     }
 
     // Use WordPress menu items (excluding "Shop All" type items) to determine order
@@ -140,7 +141,7 @@ export function CategoriesDrawer({
       const slug = extractSlugFromMenuUrl(menuItem.url);
       if (!slug) continue;
       const matched = slugMap.get(slug);
-      if (matched) {
+      if (matched && !isLegacyBrandCategory(matched)) {
         // Use menu item title for display name (supports Arabic via translateToArabic)
         const displayName = locale === "ar"
           ? translateToArabic(menuItem.title)
@@ -149,7 +150,7 @@ export function CategoriesDrawer({
       }
     }
 
-    return ordered.length > 0 ? ordered : allCategories.filter(cat => cat.parent === 0);
+    return ordered.length > 0 ? ordered : allCategories.filter(cat => cat.parent === 0 && !isLegacyBrandCategory(cat));
   })();
 
   const fetchCategoriesData = useCallback(async () => {
@@ -173,7 +174,7 @@ export function CategoriesDrawer({
       fetchPromise[locale] = fetch(`/api/categories?locale=${encodeURIComponent(locale)}`)
         .then((response) => response.ok ? response.json() : [])
         .then((cats: WCCategory[]) => {
-        const filtered = cats.filter((cat) => cat.count > 0);
+        const filtered = cats.filter((cat) => cat.count > 0 && !isLegacyBrandCategory(cat));
         return filtered;
       });
 

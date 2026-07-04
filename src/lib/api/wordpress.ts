@@ -1,6 +1,7 @@
 ﻿import { disableRuntimeCache, siteConfig, type Locale } from "@/config/site";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { translateToArabic } from "@/config/menu";
+import { isLegacyBrandCategory } from "@/config/categoryVisibility";
 import { getActiveDiscountRules } from "@/lib/discountRules";
 import type { DiscountRule } from "@/types/discount";
 import {
@@ -1281,6 +1282,34 @@ function transformMenu(rawMenu: RawWPMenu): WPMenu {
   };
 }
 
+function menuItemCategorySlug(item: WPMenuItem): string {
+  const [path] = item.url.split("?");
+  const normalized = path.replace(/\/$/, "");
+  const match = normalized.match(/\/(?:product-)?category\/([^/]+)$/);
+  if (match?.[1]) return decodeURIComponent(match[1]);
+  return decodeURIComponent(normalized.split("/").filter(Boolean).pop() || "");
+}
+
+function filterLegacyBrandCategoryMenuItems(items: WPMenuItem[]): WPMenuItem[] {
+  const blockedIds = new Set<number>();
+
+  for (const item of items) {
+    const slug = menuItemCategorySlug(item);
+    if (isLegacyBrandCategory({ name: item.title, slug })) {
+      blockedIds.add(item.id);
+    }
+  }
+
+  if (blockedIds.size === 0) return items;
+
+  return items
+    .filter((item) => !blockedIds.has(item.id) && !blockedIds.has(item.parent))
+    .map((item) => ({
+      ...item,
+      children: item.children ? filterLegacyBrandCategoryMenuItems(item.children) : item.children,
+    }));
+}
+
 // Fetch WordPress menu by location
 export async function getMenu(location: string, locale?: Locale, frontendHost?: string): Promise<WPMenu | null> {
   if (location === "primary") {
@@ -1356,7 +1385,10 @@ export async function getCategoriesDrawerMenu(locale?: Locale, frontendHost?: st
   const menu = await getMenuBySlug("categories-drawer", locale, frontendHost);
   if (!menu) return null;
 
-  return menu;
+  return {
+    ...menu,
+    items: filterLegacyBrandCategoryMenuItems(menu.items),
+  };
 }
 
 // Fetch footer menu
