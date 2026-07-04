@@ -88,6 +88,8 @@ export function useCustomerTracking() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const initializedRef = useRef(false);
+  const pageViewInitializedRef = useRef(false);
+  const previousUrlRef = useRef("");
   const exitTrackedRef = useRef(false);
 
   // Initialize tracking on first page load or new session
@@ -132,6 +134,35 @@ export function useCustomerTracking() {
       markSession();
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Track SPA page views for GA4 / GTM on client-side route changes.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const currentUrl = window.location.href;
+    const currentSearch = searchParams.toString();
+    const pagePath = currentSearch ? `${pathname}?${currentSearch}` : pathname;
+    const localeMatch = pathname.match(/^\/(en|ar)\b/);
+    const locale = localeMatch ? localeMatch[1] : "en";
+
+    if (!pageViewInitializedRef.current) {
+      pageViewInitializedRef.current = true;
+      previousUrlRef.current = currentUrl;
+      return;
+    }
+
+    if (previousUrlRef.current === currentUrl) return;
+
+    trackAnalyticsEvent("page_view", {
+      page_title: document.title,
+      page_location: currentUrl,
+      page_path: pagePath,
+      page_referrer: previousUrlRef.current || document.referrer || "",
+      locale,
+    });
+
+    previousUrlRef.current = currentUrl;
+  }, [pathname, searchParams]);
 
   // Track page navigations
   useEffect(() => {
