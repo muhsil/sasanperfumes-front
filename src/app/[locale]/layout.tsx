@@ -19,7 +19,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { getSiteSettings, getHeaderSettings, getPrimaryMenu, getMobileHeaderMenu, getMobileBottomBarMenu, getMobileBarSettings, getCategoriesDrawerMenu, getTopbarSettings, getSeoSettings, getFooterSettings, getWhatsAppSettings, getFeatureToggles, getStaticPageContent, mapRepeater, pickLocale, getDiscountRules } from "@/lib/api/wordpress";
 import { getRequestMarket, getRequestFrontendHost } from "@/lib/market/server";
 import { getMarketPathPrefix } from "@/config/market";
-import { TrackingScripts } from "@/components/tracking";
+import { GoogleTagScripts, TrackingScripts } from "@/components/tracking";
 import { Suspense } from "react";
 
 const CustomerTracker = dynamic(() => import("@/components/tracking/CustomerTracker").then(mod => mod.CustomerTracker));
@@ -144,14 +144,16 @@ export default async function LocaleLayout({
               {generateLocalBusinessJsonLd(market.code).map((schema, i) => (
                 <JsonLd key={`local-business-${i}`} data={schema} />
               ))}
-              <TrackingScripts
+              <GoogleTagScripts
                 gaId={seoSettings.analytics.gaId}
                 googleAdsId={process.env.NEXT_PUBLIC_GOOGLE_ADS_ID}
+                gtmId={seoSettings.analytics.gtmId}
+              />
+              <TrackingScripts
                 fbPixelId={seoSettings.analytics.fbPixelId}
                 tiktokPixelId={seoSettings.analytics.tiktokPixelId}
                 snapPixelId={seoSettings.analytics.snapPixelId}
                 omnisendBrandId={process.env.NEXT_PUBLIC_OMNISEND_BRAND_ID}
-                gtmId={seoSettings.analytics.gtmId}
                 clarityId={process.env.NEXT_PUBLIC_CLARITY_ID}
               />
               <Suspense fallback={null}>
