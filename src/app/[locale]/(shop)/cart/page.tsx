@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
@@ -23,6 +23,7 @@ import { SuggestedProducts } from "@/components/checkout/SuggestedProducts";
 import { CartLoyaltyPoints } from "@/components/cart/CartLoyaltyPoints";
 import type { CoCartItem } from "@/lib/api/cocart";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
+import { trackAnalyticsEvent } from "@/lib/utils/analytics";
 
 
 
@@ -82,6 +83,28 @@ export default function CartPage() {
   
   const divisor = Math.pow(10, currencyMinorUnit);
   const adjustedCartTotal = Math.max((parseFloat(cartTotal) || 0) - promotionalDiscountTotal, 0);
+  const hasTrackedViewCartRef = useRef(false);
+
+  useEffect(() => {
+    if (isInitialCartLoading || cartItems.length === 0 || hasTrackedViewCartRef.current) return;
+
+    const items = cartItems
+      .filter((item) => !isFreeGiftItem(item.item_key))
+      .map((item) => ({
+        item_id: String(getItemLookupId(item)),
+        item_name: decodeHtmlEntities(item.name || item.title || ""),
+        price: parseFloat(item.price || "0") / divisor,
+        quantity: item.quantity?.value || 1,
+        item_variant: item.variation_id ? String(item.variation_id) : undefined,
+      }));
+
+    trackAnalyticsEvent("view_cart", {
+      currency: cart?.currency?.currency_code || "AED",
+      value: adjustedCartTotal / divisor,
+      items,
+    });
+    hasTrackedViewCartRef.current = true;
+  }, [adjustedCartTotal, cart?.currency?.currency_code, cartItems, divisor, getItemLookupId, isInitialCartLoading, isFreeGiftItem]);
 
   const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState("");

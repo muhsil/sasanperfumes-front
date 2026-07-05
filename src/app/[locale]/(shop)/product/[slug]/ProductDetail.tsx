@@ -850,6 +850,15 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
         category: product.categories?.[0]?.name || "",
         value: price,
         currency: product.prices.currency_code || "AED",
+        items: [
+          {
+            item_id: String(product.id),
+            item_name: decodeHtmlEntities(product.name),
+            item_category: product.categories?.[0]?.name || "",
+            price,
+            quantity: 1,
+          },
+        ],
       });
     }
   }, [product.id, product.name, product.prices.price, product.prices.currency_minor_unit, product.prices.currency_code, product.categories]);

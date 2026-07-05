@@ -396,10 +396,11 @@ export function CartProvider({ children, locale }: CartProviderProps) {
               (i: CoCartItem) => i.id === productId || i.variation_id === variationId
             );
             if (!addedItem) return;
-          const currMinorUnit = cartForTracking.currency?.currency_minor_unit ?? 2;
-          const currDivisor = Math.pow(10, currMinorUnit);
-          const cartValue = parseFloat(cartForTracking.totals?.total || "0") / currDivisor;
-          const itemPrice = parseFloat(addedItem.price || "0") / currDivisor;
+            const currMinorUnit = cartForTracking.currency?.currency_minor_unit ?? 2;
+            const currDivisor = Math.pow(10, currMinorUnit);
+            const cartValue = parseFloat(cartForTracking.totals?.total || "0") / currDivisor;
+            const itemPrice = parseFloat(addedItem.price || "0") / currDivisor;
+            const itemQuantity = addedItem.quantity?.value ?? quantity;
 
           // Build line items for all cart items
           const lineItems: OmnisendLineItem[] = cartForTracking.items.map((ci: CoCartItem) => ({
@@ -414,18 +415,27 @@ export function CartProvider({ children, locale }: CartProviderProps) {
           fbTrackAddToCart({
             productId: addedItem.id,
             productName: addedItem.name || addedItem.title || "",
-            value: itemPrice * (addedItem.quantity?.value ?? quantity),
+            value: itemPrice * itemQuantity,
             currency: cartForTracking.currency?.currency_code || "AED",
-            quantity: addedItem.quantity?.value ?? quantity,
+            quantity: itemQuantity,
           });
 
           trackAnalyticsEvent("add_to_cart", {
             product_id: addedItem.id,
             product_name: addedItem.name || addedItem.title || "",
-            quantity: addedItem.quantity?.value ?? quantity,
-            value: itemPrice * (addedItem.quantity?.value ?? quantity),
+            quantity: itemQuantity,
+            value: itemPrice * itemQuantity,
             currency: cartForTracking.currency?.currency_code || "AED",
             variation_id: variationId || null,
+            items: [
+              {
+                item_id: String(addedItem.id),
+                item_name: addedItem.name || addedItem.title || "",
+                price: itemPrice,
+                quantity: itemQuantity,
+                item_variant: variationId ? String(variationId) : undefined,
+              },
+            ],
           });
 
           // 1. Fire JS snippet event (shows in Omnisend Live View)
@@ -548,6 +558,12 @@ export function CartProvider({ children, locale }: CartProviderProps) {
   const removeCartItem = useCallback(
     async (key: string) => {
       setIsOperationLoading(true);
+      const removedItemSnapshot = cart?.items.find((item) => item.item_key === key);
+      const currencyCode = cart?.currency?.currency_code || "AED";
+      const currMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
+      const currDivisor = Math.pow(10, currMinorUnit);
+      const removedItemPrice = parseFloat(removedItemSnapshot?.price || "0") / currDivisor;
+      const removedItemQuantity = removedItemSnapshot?.quantity?.value || 0;
 
       // Optimistically remove the item
       await mutate(
@@ -584,6 +600,22 @@ export function CartProvider({ children, locale }: CartProviderProps) {
         } else {
           await mutate(cacheKey);
         }
+
+        if (removedItemSnapshot) {
+          trackAnalyticsEvent("remove_from_cart", {
+            currency: currencyCode,
+            value: removedItemPrice * removedItemQuantity,
+            items: [
+              {
+                item_id: String(removedItemSnapshot.id),
+                item_name: removedItemSnapshot.name || removedItemSnapshot.title || "",
+                price: removedItemPrice,
+                quantity: removedItemQuantity,
+                item_variant: removedItemSnapshot.variation_id ? String(removedItemSnapshot.variation_id) : undefined,
+              },
+            ],
+          });
+        }
         notify("cart", "Item removed from cart");
       } catch (error) {
         await mutate(cacheKey);
@@ -593,7 +625,7 @@ export function CartProvider({ children, locale }: CartProviderProps) {
         setIsOperationLoading(false);
       }
     },
-    [notify, cacheKey, locale]
+    [notify, cacheKey, locale, cart]
   );
 
   const clearCart = useCallback(async () => {

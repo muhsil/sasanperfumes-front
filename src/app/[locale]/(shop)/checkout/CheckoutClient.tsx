@@ -231,6 +231,8 @@ export default function CheckoutClient() {
         const [showLoginPrompt, setShowLoginPrompt] = useState(false);
         const emailCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
         const beginCheckoutTrackedRef = useRef(false);
+        const shippingInfoTrackedRef = useRef<string | null>(null);
+        const paymentInfoTrackedRef = useRef(false);
 
         const [addressErrors, setAddressErrors] = useState<{ shippingAddress?: string; shippingCity?: string; billingAddress?: string; billingCity?: string }>({});
   
@@ -599,11 +601,26 @@ export default function CheckoutClient() {
             });
             const data = await response.json();
             if (data.success) {
+              const ratesSource = data.shipping_rates || shippingPackages;
+              const allRates = ratesSource.flatMap((pkg: ShippingPackage) => pkg.shipping_rates || []);
+              const selectedRate = allRates.find((rate: ShippingRate) => rate.rate_id === rateId) || allRates.find((rate: ShippingRate) => rate.selected);
+              const shippingInfoKey = `${rateId}:${packageId}`;
+
               if (data.shipping_rates) {
                 setShippingPackages(data.shipping_rates);
               }
               if (data.totals?.shipping_total) {
                 setShippingTotal(data.totals.shipping_total);
+              }
+
+              if (shippingInfoTrackedRef.current !== shippingInfoKey && selectedRate) {
+                trackAnalyticsEvent("add_shipping_info", {
+                  currency: currency || "AED",
+                  value: parseFloat(data.totals?.shipping_total || shippingTotal || "0") / divisor,
+                  shipping_tier: selectedRate.name || rateId,
+                  items: checkoutAnalyticsItems,
+                });
+                shippingInfoTrackedRef.current = shippingInfoKey;
               }
             }
           } catch (err) {
@@ -664,6 +681,18 @@ export default function CheckoutClient() {
         return Math.max(parseFloat(cartTotal) || 0, 0);
       }
     }, [discountedCartSubtotal, shippingTotal, shippingPackages, cartTotal, cartFeeTotal, customsFee, cart?.fees, promotionalDiscountTotal]);
+
+    const checkoutAnalyticsItems = useMemo(() => {
+      return cartItems
+        .filter((item) => !item.item_key.startsWith("temp-"))
+        .map((item) => ({
+          item_id: String(getItemLookupId(item)),
+          item_name: decodeHtmlEntities(item.name || item.title || ""),
+          price: parseFloat(item.price || "0") / divisor,
+          quantity: item.quantity?.value || 1,
+          item_variant: item.variation_id ? String(item.variation_id) : undefined,
+        }));
+    }, [cartItems, divisor, getItemLookupId]);
 
     const breadcrumbItems = [
     { name: isRTL ? "السلة" : "Cart", href: `${marketPrefix}/${locale}/cart` },
@@ -824,6 +853,15 @@ export default function CheckoutClient() {
             currency: cart.currency?.currency_code || "AED",
             item_count: cartItems.length,
             total_quantity: cartItems.reduce((sum: number, ci: CoCartItem) => sum + ci.quantity.value, 0),
+            items: cartItems
+              .filter((ci: CoCartItem) => !ci.item_key.startsWith("temp-"))
+              .map((ci: CoCartItem) => ({
+                item_id: String(getItemLookupId(ci)),
+                item_name: decodeHtmlEntities(ci.name || ci.title || ""),
+                price: parseFloat(ci.price || "0") / currDivisor,
+                quantity: ci.quantity.value,
+                item_variant: ci.variation_id ? String(ci.variation_id) : undefined,
+              })),
           });
 
           beginCheckoutTrackedRef.current = true;
@@ -1212,6 +1250,16 @@ export default function CheckoutClient() {
 
       if (!data.success) {
         throw new Error(sanitizeCheckoutMessage(data.error?.message || "Failed to create order"));
+      }
+
+      if (!paymentInfoTrackedRef.current) {
+        trackAnalyticsEvent("add_payment_info", {
+          currency: currency || "AED",
+          value: checkoutTotal / divisor,
+          payment_type: selectedPaymentGateway?.title || formData.paymentMethod,
+          items: checkoutAnalyticsItems,
+        });
+        paymentInfoTrackedRef.current = true;
       }
 
       if (isAuthenticated && user?.user_id) {
