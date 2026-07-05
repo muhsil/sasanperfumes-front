@@ -23,8 +23,8 @@ interface FeaturedProductsPageProps {
 const defaultSeo = {
   title: { en: "Best Sellers | Top Rated Luxury Perfumes & Oud Fragrances", ar: "الأكثر مبيعاً | أفضل العطور الفاخرة والمميزة" },
   description: {
-    en: "Shop our best-selling luxury perfumes, Arabian oud & aromatic oils from Sasan Perfumes. Handcrafted in the UAE. Free delivery available on eligible orders.",
-    ar: "تسوق أفضل العطور المميزة والأكثر مبيعاً من Sasan Perfumes. عطور فاخرة وعود عربي وزيوت عطرية مصنوعة يدوياً في الإمارات. توصيل مجاني للطلبات فوق 500 درهم.",
+    en: "Shop our best-selling luxury perfumes, Arabian oud & aromatic oils from Sasan Perfumes. Handcrafted in the UAE with fast delivery across our markets.",
+    ar: "تسوق أفضل العطور المميزة والأكثر مبيعاً من Sasan Perfumes. عطور فاخرة وعود عربي وزيوت عطرية مصنوعة يدوياً في الإمارات مع توصيل سريع عبر أسواقنا.",
   },
   keywords: {
     en: ["featured perfumes", "best sellers", "top fragrances", "luxury perfume", "Arabian perfume", "fragrance gifts", "popular Dubai perfume", "best UAE perfume", "top rated oud", "luxury gift sets", "bestselling cologne", "best musk perfume", "best amber perfume", "top Arabian fragrance", "luxury perfume online", "trending perfume", "premium Dubai fragrance", "aromatic bestsellers", "top aromatic perfumes UAE", "most popular aromatic scents", "best aromatic fragrance"],
@@ -43,8 +43,8 @@ export async function generateMetadata({
   const currencyCode = market.defaultCurrency;
   const marketAudience = getMarketSeoAudience(market.code, lang);
   const fallbackDescription = isAr
-    ? `تسوق أفضل العطور المميزة والأكثر مبيعاً من Sasan Perfumes. عطور فاخرة وعود عربي وزيوت عطرية مصنوعة يدوياً في الإمارات. توصيل مجاني للطلبات فوق 500 ${currencyCode}.`
-    : `Shop our best-selling luxury perfumes, Arabian oud & aromatic oils from Sasan Perfumes. Built for ${marketAudience}. Free delivery on orders over 500 ${currencyCode}.`;
+    ? `تسوق أفضل العطور المميزة والأكثر مبيعاً من Sasan Perfumes. عطور فاخرة وعود عربي وزيوت عطرية مصنوعة يدوياً في الإمارات مع توصيل سريع عبر أسواقنا.`
+    : `Shop our best-selling luxury perfumes, Arabian oud & aromatic oils from Sasan Perfumes. Built for ${marketAudience} with fast delivery across our markets.`;
   const wpSeo = await getPageSeo("featured-products", lang);
   return generateSeoMetadata({
     title: wpSeo?.title || (isAr ? defaultSeo.title.ar : defaultSeo.title.en),

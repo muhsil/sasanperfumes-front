@@ -18,8 +18,8 @@ interface ShippingPageProps {
 
 function getDefaultKeywords(currencyCode: string) {
   return {
-    en: ["perfume shipping", "fragrance delivery", "UAE shipping", "Dubai delivery", "GCC shipping", "free delivery", "express delivery", "shipping policy", "Sasan Perfumes", `free shipping 500 ${currencyCode}`, "delivery time", "Saudi Arabia perfume shipping", "Oman perfume delivery", "order tracking"],
-    ar: ["شحن عطور", "توصيل عطور", "شحن الإمارات", "توصيل مجاني", "سياسة الشحن", "شحن دبي", "شحن دول الخليج", "توصيل سريع", "Sasan Perfumes", `شحن مجاني 500 ${currencyCode}`, "مدة التوصيل", "شحن عطور السعودية", "شحن عطور عمان", "تتبع الشحن"],
+    en: ["perfume shipping", "fragrance delivery", "UAE shipping", "Dubai delivery", "GCC shipping", "express delivery", "shipping policy", "Sasan Perfumes", "delivery time", "Saudi Arabia perfume shipping", "Oman perfume delivery", "order tracking"],
+    ar: ["شحن عطور", "توصيل عطور", "شحن الإمارات", "سياسة الشحن", "شحن دبي", "شحن دول الخليج", "توصيل سريع", "Sasan Perfumes", "مدة التوصيل", "شحن عطور السعودية", "شحن عطور عمان", "تتبع الشحن"],
   };
 }
 

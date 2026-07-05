@@ -23,8 +23,8 @@ interface NewProductsPageProps {
 const defaultSeo = {
   title: { en: "New Arrivals | Latest Luxury Perfumes & Oud Fragrances", ar: "منتجات جديدة | أحدث العطور والإصدارات الفاخرة" },
   description: {
-    en: "Discover our newest luxury perfumes, Arabian oud & aromatic oils from Sasan Perfumes. Handcrafted in the UAE. Free delivery available on eligible orders.",
-    ar: "اكتشف أحدث إصداراتنا من العطور الفاخرة والعود العربي والزيوت العطرية من Sasan Perfumes. منتجات يدوية فاخرة من الإمارات. توصيل مجاني للطلبات فوق 500 درهم.",
+    en: "Discover our newest luxury perfumes, Arabian oud & aromatic oils from Sasan Perfumes. Handcrafted in the UAE with fast delivery across our markets.",
+    ar: "اكتشف أحدث إصداراتنا من العطور الفاخرة والعود العربي والزيوت العطرية من Sasan Perfumes. منتجات يدوية فاخرة من الإمارات مع توصيل سريع عبر أسواقنا.",
   },
   keywords: {
     en: ["new perfumes", "latest fragrances", "new arrivals perfume", "premium fragrance", "aromatic products", "UAE perfume", "new oud perfume", "latest Dubai perfume", "new women perfume", "new men cologne", "luxury perfume new arrival", "new musk perfume", "new amber fragrance", "latest Arabian perfume", "new vanilla perfume", "new perfume online", "new home fragrance", "new aromatic perfumes", "latest aromatic scents", "aromatic new arrivals", "new fragrance launch aromatic UAE"],
@@ -43,8 +43,8 @@ export async function generateMetadata({
   const currencyCode = market.defaultCurrency;
   const marketAudience = getMarketSeoAudience(market.code, lang);
   const fallbackDescription = isAr
-    ? `اكتشف أحدث إصداراتنا من العطور الفاخرة والعود العربي والزيوت العطرية من Sasan Perfumes. منتجات يدوية فاخرة من الإمارات. توصيل مجاني للطلبات فوق 500 ${currencyCode}.`
-    : `Discover our newest luxury perfumes, Arabian oud & aromatic oils from Sasan Perfumes. Built for ${marketAudience}. Free delivery on orders over 500 ${currencyCode}.`;
+    ? `اكتشف أحدث إصداراتنا من العطور الفاخرة والعود العربي والزيوت العطرية من Sasan Perfumes. منتجات يدوية فاخرة من الإمارات مع توصيل سريع عبر أسواقنا.`
+    : `Discover our newest luxury perfumes, Arabian oud & aromatic oils from Sasan Perfumes. Built for ${marketAudience} with fast delivery across our markets.`;
   const wpSeo = await getPageSeo("new-products", lang);
   return generateSeoMetadata({
     title: wpSeo?.title || (isAr ? defaultSeo.title.ar : defaultSeo.title.en),

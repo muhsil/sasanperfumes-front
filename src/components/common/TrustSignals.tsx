@@ -23,15 +23,10 @@ export function TrustSignals({
   compact = false,
 }: TrustSignalsProps) {
   const marketPrefix = useMarketPrefix();
-  const { currency, convertPrice } = useCurrency();
   const isRTL = locale === "ar";
   const whatsappUrl = `https://wa.me/${siteConfig.contact.whatsapp}`;
-  const shippingThreshold = freeShippingThreshold ? Math.ceil(convertPrice(freeShippingThreshold)) : null;
-  const shippingLabel = shippingThreshold
-    ? (isRTL
-      ? `توصيل مجاني فوق ${shippingThreshold} ${currency}`
-      : `Free delivery over ${shippingThreshold} ${currency}`)
-    : (isRTL ? "توصيل سريع داخل الإمارات" : "Fast UAE delivery");
+  void freeShippingThreshold;
+  const shippingLabel = isRTL ? "توصيل سريع داخل الإمارات" : "Fast UAE delivery";
 
   const trustItems = [
     {

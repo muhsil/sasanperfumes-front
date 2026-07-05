@@ -621,16 +621,9 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
     const { isAuthenticated } = useAuth();
     const router = useRouter();
     const isRTL = locale === "ar";
-    const currencyInfo = getCurrencyInfo();
-  const convertedShippingThreshold = freeShippingThreshold ? Math.ceil(convertPrice(freeShippingThreshold)) : null;
   const rating = Number(product.average_rating || 0);
   const reviewCount = Number(product.review_count || 0);
   const showReviews = reviewsEnabled && reviewCount > 0;
-  const freeShippingNotice = convertedShippingThreshold
-    ? isRTL
-      ? `مجاني الشحن عند الطلبات فوق ${currencyInfo.symbol}${convertedShippingThreshold}${currencyInfo.code === "AED" ? "" : ` ${currencyInfo.code}`}`
-      : `Free shipping on orders over ${currencyInfo.symbol}${convertedShippingThreshold}`
-    : "";
 
   useEffect(() => {
     setDetailsMounted(true);
@@ -1624,11 +1617,6 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
 
           <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
             <ClothingSizeGuideModal productId={product.id} locale={locale} />
-            {freeShippingNotice && (
-              <p className="text-xs font-medium text-brand-muted">
-                {freeShippingNotice}
-              </p>
-            )}
           </div>
 
           {/* Notes / key info shown under price */}

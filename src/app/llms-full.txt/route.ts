@@ -62,7 +62,7 @@ ${categoriesSection}
 
 ## Key Features
 - Bilingual (English & Arabic)
-- Free delivery available on eligible orders in the UAE
+- Fast delivery across supported markets
 - International shipping available
 - Gift wrapping available
 - Private-label perfume support

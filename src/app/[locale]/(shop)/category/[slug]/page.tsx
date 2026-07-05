@@ -80,8 +80,8 @@ export async function generateMetadata({
   const description =
     categorySeoDescription ||
     (locale === "ar"
-      ? `تسوق ${categoryName} من Sasan Perfumes. ${categoryCount > 0 ? `اكتشف ${categoryCount}+ منتج` : "اكتشف مجموعتنا"} من العطور الفاخرة المصنوعة يدوياً في الإمارات. مخصص لـ ${audience}. توصيل مجاني للطلبات فوق 500 ${market.defaultCurrency}.`
-      : `Shop ${categoryName} at Sasan Perfumes. ${categoryCount > 0 ? `Explore ${categoryCount}+ handcrafted` : "Explore our handcrafted"} luxury products made in the UAE. Built for ${audience}. Free delivery on orders over 500 ${market.defaultCurrency}.`);
+      ? `تسوق ${categoryName} من Sasan Perfumes. ${categoryCount > 0 ? `اكتشف ${categoryCount}+ منتج` : "اكتشف مجموعتنا"} من العطور الفاخرة المصنوعة يدوياً في الإمارات. مخصص لـ ${audience} مع توصيل سريع عبر أسواقنا.`
+      : `Shop ${categoryName} at Sasan Perfumes. ${categoryCount > 0 ? `Explore ${categoryCount}+ handcrafted` : "Explore our handcrafted"} luxury products made in the UAE. Built for ${audience} with fast delivery across our markets.`);
 
   return generateSeoMetadata({
     title: categorySeoTitle || (locale === "ar"

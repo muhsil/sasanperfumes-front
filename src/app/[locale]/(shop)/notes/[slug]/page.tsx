@@ -55,8 +55,8 @@ export async function generateMetadata({
   const description = noteData
     ? (locale === "ar" ? noteData.description.ar : noteData.description.en)
     : locale === "ar"
-      ? `تسوق عطور ${noteName} من Sasan Perfumes. اكتشف مجموعتنا من العطور الفاخرة بنوتة ${noteName}. توصيل مجاني للطلبات فوق 500 ${market.defaultCurrency}.`
-      : `Shop ${noteName} perfumes at Sasan Perfumes. Explore our collection of luxury fragrances featuring ${noteName} notes. Free delivery on orders over 500 ${market.defaultCurrency}.`;
+      ? `تسوق عطور ${noteName} من Sasan Perfumes. اكتشف مجموعتنا من العطور الفاخرة بنوتة ${noteName} مع توصيل سريع عبر أسواقنا.`
+      : `Shop ${noteName} perfumes at Sasan Perfumes. Explore our collection of luxury fragrances featuring ${noteName} notes with fast delivery across our markets.`;
 
   return generateSeoMetadata({
     title,

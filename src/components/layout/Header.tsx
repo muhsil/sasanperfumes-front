@@ -25,6 +25,15 @@ import { MegaMenu } from "@/components/layout/MegaMenu";
 import { getHeaderCategoryLinks, getDynamicNavigationItems, type DynamicNavigationItem } from "@/config/menu";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
+function stripFreeShippingCopy(value: string): string {
+  return value
+    .replace(/\bfree\s+(?:shipping|delivery)\s+on\s+orders?\s+over\s+[^.!?]+[.!?]?/gi, "")
+    .replace(/\b(?:توصيل|شحن)\s+مجاني(?:\s+(?:على|للطلبات))?(?:\s+(?:فوق|أكثر\s+من))?\s+[^.!?]+[.!?]?/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .replace(/^[\s\-–—:.,]+|[\s\-–—:.,]+$/g, "")
+    .trim();
+}
+
 interface HeaderProps {
   locale: Locale;
   dictionary: Dictionary;
@@ -147,9 +156,9 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
     : "";
 
   const topbarAmount = Math.ceil(convertPrice(topbarSettings?.freeShippingThreshold ?? 500));
-  const topbarText = rawTopbarText
+  const topbarText = stripFreeShippingCopy(rawTopbarText
     .replace(/\{\{amount\}\}/g, String(topbarAmount))
-    .replace(/\{\{currency\}\}/g, currency);
+    .replace(/\{\{currency\}\}/g, currency));
   const hideTopbarOnMobile = topbarSettings?.hideOnMobile !== false;
   const topbarVisible = Boolean(topbarText && !topbarDismissed && !isScrolled);
   const mobileDrawerOffsetClass = topbarVisible

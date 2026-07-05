@@ -28,8 +28,8 @@ interface ShopPageProps {
 const defaultSeo = {
   title: { en: "Shop All Premium Perfumes, Oud & Home Fragrances Online", ar: "تسوق العطور الفاخرة والزيوت العطرية أون لاين" },
   description: {
-    en: "Browse our complete collection of luxury perfumes, Arabian oud, aromatic oils, body care & home fragrances. Handcrafted in the UAE. Free shipping available on eligible orders.",
-    ar: "تصفح مجموعتنا الكاملة من العطور الفاخرة والعود العربي والزيوت العطرية ومنتجات العناية بالجسم ومعطرات المنزل. منتجات يدوية فاخرة من الإمارات. شحن مجاني للطلبات فوق 500 درهم.",
+    en: "Browse our complete collection of luxury perfumes, Arabian oud, aromatic oils, body care & home fragrances. Handcrafted in the UAE with fast delivery across our markets.",
+    ar: "تصفح مجموعتنا الكاملة من العطور الفاخرة والعود العربي والزيوت العطرية ومنتجات العناية بالجسم ومعطرات المنزل. منتجات يدوية فاخرة من الإمارات مع توصيل سريع عبر أسواقنا.",
   },
   keywords: {
     en: ["shop perfumes", "buy fragrances online", "aromatic oils", "body care products", "home fragrances", "Arabian perfume", "UAE perfume shop", "luxury perfume online", "oud perfume", "bakhoor incense", "women perfume UAE", "men cologne Dubai", "perfume gift sets", "natural fragrance Dubai", "buy perfume UAE", "musk perfume", "amber perfume", "vanilla perfume", "leather perfume", "sandalwood fragrance", "best perfume online store", "niche perfume UAE", "aromatic perfume shop", "aromatic store UAE", "aromatic fragrance collection", "good perfume online", "affordable luxury perfume", "best smelling cologne", "perfume for men and women online", "fragrant body care products", "aromatic scented oils", "pleasant fragrance UAE"],
@@ -53,8 +53,8 @@ export async function generateMetadata({
   const currencyCode = market.defaultCurrency;
   const marketAudience = getMarketSeoAudience(market.code, lang);
   const fallbackDescription = isAr
-    ? `تصفح مجموعتنا الكاملة من العطور الفاخرة والعود العربي والزيوت العطرية ومنتجات العناية بالجسم ومعطرات المنزل. منتجات يدوية فاخرة من الإمارات. شحن مجاني للطلبات فوق 500 ${currencyCode}.`
-    : `Browse our complete collection of luxury perfumes, Arabian oud, aromatic oils, body care & home fragrances. Built for ${marketAudience}. Free shipping on orders over 500 ${currencyCode}.`;
+    ? `تصفح مجموعتنا الكاملة من العطور الفاخرة والعود العربي والزيوت العطرية ومنتجات العناية بالجسم ومعطرات المنزل. منتجات يدوية فاخرة من الإمارات مع توصيل سريع عبر أسواقنا.`
+    : `Browse our complete collection of luxury perfumes, Arabian oud, aromatic oils, body care & home fragrances. Built for ${marketAudience} with fast delivery across our markets.`;
 
   const wpSeo = await getPageSeo("shop", lang);
 

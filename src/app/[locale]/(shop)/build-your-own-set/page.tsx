@@ -22,8 +22,8 @@ interface BuildYourOwnSetPageProps {
 const defaultSeo = {
   title: { en: "Build Your Own Set | Custom Luxury Perfume Gift Bundle", ar: "اصنع مجموعتك | طقم عطور مخصص هدية فاخرة" },
   description: {
-    en: "Create a unique fragrance gift set. Pick 3+ products from perfumes, oud, oils & home fragrances. The perfect luxury gift from Sasan Perfumes. Free delivery available on eligible orders.",
-    ar: "أنشئ مجموعة عطور فريدة من اختيارك. اختر 3 منتجات أو أكثر من العطور والزيوت واللوشن ومعطرات المنزل. هدية مثالية من Sasan Perfumes. توصيل مجاني للطلبات فوق 500 درهم.",
+    en: "Create a unique fragrance gift set. Pick 3+ products from perfumes, oud, oils & home fragrances. The perfect luxury gift from Sasan Perfumes with fast delivery across our markets.",
+    ar: "أنشئ مجموعة عطور فريدة من اختيارك. اختر 3 منتجات أو أكثر من العطور والزيوت واللوشن ومعطرات المنزل. هدية مثالية من Sasan Perfumes مع توصيل سريع عبر أسواقنا.",
   },
   keywords: {
     en: ["custom fragrance set", "perfume gift set", "build your own perfume", "fragrance bundle", "perfume collection", "gift set", "luxury perfume gift", "perfume gift box", "custom perfume bundle", "birthday perfume gift", "wedding fragrance gift", "anniversary perfume set", "UAE perfume gift set", "oud gift set", "aromatic custom perfume set", "build your own aromatic gift", "personalized aromatic fragrance", "create aromatic gift box UAE"],
@@ -42,8 +42,8 @@ export async function generateMetadata({
   const currencyCode = market.defaultCurrency;
   const marketAudience = getMarketSeoAudience(market.code, lang);
   const fallbackDescription = isAr
-    ? "أنشئ مجموعة عطور فريدة من اختيارك. اختر 3 منتجات أو أكثر من العطور والزيوت واللوشن ومعطرات المنزل. هدية مثالية من Sasan Perfumes. توصيل مجاني للطلبات فوق 500 " + currencyCode + "."
-    : "Create a unique fragrance gift set. Pick 3+ products from perfumes, oud, oils & home fragrances. Built for " + marketAudience + ". Free delivery over 500 " + currencyCode + ".";
+    ? "أنشئ مجموعة عطور فريدة من اختيارك. اختر 3 منتجات أو أكثر من العطور والزيوت واللوشن ومعطرات المنزل. هدية مثالية من Sasan Perfumes مع توصيل سريع عبر أسواقنا."
+    : "Create a unique fragrance gift set. Pick 3+ products from perfumes, oud, oils & home fragrances. Built for " + marketAudience + " with fast delivery across our markets.";
   const wpSeo = await getPageSeo("build-your-own-set", lang);
   return generateSeoMetadata({
     title: wpSeo?.title || (isAr ? defaultSeo.title.ar : defaultSeo.title.en),

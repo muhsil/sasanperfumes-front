@@ -545,9 +545,7 @@ export function BuildYourOwnSetClient({
               sku: "SKU",
               noDescription: "No description available",
               paymentInfo: "We accept all major credit cards and cash on delivery.",
-              deliveryInfo: convertedShippingThreshold
-                ? `Free shipping on orders over ${convertedShippingThreshold} ${currencyInfo.code}. Delivery within 2-5 business days.`
-                : "Delivery within 2-5 business days.",
+              deliveryInfo: "Delivery within 2-5 business days.",
             },
             ar:{
       title: "اصنع مجموعتك الخاصة",
@@ -590,9 +588,7 @@ export function BuildYourOwnSetClient({
           sku: "رمز المنتج",
           noDescription: "لا يوجد وصف متاح",
           paymentInfo: "نقبل جميع بطاقات الائتمان الرئيسية والدفع عند الاستلام.",
-          deliveryInfo: convertedShippingThreshold
-            ? `شحن مجاني للطلبات التي تزيد عن ${convertedShippingThreshold} ${currencyInfo.code}. التوصيل خلال 2-5 أيام عمل.`
-            : "التوصيل خلال 2-5 أيام عمل.",
+          deliveryInfo: "التوصيل خلال 2-5 أيام عمل.",
         },
       };
 
