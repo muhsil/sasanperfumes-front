@@ -14,7 +14,7 @@ import { ComparisonProvider } from "@/contexts/ComparisonContext";
 import { DiscountRulesProvider } from "@/contexts/DiscountRulesContext";
 import { getDictionary } from "@/i18n";
 import { siteConfig, localeConfig, type Locale } from "@/config/site";
-import { INDEX_FOLLOW_ROBOTS, generateOrganizationJsonLd, generateWebSiteJsonLd, generateLocalBusinessJsonLd } from "@/lib/utils/seo";
+import { INDEX_FOLLOW_ROBOTS, generateOrganizationJsonLd, generateWebSiteJsonLd, generateLocalBusinessJsonLd, getMarketSeoDescription } from "@/lib/utils/seo";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getSiteSettings, getHeaderSettings, getPrimaryMenu, getMobileHeaderMenu, getMobileBottomBarMenu, getMobileBarSettings, getCategoriesDrawerMenu, getTopbarSettings, getSeoSettings, getFooterSettings, getWhatsAppSettings, getFeatureToggles, getStaticPageContent, mapRepeater, pickLocale, getDiscountRules } from "@/lib/api/wordpress";
 import { getRequestMarket, getRequestFrontendHost } from "@/lib/market/server";
@@ -56,10 +56,11 @@ export async function generateMetadata({
   const { locale } = await params;
   const validLocale = locale as Locale;
   const frontendHost = await getRequestFrontendHost();
+  const market = await getRequestMarket();
   
   const siteSettings = await getSiteSettings(validLocale, frontendHost);
   const metadataSiteName = siteConfig.name;
-  const metadataDescription = siteSettings.tagline || siteConfig.description;
+  const metadataDescription = siteSettings.tagline || getMarketSeoDescription(market.code, validLocale) || siteConfig.description;
   
   const faviconUrl = siteSettings.favicon?.url;
   const proxiedFaviconUrl = faviconUrl

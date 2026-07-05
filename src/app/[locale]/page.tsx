@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { getDictionary } from "@/i18n";
-import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
+import { generateMetadata as generateSeoMetadata, getMarketSeoDescription } from "@/lib/utils/seo";
 import {
   getNewProducts,
   getFreeGiftProductInfo,
@@ -155,7 +155,10 @@ export async function generateMetadata({
   const seoSettings = await getSeoSettings(validLocale, frontendHost);
 
   const seoTitle = (isArabic ? seoSettings.titleAr : seoSettings.title) || siteConfig.name;
-  const seoDescription = (isArabic ? seoSettings.descriptionAr : seoSettings.description) || siteConfig.description;
+  const seoDescription =
+    (isArabic ? seoSettings.descriptionAr : seoSettings.description) ||
+    getMarketSeoDescription(market.code, validLocale) ||
+    siteConfig.description;
 
   const baseMetadata = generateSeoMetadata({
     title: seoTitle,

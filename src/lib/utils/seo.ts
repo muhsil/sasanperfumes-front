@@ -48,7 +48,8 @@ export function generateMetadata({
     marketTitleSuffix && !rawTitle.toLowerCase().includes(marketTitleSuffix.toLowerCase())
       ? `${rawTitle} | ${marketTitleSuffix}`
       : rawTitle;
-  const fullDescription = description || siteConfig.description;
+  const fullDescription =
+    description || (marketCode ? getMarketSeoDescription(marketCode, locale) : siteConfig.description);
   const ogImage = image || siteConfig.ogImage;
   const marketPrefix = marketCode ? getMarketPathPrefix(marketCode) : "";
   const canonicalUrl = `${siteConfig.url}${marketPrefix}/${locale}${pathname}`;
@@ -371,14 +372,20 @@ export function generateStoreJsonLd(stores: {
 interface MarketSeoCopy {
   titleSuffix: string;
   audience: string;
+  description: string;
+  descriptionAr: string;
   keywords: string[];
 }
 
 const MARKET_SEO_COPY: Record<MarketCode, { en: MarketSeoCopy; ar: MarketSeoCopy }> = {
   intl: {
     en: {
-      titleSuffix: "UAE Perfumes",
+      titleSuffix: "Premium UAE Fragrances",
       audience: "UAE, GCC, and international shoppers",
+      description:
+        "Premium perfumes, oud, hair mist, and gift sets from Sasan Perfumes. Shop in AED with fast delivery across the UAE and international markets. With over 60 years of fragrance heritage, we blend tradition with modern elegance.",
+      descriptionAr:
+        "عطور فاخرة، عود، معطر شعر، وطقم هدايا من Sasan Perfumes. تسوق بالدرهم الإماراتي مع توصيل سريع داخل الإمارات والأسواق الدولية. بخبرة عطرية تتجاوز 60 عامًا، نمزج التراث بالأناقة العصرية.",
       keywords: [
         "UAE perfume",
         "Dubai perfume",
@@ -389,8 +396,12 @@ const MARKET_SEO_COPY: Record<MarketCode, { en: MarketSeoCopy; ar: MarketSeoCopy
       ],
     },
     ar: {
-      titleSuffix: "عطور الإمارات",
+      titleSuffix: "عطور الإمارات الفاخرة",
       audience: "المتسوقون في الإمارات ودول الخليج والأسواق الدولية",
+      description:
+        "عطور فاخرة، عود، معطر شعر، وطقم هدايا من Sasan Perfumes. تسوق بالدرهم الإماراتي مع توصيل سريع داخل الإمارات والأسواق الدولية. بخبرة عطرية تتجاوز 60 عامًا، نمزج التراث بالأناقة العصرية.",
+      descriptionAr:
+        "عطور فاخرة، عود، معطر شعر، وطقم هدايا من Sasan Perfumes. تسوق بالدرهم الإماراتي مع توصيل سريع داخل الإمارات والأسواق الدولية. بخبرة عطرية تتجاوز 60 عامًا، نمزج التراث بالأناقة العصرية.",
       keywords: [
         "عطور الإمارات",
         "عطور دبي",
@@ -403,8 +414,12 @@ const MARKET_SEO_COPY: Record<MarketCode, { en: MarketSeoCopy; ar: MarketSeoCopy
   },
   qa: {
     en: {
-      titleSuffix: "Qatar Perfumes",
+      titleSuffix: "Premium Qatar Fragrances",
       audience: "Qatar shoppers",
+      description:
+        "Premium perfumes, oud, hair mist, and gift sets from Sasan Perfumes Qatar. Shop in QAR with fast delivery across Qatar. With over 60 years of fragrance heritage, we blend tradition with modern elegance.",
+      descriptionAr:
+        "عطور فاخرة، عود، معطر شعر، وطقم هدايا من Sasan Perfumes Qatar. تسوق بالريال القطري مع توصيل سريع داخل قطر. بخبرة عطرية تتجاوز 60 عامًا، نمزج التراث بالأناقة العصرية.",
       keywords: [
         "Qatar perfume",
         "Doha perfume",
@@ -414,8 +429,12 @@ const MARKET_SEO_COPY: Record<MarketCode, { en: MarketSeoCopy; ar: MarketSeoCopy
       ],
     },
     ar: {
-      titleSuffix: "عطور قطر",
+      titleSuffix: "عطور قطر الفاخرة",
       audience: "المتسوقون في قطر",
+      description:
+        "عطور فاخرة، عود، معطر شعر، وطقم هدايا من Sasan Perfumes Qatar. تسوق بالريال القطري مع توصيل سريع داخل قطر. بخبرة عطرية تتجاوز 60 عامًا، نمزج التراث بالأناقة العصرية.",
+      descriptionAr:
+        "عطور فاخرة، عود، معطر شعر، وطقم هدايا من Sasan Perfumes Qatar. تسوق بالريال القطري مع توصيل سريع داخل قطر. بخبرة عطرية تتجاوز 60 عامًا، نمزج التراث بالأناقة العصرية.",
       keywords: [
         "عطور قطر",
         "عطور الدوحة",
@@ -427,8 +446,12 @@ const MARKET_SEO_COPY: Record<MarketCode, { en: MarketSeoCopy; ar: MarketSeoCopy
   },
   om: {
     en: {
-      titleSuffix: "Oman Perfumes",
+      titleSuffix: "Premium Oman Fragrances",
       audience: "Oman shoppers",
+      description:
+        "Premium perfumes, oud, hair mist, and gift sets from Sasan Perfumes Oman. Shop in OMR with fast delivery across Oman. With over 60 years of fragrance heritage, we blend tradition with modern elegance.",
+      descriptionAr:
+        "عطور فاخرة، عود، معطر شعر، وطقم هدايا من Sasan Perfumes Oman. تسوق بالريال العُماني مع توصيل سريع داخل عمان. بخبرة عطرية تتجاوز 60 عامًا، نمزج التراث بالأناقة العصرية.",
       keywords: [
         "Oman perfume",
         "Muscat perfume",
@@ -438,8 +461,12 @@ const MARKET_SEO_COPY: Record<MarketCode, { en: MarketSeoCopy; ar: MarketSeoCopy
       ],
     },
     ar: {
-      titleSuffix: "عطور عُمان",
+      titleSuffix: "عطور عمان الفاخرة",
       audience: "المتسوقون في عمان",
+      description:
+        "عطور فاخرة، عود، معطر شعر، وطقم هدايا من Sasan Perfumes Oman. تسوق بالريال العُماني مع توصيل سريع داخل عمان. بخبرة عطرية تتجاوز 60 عامًا، نمزج التراث بالأناقة العصرية.",
+      descriptionAr:
+        "عطور فاخرة، عود، معطر شعر، وطقم هدايا من Sasan Perfumes Oman. تسوق بالريال العُماني مع توصيل سريع داخل عمان. بخبرة عطرية تتجاوز 60 عامًا، نمزج التراث بالأناقة العصرية.",
       keywords: [
         "عطور عمان",
         "عطور مسقط",
@@ -451,8 +478,12 @@ const MARKET_SEO_COPY: Record<MarketCode, { en: MarketSeoCopy; ar: MarketSeoCopy
   },
   sa: {
     en: {
-      titleSuffix: "Saudi Arabia Perfumes",
+      titleSuffix: "Premium Saudi Arabia Fragrances",
       audience: "Saudi Arabia shoppers",
+      description:
+        "Premium perfumes, oud, hair mist, and gift sets from Sasan Perfumes Saudi Arabia. Shop in SAR with fast delivery across Saudi Arabia. With over 60 years of fragrance heritage, we blend tradition with modern elegance.",
+      descriptionAr:
+        "عطور فاخرة، عود، معطر شعر، وطقم هدايا من Sasan Perfumes Saudi Arabia. تسوق بالريال السعودي مع توصيل سريع داخل السعودية. بخبرة عطرية تتجاوز 60 عامًا، نمزج التراث بالأناقة العصرية.",
       keywords: [
         "Saudi Arabia perfume",
         "Riyadh perfume",
@@ -462,8 +493,12 @@ const MARKET_SEO_COPY: Record<MarketCode, { en: MarketSeoCopy; ar: MarketSeoCopy
       ],
     },
     ar: {
-      titleSuffix: "عطور السعودية",
+      titleSuffix: "عطور السعودية الفاخرة",
       audience: "المتسوقون في السعودية",
+      description:
+        "عطور فاخرة، عود، معطر شعر، وطقم هدايا من Sasan Perfumes Saudi Arabia. تسوق بالريال السعودي مع توصيل سريع داخل السعودية. بخبرة عطرية تتجاوز 60 عامًا، نمزج التراث بالأناقة العصرية.",
+      descriptionAr:
+        "عطور فاخرة، عود، معطر شعر، وطقم هدايا من Sasan Perfumes Saudi Arabia. تسوق بالريال السعودي مع توصيل سريع داخل السعودية. بخبرة عطرية تتجاوز 60 عامًا، نمزج التراث بالأناقة العصرية.",
       keywords: [
         "عطور السعودية",
         "عطور الرياض",
@@ -512,6 +547,12 @@ export function getMarketSeoTitleSuffix(marketCode: MarketCode, locale: Locale):
 
 export function getMarketSeoAudience(marketCode: MarketCode, locale: Locale): string {
   return getMarketSeoCopy(marketCode, locale).audience;
+}
+
+export function getMarketSeoDescription(marketCode: MarketCode, locale: Locale): string {
+  return locale === "ar"
+    ? getMarketSeoCopy(marketCode, locale).descriptionAr
+    : getMarketSeoCopy(marketCode, locale).description;
 }
 
 export function getMarketSeoImageFallback(): string {

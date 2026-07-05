@@ -1,8 +1,10 @@
 ﻿import { disableRuntimeCache, siteConfig, type Locale } from "@/config/site";
+import { getMarketByHost } from "@/config/market";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { translateToArabic } from "@/config/menu";
 import { isLegacyBrandCategory } from "@/config/categoryVisibility";
 import { getActiveDiscountRules } from "@/lib/discountRules";
+import { getMarketSeoDescription } from "@/lib/utils/seo";
 import type { DiscountRule } from "@/types/discount";
 import {
   backendHeaders,
@@ -141,7 +143,23 @@ function sanitizeLegacyDescription(value: string, fallback: string): string {
     return fallback;
   }
 
+  if (/premium fragrance store for the UAE, GCC, and international shoppers/i.test(replaced)) {
+    return fallback;
+  }
+
+  if (/localized storefronts, currencies, and product collections/i.test(replaced)) {
+    return fallback;
+  }
+
   return replaced;
+}
+
+function getMarketSeoFallbackDescription(locale?: Locale, frontendHost?: string): string {
+  if (!locale) {
+    return siteConfig.description;
+  }
+
+  return getMarketSeoDescription(getMarketByHost(frontendHost).code, locale);
 }
 
 const legacyMediaHosts = [["cms", ["fragrance", "network"].join(""), "ae"].join(".")];
@@ -1164,7 +1182,7 @@ export async function getSiteSettings(locale?: Locale, frontendHost?: string): P
   const rawSiteName = pluginSiteData?.name || siteInfo?.name || "";
   const rawSiteTagline = pluginSiteData?.description || siteInfo?.description || "";
   const siteName = replaceLegacyBrandText(rawSiteName).trim() || siteConfig.name;
-  const siteTagline = sanitizeLegacyDescription(rawSiteTagline, siteConfig.description);
+  const siteTagline = sanitizeLegacyDescription(rawSiteTagline, getMarketSeoFallbackDescription(locale, frontendHost));
 
   // Build site settings from available sources
   const settings: SiteSettings = {
@@ -1544,7 +1562,7 @@ export async function getSeoSettings(locale?: Locale, frontendHost?: string): Pr
   // re-encode to "&amp;amp;" in <title> tags if not decoded first
   const d = (val: string | undefined) => val ? decodeHtmlEntities(val) : "";
   const dn = (val: string | undefined) => val ? replaceLegacyBrandText(val).trim() : "";
-  const dd = (val: string | undefined) => val ? sanitizeLegacyDescription(val, siteConfig.description) : siteConfig.description;
+  const dd = (val: string | undefined) => val ? sanitizeLegacyDescription(val, getMarketSeoFallbackDescription(locale, frontendHost)) : getMarketSeoFallbackDescription(locale, frontendHost);
 
   const settings: SeoSettings = {
     title: dn(data?.title) || siteConfig.name,
