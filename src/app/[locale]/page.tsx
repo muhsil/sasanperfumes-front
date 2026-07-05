@@ -154,7 +154,7 @@ export async function generateMetadata({
   ]);
   const seoSettings = await getSeoSettings(validLocale, frontendHost);
 
-  const seoTitle = siteConfig.name;
+  const seoTitle = (isArabic ? seoSettings.titleAr : seoSettings.title) || siteConfig.name;
   const seoDescription = (isArabic ? seoSettings.descriptionAr : seoSettings.description) || siteConfig.description;
 
   const baseMetadata = generateSeoMetadata({
@@ -226,7 +226,7 @@ export async function generateMetadata({
 
   return {
     ...baseMetadata,
-    title: { absolute: seoTitle },
+    title: typeof baseMetadata.title === "string" ? { absolute: baseMetadata.title } : baseMetadata.title,
   };
 }
 
