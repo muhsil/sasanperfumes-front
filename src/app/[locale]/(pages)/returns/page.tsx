@@ -84,7 +84,7 @@ export async function generateMetadata({
 
   const market = await getRequestMarket();
   return generateSeoMetadata({
-    title: wpSeo?.title || pageContent.seo.title,
+    title: pageContent.seo.title,
     description: wpSeo?.description || pageContent.seo.description,
     image: wpSeo?.ogImage || undefined,
     locale: lang,

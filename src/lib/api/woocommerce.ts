@@ -57,6 +57,7 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
 // Default currency for Store API requests - ensures prices are returned in the base currency
 const DEFAULT_API_CURRENCY = API_BASE_CURRENCY;
 const BACKEND_FETCH_TIMEOUT_MS = 8000;
+const LEGACY_STORE_SITE_URL = "https://sasanperfumes.shapehive.com";
 
 function cmsApiHostName(): string {
   try {
@@ -286,6 +287,7 @@ interface FetchOptions {
   locale?: Locale;
   currency?: Currency;
   frontendHost?: string;
+  apiBase?: string;
 }
 
 interface FetchAPIResponse<T> {
@@ -302,9 +304,9 @@ interface StoreFetchResult<T> {
 function buildStoreAPIUrls(
   endpoint: string,
   market: string | undefined,
-  options: Pick<FetchOptions, "locale" | "currency" | "frontendHost">
+  options: Pick<FetchOptions, "locale" | "currency" | "frontendHost" | "apiBase">
 ): string[] {
-  const rootApiBase = withExplicitHttpsPort(siteConfig.apiUrl.replace(/\/+$/, ""));
+  const rootApiBase = withExplicitHttpsPort((options.apiBase || siteConfig.apiUrl).replace(/\/+$/, ""));
   const apiBases = [`${rootApiBase}/wp-json/wc/store/v1`];
   const currencyToUse = options.currency || DEFAULT_API_CURRENCY;
 
@@ -421,6 +423,26 @@ function localizeMarketProducts(products: WCProduct[], locale?: Locale, market?:
   return products.map((product) => localizeMarketProduct(product, locale, market));
 }
 
+function hasMeaningfulText(value?: string): boolean {
+  return Boolean(value && value.replace(/<[^>]*>/g, "").trim());
+}
+
+function mergeLegacyProductCopy(primary: WCProduct, fallback?: WCProduct | null): WCProduct {
+  if (!fallback) {
+    return primary;
+  }
+
+  return {
+    ...primary,
+    short_description: hasMeaningfulText(primary.short_description)
+      ? primary.short_description
+      : (fallback.short_description || primary.short_description || ""),
+    description: hasMeaningfulText(primary.description)
+      ? primary.description
+      : (fallback.description || primary.description || ""),
+  };
+}
+
 async function requestMarketForLocale(locale?: Locale, frontendHost?: string): Promise<string | undefined> {
   if (locale !== "ar") {
     return undefined;
@@ -433,7 +455,7 @@ async function fetchAPI<T>(
   endpoint: string,
   options: FetchOptions = {}
 ): Promise<T> {
-  const { revalidate = 60, tags, locale, currency, frontendHost } = options;
+  const { revalidate = 60, tags, locale, currency, frontendHost, apiBase } = options;
 
   const market = extractMarketFromHost(frontendHost) || await detectMarketFromRequest();
   const result = await fetchStoreAPI<T>(endpoint, {
@@ -442,6 +464,7 @@ async function fetchAPI<T>(
     locale,
     currency,
     frontendHost,
+    apiBase,
   }, market);
 
   return rebrandApiContent(result.data);
@@ -451,7 +474,7 @@ async function fetchAPIWithPagination<T>(
   endpoint: string,
   options: FetchOptions = {}
 ): Promise<FetchAPIResponse<T>> {
-  const { revalidate = 60, tags, locale, currency, frontendHost } = options;
+  const { revalidate = 60, tags, locale, currency, frontendHost, apiBase } = options;
 
   const market = extractMarketFromHost(frontendHost) || await detectMarketFromRequest();
   const result = await fetchStoreAPI<T>(endpoint, {
@@ -460,6 +483,7 @@ async function fetchAPIWithPagination<T>(
     locale,
     currency,
     frontendHost,
+    apiBase,
   }, market);
   const { response } = result;
   const data = rebrandApiContent(result.data);
@@ -476,8 +500,9 @@ async function fetchStoreAPI<T>(
 ): Promise<StoreFetchResult<T>> {
   const { revalidate = 60, tags } = options;
   const urls = buildStoreAPIUrls(endpoint, market, options);
+  const requestOrigin = options.apiBase ? new URL(options.apiBase).origin : cmsApiOrigin();
   const hdrs = market
-    ? backendHeaders({ "Origin": cmsApiOrigin(), "X-Market": market, "Cache-Control": "no-cache", "Pragma": "no-cache" })
+    ? backendHeaders({ "Origin": requestOrigin, "X-Market": market, "Cache-Control": "no-cache", "Pragma": "no-cache" })
     : backendHeaders();
   const fetchOptions: RequestInit = disableRuntimeCache
     ? { cache: "no-store", headers: hdrs }
@@ -582,9 +607,33 @@ export async function getProducts(params?: {
 
     const market = await requestMarketForLocale(params?.locale, params?.frontendHost);
     const localizedProducts = localizeMarketProducts(dedupedProducts, params?.locale, market);
+    let enrichedProducts = localizedProducts;
+
+    if (localizedProducts.some((product) => !hasMeaningfulText(product.short_description) || !hasMeaningfulText(product.description))) {
+      try {
+        const legacyResult = await fetchAPIWithPagination<WCProduct[]>(endpoint, {
+          tags: ["products", "legacy-products"],
+          locale: "en",
+          currency: params?.currency,
+          frontendHost: params?.frontendHost,
+          revalidate: 300,
+          apiBase: LEGACY_STORE_SITE_URL,
+        });
+
+        const legacyMap = new Map(
+          deduplicateWPMLTranslations(legacyResult.data, "en").map((product) => [product.slug, product] as const)
+        );
+
+        enrichedProducts = localizedProducts.map((product) =>
+          mergeLegacyProductCopy(product, legacyMap.get(product.slug))
+        );
+      } catch (error) {
+        console.warn(`Failed to fetch legacy products for fallback content: ${formatFetchError(error)}`);
+      }
+    }
 
     return {
-      products: localizedProducts,
+      products: enrichedProducts,
       total: total - (products.length - dedupedProducts.length),
       totalPages,
     };
@@ -635,14 +684,54 @@ export const getProductBySlug = cache(async function getProductBySlug(
   frontendHost?: string
 ): Promise<WCProduct | null> {
   const market = await requestMarketForLocale(locale, frontendHost);
+  const encodedSlug = encodeURIComponent(slug);
+
+  const hydrateWithLegacyCopy = async (current: WCProduct | null, targetSlug = slug): Promise<WCProduct | null> => {
+    if (!current) {
+      try {
+        const legacyProducts = await fetchAPI<WCProduct[]>(`/products?slug=${encodeURIComponent(targetSlug)}`, {
+          tags: ["products", `product-${targetSlug}-legacy`],
+          locale: "en",
+          currency,
+          frontendHost,
+          apiBase: LEGACY_STORE_SITE_URL,
+        });
+
+        if (legacyProducts.length === 0) {
+          return null;
+        }
+
+        return localizeMarketProduct(legacyProducts[0], locale, market);
+      } catch {
+        return null;
+      }
+    }
+
+    const localizedProduct = localizeMarketProduct(current, locale, market);
+    if (hasMeaningfulText(localizedProduct.short_description) && hasMeaningfulText(localizedProduct.description)) {
+      return localizedProduct;
+    }
+
+    try {
+      const legacyProducts = await fetchAPI<WCProduct[]>(`/products?slug=${encodeURIComponent(targetSlug)}`, {
+        tags: ["products", `product-${targetSlug}-legacy`],
+        locale: "en",
+        currency,
+        frontendHost,
+        apiBase: LEGACY_STORE_SITE_URL,
+      });
+
+      if (legacyProducts.length === 0) {
+        return localizedProduct;
+      }
+
+      return mergeLegacyProductCopy(localizedProduct, legacyProducts[0]);
+    } catch {
+      return localizedProduct;
+    }
+  };
 
   try {
-    // URL encode the slug to handle non-ASCII characters (e.g., Arabic slugs)
-    const encodedSlug = encodeURIComponent(slug);
-    
-    // Always fetch by slug with locale to get the correct translated product
-    // WPML keeps the same slug across languages but returns different product IDs
-    // and localized content based on the lang parameter
     if (locale) {
       const localizedProducts = await fetchAPI<WCProduct[]>(`/products?slug=${encodedSlug}`, {
         tags: ["products", `product-${slug}-${locale}`],
@@ -650,12 +739,11 @@ export const getProductBySlug = cache(async function getProductBySlug(
         currency,
         frontendHost,
       });
-      
+
       if (localizedProducts.length > 0) {
-        return localizeMarketProduct(localizedProducts[0], locale, market);
+        return hydrateWithLegacyCopy(localizedProducts[0], slug);
       }
 
-      // For Arabic locale, try the -ar suffixed slug (used on OM/SA subsites)
       if (locale === "ar" && !slug.endsWith("-ar")) {
         const arSlug = `${slug}-ar`;
         const arProducts = await fetchAPI<WCProduct[]>(`/products?slug=${encodeURIComponent(arSlug)}`, {
@@ -665,7 +753,7 @@ export const getProductBySlug = cache(async function getProductBySlug(
           frontendHost,
         });
         if (arProducts.length > 0) {
-          return localizeMarketProduct(arProducts[0], locale, market);
+          return hydrateWithLegacyCopy(arProducts[0], arSlug);
         }
       }
 
@@ -678,27 +766,25 @@ export const getProductBySlug = cache(async function getProductBySlug(
         });
 
         if (englishProducts.length > 0) {
-          return localizeMarketProduct(englishProducts[0], locale, market);
+          return hydrateWithLegacyCopy(englishProducts[0], slug);
         }
       }
     }
-    
-    // Fallback: fetch without locale (for cases where locale is not specified)
+
     const products = await fetchAPI<WCProduct[]>(`/products?slug=${encodedSlug}`, {
       tags: ["products", `product-${slug}`],
       currency,
       frontendHost,
     });
 
-    if (products.length === 0) {
-      return null;
+    if (products.length > 0) {
+      return hydrateWithLegacyCopy(products[0], slug);
     }
-    
-    return localizeMarketProduct(products[0], locale, market);
+
+    return hydrateWithLegacyCopy(null, slug);
   } catch {
     if (market && locale && locale !== "en") {
       try {
-        const encodedSlug = encodeURIComponent(slug);
         const englishProducts = await fetchAPI<WCProduct[]>(`/products?slug=${encodedSlug}`, {
           tags: ["products", `product-${slug}-en-fallback`],
           locale: "en",
@@ -706,15 +792,15 @@ export const getProductBySlug = cache(async function getProductBySlug(
           frontendHost,
         });
 
-        return englishProducts.length > 0
-          ? localizeMarketProduct(englishProducts[0], locale, market)
-          : null;
+        if (englishProducts.length > 0) {
+          return hydrateWithLegacyCopy(englishProducts[0], slug);
+        }
       } catch {
-        return null;
+        // ignore
       }
     }
 
-    return null;
+    return hydrateWithLegacyCopy(null, slug);
   }
 });
 

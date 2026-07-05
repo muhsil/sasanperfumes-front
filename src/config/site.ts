@@ -49,7 +49,7 @@ export const siteConfig = {
   name: "Sasan Perfumes",
   
   // Site description - used for SEO meta description
-  description: "Premium perfumes, oud, hair mist, and gift sets from Sasan Perfumes. Shop with fast delivery across the UAE and international markets. A 60+ year fragrance heritage brand blending tradition with modern elegance.",
+  description: "Premium perfumes, oud, hair mist, and gift sets from Sasan Perfumes. Shop in AED with fast delivery across the UAE and international markets. A 60+ year fragrance heritage brand blending tradition with modern elegance.",
   
   // Frontend URL - reads from NEXT_PUBLIC_SITE_URL environment variable
   url: siteUrl,

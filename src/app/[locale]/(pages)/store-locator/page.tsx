@@ -28,6 +28,8 @@ export default async function StoreLocatorPage({ params }: StoreLocatorPageProps
   const ctaTitle = pickLocale(wp?.cta_title, validLocale, "");
   const ctaSubtitle = pickLocale(wp?.cta_subtitle, validLocale, "");
   const ctaButton = pickLocale(wp?.cta_button, validLocale, "");
+  const waitingTitle = pickLocale(wp?.waitingTitle, validLocale, dict.waitingTitle);
+  const waitingSubtitle = pickLocale(wp?.waitingSubtitle, validLocale, dict.waitingSubtitle);
   const breadcrumbLabel = heroTitle || (validLocale === "ar" ? "مواقعنا" : "Our Stores");
 
   // Map store data from CMS repeater
@@ -53,6 +55,8 @@ export default async function StoreLocatorPage({ params }: StoreLocatorPageProps
     ctaTitle,
     ctaSubtitle,
     ctaButton,
+    waitingTitle,
+    waitingSubtitle,
   };
 
   return (

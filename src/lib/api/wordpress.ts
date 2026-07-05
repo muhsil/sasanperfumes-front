@@ -37,6 +37,7 @@ import type {
 } from "@/types/wordpress";
 
 const WP_API_BASE = `${siteConfig.apiUrl}/wp-json`;
+const LEGACY_WP_API_BASE = "https://sasanperfumes.shapehive.com/wp-json";
 const WP_API_HEADERS = backendHeaders();
 const WP_NAMESPACE_FALLBACKS = ["sasanperfumes/v1"];
 const CMS_FORCE_DYNAMIC_CACHE = process.env.NEXT_PUBLIC_DISABLE_CMS_CACHE === "true" || process.env.DISABLE_CMS_CACHE === "true";
@@ -906,6 +907,7 @@ interface FetchOptions {
   locale?: Locale;
   noCache?: boolean;
   frontendHost?: string;
+  apiBase?: string;
 }
 
 const WP_KNOWN_MARKETS = new Set(["qa", "om", "sa"]);
@@ -951,11 +953,12 @@ async function fetchWPAPI<T>(
   endpoint: string,
   options: FetchOptions = {}
 ): Promise<T | null> {
-  const { revalidate = 300, tags, locale, noCache = false, frontendHost } = options;
+  const { revalidate = 300, tags, locale, noCache = false, frontendHost, apiBase } = options;
   const market = extractWPMarketFromHost(frontendHost) || await detectMarketFromRequest();
   const cmsFrontendHost = cmsFrontendHostForMarket(market, frontendHost);
+  const rootApiBase = apiBase || WP_API_BASE;
   const urls = uniqueUrls(
-    buildWPAPIUrls(endpoint, locale, WP_API_BASE).map((url) =>
+    buildWPAPIUrls(endpoint, locale, rootApiBase).map((url) =>
       cmsFrontendHost ? appendQueryParam(url, "frontend_host", cmsFrontendHost) : url
     )
   );
@@ -1928,18 +1931,18 @@ export async function getPageBySlug(slug: string, locale?: Locale): Promise<WPPa
     return null;
   }
 
-  const data = await fetchWPAPI<WPPage[]>(
-    `/wp/v2/pages?slug=${encodeURIComponent(slug)}&_embed`,
-    {
-      tags: ["pages", `page-${slug}`],
-      locale,
-      revalidate: 300, // Cache for 5 minutes for better performance
-    }
-  );
+  const currentPage = await fetchPageBySlugFromApi(slug, locale);
+  if (currentPage) {
+    return currentPage;
+  }
 
-  // WordPress returns an array, get the first matching page
-  if (data && data.length > 0) {
-    return data[0];
+  const legacyPage = await fetchPageBySlugFromApi(slug, locale, LEGACY_WP_API_BASE);
+  if (legacyPage) {
+    return legacyPage;
+  }
+
+  if (normalizeStaticPageSlug(slug) === "track-order") {
+    return buildTrackOrderSyntheticPage(locale);
   }
 
   return null;
@@ -1947,21 +1950,42 @@ export async function getPageBySlug(slug: string, locale?: Locale): Promise<WPPa
 
 // Fetch all published WordPress pages
 export async function getPages(locale?: Locale): Promise<WPPage[]> {
-  const data = await fetchWPAPI<WPPage[]>(
-    "/wp/v2/pages?per_page=100&status=publish&_embed",
-    {
-      tags: ["pages"],
-      locale,
-      revalidate: 300, // Cache for 5 minutes
-    }
-  );
+  const [currentPages, legacyPages] = await Promise.all([
+    fetchWPAPI<WPPage[]>(
+      "/wp/v2/pages?per_page=100&status=publish&_embed",
+      {
+        tags: ["pages"],
+        locale,
+        revalidate: 300,
+      }
+    ),
+    fetchWPAPI<WPPage[]>(
+      "/wp/v2/pages?per_page=100&status=publish&_embed",
+      {
+        tags: ["pages", "legacy-pages"],
+        locale,
+        revalidate: 300,
+        apiBase: LEGACY_WP_API_BASE,
+      }
+    ),
+  ]);
 
-  if (!data) {
-    return [];
+  const pages = new Map<string, WPPage>();
+  for (const page of [...(currentPages || []), ...(legacyPages || [])]) {
+    if (isFunctionalPageSlug(page.slug) || pages.has(page.slug)) {
+      continue;
+    }
+    pages.set(page.slug, page);
   }
 
-  // Filter out functional pages
-  return data.filter((page) => !isFunctionalPageSlug(page.slug));
+  if (!pages.has("track-order")) {
+    const trackOrderPage = buildTrackOrderSyntheticPage(locale);
+    if (trackOrderPage) {
+      pages.set(trackOrderPage.slug, trackOrderPage);
+    }
+  }
+
+  return Array.from(pages.values());
 }
 
 // Helper function to strip HTML tags from a string (for SEO metadata)
@@ -1988,34 +2012,29 @@ export interface PageSeoData {
 // Fetch SEO data for a page by its slug from WordPress
 // Used by frontend pages to get dynamic SEO content from WordPress Pages editor + Yoast
 export async function getPageSeo(slug: string, locale?: Locale): Promise<PageSeoData | null> {
-  const data = await fetchWPAPI<WPPage[]>(
-    `/wp/v2/pages?slug=${encodeURIComponent(slug)}&_embed`,
-    {
-      tags: ["pages", "page-seo", `page-${slug}`, `page-seo-${slug}`],
-      locale,
-      revalidate: 300,
-    }
-  );
+  const page =
+    (await fetchPageBySlugFromApi(slug, locale)) ||
+    (await fetchPageBySlugFromApi(slug, locale, LEGACY_WP_API_BASE));
+  const fallback = buildStaticPageSeoFallback(slug, locale);
 
-  if (!data || data.length === 0) {
-    return null;
+  if (!page) {
+    return fallback;
   }
 
-  const page = data[0];
   const yoast = page.yoast_head_json;
 
   return {
-    title: yoast?.title ? decodeHtmlEntities(yoast.title) : null,
-    description: yoast?.description || null,
-    ogTitle: yoast?.og_title ? decodeHtmlEntities(yoast.og_title) : null,
-    ogDescription: yoast?.og_description || null,
-    ogImage: yoast?.og_image?.[0]?.url || null,
-    twitterTitle: yoast?.twitter_title ? decodeHtmlEntities(yoast.twitter_title) : null,
-    twitterDescription: yoast?.twitter_description || null,
-    twitterImage: yoast?.twitter_image || null,
-    canonical: yoast?.canonical || null,
-    pageTitle: page.title.rendered ? stripHtmlTags(page.title.rendered) : null,
-    pageExcerpt: page.excerpt.rendered ? stripHtmlTags(page.excerpt.rendered) : null,
+    title: yoast?.title ? decodeHtmlEntities(yoast.title) : decodeHtmlEntities(stripHtmlTags(page.title.rendered)) || fallback.title,
+    description: yoast?.description || decodeHtmlEntities(stripHtmlTags(page.excerpt.rendered)) || fallback.description,
+    ogTitle: yoast?.og_title ? decodeHtmlEntities(yoast.og_title) : fallback.ogTitle,
+    ogDescription: yoast?.og_description || fallback.ogDescription,
+    ogImage: yoast?.og_image?.[0]?.url || fallback.ogImage,
+    twitterTitle: yoast?.twitter_title ? decodeHtmlEntities(yoast.twitter_title) : fallback.twitterTitle,
+    twitterDescription: yoast?.twitter_description || fallback.twitterDescription,
+    twitterImage: yoast?.twitter_image || fallback.twitterImage,
+    canonical: yoast?.canonical || fallback.canonical,
+    pageTitle: decodeHtmlEntities(stripHtmlTags(page.title.rendered)) || fallback.pageTitle,
+    pageExcerpt: page.excerpt.rendered ? decodeHtmlEntities(stripHtmlTags(page.excerpt.rendered)) : fallback.pageExcerpt,
     pageContent: page.content.rendered || null,
   };
 }
@@ -2423,26 +2442,799 @@ interface BilingualField { en: string; ar: string; }
 
 // Generic static page API response — all fields are bilingual objects or repeater arrays
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type StaticPageResponse = Record<string, BilingualField | any[]>;
+type StaticPageValue = BilingualField | any[] | string | number | boolean | null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type StaticPageResponse = Record<string, StaticPageValue>;
+
+function bi(en: string, ar: string): BilingualField {
+  return { en, ar };
+}
+
+const STATIC_PAGE_ALIASES: Record<string, string[]> = {
+  about: ["about", "about-us"],
+  contact: ["contact", "contact-us"],
+  privacy: ["privacy", "privacy-policy"],
+  returns: ["returns", "refund_returns", "return-policy"],
+  faq: ["faq"],
+  shipping: ["shipping", "shipping-policy"],
+  terms: ["terms", "terms-and-conditions"],
+  "store-locator": ["store-locator", "store-listing"],
+  "track-order": ["track-order"],
+};
+
+function normalizeStaticPageSlug(slug: string): string {
+  const lower = slug.toLowerCase();
+  for (const [canonical, aliases] of Object.entries(STATIC_PAGE_ALIASES)) {
+    if (aliases.includes(lower)) {
+      return canonical;
+    }
+  }
+  return lower;
+}
+
+function getStaticPageCandidates(slug: string): string[] {
+  const canonical = normalizeStaticPageSlug(slug);
+  const aliases = STATIC_PAGE_ALIASES[canonical] || [canonical];
+  return Array.from(new Set([canonical, ...aliases, slug.toLowerCase()]));
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+async function fetchPageBySlugFromApi(
+  slug: string,
+  locale?: Locale,
+  apiBase?: string
+): Promise<WPPage | null> {
+  for (const candidate of getStaticPageCandidates(slug)) {
+    const data = await fetchWPAPI<WPPage[]>(
+      `/wp/v2/pages?slug=${encodeURIComponent(candidate)}&_embed`,
+      {
+        tags: ["pages", `page-${candidate}`],
+        locale,
+        revalidate: 300,
+        apiBase,
+      }
+    );
+
+    if (data && data.length > 0) {
+      return data[0];
+    }
+  }
+
+  return null;
+}
+
+function isMeaningfulStaticPageValue(value: StaticPageValue | undefined): boolean {
+  if (value === null || value === undefined) {
+    return false;
+  }
+
+  if (typeof value === "string") {
+    return value.trim().length > 0;
+  }
+
+  if (typeof value === "number") {
+    return Number.isFinite(value);
+  }
+
+  if (typeof value === "boolean") {
+    return true;
+  }
+
+  if (Array.isArray(value)) {
+    return value.length > 0;
+  }
+
+  if (typeof value === "object") {
+    const obj = value as unknown as Record<string, unknown>;
+    if ("en" in obj || "ar" in obj) {
+      const en = typeof obj.en === "string" ? obj.en.trim() : "";
+      const ar = typeof obj.ar === "string" ? obj.ar.trim() : "";
+      return Boolean(en || ar);
+    }
+
+    return Object.values(obj).some((entry) => isMeaningfulStaticPageValue(entry as StaticPageValue));
+  }
+
+  return false;
+}
+
+function mergeStaticPageContent(
+  primary: StaticPageResponse | null,
+  fallback: StaticPageResponse | null
+): StaticPageResponse | null {
+  if (!primary && !fallback) {
+    return null;
+  }
+
+  if (!primary) {
+    return fallback;
+  }
+
+  if (!fallback) {
+    return primary;
+  }
+
+  const result: StaticPageResponse = { ...fallback };
+  for (const [key, value] of Object.entries(primary)) {
+    const fallbackValue = fallback[key];
+    if (isMeaningfulStaticPageValue(value) || !isMeaningfulStaticPageValue(fallbackValue)) {
+      result[key] = value;
+    }
+  }
+
+  return result;
+}
+
+async function fetchStaticPageContentFromApi(
+  slug: string,
+  apiBase?: string
+): Promise<StaticPageResponse | null> {
+  for (const candidate of getStaticPageCandidates(slug)) {
+    const data = await fetchWPAPI<StaticPageResponse>(
+      `/sasanperfumes/v1/pages/${encodeURIComponent(candidate)}`,
+      { tags: ["static-pages", `page-${candidate}`], revalidate: 300, apiBase }
+    );
+
+    if (data) {
+      return data;
+    }
+  }
+
+  return null;
+}
+
+function buildStaticPageSeoFallback(slug: string, locale?: Locale): PageSeoData {
+  const canonical = normalizeStaticPageSlug(slug);
+  const isAr = locale === "ar";
+
+  const seoMap: Record<string, { title: BilingualField; description: BilingualField }> = {
+    about: {
+      title: bi("About Sasan Perfumes | 60+ Years of Fragrance Heritage", "حول ساسان للعطور | أكثر من 60 عاماً من الخبرة العطرية"),
+      description: bi(
+        "Discover Sasan Perfumes, a 60+ year fragrance house from the UAE blending tradition, modern elegance, and fast delivery across regional markets.",
+        "اكتشف ساسان للعطور، بيت عطور إماراتي بخبرة تتجاوز 60 عاماً يجمع بين التراث والأناقة العصرية والتوصيل السريع عبر الأسواق الإقليمية."
+      ),
+    },
+    contact: {
+      title: bi("Contact Sasan Perfumes | Customer Care & Store Support", "تواصل مع ساسان للعطور | خدمة العملاء وفروع المتاجر"),
+      description: bi(
+        "Reach Sasan Perfumes for product guidance, order support, store locations, and wholesale inquiries across the UAE and GCC.",
+        "تواصل مع ساسان للعطور للاستفسارات حول المنتجات ومتابعة الطلبات ومواقع المتاجر والاستفسارات التجارية في الإمارات والخليج."
+      ),
+    },
+    privacy: {
+      title: bi("Privacy Policy | Sasan Perfumes", "سياسة الخصوصية | ساسان للعطور"),
+      description: bi(
+        "Read how Sasan Perfumes collects, uses, and protects customer information across our websites and service channels.",
+        "اطلع على كيفية جمع ساسان للعطور لبيانات العملاء واستخدامها وحمايتها عبر مواقعنا وقنوات الخدمة."
+      ),
+    },
+    returns: {
+      title: bi("Returns & Exchange Policy | Sasan Perfumes", "سياسة الإرجاع والاستبدال | ساسان للعطور"),
+      description: bi(
+        "Review the Sasan Perfumes return, exchange, cancellation, and quality support policy before placing your order.",
+        "اطلع على سياسة الإرجاع والاستبدال والإلغاء ودعم الجودة لدى ساسان للعطور قبل إتمام طلبك."
+      ),
+    },
+    faq: {
+      title: bi("FAQ | Sasan Perfumes", "الأسئلة الشائعة | ساسان للعطور"),
+      description: bi(
+        "Answers to common questions about perfume orders, delivery, payment, returns, and store availability.",
+        "إجابات سريعة حول طلبات العطور والتوصيل والدفع والاستبدال وتوفر المنتجات في المتاجر."
+      ),
+    },
+    shipping: {
+      title: bi("Shipping Information | Sasan Perfumes", "معلومات الشحن | ساسان للعطور"),
+      description: bi(
+        "Learn how Sasan Perfumes handles delivery timelines, destination coverage, and shipping support across the UAE and GCC.",
+        "تعرف على مواعيد التوصيل وتغطية الوجهات ودعم الشحن لدى ساسان للعطور داخل الإمارات والخليج."
+      ),
+    },
+    terms: {
+      title: bi("Terms & Conditions | Sasan Perfumes", "الشروط والأحكام | ساسان للعطور"),
+      description: bi(
+        "Read the terms of use, purchasing rules, and customer responsibilities that apply when shopping with Sasan Perfumes.",
+        "اطلع على شروط الاستخدام وقواعد الشراء ومسؤوليات العميل عند التسوق من ساسان للعطور."
+      ),
+    },
+    "store-locator": {
+      title: bi("Store Locator | Sasan Perfumes", "مواقع المتاجر | ساسان للعطور"),
+      description: bi(
+        "Find Sasan Perfumes store locations across Sharjah and Abu Dhabi, with directions and regional shopping support.",
+        "اعثر على مواقع متاجر ساسان للعطور في الشارقة وأبوظبي مع إرشادات الوصول ودعم التسوق الإقليمي."
+      ),
+    },
+    "track-order": {
+      title: bi("Track Order | Sasan Perfumes", "تتبع الطلب | ساسان للعطور"),
+      description: bi(
+        "Check your order status quickly with your order number and checkout email, or contact our team for help.",
+        "تحقق من حالة طلبك باستخدام رقم الطلب وبريد الشراء، أو تواصل مع فريقنا للمساعدة."
+      ),
+    },
+  };
+
+  const seo = seoMap[canonical] || {
+    title: bi(`${siteConfig.name} | Premium UAE Fragrances`, `${siteConfig.name} | عطور إماراتية فاخرة`),
+    description: bi(siteConfig.description, siteConfig.description),
+  };
+
+  const title = isAr ? seo.title.ar : seo.title.en;
+  const description = isAr ? seo.description.ar : seo.description.en;
+
+  return {
+    title,
+    description,
+    ogTitle: title,
+    ogDescription: description,
+    ogImage: siteConfig.ogImage,
+    twitterTitle: title,
+    twitterDescription: description,
+    twitterImage: siteConfig.ogImage,
+    canonical: `${siteConfig.url}/${canonical === "about" ? "about-us" : canonical === "contact" ? "contact-us" : canonical === "privacy" ? "privacy" : canonical === "returns" ? "returns" : canonical === "faq" ? "faq" : canonical === "shipping" ? "shipping" : canonical === "terms" ? "terms-and-conditions" : canonical === "store-locator" ? "store-listing" : canonical === "track-order" ? "track-order" : canonical}`,
+    pageTitle: title,
+    pageExcerpt: description,
+    pageContent: null,
+  };
+}
+
+function buildTrackOrderSyntheticPage(locale?: Locale): WPPage | null {
+  const fallback = buildStaticPageFallbackContent("track-order");
+  if (!fallback) {
+    return null;
+  }
+
+  const seo = buildStaticPageSeoFallback("track-order", locale);
+  const localizedTitle = pickLocale(fallback.title, locale || "en", "Track Order");
+  const localizedSubtitle = pickLocale(fallback.subtitle, locale || "en", "");
+  const sections = Array.isArray(fallback.sections) ? fallback.sections : [];
+
+  const contentHtml = [
+    '<div class="space-y-6">',
+    localizedSubtitle ? `<p class="text-base leading-7 text-gray-700">${escapeHtml(localizedSubtitle)}</p>` : "",
+    ...sections.map((section) => {
+      const sectionTitle = pickLocale(section.title, locale || "en", "");
+      const sectionContent = pickLocale(section.content, locale || "en", "");
+      return [
+        '<section class="rounded-2xl border border-[#e7ded7] bg-white p-6 shadow-sm">',
+        sectionTitle ? `<h2 class="text-xl font-semibold text-brand-primary">${escapeHtml(sectionTitle)}</h2>` : "",
+        sectionContent ? `<div class="mt-3 text-base leading-7 text-gray-700">${escapeHtml(sectionContent)}</div>` : "",
+        "</section>",
+      ].join("");
+    }),
+    "</div>",
+  ].join("");
+
+  const now = new Date().toISOString();
+  return {
+    id: 0,
+    date: now,
+    date_gmt: now,
+    modified: now,
+    modified_gmt: now,
+    slug: "track-order",
+    status: "publish",
+    type: "page",
+    link: seo.canonical || `${siteConfig.url}/track-order`,
+    title: {
+      rendered: localizedTitle || "Track Order",
+    },
+    content: {
+      rendered: contentHtml,
+      protected: false,
+    },
+    excerpt: {
+      rendered: localizedSubtitle ? `<p>${escapeHtml(localizedSubtitle)}</p>` : "",
+      protected: false,
+    },
+    featured_media: 0,
+    parent: 0,
+    menu_order: 0,
+    template: "",
+    meta: {},
+    yoast_head_json: {
+      title: seo.title || "Track Order",
+      description: seo.description || "",
+      canonical: seo.canonical || `${siteConfig.url}/track-order`,
+      og_title: seo.ogTitle || seo.title || "Track Order",
+      og_description: seo.ogDescription || seo.description || "",
+      og_image: seo.ogImage ? [{ url: seo.ogImage }] : [],
+      twitter_title: seo.twitterTitle || seo.title || "Track Order",
+      twitter_description: seo.twitterDescription || seo.description || "",
+      twitter_image: seo.twitterImage || seo.ogImage || "",
+    },
+  };
+}
+
+function buildStaticPageFallbackContent(slug: string): StaticPageResponse | null {
+  const canonical = normalizeStaticPageSlug(slug);
+
+  switch (canonical) {
+    case "about":
+      return {
+        title: bi("Sasan Perfumes", "ساسان للعطور"),
+        hero_title: bi(
+          "SASAN Perfumes - Where Wisdom Meets Innovation in the Heart of Sharjah.",
+          "ساسان للعطور - حيث يلتقي التراث بالابتكار في قلب الشارقة."
+        ),
+        hero_subtitle: bi("WHO WE ARE", "من نحن"),
+        hero_description: bi(
+          "Established in 1964 in the UAE, Sasan Perfumes began as a single outlet focused on fragrance imports and exports before expanding into oil fragrances, perfumes, body and hair mists, fragrance oils, dakhons, ouds, and air fresheners.",
+          "تأسست ساسان للعطور عام 1964 في الإمارات كمحل واحد يركز على استيراد وتصدير العطور، ثم توسعت لتشمل العطور الزيتية والعطور والبودي ميست والهير ميست وزيوت العطور والدخون والعود ومعطرات الجو."
+        ),
+        stats_since: bi("Since 1964", "منذ 1964"),
+        stats_location: bi("Sharjah, UAE", "الشارقة، الإمارات"),
+        stats_handcrafted: bi("Refined craftsmanship", "حرفية متقنة"),
+        stats_sustainable: bi("Global raw materials", "مواد خام عالمية"),
+        main_title: bi("A fragrance house built on craft and consistency.", "بيت عطور يقوم على الحرفة والاتساق."),
+        main_paragraph1: bi(
+          "Our collection is designed to make fragrance discovery clear, elegant, and easy for every customer.",
+          "صُممت مجموعتنا لتجعل اكتشاف العطور واضحاً وأنيقاً وسهلاً لكل عميل."
+        ),
+        main_paragraph2: bi(
+          "We pair timeless Arabic sensibility with modern fragrance behavior, giving every scent a confident and memorable presence.",
+          "نجمع بين الذوق العربي الأصيل وسلوك العطور العصري ليحمل كل عطر حضوراً واثقاً ولافتاً."
+        ),
+        main_paragraph3: bi(
+          "From daily wear to gifting, every bottle is crafted to feel personal, polished, and reliable.",
+          "من الاستخدام اليومي إلى الهدايا، يُصمم كل قارورة لتكون شخصية وراقية وموثوقة."
+        ),
+        uniqueness_title: bi("What makes us different", "ما يميزنا"),
+        uniqueness_subtitle: bi(
+          "Distinctive scents, thoughtful presentation, and a store experience that feels calm and refined.",
+          "روائح مميزة وتقديم متقن وتجربة تسوق هادئة وراقية."
+        ),
+        uniqueness_content: bi(
+          "We focus on perfumes that feel premium without becoming complicated, making it easy to find the right scent for the right moment.",
+          "نركز على عطور فاخرة ولكن بسيطة في الاختيار لتجد العطر المناسب في اللحظة المناسبة."
+        ),
+        journey_title: bi("From idea to signature scent", "من الفكرة إلى العطر المميز"),
+        journey_content: bi(
+          "Every fragrance begins with a clear direction, then moves through careful formulation, testing, and presentation.",
+          "يبدأ كل عطر بفكرة واضحة، ثم يمر بالتكوين الدقيق والاختبار والتقديم المتقن."
+        ),
+        mission_title: bi("Our mission", "مهمتنا"),
+        mission_content: bi(
+          "Make premium fragrance shopping simple, trustworthy, and enjoyable across every market we serve.",
+          "نجعل شراء العطور الفاخرة بسيطاً وموثوقاً وممتعاً في كل سوق نخدمه."
+        ),
+        vision_title: bi("Our vision", "رؤيتنا"),
+        vision_content: bi(
+          "To be a fragrance brand remembered for heritage, service, and a collection customers return to again and again.",
+          "أن نكون علامة عطور تُذكر بالتراث والخدمة والمجموعات التي يعود إليها العملاء مراراً وتكراراً."
+        ),
+        core_values_title: bi("Core values", "القيم الأساسية"),
+        core_values_subtitle: bi("The standards behind every fragrance we present.", "المعايير التي تقف خلف كل عطر نقدمه."),
+        about_core_values: [
+          { title: bi("Quality first", "الجودة أولاً"), description: bi("We choose products and presentation with long-term value in mind.", "نختار المنتجات وطريقة التقديم بعينٍ على القيمة طويلة المدى.") },
+          { title: bi("Clear service", "خدمة واضحة"), description: bi("We keep the buying journey easy to follow from browse to checkout.", "نجعل رحلة الشراء سهلة وواضحة من التصفح حتى الدفع.") },
+          { title: bi("Regional relevance", "ملاءمة إقليمية"), description: bi("We shape our offering for customers in the UAE, GCC, and beyond.", "نصمم عروضنا لتناسب عملاء الإمارات والخليج وما بعده.") },
+        ],
+        ingredients_title: bi("Signature scent families", "عائلات العطور المميزة"),
+        ingredients_subtitle: bi("Oud, amber, musk, florals, woods, and modern accords.", "العود والعنبر والمسك والزهور والأخشاب واللمسات العصرية."),
+        ingredients_description: bi(
+          "Our range balances traditional warmth with modern elegance, creating fragrances that feel rich, wearable, and memorable.",
+          "توازن مجموعتنا بين الدفء التراثي والأناقة العصرية لتمنحك عطوراً غنية وسهلة الارتداء ولا تُنسى."
+        ),
+        about_ingredients: [
+          { name: bi("Oud", "العود"), desc: bi("Deep and distinctive, with a confident regional presence.", "عميق ومميز بحضور إقليمي واضح.") },
+          { name: bi("Amber", "العنبر"), desc: bi("Warm, smooth, and ideal for elegant evening wear.", "دافئ وناعم ومثالي للأناقة المسائية.") },
+          { name: bi("Musk", "المسك"), desc: bi("Clean and lasting, perfect for everyday layering.", "نظيف وثابت ومناسب للتنسيق اليومي.") },
+        ],
+        cta_title: bi("Explore the collection.", "اكتشف المجموعة."),
+        cta_subtitle: bi("Find your next fragrance or choose a gift set for someone special.", "اعثر على عطرك القادم أو اختر طقماً هدية لمن تحب."),
+        cta_button: bi("Shop Now", "تسوق الآن"),
+        cta_link: "/shop",
+        faq_items: [
+          { q: bi("When was Sasan Perfumes founded?", "متى تأسست ساسان للعطور؟"), a: bi("Sasan Perfumes was established in 1964 in the UAE.", "تأسست ساسان للعطور عام 1964 في الإمارات.") },
+          { q: bi("What products do you offer?", "ما المنتجات التي تقدمونها؟"), a: bi("Perfumes, oud, hair and body mists, fragrance oils, dakhons, and gift sets.", "العطور والعود وبخاخات الشعر والجسم وزيوت العطور والدخون وأطقم الهدايا.") },
+          { q: bi("Do you deliver across markets?", "هل التوصيل متاح عبر الأسواق؟"), a: bi("Yes. We support regional stores and international browsing with market-aware pricing.", "نعم، ندعم المتاجر الإقليمية والتصفح الدولي بأسعار مخصصة لكل سوق.") },
+        ],
+      };
+
+    case "contact":
+      return {
+        title: bi("Contact Us", "تواصل معنا"),
+        hero_title: bi("Contact Sasan Perfumes", "تواصل مع ساسان للعطور"),
+        hero_subtitle: bi("We are here to help", "نحن هنا للمساعدة"),
+        hero_description: bi(
+          "Reach our team for product guidance, order updates, store locations, and wholesale inquiries.",
+          "تواصل مع فريقنا للاستفسارات حول المنتجات ومتابعة الطلبات ومواقع المتاجر والاستفسارات التجارية."
+        ),
+        send_message: bi("Send us a Message", "أرسل لنا رسالة"),
+        send_message_sub: bi(
+          "Share your question and we will get back to you within one business day.",
+          "أرسل سؤالك وسنعود إليك خلال يوم عمل واحد."
+        ),
+        quick_contact: bi("Quick Contact", "تواصل سريع"),
+        whatsapp: bi("WhatsApp Support", "دعم واتساب"),
+        call_us: bi("Call Us", "اتصل بنا"),
+        email_us: bi("Email Us", "راسلنا"),
+        contact_info: [
+          {
+            key: "address",
+            title: bi("Address", "العنوان"),
+            content: bi("Industrial Area 17 - Street 15, Warehouse 14, PO Box 177, Sharjah, UAE", "المنطقة الصناعية 17 - شارع 15، مستودع 14، ص.ب 177، الشارقة، الإمارات"),
+          },
+          {
+            key: "hours",
+            title: bi("Working Hours", "ساعات العمل"),
+            content: bi("Usually within 24 hours on working days.", "عادة خلال 24 ساعة في أيام العمل."),
+          },
+          {
+            key: "phone",
+            title: bi("WhatsApp", "واتساب"),
+            content: bi("0567394314", "0567394314"),
+          },
+          {
+            key: "callPhone",
+            title: bi("Complaints & Calls", "الشكاوى والمكالمات"),
+            content: bi("0563982953", "0563982953"),
+          },
+          {
+            key: "email",
+            title: bi("Email", "البريد الإلكتروني"),
+            content: bi("support@sasanperfumes.com", "support@sasanperfumes.com"),
+          },
+        ],
+        trust_indicators: [
+          { title: bi("Fast response", "استجابة سريعة"), description: bi("We reply during working hours with practical help.", "نرد خلال ساعات العمل بمساعدة عملية."), icon: "check" },
+          { title: bi("Order support", "دعم الطلبات"), description: bi("Need help with checkout or shipping? We can guide you.", "تحتاج مساعدة في الدفع أو الشحن؟ يمكننا إرشادك."), icon: "lock" },
+          { title: bi("Store guidance", "إرشادات المتاجر"), description: bi("We can point you to the closest regional store.", "يمكننا إرشادك إلى أقرب متجر إقليمي."), icon: "star" },
+        ],
+        cta_title: bi("Need a direct line to the right team?", "هل تحتاج إلى الوصول المباشر للفريق المناسب؟"),
+        cta_subtitle: bi("We can help with product availability, regional stores, and business inquiries.", "يمكننا المساعدة في توفر المنتجات والمتاجر الإقليمية والاستفسارات التجارية."),
+        cta_button: bi("Visit Private Labeling", "زيارة العلامة الخاصة"),
+      };
+
+    case "privacy":
+      return {
+        title: bi("Privacy Policy", "سياسة الخصوصية"),
+        subtitle: bi(
+          "How we collect, use, and protect your information.",
+          "كيف نجمع معلوماتك ونستخدمها ونحميها."
+        ),
+        privacy_sections: [
+          {
+            title: bi("Who we are", "من نحن"),
+            content: bi(
+              "Sasan Perfumes is a fragrance retailer serving customers across the UAE and regional markets.",
+              "ساسان للعطور هو متجر عطور يخدم العملاء في الإمارات والأسواق الإقليمية."
+            ),
+          },
+          {
+            title: bi("Information we collect", "المعلومات التي نجمعها"),
+            content: bi(
+              "We may collect the information you share when you place an order, contact us, or subscribe to updates. This can include your name, phone number, email address, shipping address, and order details.",
+              "قد نجمع المعلومات التي تشاركها عند تقديم طلب أو التواصل معنا أو الاشتراك في التحديثات، مثل الاسم ورقم الهاتف والبريد الإلكتروني وعنوان الشحن وتفاصيل الطلب."
+            ),
+          },
+          {
+            title: bi("How we use your data", "كيف نستخدم بياناتك"),
+            content: bi(
+              "We use customer information to process orders, improve service, support delivery, and send relevant updates where permitted.",
+              "نستخدم بيانات العملاء لمعالجة الطلبات وتحسين الخدمة ودعم التوصيل وإرسال التحديثات المناسبة عند السماح بذلك."
+            ),
+          },
+          {
+            title: bi("Your choices", "خياراتك"),
+            content: bi(
+              "You can contact us to update your information or ask about the data we hold about your account.",
+              "يمكنك التواصل معنا لتحديث معلوماتك أو الاستفسار عن البيانات المرتبطة بحسابك."
+            ),
+          },
+        ],
+        privacy_faq_groups: [
+          {
+            group_title: bi("Privacy questions", "أسئلة الخصوصية"),
+            faq_items: [
+              { q: bi("Do you share my data?", "هل تشاركون بياناتي؟"), a: bi("Only with trusted service providers when needed to process orders, payments, and deliveries.", "فقط مع مزودي الخدمة الموثوقين عند الحاجة لمعالجة الطلبات والمدفوعات والتوصيل.") },
+              { q: bi("Can I request an update?", "هل يمكنني طلب تحديث بياناتي؟"), a: bi("Yes. Contact us and we will help review and update your records where possible.", "نعم. تواصل معنا وسنساعد في مراجعة وتحديث بياناتك حيثما أمكن.") },
+            ],
+          },
+        ],
+        featured_links_title: bi("Helpful links", "روابط مفيدة"),
+        featured_links_description: bi("Quick access to customer support pages and store information.", "وصول سريع إلى صفحات الدعم ومعلومات المتاجر."),
+        featured_links: [
+          { label: bi("Contact Us", "تواصل معنا"), url: "/contact-us" },
+          { label: bi("Shipping Information", "معلومات الشحن"), url: "/shipping" },
+          { label: bi("Returns & Exchange", "الإرجاع والاستبدال"), url: "/returns" },
+        ],
+      };
+
+    case "returns":
+      return {
+        title: bi("Return & Exchange Policy", "سياسة الإرجاع والاستبدال"),
+        subtitle: bi(
+          "Your satisfaction matters. If something is not right, we will help.",
+          "رضاك مهم لنا. إذا لم يكن كل شيء على ما يرام فسنسعد بالمساعدة."
+        ),
+        returns_features: [
+          {
+            title: bi("Condition check", "فحص الحالة"),
+            desc: bi("Items should be unopened and in original condition whenever possible.", "يفضل أن تكون المنتجات غير مفتوحة وبحالتها الأصلية قدر الإمكان."),
+          },
+          {
+            title: bi("Simple review", "مراجعة سهلة"),
+            desc: bi("Send us your order details and we will review the request quickly.", "أرسل تفاصيل الطلب وسنراجع الطلب بسرعة."),
+          },
+          {
+            title: bi("Support team", "فريق الدعم"),
+            desc: bi("We will guide you through exchange or refund options according to policy.", "سنرشدك إلى خيارات الاستبدال أو الاسترداد وفقاً للسياسة."),
+          },
+        ],
+        returns_steps: [
+          { title: bi("Contact us", "تواصل معنا"), desc: bi("Share your order number and reason for return.", "أرسل رقم الطلب وسبب الإرجاع.") },
+          { title: bi("Review", "المراجعة"), desc: bi("Our team checks eligibility and next steps.", "يقوم فريقنا بمراجعة الأهلية والخطوات التالية.") },
+          { title: bi("Resolution", "النتيجة"), desc: bi("We confirm the approved exchange, refund, or store credit path.", "نؤكد طريقة الاستبدال أو الاسترداد أو الرصيد المعتمد.") },
+        ],
+        returns_eligible: [
+          { text: bi("Incorrect or damaged item received", "استلام منتج خاطئ أو تالف") },
+          { text: bi("Order reported within the eligible window", "تم الإبلاغ عن الطلب خلال المدة المسموح بها") },
+          { text: bi("Product is unused and in original packaging", "المنتج غير مستخدم وفي غلافه الأصلي") },
+        ],
+        returns_not_eligible: [
+          { text: bi("Opened fragrance products", "المنتجات العطرية المفتوحة") },
+          { text: bi("Items without proof of purchase", "المنتجات دون إثبات شراء") },
+          { text: bi("Customized or final-sale items", "المنتجات المخصصة أو النهائية") },
+        ],
+        need_help: bi("Need help?", "تحتاج مساعدة؟"),
+        need_help_text: bi(
+          "Our customer care team can confirm the return path for your order.",
+          "يمكن لفريق خدمة العملاء تأكيد مسار الإرجاع المناسب لطلبك."
+        ),
+        process_title: bi("Return process", "خطوات الإرجاع"),
+        returns_faq_groups: [
+          {
+            group_title: bi("Returns FAQ", "الأسئلة الشائعة للإرجاع"),
+            faq_items: [
+              { q: bi("Can I exchange a fragrance?", "هل يمكنني استبدال عطر؟"), a: bi("Yes, subject to product condition and policy review.", "نعم، وذلك وفق حالة المنتج ومراجعة السياسة.") },
+              { q: bi("How do I start?", "كيف أبدأ؟"), a: bi("Contact us with your order details and our team will guide you.", "تواصل معنا مع تفاصيل الطلب وسنرشدك للخطوات.") },
+            ],
+          },
+        ],
+        featured_links_title: bi("Helpful links", "روابط مفيدة"),
+        featured_links_description: bi("Customer support and policy pages in one place.", "صفحات الدعم والسياسات في مكان واحد."),
+        featured_links: [
+          { label: bi("Contact Us", "تواصل معنا"), url: "/contact-us" },
+          { label: bi("FAQ", "الأسئلة الشائعة"), url: "/faq" },
+          { label: bi("Shipping Information", "معلومات الشحن"), url: "/shipping" },
+        ],
+      };
+
+    case "faq":
+      return {
+        title: bi("Frequently Asked Questions", "الأسئلة الشائعة"),
+        subtitle: bi(
+          "Answers to common questions about our products and services.",
+          "إجابات على أكثر الأسئلة شيوعاً حول منتجاتنا وخدماتنا."
+        ),
+        faq_groups: [
+          {
+            group_title: bi("Ordering", "الطلبات"),
+            faq_items: [
+              { q: bi("How can I place an order?", "كيف يمكنني تقديم الطلب؟"), a: bi("Browse the catalog, add your items to cart, and complete checkout.", "تصفح الكتالوج وأضف المنتجات إلى السلة ثم أكمل الدفع.") },
+              { q: bi("Do you offer gift sets?", "هل تقدمون أطقم هدايا؟"), a: bi("Yes. Gift sets are available across selected collections.", "نعم، تتوفر أطقم الهدايا عبر مجموعات مختارة.") },
+            ],
+          },
+          {
+            group_title: bi("Delivery", "التوصيل"),
+            faq_items: [
+              { q: bi("Which markets do you ship to?", "إلى أي أسواق تشحنون؟"), a: bi("We support the UAE, GCC markets, and selected international destinations.", "ندعم الإمارات وأسواق الخليج ووجهات دولية محددة.") },
+              { q: bi("Can I track my order?", "هل يمكنني تتبع الطلب؟"), a: bi("Yes. Use the Track Order page or contact support for help.", "نعم. استخدم صفحة تتبع الطلب أو تواصل مع الدعم للمساعدة.") },
+            ],
+          },
+        ],
+        not_found: bi("Didn't find your answer?", "لم تجد الإجابة التي تبحث عنها؟"),
+        not_found_text: bi("Contact us and we'll be happy to help.", "تواصل معنا وسنكون سعداء بالمساعدة."),
+        featured_links_title: bi("Helpful links", "روابط مفيدة"),
+        featured_links_description: bi("Find our most useful customer pages here.", "اعثر على صفحات العملاء الأكثر فائدة هنا."),
+        featured_links: [
+          { label: bi("Contact Us", "تواصل معنا"), url: "/contact-us" },
+          { label: bi("Shipping Information", "معلومات الشحن"), url: "/shipping" },
+          { label: bi("Returns & Exchange", "الإرجاع والاستبدال"), url: "/returns" },
+        ],
+      };
+
+    case "shipping":
+      return {
+        title: bi("Shipping Information", "معلومات الشحن"),
+        rates_title: bi("Shipping & delivery overview", "نظرة عامة على الشحن والتوصيل"),
+        rates_note: bi(
+          "Prices are shown in the market currency and delivery options vary by destination.",
+          "تظهر الأسعار بعملة السوق وتختلف خيارات التوصيل حسب الوجهة."
+        ),
+        shipping_sections: [
+          {
+            title: bi("Regional delivery", "التوصيل الإقليمي"),
+            content: bi(
+              "We deliver across the UAE and selected GCC markets with market-specific checkout settings.",
+              "نقوم بالتوصيل داخل الإمارات وبعض أسواق الخليج مع إعدادات دفع مخصصة لكل سوق."
+            ),
+          },
+          {
+            title: bi("Packaging", "التغليف"),
+            content: bi(
+              "Orders are packed carefully to protect fragrance bottles during transit.",
+              "يتم تغليف الطلبات بعناية لحماية عبوات العطور أثناء الشحن."
+            ),
+          },
+          {
+            title: bi("Support", "الدعم"),
+            content: bi(
+              "If you need help with delivery, contact our team and we will review the status with you.",
+              "إذا احتجت إلى مساعدة في التوصيل، تواصل مع فريقنا وسنراجع الحالة معك."
+            ),
+          },
+        ],
+        shipping_faq_groups: [
+          {
+            group_title: bi("Shipping FAQ", "الأسئلة الشائعة للشحن"),
+            faq_items: [
+              { q: bi("Do you offer fast delivery?", "هل توفرون توصيلاً سريعاً؟"), a: bi("Yes. Delivery speed depends on the destination and market settings.", "نعم، وتختلف سرعة التوصيل حسب الوجهة وإعدادات السوق.") },
+              { q: bi("How do I check my shipping status?", "كيف أتحقق من حالة الشحن؟"), a: bi("Use the Track Order page or contact support for assistance.", "استخدم صفحة تتبع الطلب أو تواصل مع الدعم للمساعدة.") },
+            ],
+          },
+        ],
+        featured_links_title: bi("Helpful links", "روابط مفيدة"),
+        featured_links_description: bi("Quick access to support and policy pages.", "وصول سريع إلى صفحات الدعم والسياسات."),
+        featured_links: [
+          { label: bi("Track Order", "تتبع الطلب"), url: "/track-order" },
+          { label: bi("Contact Us", "تواصل معنا"), url: "/contact-us" },
+        ],
+      };
+
+    case "terms":
+      return {
+        title: bi("Terms & Conditions", "الشروط والأحكام"),
+        subtitle: bi(
+          "Please read these terms before using the website or placing an order.",
+          "يرجى قراءة هذه الشروط قبل استخدام الموقع أو تقديم الطلب."
+        ),
+        terms_sections: [
+          {
+            title: bi("General information", "معلومات عامة"),
+            content: bi(
+              "By using this website or placing an order, you agree to the terms that apply to your purchase and browsing experience.",
+              "عند استخدام هذا الموقع أو تقديم طلب، فإنك توافق على الشروط المطبقة على عملية الشراء والتصفح."
+            ),
+          },
+          {
+            title: bi("Orders and payments", "الطلبات والمدفوعات"),
+            content: bi(
+              "We reserve the right to verify orders, adjust errors, and decline suspicious activity when necessary.",
+              "نحتفظ بالحق في التحقق من الطلبات وتصحيح الأخطاء ورفض النشاط المشبوه عند الحاجة."
+            ),
+          },
+          {
+            title: bi("Product information", "معلومات المنتج"),
+            content: bi(
+              "We do our best to keep product descriptions accurate, but fragrance impressions can vary by skin and preference.",
+              "نبذل قصارى جهدنا للحفاظ على دقة أوصاف المنتجات، لكن انطباع العطر قد يختلف حسب البشرة والتفضيل."
+            ),
+          },
+        ],
+        terms_faq_groups: [
+          {
+            group_title: bi("Terms FAQ", "الأسئلة الشائعة للشروط"),
+            faq_items: [
+              { q: bi("Can you cancel an order?", "هل يمكن إلغاء الطلب؟"), a: bi("Cancellation depends on the order status and processing stage.", "يعتمد الإلغاء على حالة الطلب ومرحلة المعالجة.") },
+              { q: bi("Are all products final sale?", "هل جميع المنتجات نهائية البيع؟"), a: bi("Some fragrance items may be subject to hygiene and return restrictions.", "قد تخضع بعض منتجات العطور لقيود تتعلق بالنظافة والإرجاع.") },
+            ],
+          },
+        ],
+        featured_links_title: bi("Helpful links", "روابط مفيدة"),
+        featured_links_description: bi("Policies and support pages for a smoother purchase journey.", "صفحات السياسات والدعم لرحلة شراء أسهل."),
+        featured_links: [
+          { label: bi("Privacy Policy", "سياسة الخصوصية"), url: "/privacy" },
+          { label: bi("Returns & Exchange", "الإرجاع والاستبدال"), url: "/returns" },
+          { label: bi("Contact Us", "تواصل معنا"), url: "/contact-us" },
+        ],
+      };
+
+    case "store-locator":
+      return {
+        hero_title: bi("We Are Where You Are", "نحن حيث تكون"),
+        hero_subtitle: bi("Store Locator", "مواقع المتاجر"),
+        hero_description: bi(
+          "Our commitment to quality and elegant presentation makes it easy to find Sasan Perfumes across the UAE.",
+          "التزامنا بالجودة والأناقة يجعل العثور على ساسان للعطور في الإمارات أمراً سهلاً."
+        ),
+        opening_hours: bi("Usually within 24 hours on working days.", "عادة خلال 24 ساعة في أيام العمل."),
+        cta_title: bi("Plan your visit.", "خطط لزيارتك."),
+        cta_subtitle: bi("Choose a location, get directions, and explore the closest store to you.", "اختر الموقع واحصل على الاتجاهات واستكشف أقرب متجر إليك."),
+        cta_button: bi("Shop Online", "تسوق عبر الموقع"),
+        waitingTitle: bi("Our locations", "مواقعنا"),
+        waitingSubtitle: bi("A small selection of stores and service points across the UAE.", "مجموعة مختارة من المتاجر ونقاط الخدمة عبر الإمارات."),
+        stores: [
+          {
+            name: bi("Sasan Perfumes", "ساسان للعطور"),
+            floor: bi("Muwaileh Commercial", "مويلح التجاري"),
+            city: bi("Sharjah", "الشارقة"),
+            region: "Sharjah",
+            country: "uae",
+            google_maps_url: "https://maps.google.com/?q=Muwaileh+Commercial+Sharjah",
+            image: "",
+          },
+          {
+            name: bi("Sasan Perfumes", "ساسان للعطور"),
+            floor: bi("Central Souk", "السوق المركزي"),
+            city: bi("Sharjah", "الشارقة"),
+            region: "Sharjah",
+            country: "uae",
+            google_maps_url: "https://maps.app.goo.gl/HCcGXFRbtnT9RbPn8",
+            image: "",
+          },
+          {
+            name: bi("Sasan Perfumes", "ساسان للعطور"),
+            floor: bi("Al Shuwaiheen", "الشويهين"),
+            city: bi("Sharjah", "الشارقة"),
+            region: "Sharjah",
+            country: "uae",
+            google_maps_url: "https://maps.app.goo.gl/rLeMnWnFuS6iV5EY9",
+            image: "",
+          },
+          {
+            name: bi("Sasan Perfumes", "ساسان للعطور"),
+            floor: bi("Khalifa City - SE45", "مدينة خليفة - SE45"),
+            city: bi("Abu Dhabi", "أبوظبي"),
+            region: "Abu Dhabi",
+            country: "uae",
+            google_maps_url: "https://maps.app.goo.gl/aX511Vhm32PekwMD7",
+            image: "",
+          },
+        ],
+      };
+
+    case "track-order":
+      return {
+        title: bi("Track Order", "تتبع الطلب"),
+        subtitle: bi("Use your order number and checkout email to see the latest status.", "استخدم رقم الطلب وبريد الشراء لمعرفة الحالة الأخيرة."),
+        sections: [
+          {
+            title: bi("How it works", "كيف يعمل"),
+            content: bi(
+              "Enter your order number and the email used at checkout, then contact our team if you need manual help.",
+              "أدخل رقم الطلب والبريد المستخدم عند الدفع، ثم تواصل مع فريقنا إذا احتجت إلى مساعدة يدوية."
+            ),
+          },
+        ],
+      };
+
+    default:
+      return null;
+  }
+}
 
 /**
  * Fetch static page content from /sasanperfumes/v1/pages/{slug}.
  * Returns null if API is unreachable — caller should fall back to dictionary.
  */
 export async function getStaticPageContent(slug: string): Promise<StaticPageResponse | null> {
-  const data = await fetchWPAPI<StaticPageResponse>(
-    `/sasanperfumes/v1/pages/${encodeURIComponent(slug)}`,
-    { tags: ["static-pages", `page-${slug}`], revalidate: 300 }
-  );
-  return data ? rebrandApiContent(data) : null;
+  const current = await fetchStaticPageContentFromApi(slug);
+  const legacy = await fetchStaticPageContentFromApi(slug, LEGACY_WP_API_BASE);
+  const fallback = buildStaticPageFallbackContent(slug);
+  const merged = mergeStaticPageContent(current, legacy || fallback);
+
+  return merged ? rebrandApiContent(merged) : fallback;
 }
 
 /**
  * Helper: pick locale value from a bilingual field, fallback to dictionary value.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function pickLocale(field: BilingualField | any[] | undefined, locale: string, fallback: string): string {
-  if (!field || Array.isArray(field)) return fallback;
+export function pickLocale(field: StaticPageValue | undefined, locale: string, fallback: string): string {
+  if (!field) return fallback;
+  if (typeof field === "string") return field;
+  if (typeof field === "number" || typeof field === "boolean") return String(field);
+  if (Array.isArray(field)) return fallback;
   const val = locale === 'ar' ? field.ar : field.en;
   return val || fallback;
 }
@@ -2452,13 +3244,13 @@ export function pickLocale(field: BilingualField | any[] | undefined, locale: st
  * Each repeater item has fields like { title: {en,ar}, content: {en,ar} } or { title_en, title_ar }.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function mapRepeater<T>(items: BilingualField | any[] | undefined, locale: string, mapper: (item: any, locale: string) => T): T[] {
+export function mapRepeater<T>(items: StaticPageValue | undefined, locale: string, mapper: (item: any, locale: string) => T): T[] {
   if (!items || !Array.isArray(items) || items.length === 0) return [];
   return items.map(item => mapper(item, locale));
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function mapFAQGroups(items: BilingualField | any[] | undefined, locale: string) {
+export function mapFAQGroups(items: StaticPageValue | undefined, locale: string) {
   if (!items || !Array.isArray(items) || items.length === 0) return [];
 
   type FAQGroup = { title: string; items: Array<{ question: string; answer: string }> };
@@ -2700,10 +3492,11 @@ async function fetchBlogAPI(
   endpoint: string,
   market: string | undefined,
   frontendHost: string | undefined,
-  tags: string[]
+  tags: string[],
+  apiBase?: string
 ): Promise<{ response: Response; raw: RawBlogPost[] } | null> {
   const urls = uniqueUrls(
-    [`${WP_API_BASE}${endpoint}`].map((url) =>
+    [`${(apiBase || WP_API_BASE)}${endpoint}`].map((url) =>
       frontendHost ? appendQueryParam(url, "frontend_host", frontendHost) : url
     )
   );
@@ -2740,16 +3533,29 @@ export async function getBlogPosts(
   perPage = 12,
   frontendHost?: string
 ): Promise<{ posts: BlogPost[]; total: number; totalPages: number }> {
-  const url = `/wp/v2/posts?per_page=${perPage}&page=${page}&_embed=true`;
   const market = extractWPMarketFromHost(frontendHost) || await detectMarketFromRequest();
-  const result = await fetchBlogAPI(url, market, frontendHost, ["blog"]);
-  if (!result) return { posts: [], total: 0, totalPages: 0 };
+  const url = `/wp/v2/posts?per_page=100&page=1&_embed=true`;
+  const [currentResult, legacyResult] = await Promise.all([
+    fetchBlogAPI(url, market, frontendHost, ["blog"], undefined),
+    fetchBlogAPI(url, market, frontendHost, ["blog", "legacy-blog"], LEGACY_WP_API_BASE),
+  ]);
 
-  const { response, raw } = result;
-  const total = parseInt(response.headers.get("x-wp-total") || "0", 10);
-  const totalPages = parseInt(response.headers.get("x-wp-totalpages") || "0", 10);
+  const mergedRaw = [
+    ...(currentResult?.raw || []),
+    ...(legacyResult?.raw || []),
+  ];
+  const raw = Array.from(
+    new Map(
+      mergedRaw.map((post) => [
+        post.slug || String(post.id || ""),
+        post,
+      ])
+    ).values()
+  );
 
-  const posts: BlogPost[] = raw.map((p) => ({
+  const posts: BlogPost[] = raw
+    .sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime())
+    .map((p) => ({
     id: p.id || 0,
     slug: p.slug || "",
     title: p.title?.rendered || "",
@@ -2764,13 +3570,20 @@ export async function getBlogPosts(
     ),
   }));
 
-  return { posts: rebrandApiContent(posts), total, totalPages };
+  const total = posts.length;
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+  const start = Math.max(0, (page - 1) * perPage);
+  const paginated = posts.slice(start, start + perPage);
+
+  return { posts: rebrandApiContent(paginated), total, totalPages };
 }
 
 export async function getBlogPost(slug: string, frontendHost?: string): Promise<BlogPost | null> {
-  const url = `/wp/v2/posts?slug=${encodeURIComponent(slug)}&_embed=true`;
   const market = extractWPMarketFromHost(frontendHost) || await detectMarketFromRequest();
-  const result = await fetchBlogAPI(url, market, frontendHost, ["blog", `blog-${slug}`]);
+  const url = `/wp/v2/posts?slug=${encodeURIComponent(slug)}&_embed=true`;
+  const result =
+    (await fetchBlogAPI(url, market, frontendHost, ["blog", `blog-${slug}`])) ||
+    (await fetchBlogAPI(url, market, frontendHost, ["blog", `blog-${slug}`, "legacy-blog"], LEGACY_WP_API_BASE));
   if (!result) return null;
 
   const { raw } = result;

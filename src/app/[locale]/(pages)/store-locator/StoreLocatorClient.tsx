@@ -97,6 +97,8 @@ interface CMSContent {
   ctaTitle: string;
   ctaSubtitle: string;
   ctaButton: string;
+  waitingTitle: string;
+  waitingSubtitle: string;
 }
 
 interface StoreLocatorClientProps {
@@ -128,6 +130,8 @@ export default function StoreLocatorClient({ dict, locale, stores: storeList, co
     ctaTitle: cms.ctaTitle,
     ctaSubtitle: cms.ctaSubtitle,
     ctaButton: cms.ctaButton,
+    waitingTitle: cms.waitingTitle || dict.waitingTitle,
+    waitingSubtitle: cms.waitingSubtitle || dict.waitingSubtitle,
   };
 
   return (
@@ -242,8 +246,8 @@ export default function StoreLocatorClient({ dict, locale, stores: storeList, co
       {/* Waiting / Quick Links Section */}
       <section className="bg-[#f8f3ef] py-8 md:py-10">
         <div className="px-4">
-          <h2 className="font-normal text-2xl text-brand-primary md:text-3xl">{dict.waitingTitle}</h2>
-          <p className="mt-2 text-sm text-brand-primary/60">{dict.waitingSubtitle}</p>
+          <h2 className="font-normal text-2xl text-brand-primary md:text-3xl">{content.waitingTitle}</h2>
+          <p className="mt-2 text-sm text-brand-primary/60">{content.waitingSubtitle}</p>
           <div className="mt-4 flex flex-wrap gap-3">
             {countries.map((country) => (
               <a

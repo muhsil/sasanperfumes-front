@@ -51,6 +51,7 @@ const staticPages = [
   "/returns",
   "/privacy",
   "/terms-and-conditions",
+  "/track-order",
 ];
 
 async function generateMarketSitemap(marketCode: MarketCode, currency: Currency): Promise<MetadataRoute.Sitemap> {

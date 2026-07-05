@@ -596,7 +596,6 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isAddedToCart, setIsAddedToCart] = useState(false);
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
-  const [detailsMounted, setDetailsMounted] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
 
   useSwipeBack();
@@ -616,7 +615,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
   const ctaSectionRef = useRef<HTMLDivElement | null>(null);
   const hasTrackedViewItemRef = useRef(false);
     const { addToCart } = useCart();
-    const { currency, convertPrice, getCurrencyInfo } = useCurrency();
+    const { currency } = useCurrency();
     const { addToWishlist, removeFromWishlist, isInWishlist, getWishlistItemId } = useWishlist();
     const { isAuthenticated } = useAuth();
     const router = useRouter();
@@ -624,10 +623,6 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
   const rating = Number(product.average_rating || 0);
   const reviewCount = Number(product.review_count || 0);
   const showReviews = reviewsEnabled && reviewCount > 0;
-
-  useEffect(() => {
-    setDetailsMounted(true);
-  }, []);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 767px)");
@@ -645,7 +640,6 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
 
   useEffect(() => {
     if (!isMobileViewport) {
-      setShowStickyAddToCart(false);
       return;
     }
 
@@ -876,19 +870,6 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
     sanitizedDescription && (!shortDescriptionText || descriptionText !== shortDescriptionText)
       ? sanitizedDescription
       : "";
-  const characteristicAttributes = (product.attributes || []).filter((attr, index, attributes) => {
-    const key = [
-      decodeHtmlEntities(attr.name).trim().toLowerCase(),
-      ...(attr.terms || []).map((term) => decodeHtmlEntities(term.name).trim().toLowerCase()),
-    ].join("|");
-    return attributes.findIndex((candidate) => {
-      const candidateKey = [
-        decodeHtmlEntities(candidate.name).trim().toLowerCase(),
-        ...(candidate.terms || []).map((term) => decodeHtmlEntities(term.name).trim().toLowerCase()),
-      ].join("|");
-      return candidateKey === key;
-    }) === index;
-  });
   const productTags = (product.tags || []).filter((tag, index, tags) =>
     tags.findIndex((candidate) => candidate.slug === tag.slug) === index
   );
@@ -987,10 +968,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
     variationAttributes.length === 0 ||
     (variationAttributes.every((attr) => Boolean(selectedVariations[attr.taxonomy || attr.name])) && Boolean(selectedVariation) && !isSelectedVariationOutOfStock);
 
-  useEffect(() => {
-    if (selectedImage < imageCount) return;
-    setSelectedImage(0);
-  }, [imageCount, selectedImage]);
+  const stickyAddToCartVisible = isMobileViewport && showStickyAddToCart;
 
   const selectGalleryImage = useCallback((index: number, options?: { openFullscreen?: boolean }) => {
     const maxIndex = Math.max(imageCount - 1, 0);
@@ -1846,8 +1824,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           )}
           </div>
 
-          {detailsMounted && (
-            <div className="mt-8 border-t border-brand-border/70 pt-6">
+          <div className="mt-8 border-t border-brand-border/70 pt-6">
                 <AccordionSection title={isRTL ? "الوصف" : "Description"}>
                   {descriptionHtml ? (
                     <div
@@ -1861,47 +1838,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                   ) : null}
                 </AccordionSection>
 
-                <AccordionSection title={isRTL ? "الخصائص" : "Characteristics"}>
-                  <div className="space-y-2 text-sm">
-                    {primaryCategory && (
-                      <div className="flex justify-between gap-4">
-                        <span className="shrink-0 text-brand-muted">{isRTL ? "الفئة" : "Category"}</span>
-                        <span className="text-right text-brand-primary">{decodeHtmlEntities(primaryCategory.name)}</span>
-                      </div>
-                    )}
-                    {product.sku && (
-                      <div className="flex justify-between gap-4">
-                        <span className="shrink-0 text-brand-muted">{isRTL ? "رمز المنتج" : "SKU"}</span>
-                        <span className="text-right text-brand-primary">{product.sku}</span>
-                      </div>
-                    )}
-                    {characteristicAttributes.length > 0 && (
-                      characteristicAttributes.map((attr) => (
-                        <div key={attr.id} className="flex justify-between gap-4">
-                          <span className="shrink-0 text-brand-muted">{decodeHtmlEntities(attr.name)}</span>
-                          <span className="text-right text-brand-primary">{attr.terms?.map(t => decodeHtmlEntities(t.name)).join(", ")}</span>
-                        </div>
-                      ))
-                    )}
-                    {productTags.length > 0 && (
-                      <div className="mt-1 border-t border-brand-border/70 pt-3">
-                        <span className="mb-3 block text-brand-muted">{isRTL ? "الوسوم" : "Tags"}</span>
-                        <div className="flex flex-wrap gap-2">
-                          {productTags.map(t => (
-                            <span
-                              key={t.slug}
-                              className="inline-flex items-center rounded-full bg-brand-beige px-2.5 py-0.5 text-xs font-medium text-brand-primary ring-1 ring-inset ring-brand-primary"
-                            >
-                              {t.name}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </AccordionSection>
             </div>
-          )}
           </div>
           </div>
         </aside>
@@ -1960,7 +1897,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
         className={cn(
           "fixed inset-x-3 bottom-20 z-40 rounded-[20px] border border-brand-border/70 bg-white/80 px-3 py-3 shadow-[0_16px_44px_rgba(20,15,10,0.18)] backdrop-blur-xl transition-all duration-300 md:hidden",
           !canPurchaseProduct && "hidden",
-          showStickyAddToCart ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"
+          stickyAddToCartVisible ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"
         )}
       >
           <div className="grid items-center gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
