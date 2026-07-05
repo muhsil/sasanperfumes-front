@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { usePathname } from "next/navigation";
 import { ChevronDown, Search, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -10,7 +11,7 @@ import {
   formatPhoneWithCountryCode,
   validatePhoneNumber,
 } from "@/lib/utils/phone";
-import { countries } from "@/components/common/CountrySelect";
+import { countries, getMarketCountryCode } from "@/components/common/CountrySelect";
 
 export interface PhoneInputProps {
   label?: string;
@@ -50,6 +51,8 @@ export function PhoneInput({
   const [internalError, setInternalError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const pathname = usePathname();
+  const marketCountryCode = getMarketCountryCode(pathname);
 
   const initialParsed = useMemo(() => {
     if (value) {
@@ -57,30 +60,39 @@ export function PhoneInput({
       if (parsed.dialCode) {
         const matchedConfig = countryPhoneConfigs.find((c) => c.dialCode === parsed.dialCode);
         return {
-          country: matchedConfig?.code || externalCountryCode || "AE",
+          country: marketCountryCode || matchedConfig?.code || externalCountryCode || "AE",
           localNumber: parsed.localNumber,
         };
       }
-      return { country: externalCountryCode || "AE", localNumber: parsed.localNumber };
+      return { country: marketCountryCode || externalCountryCode || "AE", localNumber: parsed.localNumber };
     }
-    return { country: externalCountryCode || "AE", localNumber: "" };
+    return { country: marketCountryCode || externalCountryCode || "AE", localNumber: "" };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const [selectedCountry, setSelectedCountry] = useState<string>(initialParsed.country);
   const [localNumber, setLocalNumber] = useState(initialParsed.localNumber);
 
-  const prevExternalCountryCode = useRef(externalCountryCode);
-  if (externalCountryCode && externalCountryCode !== prevExternalCountryCode.current) {
-    prevExternalCountryCode.current = externalCountryCode;
-    if (externalCountryCode !== selectedCountry) {
-      setSelectedCountry(externalCountryCode);
+  useEffect(() => {
+    const forcedCountry = marketCountryCode || externalCountryCode || initialParsed.country;
+    if (forcedCountry !== selectedCountry) {
+      setSelectedCountry(forcedCountry);
       setLocalNumber("");
       setInternalError(null);
       onChange("");
+      if (onCountryCodeChange) onCountryCodeChange(forcedCountry);
       if (onValidationChange) onValidationChange(!required);
     }
-  }
+  }, [
+    externalCountryCode,
+    initialParsed.country,
+    marketCountryCode,
+    onChange,
+    onCountryCodeChange,
+    onValidationChange,
+    required,
+    selectedCountry,
+  ]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -166,7 +178,11 @@ export function PhoneInput({
     };
   });
 
-  const filteredConfigs = phoneConfigsWithLabels.filter((config) => {
+  const visiblePhoneConfigs = marketCountryCode
+    ? phoneConfigsWithLabels.filter((config) => config.code === marketCountryCode)
+    : phoneConfigsWithLabels;
+
+  const filteredConfigs = visiblePhoneConfigs.filter((config) => {
     const searchLower = searchQuery.toLowerCase();
     return (
       config.label.toLowerCase().includes(searchLower) ||
@@ -177,7 +193,7 @@ export function PhoneInput({
   });
 
   const displayError = externalError || internalError;
-  const selectedConfig = phoneConfigsWithLabels.find((c) => c.code === selectedCountry);
+  const selectedConfig = visiblePhoneConfigs.find((c) => c.code === selectedCountry);
 
   return (
     <div className={cn("w-full", className)} ref={containerRef}>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { ChevronDown, Search, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,7 +21,6 @@ export const countries: CountryOption[] = [
   { value: "EG", label: "Egypt", labelAr: "مصر" },
   { value: "JO", label: "Jordan", labelAr: "الأردن" },
   { value: "LB", label: "Lebanon", labelAr: "لبنان" },
-  { value: "IQ", label: "Iraq", labelAr: "العراق" },
   { value: "SY", label: "Syria", labelAr: "سوريا" },
   { value: "PS", label: "Palestine", labelAr: "فلسطين" },
   { value: "YE", label: "Yemen", labelAr: "اليمن" },
@@ -72,8 +72,6 @@ export const countries: CountryOption[] = [
   { value: "AR", label: "Argentina", labelAr: "الأرجنتين" },
   { value: "CL", label: "Chile", labelAr: "تشيلي" },
   { value: "CO", label: "Colombia", labelAr: "كولومبيا" },
-  { value: "RU", label: "Russia", labelAr: "روسيا" },
-  { value: "UA", label: "Ukraine", labelAr: "أوكرانيا" },
   { value: "AF", label: "Afghanistan", labelAr: "أفغانستان" },
   { value: "AL", label: "Albania", labelAr: "ألبانيا" },
   { value: "AD", label: "Andorra", labelAr: "أندورا" },
@@ -83,7 +81,6 @@ export const countries: CountryOption[] = [
   { value: "AZ", label: "Azerbaijan", labelAr: "أذربيجان" },
   { value: "BS", label: "Bahamas", labelAr: "الباهاماس" },
   { value: "BB", label: "Barbados", labelAr: "بربادوس" },
-  { value: "BY", label: "Belarus", labelAr: "بيلاروسيا" },
   { value: "BZ", label: "Belize", labelAr: "بليز" },
   { value: "BJ", label: "Benin", labelAr: "بنين" },
   { value: "BT", label: "Bhutan", labelAr: "بوتان" },
@@ -203,6 +200,23 @@ export const countries: CountryOption[] = [
   { value: "ZW", label: "Zimbabwe", labelAr: "زيمبابوي" },
 ];
 
+const MARKET_COUNTRY_CODES = new Set(["qa", "om", "sa"]);
+
+export function getMarketCountryCode(pathname?: string | null): string | null {
+  const firstSegment = pathname?.split("/").filter(Boolean)[0]?.toLowerCase();
+  if (!firstSegment || !MARKET_COUNTRY_CODES.has(firstSegment)) return null;
+  return firstSegment.toUpperCase();
+}
+
+export function getCountriesForPathname(
+  countryList: CountryOption[],
+  pathname?: string | null
+): CountryOption[] {
+  const marketCountryCode = getMarketCountryCode(pathname);
+  if (!marketCountryCode) return countryList;
+  return countryList.filter((country) => country.value === marketCountryCode);
+}
+
 export interface CountrySelectProps {
   label?: string;
   value: string;
@@ -230,10 +244,19 @@ export function CountrySelect({
   const [searchQuery, setSearchQuery] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const pathname = usePathname();
 
-  const countryList = availableCountries || countries;
+  const marketCountryCode = getMarketCountryCode(pathname);
+  const countryList = getCountriesForPathname(availableCountries || countries, pathname);
+  const effectiveValue = marketCountryCode || value;
 
-  const selectedCountry = countryList.find((c) => c.value === value);
+  useEffect(() => {
+    if (marketCountryCode && value !== marketCountryCode) {
+      onChange(marketCountryCode);
+    }
+  }, [marketCountryCode, onChange, value]);
+
+  const selectedCountry = countryList.find((c) => c.value === effectiveValue);
   const displayLabel = selectedCountry
     ? isRTL && selectedCountry.labelAr
       ? selectedCountry.labelAr

@@ -28,6 +28,12 @@ interface WCCountry {
   name: string;
 }
 
+const MARKET_SHIPPING_COUNTRIES = {
+  qa: "QA",
+  om: "OM",
+  sa: "SA",
+} as const;
+
 const CONTINENT_COUNTRIES: Record<string, string[]> = {
   AF: ["DZ", "AO", "BJ", "BW", "BF", "BI", "CM", "CV", "CF", "TD", "KM", "CG", "CD", "CI", "DJ", "EG", "GQ", "ER", "SZ", "ET", "GA", "GM", "GH", "GN", "GW", "KE", "LS", "LR", "LY", "MG", "MW", "ML", "MR", "MU", "YT", "MA", "MZ", "NA", "NE", "NG", "RE", "RW", "SH", "ST", "SN", "SC", "SL", "SO", "ZA", "SS", "SD", "TZ", "TG", "TN", "UG", "EH", "ZM", "ZW"],
   AN: ["AQ", "BV", "TF", "HM", "GS"],
@@ -43,6 +49,29 @@ export async function GET() {
     const market = await getRequestMarket();
     const authParams = getBasicAuthParams(market.code);
     const apiBase = `${wpJsonBaseForMarket(market.code)}/wc/v3`;
+
+    const marketCountryCode = MARKET_SHIPPING_COUNTRIES[market.code as keyof typeof MARKET_SHIPPING_COUNTRIES];
+    if (marketCountryCode) {
+      let countryName: string = marketCountryCode;
+      const countriesUrl = `${apiBase}/data/countries?${authParams}`;
+      const countriesResponse = await fetch(countriesUrl, {
+        method: "GET",
+        headers: backendMarketHeaders(market.code, { "Content-Type": "application/json" }),
+      });
+
+      if (countriesResponse.ok) {
+        const wcCountries = (await countriesResponse.json()) as WCCountry[];
+        countryName = wcCountries.find((c) => c.code === marketCountryCode)?.name || marketCountryCode;
+      }
+
+      return NextResponse.json({
+        success: true,
+        countries: [{ code: marketCountryCode, name: countryName }],
+        has_rest_of_world: false,
+        zone_count: 0,
+      });
+    }
+
     const zonesUrl = `${apiBase}/shipping/zones?${authParams}`;
     const zonesResponse = await fetch(zonesUrl, {
       method: "GET",
