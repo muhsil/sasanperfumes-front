@@ -5,6 +5,7 @@ import { ArrowUpRight, MessageCircleMore, RotateCcw, ShieldCheck, Truck } from "
 import { cn } from "@/lib/utils";
 import { siteConfig, type Locale } from "@/config/site";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface TrustSignalsProps {
   locale: Locale;
@@ -22,12 +23,14 @@ export function TrustSignals({
   compact = false,
 }: TrustSignalsProps) {
   const marketPrefix = useMarketPrefix();
+  const { currency, convertPrice } = useCurrency();
   const isRTL = locale === "ar";
   const whatsappUrl = `https://wa.me/${siteConfig.contact.whatsapp}`;
-  const shippingLabel = freeShippingThreshold
+  const shippingThreshold = freeShippingThreshold ? Math.ceil(convertPrice(freeShippingThreshold)) : null;
+  const shippingLabel = shippingThreshold
     ? (isRTL
-      ? `توصيل مجاني فوق ${freeShippingThreshold} AED`
-      : `Free delivery over AED ${freeShippingThreshold}`)
+      ? `توصيل مجاني فوق ${shippingThreshold} ${currency}`
+      : `Free delivery over ${shippingThreshold} ${currency}`)
     : (isRTL ? "توصيل سريع داخل الإمارات" : "Fast UAE delivery");
 
   const trustItems = [

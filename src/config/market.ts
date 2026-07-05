@@ -1,4 +1,4 @@
-import type { Currency } from "@/config/site";
+import { siteConfig, type Currency } from "@/config/site";
 
 export type MarketCode = "intl" | "qa" | "om" | "sa";
 
@@ -47,7 +47,7 @@ export const marketConfigs: MarketConfig[] = [
       "localhost",
       "127.0.0.1",
     ],
-    defaultCurrency: "AED",
+    defaultCurrency: siteConfig.defaultCurrency,
     allowedCurrencies: "all",
   },
 ];

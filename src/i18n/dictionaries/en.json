@@ -205,8 +205,8 @@
           "description": "We source the finest oud, musk, amber, rose, and sandalwood from trusted suppliers worldwide to create long-lasting, authentic scents."
         },
         {
-          "title": "Free UAE Delivery",
-          "description": "Enjoy complimentary shipping on all orders over 500 AED across the United Arab Emirates, with express delivery options available."
+          "title": "Free Delivery",
+          "description": "Enjoy complimentary shipping on eligible orders across the United Arab Emirates, with express delivery options available."
         },
         {
           "title": "Curated Gift Collections",
@@ -224,7 +224,7 @@
         },
         {
           "question": "Do you offer free shipping in the UAE?",
-          "answer": "Yes, we offer free shipping on all orders over 500 AED within the United Arab Emirates. We also ship internationally to Saudi Arabia, Kuwait, Bahrain, Qatar, Oman, and other GCC countries."
+          "answer": "Yes, we offer free shipping on eligible orders within the United Arab Emirates. We also ship internationally to Saudi Arabia, Kuwait, Bahrain, Qatar, Oman, and other GCC countries."
         },
         {
           "question": "Are your fragrances made with natural ingredients?",
@@ -434,9 +434,9 @@
         "destination": "Destination",
         "shippingCost": "Shipping Cost",
         "estimatedDelivery": "Estimated Delivery",
-        "currency": "AED",
+        "currency": "Currency",
         "rates": [],
-        "note": "All prices are in AED. Free shipping is not currently available."
+        "note": "All prices are shown in the market currency. Free shipping is not currently available."
       },
       "sections": []
     },
@@ -453,7 +453,7 @@
       "location": "UAE",
       "expertPicks": "Expert Picks",
       "ctaTitle": "Ready to Find Your Perfect Scent?",
-      "ctaDescription": "Browse our full collection of premium, handcrafted fragrances made in the UAE. Free delivery on orders over 500 AED.",
+      "ctaDescription": "Browse our full collection of premium, handcrafted fragrances made in the UAE. Free delivery available on eligible orders.",
       "ctaShopButton": "Shop Sasan Perfumes Fragrances",
       "ctaBrowseButton": "Browse Perfumes",
       "contactUs": "Contact Us"

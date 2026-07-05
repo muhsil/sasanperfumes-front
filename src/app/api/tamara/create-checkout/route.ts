@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { siteConfig } from "@/config/site";
 import { getEnvVar } from "@/lib/utils/loadEnv";
 
 const TAMARA_API_URL = "https://api.tamara.co/checkout";
@@ -116,7 +117,7 @@ export async function POST(request: NextRequest) {
       order_number: `${order_id}`,
       total_amount: {
         amount: total_amount.toFixed(2),
-        currency: currency || "AED",
+        currency: currency || siteConfig.defaultCurrency,
       },
       description: `Order #${order_id}`,
       country_code: country_code || "AE",
@@ -130,11 +131,11 @@ export async function POST(request: NextRequest) {
         quantity: item.quantity,
         unit_price: {
           amount: item.unit_price.toFixed(2),
-          currency: currency || "AED",
+          currency: currency || siteConfig.defaultCurrency,
         },
         total_amount: {
           amount: (item.unit_price * item.quantity).toFixed(2),
-          currency: currency || "AED",
+          currency: currency || siteConfig.defaultCurrency,
         },
       })),
       consumer: {
@@ -167,17 +168,17 @@ export async function POST(request: NextRequest) {
       },
       shipping_amount: {
         amount: shipping_amount.toFixed(2),
-        currency: currency || "AED",
+        currency: currency || siteConfig.defaultCurrency,
       },
       tax_amount: {
         amount: tax_amount.toFixed(2),
-        currency: currency || "AED",
+        currency: currency || siteConfig.defaultCurrency,
       },
       discount: {
         name: discount_name,
         amount: {
           amount: discount_amount.toFixed(2),
-          currency: currency || "AED",
+          currency: currency || siteConfig.defaultCurrency,
         },
       },
     };

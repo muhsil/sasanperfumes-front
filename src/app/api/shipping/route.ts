@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { siteConfig } from "@/config/site";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { getRequestMarket } from "@/lib/market/server";
 import { resolveFreightPrice } from "@/config/shipping";
@@ -92,6 +93,20 @@ const CONTINENT_COUNTRIES: Record<string, string[]> = {
   OC: ["AS", "AU", "CK", "FJ", "PF", "GU", "KI", "MH", "FM", "NR", "NC", "NZ", "NU", "NF", "MP", "PW", "PG", "PN", "WS", "SB", "TK", "TO", "TV", "UM", "VU", "WF"],
   SA: ["AR", "BO", "BR", "CL", "CO", "EC", "FK", "GF", "GY", "PY", "PE", "SR", "UY", "VE"],
 };
+
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  AED: "د.إ",
+  BHD: "BD",
+  KWD: "KD",
+  OMR: "ر.ع.",
+  QAR: "QR",
+  SAR: "ر.س",
+  USD: "$",
+};
+
+function getCurrencySymbolForCode(code: string): string {
+  return CURRENCY_SYMBOLS[code.toUpperCase()] || code.toUpperCase();
+}
 
 async function findZoneForCountry(country: string, marketCode?: string): Promise<number | null> {
   const authParams = getBasicAuthParams(marketCode);
@@ -366,8 +381,8 @@ export async function GET(request: NextRequest) {
     const postcode = request.nextUrl.searchParams.get("postcode") || "";
     const cartSubtotal = parseFloat(request.nextUrl.searchParams.get("cart_subtotal") || "0");
     const cartWeight = parseFloat(request.nextUrl.searchParams.get("cart_weight") || "0");
-    const currencyCode = request.nextUrl.searchParams.get("currency_code") || "AED";
-    const currencySymbol = request.nextUrl.searchParams.get("currency_symbol") || "د.إ";
+    const currencyCode = request.nextUrl.searchParams.get("currency_code") || siteConfig.defaultCurrency;
+    const currencySymbol = request.nextUrl.searchParams.get("currency_symbol") || getCurrencySymbolForCode(currencyCode);
 
     const freightRate = buildFreightRate(country, cartWeight, currencyCode, currencySymbol);
     if (freightRate) {

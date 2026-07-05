@@ -74,6 +74,23 @@ export interface BannersSettings {
   hide_on_desktop?: boolean;
 }
 
+// Ad Slot Types
+export interface Ad {
+  image: WPImage;
+  mobile_image?: WPImage;
+  link?: WPLink;
+  title?: string;
+  subtitle?: string;
+  button_text?: string;
+  placement?: string;
+  market?: string;
+}
+
+export interface AdsSettings {
+  enabled: boolean;
+  items: Ad[];
+}
+
 // Collection Types
 export interface Collection {
   title: string;

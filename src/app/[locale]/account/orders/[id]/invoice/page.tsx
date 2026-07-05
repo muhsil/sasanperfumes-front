@@ -16,6 +16,7 @@ import { isOrderBundleProduct, isOrderFreeGift, getOrderBundleItems } from "@/co
 import { siteConfig } from "@/config/site";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
+import { getGrossDiscountTotal, getGrossFeeTotal, getGrossLineItemTotal, getGrossLineItemUnitPrice, getGrossOrderSubtotal, getGrossShippingTotal, getInclusiveAmount } from "@/lib/orders/pricing";
 
 interface InvoicePageProps {
   params: Promise<{ locale: string; id: string }>;
@@ -183,10 +184,9 @@ export default function InvoicePage({ params }: InvoicePageProps) {
 
   const renderInvoice = () => {
     if (!order) return null;
-    const orderTax = parseFloat(order.total_tax || "0");
-    const totalWithoutTax = parseFloat(order.total) - orderTax;
-    const feeTotal = (order.fee_lines || []).reduce((sum, fee) => sum + parseFloat(fee.total || "0"), 0);
-    const subtotal = totalWithoutTax - parseFloat(order.shipping_total) + parseFloat(order.discount_total) - feeTotal;
+    const subtotal = getGrossOrderSubtotal(order);
+    const shippingTotal = getGrossShippingTotal(order);
+    const discountTotal = getGrossDiscountTotal(order);
 
     return (
       <div className="min-h-screen bg-gray-50" dir={isRTL ? "rtl" : "ltr"}>
@@ -397,7 +397,7 @@ export default function InvoicePage({ params }: InvoicePageProps) {
                               <span className="text-brand-gold">-</span>
                             ) : (
                               <OrderPrice 
-                                price={item.price} 
+                                price={getGrossLineItemUnitPrice(item)}
                                 orderCurrency={order.currency} 
                                 orderCurrencySymbol={order.currency_symbol}
                                 iconSize="xs"
@@ -412,7 +412,7 @@ export default function InvoicePage({ params }: InvoicePageProps) {
                               </span>
                             ) : (
                               <OrderPrice 
-                                price={item.total} 
+                                price={getGrossLineItemTotal(item)}
                                 orderCurrency={order.currency} 
                                 orderCurrencySymbol={order.currency_symbol}
                                 iconSize="xs"
@@ -509,19 +509,19 @@ export default function InvoicePage({ params }: InvoicePageProps) {
                   <div className="flex justify-between">
                     <span className="text-gray-600">{t.shipping}</span>
                     <OrderPrice 
-                      price={order.shipping_total} 
+                      price={shippingTotal}
                       orderCurrency={order.currency} 
                       orderCurrencySymbol={order.currency_symbol}
                       className="text-gray-900"
                       iconSize="xs"
                     />
                   </div>
-                  {parseFloat(order.discount_total) > 0 && (
+                  {discountTotal > 0 && (
                     <div className="flex justify-between">
                       <span className="text-gray-600">{t.discount}</span>
                       <span className="text-green-600">
                         -<OrderPrice 
-                          price={order.discount_total} 
+                          price={discountTotal}
                           orderCurrency={order.currency} 
                           orderCurrencySymbol={order.currency_symbol}
                           iconSize="xs"
@@ -534,7 +534,7 @@ export default function InvoicePage({ params }: InvoicePageProps) {
                     <div key={fee.id} className="flex justify-between">
                       <span className="text-gray-600">{isRTL ? "رسوم جمركية" : fee.name}</span>
                       <OrderPrice 
-                        price={fee.total} 
+                        price={getInclusiveAmount(fee.total, fee.total_tax)}
                         orderCurrency={order.currency} 
                         orderCurrencySymbol={order.currency_symbol}
                         className="text-gray-900"
@@ -545,7 +545,7 @@ export default function InvoicePage({ params }: InvoicePageProps) {
                   <div className="flex justify-between border-t-2 border-gray-200 pt-2 text-base font-semibold">
                     <span className="text-gray-900">{t.grandTotal}</span>
                     <OrderPrice 
-                      price={totalWithoutTax} 
+                      price={order.total}
                       orderCurrency={order.currency} 
                       orderCurrencySymbol={order.currency_symbol}
                       className="text-gray-900"

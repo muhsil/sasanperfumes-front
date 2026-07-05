@@ -6,6 +6,7 @@ import type { CoCartResponse, CoCartItem } from "@/lib/api/cocart";
 import { getAuthToken } from "@/lib/api/auth";
 import { useNotification } from "./NotificationContext";
 import { useAuth } from "./AuthContext";
+import { useCurrency } from "./CurrencyContext";
 import { getBundleItems, getBundleItemsTotal } from "@/components/cart/BundleItemsList";
 import { getBundleData } from "@/lib/utils/bundleStorage";
 import { decodeHtmlEntities, getLocalizedMarketPath, getMarketPrefixFromPath } from "@/lib/utils";
@@ -112,7 +113,9 @@ function isValidCartResponse(cart: unknown): cart is CoCartResponse {
 function createOptimisticCart(
   currentCart: CoCartResponse | null | undefined,
   optimisticItem: CoCartItem,
-  quantity: number
+  quantity: number,
+  currencyCode: string,
+  currencyMinorUnit: number
 ): CoCartResponse {
   if (currentCart) {
     return {
@@ -126,13 +129,13 @@ function createOptimisticCart(
     cart_hash: "optimistic",
     cart_key: "",
     currency: {
-      currency_code: "AED",
-      currency_symbol: "AED",
-      currency_minor_unit: 2,
+      currency_code: currencyCode,
+      currency_symbol: currencyCode,
+      currency_minor_unit: currencyMinorUnit,
       currency_decimal_separator: ".",
       currency_thousand_separator: ",",
       currency_prefix: "",
-      currency_suffix: " AED",
+      currency_suffix: ` ${currencyCode}`,
     },
     customer: {
       billing_address: {},
@@ -261,6 +264,8 @@ export function CartProvider({ children, locale }: CartProviderProps) {
   
   // Get authentication state to refresh cart after login
   const { isAuthenticated, user } = useAuth();
+  const { currency: activeCurrency, getCurrencyInfo } = useCurrency();
+  const activeCurrencyInfo = getCurrencyInfo();
   const wasAuthenticatedRef = useRef(isAuthenticated);
   
   // Use SWR for cart data - always start with null to match server-rendered HTML
@@ -355,7 +360,14 @@ export function CartProvider({ children, locale }: CartProviderProps) {
       // Optimistically update the cache
       void mutate(
         cacheKey,
-        (currentCart: CoCartResponse | null | undefined) => createOptimisticCart(currentCart, optimisticItem, quantity),
+        (currentCart: CoCartResponse | null | undefined) =>
+          createOptimisticCart(
+            currentCart,
+            optimisticItem,
+            quantity,
+            activeCurrencyInfo.code,
+            activeCurrencyInfo.decimals
+          ),
         false // Don't revalidate yet
       );
 
@@ -412,22 +424,22 @@ export function CartProvider({ children, locale }: CartProviderProps) {
           }));
 
           // Facebook Pixel: AddToCart
-          fbTrackAddToCart({
-            productId: addedItem.id,
-            productName: addedItem.name || addedItem.title || "",
-            value: itemPrice * itemQuantity,
-            currency: cartForTracking.currency?.currency_code || "AED",
-            quantity: itemQuantity,
-          });
+            fbTrackAddToCart({
+              productId: addedItem.id,
+              productName: addedItem.name || addedItem.title || "",
+              value: itemPrice * itemQuantity,
+              currency: cartForTracking.currency?.currency_code || activeCurrency,
+              quantity: itemQuantity,
+            });
 
-          trackAnalyticsEvent("add_to_cart", {
-            product_id: addedItem.id,
-            product_name: addedItem.name || addedItem.title || "",
-            quantity: itemQuantity,
-            value: itemPrice * itemQuantity,
-            currency: cartForTracking.currency?.currency_code || "AED",
-            variation_id: variationId || null,
-            items: [
+            trackAnalyticsEvent("add_to_cart", {
+              product_id: addedItem.id,
+              product_name: addedItem.name || addedItem.title || "",
+              quantity: itemQuantity,
+              value: itemPrice * itemQuantity,
+              currency: cartForTracking.currency?.currency_code || activeCurrency,
+              variation_id: variationId || null,
+              items: [
               {
                 item_id: String(addedItem.id),
                 item_name: addedItem.name || addedItem.title || "",
@@ -439,7 +451,7 @@ export function CartProvider({ children, locale }: CartProviderProps) {
           });
 
           // 1. Fire JS snippet event (shows in Omnisend Live View)
-          omnisendTrackAddToCart({
+            omnisendTrackAddToCart({
             addedItem: {
               productID: String(addedItem.id),
               productTitle: addedItem.name || addedItem.title || "",
@@ -449,10 +461,10 @@ export function CartProvider({ children, locale }: CartProviderProps) {
             },
             lineItems,
             value: cartValue,
-            currency: cartForTracking.currency?.currency_code || "AED",
-            cartID: cartForTracking.cart_key || "",
-            email: user?.user_email || "",
-          });
+              currency: cartForTracking.currency?.currency_code || activeCurrency,
+              cartID: cartForTracking.cart_key || "",
+              email: user?.user_email || "",
+            });
 
           // 2. Create/update cart in Omnisend via REST API (required for
           //    the built-in "Abandoned Cart" automation workflow to trigger).
@@ -477,7 +489,7 @@ export function CartProvider({ children, locale }: CartProviderProps) {
               body: JSON.stringify({
                 cartID: cartForTracking.cart_key || "",
                 email: user.user_email,
-                currency: cartForTracking.currency?.currency_code || "AED",
+                currency: cartForTracking.currency?.currency_code || activeCurrency,
                 cartSum: Math.round(parseFloat(cartForTracking.totals?.total || "0")),
                 cartRecoveryUrl: siteOrigin ? getTrackingCartUrl(locale) : "",
                 products: omnisendProducts,
@@ -500,7 +512,7 @@ export function CartProvider({ children, locale }: CartProviderProps) {
         setIsOperationLoading(false);
       }
     },
-    [notify, cacheKey, locale, user?.user_email]
+    [notify, cacheKey, locale, user, activeCurrency, activeCurrencyInfo.code, activeCurrencyInfo.decimals]
   );
 
   const updateCartItem = useCallback(
@@ -559,7 +571,7 @@ export function CartProvider({ children, locale }: CartProviderProps) {
     async (key: string) => {
       setIsOperationLoading(true);
       const removedItemSnapshot = cart?.items.find((item) => item.item_key === key);
-      const currencyCode = cart?.currency?.currency_code || "AED";
+      const currencyCode = cart?.currency?.currency_code || activeCurrency;
       const currMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
       const currDivisor = Math.pow(10, currMinorUnit);
       const removedItemPrice = parseFloat(removedItemSnapshot?.price || "0") / currDivisor;
@@ -625,7 +637,7 @@ export function CartProvider({ children, locale }: CartProviderProps) {
         setIsOperationLoading(false);
       }
     },
-    [notify, cacheKey, locale, cart]
+    [notify, cacheKey, locale, cart, activeCurrency]
   );
 
   const clearCart = useCallback(async () => {

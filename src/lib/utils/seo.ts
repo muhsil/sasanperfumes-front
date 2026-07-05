@@ -42,11 +42,19 @@ export function generateMetadata({
   keywords,
   marketCode,
 }: GenerateMetadataParams): Metadata {
-  const fullTitle = title || siteConfig.name;
+  const marketTitleSuffix = marketCode ? getMarketSeoTitleSuffix(marketCode, locale) : "";
+  const rawTitle = title || siteConfig.name;
+  const fullTitle =
+    marketTitleSuffix && !rawTitle.toLowerCase().includes(marketTitleSuffix.toLowerCase())
+      ? `${rawTitle} | ${marketTitleSuffix}`
+      : rawTitle;
   const fullDescription = description || siteConfig.description;
   const ogImage = image || siteConfig.ogImage;
   const marketPrefix = marketCode ? getMarketPathPrefix(marketCode) : "";
   const canonicalUrl = `${siteConfig.url}${marketPrefix}/${locale}${pathname}`;
+  const ogRegion = marketCode === "qa" ? "QA" : marketCode === "om" ? "OM" : marketCode === "sa" ? "SA" : "AE";
+  const ogLocale = `${locale === "ar" ? "ar" : "en"}_${ogRegion}`;
+  const ogAlternateLocale = `${locale === "ar" ? "en" : "ar"}_${ogRegion}`;
 
   const altEn = alternatePathnames?.en || `${siteConfig.url}${marketPrefix}/en${pathname}`;
   const altAr = alternatePathnames?.ar || `${siteConfig.url}${marketPrefix}/ar${pathname}`;
@@ -70,8 +78,8 @@ export function generateMetadata({
       description: fullDescription,
       url: canonicalUrl,
       siteName: siteConfig.name,
-      locale: locale === "ar" ? "ar_AE" : "en_AE",
-      alternateLocale: locale === "ar" ? "en_AE" : "ar_AE",
+      locale: ogLocale,
+      alternateLocale: ogAlternateLocale,
       type: "website",
       ...(ogImage ? { images: [{ url: ogImage, width: 1200, height: 630, alt: fullTitle }] } : {}),
     },
@@ -109,7 +117,7 @@ export function generateProductJsonLd(product: {
   // Use all images if available, otherwise fall back to single image
   const imageList = product.images && product.images.length > 0
     ? product.images
-    : [product.image];
+    : [product.image || siteConfig.ogImage];
 
   return {
     "@context": "https://schema.org",
@@ -256,7 +264,7 @@ export function generateWebSiteJsonLd() {
 }
 
 const marketLocationData: Record<MarketCode, { country: string; currency: string; addressCountry: string }> = {
-  intl: { country: "United Arab Emirates", currency: "AED", addressCountry: "AE" },
+  intl: { country: "United Arab Emirates", currency: siteConfig.defaultCurrency, addressCountry: "AE" },
   qa: { country: "Qatar", currency: "QAR", addressCountry: "QA" },
   om: { country: "Oman", currency: "OMR", addressCountry: "OM" },
   sa: { country: "Saudi Arabia", currency: "SAR", addressCountry: "SA" },
@@ -357,7 +365,157 @@ export function generateStoreJsonLd(stores: {
       opens: "10:00",
       closes: "22:00",
     },
-  }));
+    }));
+}
+
+interface MarketSeoCopy {
+  titleSuffix: string;
+  audience: string;
+  keywords: string[];
+}
+
+const MARKET_SEO_COPY: Record<MarketCode, { en: MarketSeoCopy; ar: MarketSeoCopy }> = {
+  intl: {
+    en: {
+      titleSuffix: "UAE Perfumes",
+      audience: "UAE, GCC, and international shoppers",
+      keywords: [
+        "UAE perfume",
+        "Dubai perfume",
+        "UAE fragrance store",
+        "GCC perfume",
+        "international perfume",
+        "luxury perfume UAE",
+      ],
+    },
+    ar: {
+      titleSuffix: "عطور الإمارات",
+      audience: "المتسوقون في الإمارات ودول الخليج والأسواق الدولية",
+      keywords: [
+        "عطور الإمارات",
+        "عطور دبي",
+        "متجر عطور إماراتي",
+        "عطور الخليج",
+        "عطور دولية",
+        "عطور فاخرة الإمارات",
+      ],
+    },
+  },
+  qa: {
+    en: {
+      titleSuffix: "Qatar Perfumes",
+      audience: "Qatar shoppers",
+      keywords: [
+        "Qatar perfume",
+        "Doha perfume",
+        "QAR perfume",
+        "luxury perfume Qatar",
+        "fragrance store Qatar",
+      ],
+    },
+    ar: {
+      titleSuffix: "عطور قطر",
+      audience: "المتسوقون في قطر",
+      keywords: [
+        "عطور قطر",
+        "عطور الدوحة",
+        "عطور قطرية",
+        "عطور فاخرة قطر",
+        "متجر عطور قطر",
+      ],
+    },
+  },
+  om: {
+    en: {
+      titleSuffix: "Oman Perfumes",
+      audience: "Oman shoppers",
+      keywords: [
+        "Oman perfume",
+        "Muscat perfume",
+        "OMR perfume",
+        "luxury perfume Oman",
+        "fragrance store Oman",
+      ],
+    },
+    ar: {
+      titleSuffix: "عطور عُمان",
+      audience: "المتسوقون في عمان",
+      keywords: [
+        "عطور عمان",
+        "عطور مسقط",
+        "عطور عمانية",
+        "عطور فاخرة عمان",
+        "متجر عطور عمان",
+      ],
+    },
+  },
+  sa: {
+    en: {
+      titleSuffix: "Saudi Arabia Perfumes",
+      audience: "Saudi Arabia shoppers",
+      keywords: [
+        "Saudi Arabia perfume",
+        "Riyadh perfume",
+        "SAR perfume",
+        "luxury perfume Saudi Arabia",
+        "fragrance store Saudi Arabia",
+      ],
+    },
+    ar: {
+      titleSuffix: "عطور السعودية",
+      audience: "المتسوقون في السعودية",
+      keywords: [
+        "عطور السعودية",
+        "عطور الرياض",
+        "عطور سعودية",
+        "عطور فاخرة السعودية",
+        "متجر عطور السعودية",
+      ],
+    },
+  },
+};
+
+function dedupeKeywords(values: string[]): string[] {
+  const seen = new Set<string>();
+  return values
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .filter((value) => {
+      const normalized = value.toLowerCase();
+      if (seen.has(normalized)) return false;
+      seen.add(normalized);
+      return true;
+    });
+}
+
+export function getMarketSeoCopy(marketCode: MarketCode, locale: Locale): MarketSeoCopy {
+  return MARKET_SEO_COPY[marketCode]?.[locale] || MARKET_SEO_COPY.intl[locale];
+}
+
+export function buildMarketSeoKeywords(
+  baseKeywords: string[],
+  marketCode: MarketCode,
+  locale: Locale,
+  extraKeywords: string[] = []
+): string[] {
+  const marketSeo = getMarketSeoCopy(marketCode, locale);
+  return dedupeKeywords([
+    ...baseKeywords,
+    ...marketSeo.keywords,
+    ...extraKeywords,
+  ]);
+}
+
+export function getMarketSeoTitleSuffix(marketCode: MarketCode, locale: Locale): string {
+  return getMarketSeoCopy(marketCode, locale).titleSuffix;
+}
+
+export function getMarketSeoAudience(marketCode: MarketCode, locale: Locale): string {
+  return getMarketSeoCopy(marketCode, locale).audience;
+}
+
+export function getMarketSeoImageFallback(): string {
+  return "/opengraph-image";
 }
 
 export function generateContactPageJsonLd(params: {

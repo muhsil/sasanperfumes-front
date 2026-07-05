@@ -16,6 +16,7 @@ import { OrderBundleItemsList, isOrderBundleProduct, isOrderFreeGift } from "@/c
 import { OrderNotes } from "@/components/account/OrderNotes";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
+import { getGrossDiscountTotal, getGrossLineItemTotal, getGrossLineItemUnitPrice, getGrossOrderSubtotal, getGrossShippingTotal, getInclusiveAmount } from "@/lib/orders/pricing";
 import type { WCProduct } from "@/types/woocommerce";
 
 interface OrderDetailPageProps {
@@ -357,10 +358,9 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
 
   const renderOrderDetails = () => {
     if (!order) return null;
-    const orderTax = parseFloat(order.total_tax || "0");
-    const totalWithoutTax = parseFloat(order.total) - orderTax;
-    const feeTotal = (order.fee_lines || []).reduce((sum, fee) => sum + parseFloat(fee.total || "0"), 0);
-    const subtotal = totalWithoutTax - parseFloat(order.shipping_total) + parseFloat(order.discount_total) - feeTotal;
+    const subtotal = getGrossOrderSubtotal(order);
+    const shippingTotal = getGrossShippingTotal(order);
+    const discountTotal = getGrossDiscountTotal(order);
 
     return (
       <div className="container mx-auto px-4 py-8" dir={isRTL ? "rtl" : "ltr"}>
@@ -482,7 +482,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
                       <p className="text-sm text-gray-500 inline-flex items-center gap-1">
                         {t.qty}: {item.quantity}
                         {!isFreeGift && !isBundle && (
-                          <> × <OrderPrice price={item.price} orderCurrency={order.currency} orderCurrencySymbol={order.currency_symbol} iconSize="xs" /></>
+                          <> × <OrderPrice price={getGrossLineItemUnitPrice(item)} orderCurrency={order.currency} orderCurrencySymbol={order.currency_symbol} iconSize="xs" /></>
                         )}
                       </p>
                       {/* Bundle Items Breakdown */}
@@ -492,7 +492,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
                     </div>
                     <div className="flex items-start pt-1">
                       <OrderPrice
-                        price={isFreeGift ? 0 : item.total}
+                        price={isFreeGift ? 0 : getGrossLineItemTotal(item)}
                         orderCurrency={order.currency}
                         orderCurrencySymbol={order.currency_symbol}
                         className={`font-medium ${isFreeGift ? "text-brand-gold" : "text-gray-900"}`}
@@ -511,13 +511,13 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">{t.shipping}</span>
-              <OrderPrice price={order.shipping_total} orderCurrency={order.currency} orderCurrencySymbol={order.currency_symbol} className="text-gray-900" iconSize="xs" />
+              <OrderPrice price={shippingTotal} orderCurrency={order.currency} orderCurrencySymbol={order.currency_symbol} className="text-gray-900" iconSize="xs" />
             </div>
-            {parseFloat(order.discount_total) > 0 && (
+            {discountTotal > 0 && (
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">{t.discount}</span>
                 <span className="text-green-600 inline-flex items-center gap-1">
-                  -<OrderPrice price={order.discount_total} orderCurrency={order.currency} orderCurrencySymbol={order.currency_symbol} iconSize="xs" />
+                  -<OrderPrice price={discountTotal} orderCurrency={order.currency} orderCurrencySymbol={order.currency_symbol} iconSize="xs" />
                 </span>
               </div>
             )}
@@ -525,12 +525,12 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
             {order.fee_lines && order.fee_lines.length > 0 && order.fee_lines.map((fee) => (
               <div key={fee.id} className="flex justify-between text-sm">
                 <span className="text-gray-600">{isRTL ? "رسوم جمركية" : fee.name}</span>
-                <OrderPrice price={fee.total} orderCurrency={order.currency} orderCurrencySymbol={order.currency_symbol} className="text-gray-900" iconSize="xs" />
+                <OrderPrice price={getInclusiveAmount(fee.total, fee.total_tax)} orderCurrency={order.currency} orderCurrencySymbol={order.currency_symbol} className="text-gray-900" iconSize="xs" />
               </div>
             ))}
             <div className="flex justify-between border-t pt-2 text-base font-semibold">
               <span className="text-gray-900">{t.total}</span>
-              <OrderPrice price={totalWithoutTax} orderCurrency={order.currency} orderCurrencySymbol={order.currency_symbol} className="text-gray-900" iconSize="sm" showConversion={true} isRTL={isRTL} />
+              <OrderPrice price={order.total} orderCurrency={order.currency} orderCurrencySymbol={order.currency_symbol} className="text-gray-900" iconSize="sm" showConversion={true} isRTL={isRTL} />
             </div>
           </div>
         </div>

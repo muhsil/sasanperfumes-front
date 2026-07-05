@@ -16,11 +16,12 @@ interface ShippingPageProps {
   params: Promise<{ locale: string }>;
 }
 
-// Default keywords (fallback when WordPress page doesn't exist)
-const defaultKeywords = {
-  en: ["perfume shipping", "fragrance delivery", "UAE shipping", "Dubai delivery", "GCC shipping", "free delivery", "express delivery", "shipping policy", "Sasan Perfumes", "free shipping 500 AED", "delivery time", "Saudi Arabia perfume shipping", "Oman perfume delivery", "order tracking"],
-  ar: ["شحن عطور", "توصيل عطور", "شحن الإمارات", "توصيل مجاني", "سياسة الشحن", "شحن دبي", "شحن دول الخليج", "توصيل سريع", "Sasan Perfumes", "شحن مجاني 500 درهم", "مدة التوصيل", "شحن عطور السعودية", "شحن عطور عمان", "تتبع الشحن"],
-};
+function getDefaultKeywords(currencyCode: string) {
+  return {
+    en: ["perfume shipping", "fragrance delivery", "UAE shipping", "Dubai delivery", "GCC shipping", "free delivery", "express delivery", "shipping policy", "Sasan Perfumes", `free shipping 500 ${currencyCode}`, "delivery time", "Saudi Arabia perfume shipping", "Oman perfume delivery", "order tracking"],
+    ar: ["شحن عطور", "توصيل عطور", "شحن الإمارات", "توصيل مجاني", "سياسة الشحن", "شحن دبي", "شحن دول الخليج", "توصيل سريع", "Sasan Perfumes", `شحن مجاني 500 ${currencyCode}`, "مدة التوصيل", "شحن عطور السعودية", "شحن عطور عمان", "تتبع الشحن"],
+  };
+}
 
 export async function generateMetadata({
   params,
@@ -36,6 +37,8 @@ export async function generateMetadata({
   const wpSeo = await getPageSeo("shipping", lang);
 
   const market = await getRequestMarket();
+  const currencyCode = market.defaultCurrency;
+  const defaultKeywords = getDefaultKeywords(currencyCode);
   return generateSeoMetadata({
     title: wpSeo?.title || pageContent.seo.title,
     description: wpSeo?.description || pageContent.seo.description,
@@ -55,17 +58,18 @@ export default async function ShippingPage({ params }: ShippingPageProps) {
   if (!toggles.sasanperfumes_shipping_enabled) notFound();
   const dictionary = await getDictionary(locale as Locale);
   const wp = await getStaticPageContent("shipping");
+  const currencyCode = market.defaultCurrency;
 
   const title = pickLocale(wp?.title, locale, locale === "ar" ? "الشحن والتوصيل" : "Shipping & Delivery");
   const ratesTitle = pickLocale(
     wp?.rates_title,
     locale,
-    locale === "ar" ? "رسوم الشحن عبر أرامكس بالدرهم" : "Aramex Freight Charges in Dirhams"
+    locale === "ar" ? `رسوم الشحن عبر أرامكس بعملة ${currencyCode}` : `Aramex Freight Charges in ${currencyCode}`
   );
   const ratesNote = pickLocale(
     wp?.rates_note,
     locale,
-    locale === "ar" ? "جميع الأسعار موضحة بالدرهم الإماراتي." : "All freight charges are shown in AED."
+    locale === "ar" ? `جميع الأسعار موضحة بعملة ${currencyCode}.` : `All freight charges are shown in ${currencyCode}.`
   );
 
   // FAQ-style grouped content

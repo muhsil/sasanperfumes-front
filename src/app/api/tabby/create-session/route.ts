@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { siteConfig } from "@/config/site";
 import { getEnvVar } from "@/lib/utils/loadEnv";
 
 const TABBY_API_URL = "https://api.tabby.ai/api/v2/checkout";
@@ -97,7 +98,7 @@ export async function POST(request: NextRequest) {
     const tabbyPayload = {
       payment: {
         amount: amount.toFixed(2),
-        currency: currency || "AED",
+        currency: currency || siteConfig.defaultCurrency,
         description: description || `Order #${order_id}`,
         buyer: {
           phone: buyer.phone,

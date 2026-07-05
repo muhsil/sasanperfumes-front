@@ -3,7 +3,7 @@
  * Plugin Name: sasanperfumes
  * Plugin URI: https://cms.sasanperfumes.com
  * Description: Admin dashboard and REST API endpoints for sasanperfumes with Media Library upload, dynamic slides, layout options, Bundles Creator, and Free Gift functionality.
- * Version: 6.6.10
+ * Version: 6.6.12
  * Author: ShapeHive
  * License: GPL v2 or later
  */
@@ -18,7 +18,7 @@ if (defined('sasanperfumes_FRONTEND_SETTINGS_LOADED')) {
     return;
 }
 define('sasanperfumes_FRONTEND_SETTINGS_LOADED', true);
-define('sasanperfumes_SETTINGS_VERSION', '6.6.10');
+define('sasanperfumes_SETTINGS_VERSION', '6.6.12');
 define('sasanperfumes_SETTINGS_PATH', plugin_dir_path(__FILE__));
 
 define('SASANPERFUMES_REST_NAMESPACE', 'sasanperfumes/v1');
@@ -96,14 +96,19 @@ function sasanperfumes_assign_order_number($order) {
     $order->save();
 }
 
-add_action('woocommerce_checkout_order_created', 'sasanperfumes_assign_order_number', 20);
-add_action('woocommerce_store_api_checkout_order_processed', 'sasanperfumes_assign_order_number', 20);
-add_action('woocommerce_new_order', 'sasanperfumes_assign_order_number', 20, 2);
+function sasanperfumes_force_real_order_number($order_number, $order) {
+    if ($order instanceof WC_Order) {
+        return (string) $order->get_id();
+    }
 
-add_filter('woocommerce_order_number', function($order_number, $order) {
-    $custom_order_number = sasanperfumes_order_number_meta_value($order);
-    return $custom_order_number !== '' ? $custom_order_number : $order_number;
-}, 20, 2);
+    if (is_numeric($order)) {
+        return (string) absint($order);
+    }
+
+    return (string) $order_number;
+}
+
+add_filter('woocommerce_order_number', 'sasanperfumes_force_real_order_number', 9999, 2);
 
 function sasanperfumes_register_rest_route($route, $args = array(), $override = false) {
     register_rest_route(SASANPERFUMES_REST_NAMESPACE, $route, $args, $override);
@@ -634,6 +639,9 @@ require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-email-t
 
 // Include Customer Tracking module (order tracking data display in admin)
 require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-customer-tracking.php';
+
+// Include Order Admin module (order number and payment gateway details in admin)
+require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-order-admin.php';
 
 // Include Product Pages module (dynamic product-type pages with EN/AR support)
 require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-product-pages.php';

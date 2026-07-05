@@ -2,7 +2,7 @@
 import { ProductGridSkeleton } from "@/components/common/Skeleton";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { getDictionary } from "@/i18n";
-import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
+import { generateMetadata as generateSeoMetadata, buildMarketSeoKeywords, getMarketSeoAudience } from "@/lib/utils/seo";
 import { getFeaturedProducts, getFreeGiftProductIds, getBundleEnabledProductSlugs } from "@/lib/api/woocommerce";
 import { getPageSeo } from "@/lib/api/wordpress";
 import { getMarketHintFromSearchParams, getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
@@ -23,7 +23,7 @@ interface FeaturedProductsPageProps {
 const defaultSeo = {
   title: { en: "Best Sellers | Top Rated Luxury Perfumes & Oud Fragrances", ar: "الأكثر مبيعاً | أفضل العطور الفاخرة والمميزة" },
   description: {
-    en: "Shop our best-selling luxury perfumes, Arabian oud & aromatic oils from Sasan Perfumes. Handcrafted in the UAE. Free delivery on orders over 500 AED.",
+    en: "Shop our best-selling luxury perfumes, Arabian oud & aromatic oils from Sasan Perfumes. Handcrafted in the UAE. Free delivery available on eligible orders.",
     ar: "تسوق أفضل العطور المميزة والأكثر مبيعاً من Sasan Perfumes. عطور فاخرة وعود عربي وزيوت عطرية مصنوعة يدوياً في الإمارات. توصيل مجاني للطلبات فوق 500 درهم.",
   },
   keywords: {
@@ -39,16 +39,20 @@ export async function generateMetadata({
   const lang = locale as Locale;
   const isAr = lang === "ar";
 
-  const wpSeo = await getPageSeo("featured-products", lang);
-
   const market = await getRequestMarket();
+  const currencyCode = market.defaultCurrency;
+  const marketAudience = getMarketSeoAudience(market.code, lang);
+  const fallbackDescription = isAr
+    ? `تسوق أفضل العطور المميزة والأكثر مبيعاً من Sasan Perfumes. عطور فاخرة وعود عربي وزيوت عطرية مصنوعة يدوياً في الإمارات. توصيل مجاني للطلبات فوق 500 ${currencyCode}.`
+    : `Shop our best-selling luxury perfumes, Arabian oud & aromatic oils from Sasan Perfumes. Built for ${marketAudience}. Free delivery on orders over 500 ${currencyCode}.`;
+  const wpSeo = await getPageSeo("featured-products", lang);
   return generateSeoMetadata({
     title: wpSeo?.title || (isAr ? defaultSeo.title.ar : defaultSeo.title.en),
-    description: wpSeo?.description || (isAr ? defaultSeo.description.ar : defaultSeo.description.en),
+    description: wpSeo?.description || fallbackDescription,
     image: wpSeo?.ogImage || undefined,
     locale: lang,
     pathname: "/featured-products",
-    keywords: isAr ? defaultSeo.keywords.ar : defaultSeo.keywords.en,
+    keywords: buildMarketSeoKeywords(isAr ? defaultSeo.keywords.ar : defaultSeo.keywords.en, market.code, lang),
     marketCode: market.code,
   });
 }

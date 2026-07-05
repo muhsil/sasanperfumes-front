@@ -4,6 +4,7 @@ export { CategorySection, CategorySectionSkeleton } from "./CategorySection";
 export { FeaturedProductsSlider, FeaturedProductsSliderSkeleton } from "./FeaturedProductsSlider";
 export { CollectionsSection, CollectionsSectionSkeleton } from "./CollectionsSection";
 export { BannersSection, BannersSectionSkeleton } from "./BannersSection";
+export { AdsSection } from "./AdsSection";
 export { VideoHero } from "./VideoHero";
 export { BrandsSlider } from "./BrandsSlider";
 export { ServicesSlider } from "./ServicesSlider";

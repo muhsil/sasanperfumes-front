@@ -62,7 +62,7 @@ ${categoriesSection}
 
 ## Key Features
 - Bilingual (English & Arabic)
-- Free delivery on orders over 500 AED (UAE)
+- Free delivery available on eligible orders in the UAE
 - International shipping available
 - Gift wrapping available
 - Private-label perfume support

@@ -1,8 +1,8 @@
 ﻿import { notFound, redirect } from "next/navigation";
 import { getProductBySlug, getRelatedProducts, getProducts, getEnglishSlugForProduct, getBundleConfig, getFreeGiftProductIds, getHiddenProductIds, getCategoryBySlug, getEnglishSlugForCategory, getProductUpsellIds, getProductsByIds } from "@/lib/api/woocommerce";
 import { getProductAddons } from "@/lib/api/wcpa";
-import { generateMetadata as generateSeoMetadata, generateProductJsonLd, generateBreadcrumbJsonLd } from "@/lib/utils/seo";
-import { getTopbarSettings, getProductMetaDescription, getFeatureToggles, getSiteSettings } from "@/lib/api/wordpress";
+import { generateMetadata as generateSeoMetadata, generateProductJsonLd, generateBreadcrumbJsonLd, buildMarketSeoKeywords } from "@/lib/utils/seo";
+import { getTopbarSettings, getProductSeo, getFeatureToggles, getSiteSettings } from "@/lib/api/wordpress";
 import { getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
 import { ProductDetail } from "./ProductDetail";
 import { BuildYourOwnSetClient } from "../../build-your-own-set/BuildYourOwnSetClient";
@@ -27,12 +27,13 @@ function getProductJsonLdData(product: WCProduct, locale: string, slug: string, 
   const divisor = Math.pow(10, minorUnit);
   const price = (parseInt(product.prices.price, 10) / divisor).toFixed(2);
   const primaryCategory = product.categories?.[0]?.name || undefined;
+  const imageList = product.images.map((img) => img.src).filter(Boolean);
   
   return generateProductJsonLd({
     name: decodeHtmlEntities(product.name),
     description: decodeHtmlEntities(product.short_description.replace(/<[^>]*>/g, "")).slice(0, 500),
-    image: product.images[0]?.src || "",
-    images: product.images.map((img) => img.src).filter(Boolean),
+    image: imageList[0] || siteConfig.ogImage,
+    images: imageList.length > 0 ? imageList : [siteConfig.ogImage],
     price,
     currency,
     sku: product.sku || undefined,
@@ -110,7 +111,7 @@ export async function generateMetadata({
   // Fetch product and backend-generated meta description in parallel
   const [product, backendMetaDesc, siteSettings] = await Promise.all([
     getProductBySlug(slug, locale as Locale, market.defaultCurrency, frontendHost),
-    getProductMetaDescription(slug, locale as Locale),
+    getProductSeo(slug, locale as Locale),
     getSiteSettings(locale as Locale, frontendHost),
   ]);
   const siteName = siteSettings.site_name || siteConfig.name;
@@ -145,31 +146,29 @@ export async function generateMetadata({
   // Format: "Product Name - Olfactory Family Category | Premium Scent"
   // Example: "Leather Intense - Leathery Perfume | Premium Scent"
   // Fallback: "Product Name - Category | Premium Scent"
-  const seoSuffix = "Premium Scent";
   let seoTitle: string;
   if (olfactoryFamily && primaryCategoryName) {
-    seoTitle = `${productName} - ${olfactoryFamily} ${primaryCategoryName} | ${seoSuffix}`;
+    seoTitle = `${productName} - ${olfactoryFamily} ${primaryCategoryName}`;
   } else if (primaryCategoryName) {
-    seoTitle = `${productName} - ${primaryCategoryName} | ${seoSuffix}`;
+    seoTitle = `${productName} - ${primaryCategoryName}`;
   } else {
-    seoTitle = `${productName} | ${seoSuffix}`;
+    seoTitle = productName;
   }
 
-  // Ensure title stays within ~60 chars for optimal Google display
-  // If too long, drop olfactory family and keep product name + category
+  // Ensure title stays within a sensible length before the market suffix is applied
   if (seoTitle.length > 60 && olfactoryFamily && primaryCategoryName) {
-    seoTitle = `${productName} - ${primaryCategoryName} | ${seoSuffix}`;
+    seoTitle = `${productName} - ${primaryCategoryName}`;
   }
   if (seoTitle.length > 60 && primaryCategoryName) {
-    seoTitle = `${productName} | ${seoSuffix}`;
+    seoTitle = productName;
   }
 
-  // Use backend-generated meta description if available (from WordPress REST API).
+  // Use backend-generated SEO fields when available (from WordPress REST API).
   // Falls back to frontend-generated description if backend returns empty.
   let trimmedDescription: string;
 
-  if (backendMetaDesc) {
-    trimmedDescription = backendMetaDesc;
+  if (backendMetaDesc?.meta_description) {
+    trimmedDescription = backendMetaDesc.meta_description;
   } else {
     // Fallback: Build description on the frontend from product data
     const fullRawDescription = decodeHtmlEntities(product.short_description.replace(/<[^>]*>/g, ""));
@@ -200,36 +199,44 @@ export async function generateMetadata({
       : productDescription;
   }
 
+  const productSeoTitle = backendMetaDesc?.seo_title?.trim() || seoTitle;
+  const seoImage = backendMetaDesc?.og_image || product.images[0]?.src || siteConfig.ogImage;
+
   // Build enriched keywords from product attributes
   const olfactoryKeywords = olfactoryFamily ? [olfactoryFamily, `${olfactoryFamily} perfume`] : [];
   const noteKeywords = fragranceNotes.map((n) => n.toLowerCase());
+  const backendKeywords = backendMetaDesc?.keywords
+    ? backendMetaDesc.keywords.split(",").map((keyword) => keyword.trim()).filter(Boolean)
+    : [];
+  const marketKeywords = buildMarketSeoKeywords(
+    [
+      productName,
+      ...categoryNames,
+      ...tagNames,
+      ...olfactoryKeywords,
+      ...noteKeywords,
+    ],
+    market.code,
+    locale as Locale,
+    backendKeywords
+  );
 
   const minorUnit = product.prices?.currency_minor_unit || 2;
   const divisorOg = Math.pow(10, minorUnit);
   const ogPrice = product.prices?.price ? (parseInt(product.prices.price, 10) / divisorOg).toFixed(2) : undefined;
 
   const metadata = generateSeoMetadata({
-    title: seoTitle,
+    title: productSeoTitle,
     description: trimmedDescription,
     locale: locale as Locale,
     pathname: `/product/${slug}`,
-    image: product.images[0]?.src,
+    image: seoImage,
     marketCode: market.code,
-    keywords: [
-      productName,
-      ...categoryNames,
-      ...tagNames,
-      ...olfactoryKeywords,
-      ...noteKeywords,
-      ...(locale === "ar"
-        ? ["عطور", "شراء عطور", "عطور فاخرة", "عطور الإمارات", "عطور دبي", "عود عربي", "هدايا عطرية", "Sasan Perfumes", "عطور فخمة", "شراء عطر أون لاين", "عطور مسك", "عطور عنبر", "عطور فانيلا", "عطور عود", "أفضل عطور الإمارات"]
-        : ["perfume", "buy fragrance", "luxury perfume UAE", "Dubai perfume", "Arabian oud", "fragrance gift", "premium scent", siteName, "niche perfume", "buy perfume online", "musk perfume", "amber fragrance", "vanilla perfume", "oud fragrance", "best perfume UAE"]),
-    ],
+    keywords: marketKeywords,
   });
 
   return {
     ...metadata,
-    title: { absolute: seoTitle },
     openGraph: {
       ...metadata.openGraph,
       type: "website",

@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { ProductGridSkeleton } from "@/components/common/Skeleton";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { getDictionary } from "@/i18n";
-import { generateMetadata as generateSeoMetadata, generateCollectionPageJsonLd, generateItemListJsonLd } from "@/lib/utils/seo";
+import { generateMetadata as generateSeoMetadata, generateCollectionPageJsonLd, generateItemListJsonLd, buildMarketSeoKeywords, getMarketSeoAudience } from "@/lib/utils/seo";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getCategoryBySlug, getProductsByCategory, getCategories, getFreeGiftProductInfo, getBundleEnabledProductSlugs, getEnglishSlugFromLocalizedSlug } from "@/lib/api/woocommerce";
 import { siteConfig, type Locale } from "@/config/site";
@@ -61,29 +61,44 @@ export async function generateMetadata({
     getRequestMarket(marketHint),
     getRequestFrontendHost(marketHint),
   ]);
-  const category = await getCategoryBySlug(slug, locale as Locale, market.defaultCurrency, frontendHost);
+  const [category, categorySeo] = await Promise.all([
+    getCategoryBySlug(slug, locale as Locale, market.defaultCurrency, frontendHost),
+    getCategorySeoContent(slug),
+  ]);
   const categoryName = decodeHtmlEntities(category?.name || slug.charAt(0).toUpperCase() + slug.slice(1));
+  const categorySeoTitle = categorySeo
+    ? decodeHtmlEntities(locale === "ar" ? categorySeo.title.ar : categorySeo.title.en)
+    : "";
+  const categorySeoDescription = categorySeo
+    ? decodeHtmlEntities(locale === "ar" ? categorySeo.description.ar : categorySeo.description.en)
+    : "";
 
   const canonicalSlug = getEnglishSlugFromLocalizedSlug(slug) || slug;
+  const audience = getMarketSeoAudience(market.code, locale as Locale);
 
   const categoryCount = category?.count || 0;
   const description =
-    locale === "ar"
-      ? `تسوق ${categoryName} من Sasan Perfumes. ${categoryCount > 0 ? `اكتشف ${categoryCount}+ منتج` : "اكتشف مجموعتنا"} من العطور الفاخرة المصنوعة يدوياً في الإمارات. توصيل مجاني للطلبات فوق 500 درهم.`
-      : `Shop ${categoryName} at Sasan Perfumes. ${categoryCount > 0 ? `Explore ${categoryCount}+ handcrafted` : "Explore our handcrafted"} luxury products made in the UAE. Free delivery on orders over 500 AED.`;
+    categorySeoDescription ||
+    (locale === "ar"
+      ? `تسوق ${categoryName} من Sasan Perfumes. ${categoryCount > 0 ? `اكتشف ${categoryCount}+ منتج` : "اكتشف مجموعتنا"} من العطور الفاخرة المصنوعة يدوياً في الإمارات. مخصص لـ ${audience}. توصيل مجاني للطلبات فوق 500 ${market.defaultCurrency}.`
+      : `Shop ${categoryName} at Sasan Perfumes. ${categoryCount > 0 ? `Explore ${categoryCount}+ handcrafted` : "Explore our handcrafted"} luxury products made in the UAE. Built for ${audience}. Free delivery on orders over 500 ${market.defaultCurrency}.`);
 
   return generateSeoMetadata({
-    title: locale === "ar"
+    title: categorySeoTitle || (locale === "ar"
       ? `${categoryName} | تسوق أون لاين`
-      : `${categoryName} | Shop Online`,
+      : `${categoryName} | Shop Online`),
     description,
-    image: category?.image?.src || undefined,
+    image: category?.image?.src || siteConfig.ogImage,
     locale: locale as Locale,
     pathname: `/category/${canonicalSlug}`,
     marketCode: market.code,
-    keywords: locale === "ar"
-      ? [categoryName, "عطور", "عطور فاخرة", "منتجات عطرية", "Sasan Perfumes", "عطور الإمارات", "شراء عطور اون لاين", "عود عربي", "هدايا عطرية", "عطور مسك", "عطور عنبر", "عطور دبي", "أفضل عطور", "عطور نسائية", "عطور رجالية", `أروماتيك ${categoryName}`, `أفضل ${categoryName} الإمارات`, `${categoryName} بأسعار مناسبة`, "عطور أروماتيك أصلية", "روائح عطرية فاخرة", "تسوق عطور أروماتيك"]
-      : [categoryName, "perfume", "premium fragrance", "aromatic products", "Sasan Perfumes", "UAE perfume shop", "buy perfume online", "Arabian oud", "fragrance gifts", "musk perfume", "amber fragrance", "Dubai perfume", "best perfume", "women perfume", "men cologne", `aromatic ${categoryName.toLowerCase()}`, `best ${categoryName.toLowerCase()} UAE`, `${categoryName.toLowerCase()} affordable price`, "aromatic original perfume", "luxury aromatic scents", "shop aromatic fragrances"],
+    keywords: buildMarketSeoKeywords(
+      locale === "ar"
+        ? [categoryName, "عطور", "عطور فاخرة", "منتجات عطرية", "Sasan Perfumes", "عطور الإمارات", "شراء عطور اون لاين", "عود عربي", "هدايا عطرية", "عطور مسك", "عطور عنبر", "عطور دبي", "أفضل عطور", "عطور نسائية", "عطور رجالية", `أروماتيك ${categoryName}`, `أفضل ${categoryName} الإمارات`, `${categoryName} بأسعار مناسبة`, "عطور أروماتيك أصلية", "روائح عطرية فاخرة", "تسوق عطور أروماتيك"]
+        : [categoryName, "perfume", "premium fragrance", "aromatic products", "Sasan Perfumes", "UAE perfume shop", "buy perfume online", "Arabian oud", "fragrance gifts", "musk perfume", "amber fragrance", "Dubai perfume", "best perfume", "women perfume", "men cologne", `aromatic ${categoryName.toLowerCase()}`, `best ${categoryName.toLowerCase()} UAE`, `${categoryName.toLowerCase()} affordable price`, "aromatic original perfume", "luxury aromatic scents", "shop aromatic fragrances"],
+      market.code,
+      locale as Locale
+    ),
   });
 }
 
@@ -126,6 +141,10 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     getRequestFrontendHost(marketHint),
   ]);
   const pathPrefix = getMarketPathPrefix(market.code);
+  const categorySeo = await getCategorySeoContent(slug);
+  const categorySeoDescription = categorySeo
+    ? decodeHtmlEntities(locale === "ar" ? categorySeo.description.ar : categorySeo.description.en)
+    : "";
 
   // If the URL contains a non-ASCII slug (e.g., Arabic), redirect to the English slug
   // This prevents duplicate content issues where both Arabic-slug and English-slug URLs get indexed
@@ -202,25 +221,25 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
       { name: decodeHtmlEntities(category.name), href: `${pathPrefix}/${locale}/category/${slug}` },
     ];
 
-  const categoryUrl = `${siteConfig.url}/${locale}/category/${slug}`;
+  const categoryUrl = `${siteConfig.url}${pathPrefix}/${locale}/category/${slug}`;
   const categoryName = decodeHtmlEntities(category.name);
 
   const collectionJsonLd = generateCollectionPageJsonLd({
     name: categoryName,
-    description: category.description
+    description: categorySeoDescription || (category.description
       ? decodeHtmlEntities(category.description.replace(/<[^>]*>/g, "")).slice(0, 200)
-      : `Shop ${categoryName} at ${siteConfig.name}`,
+      : `Shop ${categoryName} at ${siteConfig.name}`),
     url: categoryUrl,
   });
 
   const itemListJsonLd = generateItemListJsonLd({
     name: categoryName,
-    description: `${categoryName} products from ${siteConfig.name}`,
+    description: categorySeoDescription || `${categoryName} products from ${siteConfig.name}`,
     url: categoryUrl,
     items: products.slice(0, 20).map((product, index) => ({
       name: decodeHtmlEntities(product.name),
-      url: `${siteConfig.url}/${locale}/product/${product.slug}`,
-      image: product.images[0]?.src || "",
+      url: `${siteConfig.url}${pathPrefix}/${locale}/product/${product.slug}`,
+      image: product.images[0]?.src || siteConfig.ogImage,
       position: index + 1,
     })),
   });

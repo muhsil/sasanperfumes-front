@@ -1,8 +1,25 @@
 import { Suspense } from "react";
 import OrderConfirmationClient from "./OrderConfirmationClient";
+import type { Metadata } from "next";
+import { NOINDEX_NOFOLLOW_ROBOTS } from "@/lib/utils/seo";
 
 interface PageProps {
   params: Promise<{ locale: string }>;
+}
+
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const { locale } = await params;
+  const isAr = locale === "ar";
+
+  return {
+    title: isAr ? "تأكيد الطلب" : "Order Confirmation",
+    description: isAr
+      ? "عرض ملخص الطلب وحالة الدفع بعد إتمام الشراء."
+      : "Review your order summary and payment status after checkout.",
+    robots: NOINDEX_NOFOLLOW_ROBOTS,
+  };
 }
 
 function LoadingFallback({ locale }: { locale: string }) {

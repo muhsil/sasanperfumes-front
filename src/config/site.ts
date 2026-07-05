@@ -49,13 +49,13 @@ export const siteConfig = {
   name: "Sasan Perfumes",
   
   // Site description - used for SEO meta description
-  description: "Sasan Perfumes is a fragrance storefront with region-specific products, content, and currencies.",
+  description: "Sasan Perfumes is a premium fragrance store for the UAE, GCC, and international shoppers, with localized storefronts, currencies, and product collections for each market.",
   
   // Frontend URL - reads from NEXT_PUBLIC_SITE_URL environment variable
   url: siteUrl,
 
-  // Open Graph image URL - uses the site URL for the og image
-  ogImage: `${siteUrl}/og.jpg`,
+  // Open Graph image URL - uses a generated social preview image
+  ogImage: `${siteUrl}/opengraph-image`,
   
   // WordPress/WooCommerce Backend API URL - reads from NEXT_PUBLIC_WC_API_URL environment variable
   // This can be different from the public frontend URL.

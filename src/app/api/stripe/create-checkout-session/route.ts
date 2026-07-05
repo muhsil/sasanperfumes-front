@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { siteConfig } from "@/config/site";
 import { getRequestMarket } from "@/lib/market/server";
 import { backendMarketHeaders, backendMarketPostHeaders, extractMarketCode, noCacheUrl, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
@@ -103,13 +104,13 @@ export async function POST(request: NextRequest) {
 
     const session = await createStripeCheckoutSession(
       secretKey,
-      buildCheckoutSessionParams({
-        orderId,
-        orderKey,
-        amount,
-        currency: order.currency || "AED",
-        customerEmail: order.billing?.email,
-        successUrl,
+        buildCheckoutSessionParams({
+          orderId,
+          orderKey,
+          amount,
+          currency: order.currency || siteConfig.defaultCurrency,
+          customerEmail: order.billing?.email,
+          successUrl,
         cancelUrl,
         marketCode: market.code,
         locale,

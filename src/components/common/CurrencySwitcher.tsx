@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import Image from "next/image";
 import { ChevronDown, Check, X, Globe } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { type Currency } from "@/config/site";
+import { siteConfig, type Currency } from "@/config/site";
 import { cn } from "@/lib/utils";
 
 const currencyCountryCodes: Record<string, string> = {
@@ -124,7 +124,7 @@ export function CurrencySwitcher({ className, locale = "en" }: CurrencySwitcherP
         aria-haspopup={isLockedCurrency ? undefined : "dialog"}
         aria-disabled={isLockedCurrency}
       >
-        <CountryFlag currencyCode={currentCurrency?.code || "AED"} size={20} />
+        <CountryFlag currencyCode={currentCurrency?.code || siteConfig.defaultCurrency} size={20} />
         {currentCurrency?.symbol && currentCurrency.symbol !== currentCurrency.code && (
           <span className="font-semibold text-brand-primary">{currentCurrency.symbol}</span>
         )}

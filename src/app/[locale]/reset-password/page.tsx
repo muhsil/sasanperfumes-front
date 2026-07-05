@@ -1,9 +1,26 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import ResetPasswordForm from "./ResetPasswordForm";
 import { AuthBackground } from "@/components/common/AuthBackground";
+import { NOINDEX_NOFOLLOW_ROBOTS } from "@/lib/utils/seo";
 
 interface ResetPasswordPageProps {
   params: Promise<{ locale: string }>;
+}
+
+export async function generateMetadata({
+  params,
+}: ResetPasswordPageProps): Promise<Metadata> {
+  const { locale } = await params;
+  const isAr = locale === "ar";
+
+  return {
+    title: isAr ? "إعادة تعيين كلمة المرور" : "Reset Password",
+    description: isAr
+      ? "إنشاء كلمة مرور جديدة لحسابك."
+      : "Create a new password for your account.",
+    robots: NOINDEX_NOFOLLOW_ROBOTS,
+  };
 }
 
 function LoadingFallback() {

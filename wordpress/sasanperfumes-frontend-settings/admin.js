@@ -382,6 +382,50 @@ jQuery(document).ready(function($) {
     });
 
     /* ================================================================
+       ADS - Add / Remove / Reindex
+       ================================================================ */
+    function adImageField(p, id, key, label, desc) {
+        var html = '<tr class="sasanperfumes-ad-image-fields"><th>' + label + '</th><td><div class="sasanperfumes-image-field">' +
+            '<input type="hidden" name="' + p + '[' + key + ']" id="' + id + '_' + key + '" value="">' +
+            '<button type="button" class="button sasanperfumes-upload-btn" data-target="#' + id + '_' + key + '" data-preview="#' + id + '_' + key + '_preview">Upload Image</button>' +
+            '<button type="button" class="button sasanperfumes-remove-btn" data-target="#' + id + '_' + key + '" data-preview="#' + id + '_' + key + '_preview" style="display:none;">Remove</button>' +
+            '<div id="' + id + '_' + key + '_preview" class="sasanperfumes-preview"></div>';
+        if (desc) html += '<p class="description">' + desc + '</p>';
+        html += '</div></td></tr>';
+        return html;
+    }
+
+    function adTemplate(i) {
+        var p = 'sasanperfumes_ads_items[' + i + ']', id = 'sasanperfumes_ads_items_' + i;
+        return '<div class="sasanperfumes-ad-item" style="background:#f9f9f9;padding:15px;margin-bottom:15px;border:1px solid #ddd;">' +
+            '<h4>Ad ' + (i+1) + ' <button type="button" class="button sasanperfumes-remove-ad" style="float:right;color:red;">Remove</button></h4>' +
+            '<table class="form-table">' +
+            '<tr><th>Enable</th><td><label><input type="hidden" name="' + p + '[enabled]" value="0"><input type="checkbox" name="' + p + '[enabled]" value="1" checked> Show this ad</label></td></tr>' +
+            '<tr><th>Placement</th><td><select name="' + p + '[placement]"><option value="home" selected>Home page</option><option value="shop">Shop page</option><option value="category">Category pages</option><option value="product">Product pages</option><option value="all">All pages</option></select></td></tr>' +
+            '<tr><th>Market</th><td><select name="' + p + '[market]"><option value="all" selected>All markets</option><option value="intl">International / UAE</option><option value="qa">Qatar</option><option value="om">Oman</option><option value="sa">Saudi Arabia</option></select></td></tr>' +
+            adImageField(p, id, 'image', 'Desktop Image (EN)', '') +
+            adImageField(p, id, 'mobile', 'Mobile Image (EN)', '') +
+            adImageField(p, id, 'image_ar', 'Desktop Image (AR)', 'Falls back to the English image if empty.') +
+            adImageField(p, id, 'mobile_ar', 'Mobile Image (AR)', 'Falls back to the English mobile image if empty.') +
+            '<tr><th>Title (EN)</th><td><input type="text" name="' + p + '[title]" value="" class="regular-text"></td></tr>' +
+            '<tr><th>Title (AR)</th><td><input type="text" name="' + p + '[title_ar]" value="" class="regular-text" dir="rtl"></td></tr>' +
+            '<tr><th>Subtitle (EN)</th><td><input type="text" name="' + p + '[subtitle]" value="" class="regular-text"></td></tr>' +
+            '<tr><th>Subtitle (AR)</th><td><input type="text" name="' + p + '[subtitle_ar]" value="" class="regular-text" dir="rtl"></td></tr>' +
+            '<tr><th>Button Text (EN)</th><td><input type="text" name="' + p + '[button_text]" value="" class="regular-text" placeholder="Shop Now"></td></tr>' +
+            '<tr><th>Button Text (AR)</th><td><input type="text" name="' + p + '[button_text_ar]" value="" class="regular-text" dir="rtl" placeholder="تسوق الآن"></td></tr>' +
+            '<tr><th>Link</th><td><input type="text" name="' + p + '[link]" value="" class="large-text" placeholder="/shop or https://example.com"></td></tr>' +
+            '</table></div>';
+    }
+
+    $('#sasanperfumes-add-ad').on('click', function() {
+        var c = $('#sasanperfumes-ads-items'); c.append(adTemplate(c.find('.sasanperfumes-ad-item').length));
+    });
+    $(document).on('click', '.sasanperfumes-remove-ad', function() {
+        $(this).closest('.sasanperfumes-ad-item').remove();
+        reindexRepeater($('#sasanperfumes-ads-items'), 'sasanperfumes-ad-item', 'Ad');
+    });
+
+    /* ================================================================
        CATEGORY SELECTOR - Check/uncheck + drag-and-drop reorder
        ================================================================ */
 

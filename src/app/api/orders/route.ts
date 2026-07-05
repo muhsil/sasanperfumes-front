@@ -282,6 +282,17 @@ function resolvePaymentMethodTitle(paymentMethod: string, providedTitle: unknown
   return paymentMethod.replace(/[-_]/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
+function normalizeOrderDisplayNumber<T extends { id?: number | string; number?: string | number }>(order: T): T {
+  if (!order || order.id === undefined || order.id === null) {
+    return order;
+  }
+
+  return {
+    ...order,
+    number: String(order.id),
+  };
+}
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const orderId = searchParams.get("orderId");
@@ -317,7 +328,7 @@ export async function GET(request: NextRequest) {
         );
       }
       
-      const orderData = await orderResponse.json();
+      const orderData = normalizeOrderDisplayNumber(await orderResponse.json());
       
       // Security check: Either order_key must match OR user must be authenticated and own the order
       if (orderKey) {
@@ -380,7 +391,7 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      return NextResponse.json({ success: true, data: orderData });
+      return NextResponse.json({ success: true, data: normalizeOrderDisplayNumber(orderData) });
     } else if (customerId) {
       // For listing orders by customer, always require authentication
       const authResult = await verifyAuth(request);
@@ -442,7 +453,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ success: true, data });
+    const normalizedData = Array.isArray(data)
+      ? data.map((order) =>
+          order && typeof order === "object"
+            ? normalizeOrderDisplayNumber(order as { id?: number | string; number?: string | number })
+            : order
+        )
+      : data;
+
+    return NextResponse.json({ success: true, data: normalizedData });
   } catch (error) {
     return NextResponse.json(
       {
@@ -596,12 +615,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const normalizedOrder = normalizeOrderDisplayNumber(data);
+
     return NextResponse.json({ 
       success: true, 
-      order: data,
-      order_id: data.id,
-      order_key: data.order_key,
-      payment_url: data.payment_url || null,
+      order: normalizedOrder,
+      order_id: normalizedOrder.id,
+      order_key: normalizedOrder.order_key,
+      payment_url: normalizedOrder.payment_url || null,
     });
   } catch (error) {
     return NextResponse.json(

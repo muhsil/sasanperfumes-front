@@ -15,7 +15,7 @@ import { useDiscountRules } from "@/contexts/DiscountRulesContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { getCustomer, getSavedAddressesFromCustomer, saveSavedAddresses, generateAddressId, resolveCountryCode, type Customer, type SavedAddress } from "@/lib/api/customer";
-import { featureFlags, type Locale } from "@/config/site";
+import { featureFlags, siteConfig, type Locale } from "@/config/site";
 import { MapPin, Check, ChevronDown, ChevronUp, Tag, X, Truck } from "lucide-react";
 import { BundleItemsList, getBundleItems, getBundleItemsTotal, getBoxPrice, getPricingMode, getFixedPrice, getBundleTotal } from "@/components/cart/BundleItemsList";
 import { PhoneInput } from "@/components/common/PhoneInput";
@@ -535,7 +535,7 @@ export default function CheckoutClient() {
               postcode: postcode || "",
               cart_subtotal: String(subtotal),
               cart_weight: String(weight),
-              currency_code: currency || "AED",
+              currency_code: currency || siteConfig.defaultCurrency,
             });
             const response = await fetch(`/api/shipping?${params.toString()}`);
             const data = await response.json();
@@ -615,7 +615,7 @@ export default function CheckoutClient() {
 
               if (shippingInfoTrackedRef.current !== shippingInfoKey && selectedRate) {
                 trackAnalyticsEvent("add_shipping_info", {
-                  currency: currency || "AED",
+                  currency: currency || siteConfig.defaultCurrency,
                   value: parseFloat(data.totals?.shipping_total || shippingTotal || "0") / divisor,
                   shipping_tier: selectedRate.name || rateId,
                   items: checkoutAnalyticsItems,
@@ -835,7 +835,7 @@ export default function CheckoutClient() {
           omnisendTrackStartedCheckout({
             lineItems,
             value: cartValue,
-            currency: cart.currency?.currency_code || "AED",
+            currency: cart.currency?.currency_code || currency || siteConfig.defaultCurrency,
             cartID: cart.cart_key || "",
             email,
           });
@@ -844,13 +844,13 @@ export default function CheckoutClient() {
           fbTrackInitiateCheckout({
             contentIds: cartItems.map((ci: CoCartItem) => String(ci.id)),
             value: cartValue,
-            currency: cart.currency?.currency_code || "AED",
+            currency: cart.currency?.currency_code || currency || siteConfig.defaultCurrency,
             numItems: cartItems.reduce((sum: number, ci: CoCartItem) => sum + ci.quantity.value, 0),
           });
 
           trackAnalyticsEvent("begin_checkout", {
             value: cartValue,
-            currency: cart.currency?.currency_code || "AED",
+            currency: cart.currency?.currency_code || currency || siteConfig.defaultCurrency,
             item_count: cartItems.length,
             total_quantity: cartItems.reduce((sum: number, ci: CoCartItem) => sum + ci.quantity.value, 0),
             items: cartItems
@@ -1166,7 +1166,7 @@ export default function CheckoutClient() {
       const orderPayload = {
         payment_method: formData.paymentMethod,
         payment_method_title: selectedPaymentGateway?.title || formData.paymentMethod,
-        currency: currency || "AED",
+        currency: currency || siteConfig.defaultCurrency,
         billing: {
           first_name: billingData.firstName,
           last_name: billingData.lastName,
@@ -1254,7 +1254,7 @@ export default function CheckoutClient() {
 
       if (!paymentInfoTrackedRef.current) {
         trackAnalyticsEvent("add_payment_info", {
-          currency: currency || "AED",
+          currency: currency || siteConfig.defaultCurrency,
           value: checkoutTotal / divisor,
           payment_type: selectedPaymentGateway?.title || formData.paymentMethod,
           items: checkoutAnalyticsItems,
@@ -1367,7 +1367,7 @@ export default function CheckoutClient() {
                   order_id: data.order_id,
                   order_key: data.order_key,
                   amount: paymentAmount,
-                  currency: data.order?.currency || "AED",
+                  currency: data.order?.currency || currency || siteConfig.defaultCurrency,
                   description: `Order #${data.order_id}`,
                   buyer: {
                     name: `${billingInfo.firstName} ${billingInfo.lastName}`,
@@ -1410,7 +1410,7 @@ export default function CheckoutClient() {
                   order_id: data.order_id,
                   order_key: data.order_key,
                   total_amount: paymentAmount,
-                  currency: data.order?.currency || "AED",
+                  currency: data.order?.currency || currency || siteConfig.defaultCurrency,
                   country_code: formData.shipping.country || "AE",
                   locale: locale === "ar" ? "ar_SA" : "en_US",
                   consumer: {

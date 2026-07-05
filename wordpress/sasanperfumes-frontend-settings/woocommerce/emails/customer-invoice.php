@@ -41,6 +41,14 @@ $order_date     = $invoice_date;
 // Currency
 $currency = $order->get_currency();
 
+$items = $order->get_items();
+$products_subtotal = 0.0;
+foreach ( $items as $invoice_item ) {
+	$products_subtotal += function_exists( 'sasanperfumes_order_admin_line_gross_total' )
+		? sasanperfumes_order_admin_line_gross_total( $invoice_item )
+		: ( (float) $invoice_item->get_total() + (float) $invoice_item->get_total_tax() );
+}
+
 /*
  * @hooked WC_Emails::email_header() Output the email header
  */
@@ -162,14 +170,15 @@ do_action( 'woocommerce_email_header', $email_heading, $email ); ?>
 				</tr>
 				<!-- Table Body -->
 				<?php
-				$items = $order->get_items();
 				if ( $items ) :
 					foreach ( $items as $item_id => $item ) :
 						$product  = $item->get_product();
 						$sku      = $product ? $product->get_sku() : '';
 						$weight   = $product ? $product->get_weight() : '';
 						$qty      = $item->get_quantity();
-						$subtotal = $order->get_formatted_line_subtotal( $item );
+						$subtotal = function_exists( 'sasanperfumes_order_admin_money' )
+							? sasanperfumes_order_admin_money( function_exists( 'sasanperfumes_order_admin_line_gross_total' ) ? sasanperfumes_order_admin_line_gross_total( $item ) : ( (float) $item->get_total() + (float) $item->get_total_tax() ), $currency )
+							: wc_price( (float) $item->get_total() + (float) $item->get_total_tax(), array( 'currency' => $currency ) );
 				?>
 				<tr>
 					<td style="padding: 12px; border-bottom: 1px solid #e0e0e0; vertical-align: top; font-size: 14px; color: #1a1a1a;">
@@ -218,14 +227,14 @@ do_action( 'woocommerce_email_header', $email_heading, $email ); ?>
 							<!-- Subtotal -->
 							<tr>
 								<td style="padding: 6px 12px; font-size: 13px; font-weight: 600; color: #333333; border-bottom: 1px solid #e0e0e0;">Subtotal</td>
-								<td align="right" style="padding: 6px 12px; font-size: 13px; color: #333333; border-bottom: 1px solid #e0e0e0;"><?php echo wp_kses_post( $order->get_subtotal_to_display() ); ?></td>
+								<td align="right" style="padding: 6px 12px; font-size: 13px; color: #333333; border-bottom: 1px solid #e0e0e0;"><?php echo wp_kses_post( function_exists( 'sasanperfumes_order_admin_money' ) ? sasanperfumes_order_admin_money( $products_subtotal, $currency ) : wc_price( $products_subtotal, array( 'currency' => $currency ) ) ); ?></td>
 							</tr>
 							<!-- Shipping -->
 							<?php if ( $order->get_shipping_methods() ) : ?>
 							<tr>
 								<td style="padding: 6px 12px; font-size: 13px; font-weight: 600; color: #333333; border-bottom: 1px solid #e0e0e0;">Shipping</td>
 								<td align="right" style="padding: 6px 12px; font-size: 13px; color: #333333; border-bottom: 1px solid #e0e0e0;">
-									<?php echo wp_kses_post( $order->get_shipping_to_display() ); ?>
+									<?php echo wp_kses_post( function_exists( 'sasanperfumes_order_admin_money' ) ? sasanperfumes_order_admin_money( function_exists( 'sasanperfumes_order_admin_shipping_gross_total' ) ? sasanperfumes_order_admin_shipping_gross_total( $order ) : ( (float) $order->get_shipping_total() + (float) $order->get_shipping_tax() ), $currency ) : wc_price( (float) $order->get_shipping_total() + (float) $order->get_shipping_tax(), array( 'currency' => $currency ) ) ); ?>
 								</td>
 							</tr>
 							<?php endif; ?>
@@ -233,14 +242,14 @@ do_action( 'woocommerce_email_header', $email_heading, $email ); ?>
 							<?php foreach ( $order->get_fees() as $fee ) : ?>
 							<tr>
 								<td style="padding: 6px 12px; font-size: 13px; font-weight: 600; color: #333333; border-bottom: 1px solid #e0e0e0;"><?php echo esc_html( $fee->get_name() ); ?></td>
-								<td align="right" style="padding: 6px 12px; font-size: 13px; color: #333333; border-bottom: 1px solid #e0e0e0;"><?php echo wp_kses_post( wc_price( $fee->get_total(), array( 'currency' => $currency ) ) ); ?></td>
+								<td align="right" style="padding: 6px 12px; font-size: 13px; color: #333333; border-bottom: 1px solid #e0e0e0;"><?php echo wp_kses_post( function_exists( 'sasanperfumes_order_admin_money' ) ? sasanperfumes_order_admin_money( function_exists( 'sasanperfumes_order_admin_inclusive_amount' ) ? sasanperfumes_order_admin_inclusive_amount( $fee->get_total(), $fee->get_total_tax() ) : ( (float) $fee->get_total() + (float) $fee->get_total_tax() ), $currency ) : wc_price( (float) $fee->get_total() + (float) $fee->get_total_tax(), array( 'currency' => $currency ) ) ); ?></td>
 							</tr>
 							<?php endforeach; ?>
 							<!-- Discount -->
-							<?php if ( $order->get_total_discount() > 0 ) : ?>
+							<?php if ( function_exists( 'sasanperfumes_order_admin_discount_gross_total' ) ? sasanperfumes_order_admin_discount_gross_total( $order ) > 0 : $order->get_total_discount() > 0 ) : ?>
 							<tr>
 								<td style="padding: 6px 12px; font-size: 13px; font-weight: 600; color: #333333; border-bottom: 1px solid #e0e0e0;">Discount</td>
-								<td align="right" style="padding: 6px 12px; font-size: 13px; color: #c0392b; border-bottom: 1px solid #e0e0e0;">-<?php echo wp_kses_post( wc_price( $order->get_total_discount(), array( 'currency' => $currency ) ) ); ?></td>
+								<td align="right" style="padding: 6px 12px; font-size: 13px; color: #c0392b; border-bottom: 1px solid #e0e0e0;">-<?php echo wp_kses_post( function_exists( 'sasanperfumes_order_admin_money' ) ? sasanperfumes_order_admin_money( function_exists( 'sasanperfumes_order_admin_discount_gross_total' ) ? sasanperfumes_order_admin_discount_gross_total( $order ) : (float) $order->get_total_discount(), $currency ) : wc_price( function_exists( 'sasanperfumes_order_admin_discount_gross_total' ) ? sasanperfumes_order_admin_discount_gross_total( $order ) : (float) $order->get_total_discount(), array( 'currency' => $currency ) ) ); ?></td>
 							</tr>
 							<?php endif; ?>
 							<!-- Total -->
@@ -248,21 +257,6 @@ do_action( 'woocommerce_email_header', $email_heading, $email ); ?>
 								<td style="padding: 10px 12px; font-size: 14px; font-weight: 700; color: #1a1a1a; border-bottom: 2px solid #1a1a1a;">Total</td>
 								<td align="right" style="padding: 10px 12px; font-size: 14px; font-weight: 700; color: #1a1a1a; border-bottom: 2px solid #1a1a1a;">
 									<?php echo wp_kses_post( $order->get_formatted_order_total() ); ?>
-									<?php
-									// Show tax info
-									$tax_display = '';
-									$tax_totals  = $order->get_tax_totals();
-									if ( $tax_totals ) {
-										foreach ( $tax_totals as $code => $tax ) {
-											$tax_display .= sprintf(
-												'<br><span style="font-size: 11px; font-weight: 400; color: #555555;">(includes %s %s)</span>',
-												wp_kses_post( $tax->formatted_amount ),
-												esc_html( $tax->label )
-											);
-										}
-										echo $tax_display;
-									}
-									?>
 								</td>
 							</tr>
 						</table>

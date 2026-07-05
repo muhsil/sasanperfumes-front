@@ -9,13 +9,14 @@ import {
   getFeaturedProducts,
   getCategories,
 } from "@/lib/api/woocommerce";
-import { getHomePageSettings, getSeoSettings, getHomeSections, getSiteSettings } from "@/lib/api/wordpress";
+import { getHomePageSettings, getSeoSettings, getHomeSections, getSiteSettings, getAdSettings } from "@/lib/api/wordpress";
 import { getMarketHintFromSearchParams, getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
 import { getMarketPathPrefix } from "@/config/market";
 import {
   HeroSlider,
   ProductSection,
   BannersSection,
+  AdsSection,
   CategorySection,
   CollectionsSection,
   SeoContentSection,
@@ -418,12 +419,13 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
     getRequestFrontendHost(marketHint),
   ]);
 
-  const [dictionary, homeSettings, homeSections, siteSettings, categories] = await Promise.all([
+  const [dictionary, homeSettings, homeSections, siteSettings, categories, adsSettings] = await Promise.all([
     getDictionary(validLocale),
     getHomePageSettings(validLocale, frontendHost),
     getHomeSections(frontendHost),
     getSiteSettings(validLocale, frontendHost),
     getCategories(validLocale, market.defaultCurrency, frontendHost),
+    getAdSettings(validLocale, frontendHost),
   ]);
 
   const t = (bi: { en: string; ar: string }) => isRTL ? bi.ar : bi.en;
@@ -437,6 +439,8 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
       <HeroSlider settings={homeSettings.hero_slider} />
 
       <div className="page-flush relative bg-transparent">
+        <AdsSection settings={adsSettings} locale={validLocale} marketCode={market.code} placement="home" />
+
         <Suspense fallback={<ProductSectionSkeleton fullView />}>
           <NewProductsSection
             locale={validLocale}

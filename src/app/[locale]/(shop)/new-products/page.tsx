@@ -2,7 +2,7 @@
 import { ProductGridSkeleton } from "@/components/common/Skeleton";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { getDictionary } from "@/i18n";
-import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
+import { generateMetadata as generateSeoMetadata, buildMarketSeoKeywords, getMarketSeoAudience } from "@/lib/utils/seo";
 import { getNewProducts, getFreeGiftProductIds, getBundleEnabledProductSlugs } from "@/lib/api/woocommerce";
 import { getPageSeo } from "@/lib/api/wordpress";
 import { getMarketHintFromSearchParams, getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
@@ -23,7 +23,7 @@ interface NewProductsPageProps {
 const defaultSeo = {
   title: { en: "New Arrivals | Latest Luxury Perfumes & Oud Fragrances", ar: "منتجات جديدة | أحدث العطور والإصدارات الفاخرة" },
   description: {
-    en: "Discover our newest luxury perfumes, Arabian oud & aromatic oils from Sasan Perfumes. Handcrafted in the UAE. Free delivery on orders over 500 AED.",
+    en: "Discover our newest luxury perfumes, Arabian oud & aromatic oils from Sasan Perfumes. Handcrafted in the UAE. Free delivery available on eligible orders.",
     ar: "اكتشف أحدث إصداراتنا من العطور الفاخرة والعود العربي والزيوت العطرية من Sasan Perfumes. منتجات يدوية فاخرة من الإمارات. توصيل مجاني للطلبات فوق 500 درهم.",
   },
   keywords: {
@@ -39,16 +39,20 @@ export async function generateMetadata({
   const lang = locale as Locale;
   const isAr = lang === "ar";
 
-  const wpSeo = await getPageSeo("new-products", lang);
-
   const market = await getRequestMarket();
+  const currencyCode = market.defaultCurrency;
+  const marketAudience = getMarketSeoAudience(market.code, lang);
+  const fallbackDescription = isAr
+    ? `اكتشف أحدث إصداراتنا من العطور الفاخرة والعود العربي والزيوت العطرية من Sasan Perfumes. منتجات يدوية فاخرة من الإمارات. توصيل مجاني للطلبات فوق 500 ${currencyCode}.`
+    : `Discover our newest luxury perfumes, Arabian oud & aromatic oils from Sasan Perfumes. Built for ${marketAudience}. Free delivery on orders over 500 ${currencyCode}.`;
+  const wpSeo = await getPageSeo("new-products", lang);
   return generateSeoMetadata({
     title: wpSeo?.title || (isAr ? defaultSeo.title.ar : defaultSeo.title.en),
-    description: wpSeo?.description || (isAr ? defaultSeo.description.ar : defaultSeo.description.en),
+    description: wpSeo?.description || fallbackDescription,
     image: wpSeo?.ogImage || undefined,
     locale: lang,
     pathname: "/new-products",
-    keywords: isAr ? defaultSeo.keywords.ar : defaultSeo.keywords.en,
+    keywords: buildMarketSeoKeywords(isAr ? defaultSeo.keywords.ar : defaultSeo.keywords.en, market.code, lang),
     marketCode: market.code,
   });
 }

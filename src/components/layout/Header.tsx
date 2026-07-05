@@ -140,14 +140,15 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
     : [];
   const mobileNavigation = mergeMobileNavigation(baseMobileNavigation, mobileBottomNavigation);
 
-  const { currency } = useCurrency();
+  const { currency, convertPrice } = useCurrency();
 
   const rawTopbarText = topbarSettings?.enabled !== false
     ? (isRTL && topbarSettings?.textAr ? topbarSettings.textAr : topbarSettings?.text) || ""
     : "";
 
+  const topbarAmount = Math.ceil(convertPrice(topbarSettings?.freeShippingThreshold ?? 500));
   const topbarText = rawTopbarText
-    .replace(/\{\{amount\}\}/g, String(topbarSettings?.freeShippingThreshold ?? 500))
+    .replace(/\{\{amount\}\}/g, String(topbarAmount))
     .replace(/\{\{currency\}\}/g, currency);
   const hideTopbarOnMobile = topbarSettings?.hideOnMobile !== false;
   const topbarVisible = Boolean(topbarText && !topbarDismissed && !isScrolled);

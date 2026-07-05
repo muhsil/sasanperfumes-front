@@ -4,7 +4,7 @@ import { ProductGridSkeleton } from "@/components/common/Skeleton";
 import { CollectionPageHeader } from "@/components/shop/CollectionPageHeader";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { getDictionary } from "@/i18n";
-import { generateMetadata as generateSeoMetadata, generateItemListJsonLd } from "@/lib/utils/seo";
+import { generateMetadata as generateSeoMetadata, generateItemListJsonLd, buildMarketSeoKeywords, getMarketSeoAudience } from "@/lib/utils/seo";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { getProducts, getFreeGiftProductInfo, getBundleEnabledProductSlugs } from "@/lib/api/woocommerce";
 import { getPageSeo, getStaticPageContent, pickLocale, getFeatureToggles } from "@/lib/api/wordpress";
@@ -28,7 +28,7 @@ interface ShopPageProps {
 const defaultSeo = {
   title: { en: "Shop All Premium Perfumes, Oud & Home Fragrances Online", ar: "تسوق العطور الفاخرة والزيوت العطرية أون لاين" },
   description: {
-    en: "Browse our complete collection of luxury perfumes, Arabian oud, aromatic oils, body care & home fragrances. Handcrafted in the UAE. Free shipping on orders over 500 AED.",
+    en: "Browse our complete collection of luxury perfumes, Arabian oud, aromatic oils, body care & home fragrances. Handcrafted in the UAE. Free shipping available on eligible orders.",
     ar: "تصفح مجموعتنا الكاملة من العطور الفاخرة والعود العربي والزيوت العطرية ومنتجات العناية بالجسم ومعطرات المنزل. منتجات يدوية فاخرة من الإمارات. شحن مجاني للطلبات فوق 500 درهم.",
   },
   keywords: {
@@ -50,17 +50,22 @@ export async function generateMetadata({
     getRequestMarket(marketHint),
   ]);
   if (!toggles.sasanperfumes_shop_enabled) return {};
+  const currencyCode = market.defaultCurrency;
+  const marketAudience = getMarketSeoAudience(market.code, lang);
+  const fallbackDescription = isAr
+    ? `تصفح مجموعتنا الكاملة من العطور الفاخرة والعود العربي والزيوت العطرية ومنتجات العناية بالجسم ومعطرات المنزل. منتجات يدوية فاخرة من الإمارات. شحن مجاني للطلبات فوق 500 ${currencyCode}.`
+    : `Browse our complete collection of luxury perfumes, Arabian oud, aromatic oils, body care & home fragrances. Built for ${marketAudience}. Free shipping on orders over 500 ${currencyCode}.`;
 
   const wpSeo = await getPageSeo("shop", lang);
 
   return generateSeoMetadata({
     title: wpSeo?.title || (isAr ? defaultSeo.title.ar : defaultSeo.title.en),
-    description: wpSeo?.description || (isAr ? defaultSeo.description.ar : defaultSeo.description.en),
+    description: wpSeo?.description || fallbackDescription,
     image: wpSeo?.ogImage || undefined,
     locale: lang,
     pathname: "/shop",
     marketCode: market.code,
-    keywords: isAr ? defaultSeo.keywords.ar : defaultSeo.keywords.en,
+    keywords: buildMarketSeoKeywords(isAr ? defaultSeo.keywords.ar : defaultSeo.keywords.en, market.code, lang),
   });
 }
 
@@ -119,7 +124,7 @@ export default async function ShopPage({ params, searchParams }: ShopPageProps) 
     items: filteredProducts.slice(0, 20).map((product, index) => ({
       name: decodeHtmlEntities(product.name),
       url: `${siteConfig.url}${pathPrefix}/${locale}/product/${product.slug}`,
-      image: product.images[0]?.src || "",
+      image: product.images[0]?.src || siteConfig.ogImage,
       position: index + 1,
     })),
   });

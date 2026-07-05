@@ -14,6 +14,29 @@ defined( 'ABSPATH' ) || exit;
 $frontend_url = function_exists( 'sasanperfumes_get_frontend_url' ) ? sasanperfumes_get_frontend_url( 'https://sasanperfumes.com' ) : 'https://sasanperfumes.com';
 $order_url = $frontend_url . '/en/account/orders/' . $order->get_id() . '/';
 $admin_order_url = $order->get_edit_order_url();
+$currency = $order->get_currency();
+$items = $order->get_items();
+$products_subtotal = 0.0;
+foreach ( $items as $invoice_item ) {
+	$products_subtotal += function_exists( 'sasanperfumes_order_admin_line_gross_total' )
+		? sasanperfumes_order_admin_line_gross_total( $invoice_item )
+		: ( (float) $invoice_item->get_total() + (float) $invoice_item->get_total_tax() );
+}
+$shipping_total = function_exists( 'sasanperfumes_order_admin_shipping_gross_total' )
+	? sasanperfumes_order_admin_shipping_gross_total( $order )
+	: ( (float) $order->get_shipping_total() + (float) $order->get_shipping_tax() );
+$discount_total = function_exists( 'sasanperfumes_order_admin_discount_gross_total' )
+	? sasanperfumes_order_admin_discount_gross_total( $order )
+	: (float) $order->get_total_discount();
+$fee_total = function_exists( 'sasanperfumes_order_admin_fee_gross_total' )
+	? sasanperfumes_order_admin_fee_gross_total( $order )
+	: array_reduce(
+		$order->get_fees(),
+		static function ( $sum, $fee ) {
+			return $sum + ( (float) $fee->get_total() + (float) $fee->get_total_tax() );
+		},
+		0.0
+	);
 
 /*
  * @hooked WC_Emails::email_header() Output the email header
@@ -95,7 +118,12 @@ if ( $items ) : ?>
 	<?php foreach ( $items as $item_id => $item ) :
 		$product = $item->get_product();
 		$qty     = $item->get_quantity();
-		$total   = $order->get_formatted_line_subtotal( $item );
+		$total   = function_exists( 'sasanperfumes_order_admin_money' )
+			? sasanperfumes_order_admin_money(
+				function_exists( 'sasanperfumes_order_admin_line_gross_total' ) ? sasanperfumes_order_admin_line_gross_total( $item ) : ( (float) $item->get_total() + (float) $item->get_total_tax() ),
+				$currency
+			)
+			: wc_price( (float) $item->get_total() + (float) $item->get_total_tax(), array( 'currency' => $currency ) );
 		$name    = $item->get_name();
 		$sku     = $product ? $product->get_sku() : '';
 		$meta    = strip_tags( wc_display_item_meta( $item, array( 'before' => '', 'after' => '', 'separator' => ', ', 'echo' => false ) ) );
@@ -116,16 +144,30 @@ if ( $items ) : ?>
 	<?php endforeach; ?>
 	</tbody>
 	<tfoot>
-		<?php foreach ( $order->get_order_item_totals() as $total_key => $total_row ) : ?>
 		<tr>
-			<td colspan="2" style="text-align: right; padding: 8px 10px; font-size: 13px; color: #888888; <?php echo $total_key === 'order_total' ? 'font-weight: 700; font-size: 15px; color: #1a1a1a; border-top: 2px solid #e0e0e0;' : ''; ?>">
-				<?php echo wp_kses_post( $total_row['label'] ); ?>
-			</td>
-			<td style="text-align: right; padding: 8px 10px; font-size: 13px; color: #333333; <?php echo $total_key === 'order_total' ? 'font-weight: 700; font-size: 15px; color: #1a1a1a; border-top: 2px solid #e0e0e0;' : ''; ?>">
-				<?php echo wp_kses_post( $total_row['value'] ); ?>
-			</td>
+			<td colspan="2" style="text-align: right; padding: 8px 10px; font-size: 13px; color: #888888;">Subtotal</td>
+			<td style="text-align: right; padding: 8px 10px; font-size: 13px; color: #333333;"><?php echo wp_kses_post( function_exists( 'sasanperfumes_order_admin_money' ) ? sasanperfumes_order_admin_money( $products_subtotal, $currency ) : wc_price( $products_subtotal, array( 'currency' => $currency ) ) ); ?></td>
 		</tr>
-		<?php endforeach; ?>
+		<tr>
+			<td colspan="2" style="text-align: right; padding: 8px 10px; font-size: 13px; color: #888888;">Shipping</td>
+			<td style="text-align: right; padding: 8px 10px; font-size: 13px; color: #333333;"><?php echo wp_kses_post( function_exists( 'sasanperfumes_order_admin_money' ) ? sasanperfumes_order_admin_money( $shipping_total, $currency ) : wc_price( $shipping_total, array( 'currency' => $currency ) ) ); ?></td>
+		</tr>
+		<?php if ( $fee_total > 0 ) : ?>
+		<tr>
+			<td colspan="2" style="text-align: right; padding: 8px 10px; font-size: 13px; color: #888888;">Fees</td>
+			<td style="text-align: right; padding: 8px 10px; font-size: 13px; color: #333333;"><?php echo wp_kses_post( function_exists( 'sasanperfumes_order_admin_money' ) ? sasanperfumes_order_admin_money( $fee_total, $currency ) : wc_price( $fee_total, array( 'currency' => $currency ) ) ); ?></td>
+		</tr>
+		<?php endif; ?>
+		<?php if ( $discount_total > 0 ) : ?>
+		<tr>
+			<td colspan="2" style="text-align: right; padding: 8px 10px; font-size: 13px; color: #888888;">Discount</td>
+			<td style="text-align: right; padding: 8px 10px; font-size: 13px; color: #c0392b;">-<?php echo wp_kses_post( function_exists( 'sasanperfumes_order_admin_money' ) ? sasanperfumes_order_admin_money( $discount_total, $currency ) : wc_price( $discount_total, array( 'currency' => $currency ) ) ); ?></td>
+		</tr>
+		<?php endif; ?>
+		<tr>
+			<td colspan="2" style="text-align: right; padding: 8px 10px; font-size: 13px; font-weight: 700; color: #1a1a1a; border-top: 2px solid #e0e0e0;">Total</td>
+			<td style="text-align: right; padding: 8px 10px; font-size: 13px; font-weight: 700; color: #1a1a1a; border-top: 2px solid #e0e0e0;"><?php echo wp_kses_post( $order->get_formatted_order_total() ); ?></td>
+		</tr>
 	</tfoot>
 </table>
 <?php endif; ?>

@@ -9,7 +9,7 @@ export function GiftSection({ locale, currency, giftProgress, activeGifts }: Gif
   const isRTL = locale === "ar";
   const { convertPrice } = useCurrency();
   const convertedAmountNeeded = Math.ceil(
-    convertPrice(giftProgress.amountNeeded, giftProgress.amountNeededCurrency || "AED")
+    convertPrice(giftProgress.amountNeeded, giftProgress.amountNeededCurrency || currency)
   );
 
   return (

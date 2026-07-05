@@ -149,8 +149,8 @@ export default async function GuidePage({ params }: GuidePageProps) {
   // Generate JSON-LD structured data
   const itemListItems = productPairs.map((pair) => ({
     name: pair.wcProduct.name,
-    url: `${siteConfig.url}/${locale}/product/${pair.guideProduct.slug}`,
-    image: pair.wcProduct.images[0]?.src || "",
+    url: `${siteConfig.url}${pathPrefix}/${locale}/product/${pair.guideProduct.slug}`,
+    image: pair.wcProduct.images[0]?.src || siteConfig.ogImage,
     position: pair.guideProduct.rank,
   }));
 
@@ -165,7 +165,7 @@ export default async function GuidePage({ params }: GuidePageProps) {
     "@type": "Article",
     headline: guide.title[validLocale],
     description: guide.metaDescription[validLocale],
-    url: `${siteConfig.url}/${locale}/guides/${slug}`,
+    url: `${siteConfig.url}${pathPrefix}/${locale}/guides/${slug}`,
     datePublished: guide.publishedAt,
     dateModified: guide.updatedAt,
     author: {
@@ -186,7 +186,7 @@ export default async function GuidePage({ params }: GuidePageProps) {
     },
     mainEntityOfPage: {
       "@type": "WebPage",
-      "@id": `${siteConfig.url}/${locale}/guides/${slug}`,
+      "@id": `${siteConfig.url}${pathPrefix}/${locale}/guides/${slug}`,
     },
     keywords: guide.keywords[validLocale].join(", "),
     inLanguage: locale === "ar" ? "ar" : "en",
@@ -215,11 +215,11 @@ export default async function GuidePage({ params }: GuidePageProps) {
     <div className="flex flex-col">
       {/* JSON-LD Structured Data — ItemList, FAQ, Article (Breadcrumb handled by Breadcrumbs component) */}
       <JsonLd data={generateItemListJsonLd({
-        name: guide.title[validLocale],
-        description: guide.metaDescription[validLocale],
-        url: `${siteConfig.url}/${locale}/guides/${slug}`,
-        items: itemListItems,
-      })} />
+      name: guide.title[validLocale],
+      description: guide.metaDescription[validLocale],
+      url: `${siteConfig.url}${pathPrefix}/${locale}/guides/${slug}`,
+      items: itemListItems,
+    })} />
       <JsonLd data={generateFAQJsonLd(faqItems)} />
       <JsonLd data={articleJsonLd} />
 

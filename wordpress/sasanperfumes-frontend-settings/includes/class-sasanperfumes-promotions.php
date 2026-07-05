@@ -6,10 +6,12 @@
  * 1. Promotional popup settings (admin + REST API)
  * 2. Exposes sale_date_to / sale_date_from on WooCommerce Store API product responses
  * 3. Product badge tag settings
+ * 4. Dynamic ad slots for storefront placements
  *
  * REST endpoints (all public):
  *   GET /sasanperfumes/v1/popup-settings
  *   GET /sasanperfumes/v1/badge-tags
+ *   GET /sasanperfumes/v1/ad-settings
  *
  * @since 6.6.0
  */
@@ -21,6 +23,7 @@ function sasanperfumes_promotions_init() {
     add_action('admin_menu',          'sasanperfumes_promotions_register_menu', 99);
     add_action('admin_post_sasanperfumes_save_popup',      'sasanperfumes_promotions_save_popup');
     add_action('admin_post_sasanperfumes_save_badge_tags', 'sasanperfumes_promotions_save_badge_tags');
+    add_action('admin_post_sasanperfumes_save_ads',        'sasanperfumes_promotions_save_ads');
 
     // Inject sale dates into WC Store API product response
     add_filter('woocommerce_store_api_product_data', 'sasanperfumes_promotions_inject_sale_dates', 10, 2);
@@ -40,6 +43,11 @@ function sasanperfumes_promotions_register_routes() {
     sasanperfumes_register_rest_route( '/badge-tags', [
         'methods'             => 'GET',
         'callback'            => 'sasanperfumes_get_badge_tags',
+        'permission_callback' => '__return_true',
+    ]);
+    sasanperfumes_register_rest_route( '/ad-settings', [
+        'methods'             => 'GET',
+        'callback'            => 'sasanperfumes_get_ad_settings',
         'permission_callback' => '__return_true',
     ]);
 }
@@ -72,6 +80,50 @@ function sasanperfumes_get_badge_tags() {
     ];
     $saved = get_option('sasanperfumes_badge_tags', $defaults);
     return rest_ensure_response(['badge_tags' => $saved]);
+}
+
+function sasanperfumes_get_ad_settings() {
+    $items = get_option('sasanperfumes_ads_items', array());
+    if (!is_array($items)) {
+        $items = array();
+    }
+
+    if (empty($items)) {
+        $items = array();
+    } else {
+        $items = array_values(array_filter(array_map(function ($item) {
+            if (!is_array($item)) return null;
+            $has_media = !empty($item['image']) || !empty($item['mobile']) || !empty($item['image_ar']) || !empty($item['mobile_ar']);
+            $enabled = array_key_exists('enabled_set', $item)
+                ? !empty($item['enabled'])
+                : (array_key_exists('enabled', $item) ? (!empty($item['enabled']) || $has_media) : $has_media);
+            $placement = sanitize_key($item['placement'] ?? 'home');
+            if ($placement === '') $placement = 'home';
+            $market = sanitize_key($item['market'] ?? 'all');
+            if ($market === '') $market = 'all';
+            return array(
+                'enabled'       => $enabled,
+                'placement'     => $placement,
+                'market'        => $market,
+                'image'         => esc_url_raw($item['image'] ?? ''),
+                'mobileImage'   => esc_url_raw($item['mobile'] ?? ($item['image'] ?? '')),
+                'imageAr'       => esc_url_raw($item['image_ar'] ?? ''),
+                'mobileImageAr' => esc_url_raw($item['mobile_ar'] ?? ''),
+                'title'         => sanitize_text_field($item['title'] ?? ''),
+                'titleAr'       => sanitize_text_field($item['title_ar'] ?? ''),
+                'subtitle'      => sanitize_text_field($item['subtitle'] ?? ''),
+                'subtitleAr'    => sanitize_text_field($item['subtitle_ar'] ?? ''),
+                'buttonText'    => sanitize_text_field($item['button_text'] ?? ''),
+                'buttonTextAr'  => sanitize_text_field($item['button_text_ar'] ?? ''),
+                'link'          => sasanperfumes_sanitize_link($item['link'] ?? ''),
+            );
+        }, $items)));
+    }
+
+    return rest_ensure_response([
+        'enabled' => (bool) get_option('sasanperfumes_ads_enabled', true),
+        'items'   => $items,
+    ]);
 }
 
 // ---------------------------------------------------------------------------
@@ -145,6 +197,41 @@ function sasanperfumes_promotions_save_badge_tags() {
     exit;
 }
 
+function sasanperfumes_promotions_save_ads() {
+    if (!current_user_can('manage_options') || !check_admin_referer('sasanperfumes_save_ads')) wp_die('Unauthorized');
+    update_option('sasanperfumes_ads_enabled', !empty($_POST['sasanperfumes_ads_enabled']) ? 1 : 0);
+    $items = array();
+    if (isset($_POST['sasanperfumes_ads_items']) && is_array($_POST['sasanperfumes_ads_items'])) {
+        foreach ($_POST['sasanperfumes_ads_items'] as $item) {
+            if (!is_array($item)) continue;
+            $placement = sanitize_key($item['placement'] ?? 'home');
+            if ($placement === '') $placement = 'home';
+            $market = sanitize_key($item['market'] ?? 'all');
+            if ($market === '') $market = 'all';
+            $items[] = array(
+                'enabled'       => !empty($item['enabled']) ? 1 : 0,
+                'enabled_set'   => true,
+                'placement'     => $placement,
+                'market'        => $market,
+                'image'         => esc_url_raw($item['image'] ?? ''),
+                'mobile'        => esc_url_raw($item['mobile'] ?? ''),
+                'image_ar'      => esc_url_raw($item['image_ar'] ?? ''),
+                'mobile_ar'     => esc_url_raw($item['mobile_ar'] ?? ''),
+                'title'         => sanitize_text_field($item['title'] ?? ''),
+                'title_ar'      => sanitize_text_field($item['title_ar'] ?? ''),
+                'subtitle'      => sanitize_text_field($item['subtitle'] ?? ''),
+                'subtitle_ar'   => sanitize_text_field($item['subtitle_ar'] ?? ''),
+                'button_text'   => sanitize_text_field($item['button_text'] ?? ''),
+                'button_text_ar'=> sanitize_text_field($item['button_text_ar'] ?? ''),
+                'link'          => sasanperfumes_sanitize_link($item['link'] ?? ''),
+            );
+        }
+    }
+    update_option('sasanperfumes_ads_items', $items);
+    wp_redirect(admin_url('admin.php?page=sasanperfumes-promotions&tab=ads&saved=1'));
+    exit;
+}
+
 // ---------------------------------------------------------------------------
 // Admin render page
 // ---------------------------------------------------------------------------
@@ -159,10 +246,12 @@ function sasanperfumes_promotions_render_page() {
         <nav class="nav-tab-wrapper">
             <a href="?page=sasanperfumes-promotions&tab=popup"  class="nav-tab <?= $tab === 'popup'  ? 'nav-tab-active' : '' ?>">Popup</a>
             <a href="?page=sasanperfumes-promotions&tab=badges" class="nav-tab <?= $tab === 'badges' ? 'nav-tab-active' : '' ?>">Product Badges</a>
+            <a href="?page=sasanperfumes-promotions&tab=ads"    class="nav-tab <?= $tab === 'ads'    ? 'nav-tab-active' : '' ?>">Ads</a>
         </nav>
 
         <?php if ($tab === 'popup'): sasanperfumes_promotions_render_popup_tab();
-        elseif ($tab === 'badges'): sasanperfumes_promotions_render_badges_tab(); endif; ?>
+        elseif ($tab === 'badges'): sasanperfumes_promotions_render_badges_tab();
+        elseif ($tab === 'ads'): sasanperfumes_promotions_render_ads_tab(); endif; ?>
     </div>
     <?php
 }
@@ -233,6 +322,64 @@ function sasanperfumes_promotions_render_badges_tab() {
             </tbody>
         </table>
         <?php submit_button('Save Badge Settings'); ?>
+    </form>
+    <?php
+}
+
+function sasanperfumes_promotions_render_ads_tab() {
+    $defaults = array(
+        array('enabled'=>1,'placement'=>'home','market'=>'all','image'=>'','mobile'=>'','image_ar'=>'','mobile_ar'=>'','title'=>'','title_ar'=>'','subtitle'=>'','subtitle_ar'=>'','button_text'=>'','button_text_ar'=>'','link'=>'')
+    );
+    $items = get_option('sasanperfumes_ads_items', $defaults);
+    if (!is_array($items) || empty($items)) {
+        $items = $defaults;
+    }
+    ?>
+    <p>Use this section to add promotional ad cards without changing code. You can target a market, a page placement, or both.</p>
+    <form method="post" action="<?= admin_url('admin-post.php') ?>">
+        <?php wp_nonce_field('sasanperfumes_save_ads'); ?>
+        <input type="hidden" name="action" value="sasanperfumes_save_ads">
+        <table class="form-table">
+            <tr><th>Enable Ads</th><td><label><input type="checkbox" name="sasanperfumes_ads_enabled" value="1" <?php checked(get_option('sasanperfumes_ads_enabled', true)); ?>> Show ad slots on the storefront</label></td></tr>
+        </table>
+
+        <h3>Ad Slots <button type="button" class="button" id="sasanperfumes-add-ad">+ Add Ad</button></h3>
+        <div id="sasanperfumes-ads-items">
+            <?php foreach ($items as $i => $item): ?>
+            <div class="sasanperfumes-ad-item" style="background:#f9f9f9;padding:15px;margin-bottom:15px;border:1px solid #ddd;">
+                <h4>Ad <?php echo $i+1; ?> <button type="button" class="button sasanperfumes-remove-ad" style="float:right;color:red;">Remove</button></h4>
+                <table class="form-table">
+                    <tr><th>Enable</th><td><label><input type="hidden" name="sasanperfumes_ads_items[<?php echo $i; ?>][enabled]" value="0"><input type="checkbox" name="sasanperfumes_ads_items[<?php echo $i; ?>][enabled]" value="1" <?php checked(array_key_exists('enabled', $item) ? !empty($item['enabled']) : true); ?>> Show this ad</label></td></tr>
+                    <tr><th>Placement</th><td>
+                        <select name="sasanperfumes_ads_items[<?php echo $i; ?>][placement]">
+                            <?php foreach (array('home'=>'Home page','shop'=>'Shop page','category'=>'Category pages','product'=>'Product pages','all'=>'All pages') as $value => $label): ?>
+                                <option value="<?php echo esc_attr($value); ?>" <?php selected($item['placement'] ?? 'home', $value); ?>><?php echo esc_html($label); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </td></tr>
+                    <tr><th>Market</th><td>
+                        <select name="sasanperfumes_ads_items[<?php echo $i; ?>][market]">
+                            <?php foreach (array('all'=>'All markets','intl'=>'International / UAE','qa'=>'Qatar','om'=>'Oman','sa'=>'Saudi Arabia') as $value => $label): ?>
+                                <option value="<?php echo esc_attr($value); ?>" <?php selected($item['market'] ?? 'all', $value); ?>><?php echo esc_html($label); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </td></tr>
+                    <tr><th>Desktop Image (EN)</th><td><?php sasanperfumes_image_field("sasanperfumes_ads_items[{$i}][image]", $item['image'] ?? ''); ?></td></tr>
+                    <tr><th>Mobile Image (EN)</th><td><?php sasanperfumes_image_field("sasanperfumes_ads_items[{$i}][mobile]", $item['mobile'] ?? ''); ?></td></tr>
+                    <tr><th>Desktop Image (AR)</th><td><?php sasanperfumes_image_field("sasanperfumes_ads_items[{$i}][image_ar]", $item['image_ar'] ?? ''); ?><p class="description">Falls back to the English image if empty.</p></td></tr>
+                    <tr><th>Mobile Image (AR)</th><td><?php sasanperfumes_image_field("sasanperfumes_ads_items[{$i}][mobile_ar]", $item['mobile_ar'] ?? ''); ?><p class="description">Falls back to the English mobile image if empty.</p></td></tr>
+                    <tr><th>Title (EN)</th><td><input type="text" name="sasanperfumes_ads_items[<?php echo $i; ?>][title]" value="<?php echo esc_attr($item['title'] ?? ''); ?>" class="regular-text"></td></tr>
+                    <tr><th>Title (AR)</th><td><input type="text" name="sasanperfumes_ads_items[<?php echo $i; ?>][title_ar]" value="<?php echo esc_attr($item['title_ar'] ?? ''); ?>" class="regular-text" dir="rtl"></td></tr>
+                    <tr><th>Subtitle (EN)</th><td><input type="text" name="sasanperfumes_ads_items[<?php echo $i; ?>][subtitle]" value="<?php echo esc_attr($item['subtitle'] ?? ''); ?>" class="regular-text"></td></tr>
+                    <tr><th>Subtitle (AR)</th><td><input type="text" name="sasanperfumes_ads_items[<?php echo $i; ?>][subtitle_ar]" value="<?php echo esc_attr($item['subtitle_ar'] ?? ''); ?>" class="regular-text" dir="rtl"></td></tr>
+                    <tr><th>Button Text (EN)</th><td><input type="text" name="sasanperfumes_ads_items[<?php echo $i; ?>][button_text]" value="<?php echo esc_attr($item['button_text'] ?? ''); ?>" class="regular-text" placeholder="Shop Now"></td></tr>
+                    <tr><th>Button Text (AR)</th><td><input type="text" name="sasanperfumes_ads_items[<?php echo $i; ?>][button_text_ar]" value="<?php echo esc_attr($item['button_text_ar'] ?? ''); ?>" class="regular-text" dir="rtl" placeholder="تسوق الآن"></td></tr>
+                    <tr><th>Link</th><td><input type="text" name="sasanperfumes_ads_items[<?php echo $i; ?>][link]" value="<?php echo esc_attr($item['link'] ?? ''); ?>" class="large-text" placeholder="/shop or https://example.com"></td></tr>
+                </table>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <?php submit_button('Save Ads Settings'); ?>
     </form>
     <?php
 }

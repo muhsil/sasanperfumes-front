@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { siteConfig } from "@/config/site";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { API_BASE as BASE_URL, backendHeaders, noCacheUrl } from "@/lib/utils/backendFetch";
 
@@ -134,7 +135,7 @@ export async function POST(request: Request): Promise<NextResponse<ValidateRespo
       return NextResponse.json({
         valid: false,
         code: "min_spend",
-        message: `Minimum spend of ${minimumAmount.toFixed(2)} AED required for this coupon`,
+        message: `Minimum spend of ${minimumAmount.toFixed(2)} ${siteConfig.defaultCurrency} required for this coupon`,
       });
     }
 
@@ -144,7 +145,7 @@ export async function POST(request: Request): Promise<NextResponse<ValidateRespo
       return NextResponse.json({
         valid: false,
         code: "max_spend",
-        message: `Maximum spend of ${maximumAmount.toFixed(2)} AED exceeded for this coupon`,
+        message: `Maximum spend of ${maximumAmount.toFixed(2)} ${siteConfig.defaultCurrency} exceeded for this coupon`,
       });
     }
 

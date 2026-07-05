@@ -1474,7 +1474,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           <div className="flex items-center justify-between gap-3">
             <Breadcrumbs items={breadcrumbItems} locale={locale} contained={false} skipJsonLd />
             <SocialShareModal
-              url={`${siteConfig.url}/${locale}/product/${product.slug}`}
+              url={`${siteConfig.url}${marketPrefix}/${locale}/product/${product.slug}`}
               title={decodeHtmlEntities(product.name)}
               locale={locale}
               className="shrink-0"

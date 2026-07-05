@@ -4,10 +4,22 @@ import { siteConfig, type Locale } from "@/config/site";
 import { NOINDEX_NOFOLLOW_ROBOTS } from "@/lib/utils/seo";
 import { CompareClient } from "./CompareClient";
 
-export const metadata: Metadata = {
-  title: "Compare Products | Sasan Perfumes",
-  robots: NOINDEX_NOFOLLOW_ROBOTS,
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const isAr = locale === "ar";
+
+  return {
+    title: isAr ? "مقارنة المنتجات" : "Compare Products",
+    description: isAr
+      ? "مقارنة المنتجات جنبًا إلى جنب لاختيار العطر الأنسب."
+      : "Compare products side by side to choose the right fragrance.",
+    robots: NOINDEX_NOFOLLOW_ROBOTS,
+  };
+}
 
 export default async function ComparePage({
   params,

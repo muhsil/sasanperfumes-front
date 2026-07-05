@@ -21,7 +21,7 @@ const notoSansArabic = Noto_Sans_Arabic({
 });
 
 export const metadata: Metadata = {
-  title: `${siteConfig.name} | Premium Perfumes & Fragrances in UAE`,
+  title: `${siteConfig.name} | UAE, GCC & International Fragrances`,
   description: siteConfig.description,
   metadataBase: new URL(siteConfig.url),
   robots: INDEX_FOLLOW_ROBOTS,

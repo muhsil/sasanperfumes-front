@@ -1,7 +1,7 @@
 ﻿import { Suspense } from "react";
 import { ProductGridSkeleton } from "@/components/common/Skeleton";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
-import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
+import { generateMetadata as generateSeoMetadata, buildMarketSeoKeywords, getMarketSeoAudience } from "@/lib/utils/seo";
 import { getProducts, getProductBySlug, getBundleConfig } from "@/lib/api/woocommerce";
 import { getPageSeo } from "@/lib/api/wordpress";
 import { getMarketHintFromSearchParams, getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
@@ -22,7 +22,7 @@ interface BuildYourOwnSetPageProps {
 const defaultSeo = {
   title: { en: "Build Your Own Set | Custom Luxury Perfume Gift Bundle", ar: "اصنع مجموعتك | طقم عطور مخصص هدية فاخرة" },
   description: {
-    en: "Create a unique fragrance gift set. Pick 3+ products from perfumes, oud, oils & home fragrances. The perfect luxury gift from Sasan Perfumes. Free delivery over 500 AED.",
+    en: "Create a unique fragrance gift set. Pick 3+ products from perfumes, oud, oils & home fragrances. The perfect luxury gift from Sasan Perfumes. Free delivery available on eligible orders.",
     ar: "أنشئ مجموعة عطور فريدة من اختيارك. اختر 3 منتجات أو أكثر من العطور والزيوت واللوشن ومعطرات المنزل. هدية مثالية من Sasan Perfumes. توصيل مجاني للطلبات فوق 500 درهم.",
   },
   keywords: {
@@ -38,16 +38,20 @@ export async function generateMetadata({
   const lang = locale as Locale;
   const isAr = lang === "ar";
 
-  const wpSeo = await getPageSeo("build-your-own-set", lang);
-
   const market = await getRequestMarket();
+  const currencyCode = market.defaultCurrency;
+  const marketAudience = getMarketSeoAudience(market.code, lang);
+  const fallbackDescription = isAr
+    ? "أنشئ مجموعة عطور فريدة من اختيارك. اختر 3 منتجات أو أكثر من العطور والزيوت واللوشن ومعطرات المنزل. هدية مثالية من Sasan Perfumes. توصيل مجاني للطلبات فوق 500 " + currencyCode + "."
+    : "Create a unique fragrance gift set. Pick 3+ products from perfumes, oud, oils & home fragrances. Built for " + marketAudience + ". Free delivery over 500 " + currencyCode + ".";
+  const wpSeo = await getPageSeo("build-your-own-set", lang);
   return generateSeoMetadata({
     title: wpSeo?.title || (isAr ? defaultSeo.title.ar : defaultSeo.title.en),
-    description: wpSeo?.description || (isAr ? defaultSeo.description.ar : defaultSeo.description.en),
+    description: wpSeo?.description || fallbackDescription,
     image: wpSeo?.ogImage || undefined,
     locale: lang,
     pathname: "/build-your-own-set",
-    keywords: isAr ? defaultSeo.keywords.ar : defaultSeo.keywords.en,
+    keywords: buildMarketSeoKeywords(isAr ? defaultSeo.keywords.ar : defaultSeo.keywords.en, market.code, lang),
     marketCode: market.code,
   });
 }

@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/common/Button";
 import { OrderPrice, OrderCurrencyBadge } from "@/components/common/OrderPrice";
+import { siteConfig } from "@/config/site";
 import { useCart } from "@/contexts/CartContext";
 import { OrderBundleItemsList, isOrderBundleProduct, isOrderFreeGift } from "@/components/cart/OrderBundleItemsList";
 import { fbTrackPurchase } from "@/lib/utils/fbpixel";
@@ -13,6 +14,7 @@ import type { OrderLineItem } from "@/lib/api/customer";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { normalizeFrontendPaymentUrl } from "@/lib/utils/payment";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
+import { getGrossDiscountTotal, getGrossFeeTotal, getGrossLineItemTotal, getGrossLineItemUnitPrice, getGrossOrderSubtotal, getGrossShippingTotal } from "@/lib/orders/pricing";
 
 interface OrderMetaData {
   id: number;
@@ -29,12 +31,15 @@ interface OrderFeeLine {
 
 interface OrderData {
   id: number;
+  number: string;
   order_key: string;
   status: string;
   total: string;
   total_tax: string;
   shipping_total: string;
+  shipping_tax: string;
   discount_total: string;
+  discount_tax: string;
   currency: string;
   currency_symbol: string;
   date_created: string;
@@ -190,7 +195,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
             order_id: order.id,
             order_key: order.order_key,
             amount: orderTotal,
-            currency: order.currency || "AED",
+            currency: order.currency || siteConfig.defaultCurrency,
             description: `Order #${order.id}`,
             buyer: {
               name: `${order.billing.first_name} ${order.billing.last_name}`,
@@ -205,7 +210,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
             order_items: order.line_items.map((item) => ({
               title: item.name,
               quantity: item.quantity,
-              unit_price: parseFloat(item.total) / item.quantity,
+              unit_price: getGrossLineItemUnitPrice(item),
               category: "General",
             })),
             language: locale === "ar" ? "ar" : "en",
@@ -231,7 +236,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
             order_id: order.id,
             order_key: order.order_key,
             total_amount: orderTotal,
-            currency: order.currency || "AED",
+            currency: order.currency || siteConfig.defaultCurrency,
             country_code: order.billing.country || "AE",
             locale: locale === "ar" ? "ar_SA" : "en_US",
             consumer: {
@@ -259,7 +264,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
             items: order.line_items.map((item) => ({
               name: item.name,
               quantity: item.quantity,
-              unit_price: parseFloat(item.total) / item.quantity,
+              unit_price: getGrossLineItemUnitPrice(item),
               sku: item.id?.toString() || "",
             })),
             success_url: `${baseUrl}/${locale}/order-confirmation`,
@@ -469,17 +474,16 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
             tax: orderTax,
             shipping: orderShipping,
             discount: orderDiscount,
-            currency: fetchedOrder.currency || "AED",
+            currency: fetchedOrder.currency || siteConfig.defaultCurrency,
             market: orderMarket,
             payment_method: paymentMethod || undefined,
             items: fetchedOrder.line_items.map((item) => {
               const quantity = Number(item.quantity) || 1;
-              const itemTotal = Number.parseFloat(String(item.total || "0")) || 0;
 
               return {
                 item_id: String(item.product_id || item.id),
                 item_name: decodeHtmlEntities(item.name || ""),
-                price: itemTotal / quantity,
+                price: getGrossLineItemUnitPrice(item),
                 quantity,
               };
             }),
@@ -487,7 +491,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
           fbTrackPurchase({
             contentIds: fetchedOrder.line_items.map((item) => String(item.product_id)),
             value: orderTotal,
-            currency: fetchedOrder.currency || "AED",
+            currency: fetchedOrder.currency || siteConfig.defaultCurrency,
             numItems: fetchedOrder.line_items.reduce((sum, item) => sum + item.quantity, 0),
           });
         }
@@ -653,8 +657,8 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
           </h1>
           <p className="text-gray-600">
             {isRTL
-              ? `رقم الطلب: #${order.id}`
-              : `Order number: #${order.id}`}
+              ? `رقم الطلب: #${order.number || order.id}`
+              : `Order number: #${order.number || order.id}`}
           </p>
           {order.currency && !isPaymentFailed && (
             <div className="mt-3">
@@ -688,7 +692,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
                           )}
                         </span>
                         <OrderPrice 
-                          price={isFreeGift ? 0 : item.total} 
+                          price={isFreeGift ? 0 : getGrossLineItemTotal(item)}
                           orderCurrency={order.currency} 
                           className={`font-medium ${isFreeGift ? "text-brand-gold" : ""}`} 
                           iconSize="xs" 
@@ -707,27 +711,24 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>{isRTL ? "المجموع الفرعي" : "Subtotal"}</span>
                   <OrderPrice price={(() => {
-                    const orderTax = parseFloat(order.total_tax || "0");
-                    const totalWithoutTax = parseFloat(order.total) - orderTax;
-                    const feeTotal = (order.fee_lines || []).reduce((sum, fee) => sum + parseFloat(fee.total || "0"), 0);
-                    return totalWithoutTax - parseFloat(order.shipping_total || "0") + parseFloat(order.discount_total || "0") - feeTotal;
+                    return getGrossOrderSubtotal(order);
                   })()} orderCurrency={order.currency} iconSize="xs" />
                 </div>
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>{isRTL ? "الشحن" : "Shipping"}</span>
-                  <OrderPrice price={order.shipping_total || "0"} orderCurrency={order.currency} iconSize="xs" />
+                  <OrderPrice price={getGrossShippingTotal(order)} orderCurrency={order.currency} iconSize="xs" />
                 </div>
-                {parseFloat(order.discount_total || "0") > 0 && (
+                {getGrossDiscountTotal(order) > 0 && (
                   <div className="flex justify-between text-sm text-gray-600">
                     <span>{isRTL ? "الخصم" : "Discount"}</span>
-                    <span className="text-green-600">-<OrderPrice price={order.discount_total} orderCurrency={order.currency} iconSize="xs" /></span>
+                    <span className="text-green-600">-<OrderPrice price={getGrossDiscountTotal(order)} orderCurrency={order.currency} iconSize="xs" /></span>
                   </div>
                 )}
                 {/* Customs Fees */}
                 {order.fee_lines && order.fee_lines.length > 0 && order.fee_lines.map((fee) => (
                   <div key={fee.id} className="flex justify-between text-sm text-gray-600">
                     <span>{isRTL ? "رسوم جمركية" : fee.name}</span>
-                    <OrderPrice price={fee.total} orderCurrency={order.currency} iconSize="xs" />
+                    <OrderPrice price={getGrossFeeTotal({ fee_lines: [fee] })} orderCurrency={order.currency} iconSize="xs" />
                   </div>
                 ))}
                 <div className="flex justify-between text-lg font-semibold border-t pt-2">

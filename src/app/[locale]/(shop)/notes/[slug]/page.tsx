@@ -51,13 +51,13 @@ export async function generateMetadata({
       ? `عطور ${noteName} | تسوق أون لاين`
       : `${noteName} Perfumes | Shop Online`;
 
+  const market = await getRequestMarket();
   const description = noteData
     ? (locale === "ar" ? noteData.description.ar : noteData.description.en)
     : locale === "ar"
-      ? `تسوق عطور ${noteName} من Sasan Perfumes. اكتشف مجموعتنا من العطور الفاخرة بنوتة ${noteName}. توصيل مجاني للطلبات فوق 500 درهم.`
-      : `Shop ${noteName} perfumes at Sasan Perfumes. Explore our collection of luxury fragrances featuring ${noteName} notes. Free delivery on orders over 500 AED.`;
+      ? `تسوق عطور ${noteName} من Sasan Perfumes. اكتشف مجموعتنا من العطور الفاخرة بنوتة ${noteName}. توصيل مجاني للطلبات فوق 500 ${market.defaultCurrency}.`
+      : `Shop ${noteName} perfumes at Sasan Perfumes. Explore our collection of luxury fragrances featuring ${noteName} notes. Free delivery on orders over 500 ${market.defaultCurrency}.`;
 
-  const market = await getRequestMarket();
   return generateSeoMetadata({
     title,
     description,
@@ -144,9 +144,9 @@ export default async function NotePage({ params }: NotePageProps) {
   ];
 
   const breadcrumbJsonLd = generateBreadcrumbJsonLd([
-    { name: isRTL ? "الرئيسية" : "Home", url: `${siteConfig.url}/${locale}` },
-    { name: isRTL ? "المتجر" : "Shop", url: `${siteConfig.url}/${locale}/shop` },
-    { name: noteName, url: `${siteConfig.url}/${locale}/notes/${slug}` },
+    { name: isRTL ? "الرئيسية" : "Home", url: `${siteConfig.url}${pathPrefix}/${locale}` },
+    { name: isRTL ? "المتجر" : "Shop", url: `${siteConfig.url}${pathPrefix}/${locale}/shop` },
+    { name: noteName, url: `${siteConfig.url}${pathPrefix}/${locale}/notes/${slug}` },
   ]);
 
   return (

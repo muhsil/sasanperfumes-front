@@ -20,6 +20,7 @@ import type {
   FeaturedProductsSettings,
   CollectionsSettings,
   BannersSettings,
+  AdsSettings,
   WPSiteInfo,
   WPImage,
   WPLink,
@@ -255,6 +256,30 @@ interface WPPluginBannersSettings {
   hideOnDesktop?: boolean;
   hide_on_mobile?: boolean;
   hide_on_desktop?: boolean;
+}
+
+interface WPPluginAdItem {
+  enabled?: boolean;
+  placement?: string;
+  market?: string;
+  image?: string;
+  mobile?: string;
+  mobileImage?: string;
+  imageAr?: string;
+  mobileAr?: string;
+  mobileImageAr?: string;
+  title?: string;
+  titleAr?: string;
+  subtitle?: string;
+  subtitleAr?: string;
+  buttonText?: string;
+  buttonTextAr?: string;
+  link?: string;
+}
+
+interface WPPluginAdsSettings {
+  enabled?: boolean;
+  items?: WPPluginAdItem[];
 }
 
 interface WPPluginCollectionItem {
@@ -705,6 +730,79 @@ function transformBannersSettings(pluginBanners: WPPluginBannersSettings, locale
   };
 }
 
+// Transform WordPress Plugin ad settings to frontend format
+function transformAdsSettings(pluginAds: WPPluginAdsSettings, locale?: Locale): AdsSettings {
+  const getAdValue = (item: WPPluginAdItem, key: string, fallback: string = ""): string => {
+    const normalized = locale === "ar"
+      ? [
+          `${key}Ar` as keyof WPPluginAdItem,
+          `${key}_ar` as keyof WPPluginAdItem,
+          `${key}_arabic` as keyof WPPluginAdItem,
+          key as keyof WPPluginAdItem,
+        ]
+      : [
+          key as keyof WPPluginAdItem,
+          `${key}_en` as keyof WPPluginAdItem,
+        ];
+    for (const valueKey of normalized) {
+      const value = item[valueKey];
+      if (typeof value === "string" && value.trim()) {
+        return value.trim();
+      }
+    }
+    return fallback;
+  };
+
+  const resolveAdImage = (item: WPPluginAdItem, isAr: boolean): string => {
+    const keys = isAr
+      ? [item.imageAr, item.image, item.mobileImageAr, item.mobileAr, item.mobileImage, item.mobile, item.image]
+      : [item.image, item.mobileImage, item.mobile, item.imageAr, item.mobileImageAr, item.mobileAr];
+    const imageCandidate = keys.find((url) => typeof url === "string" && url.trim());
+    return imageCandidate ? imageCandidate.trim() : "";
+  };
+
+  const resolveAdMobileImage = (item: WPPluginAdItem, isAr: boolean): string => {
+    const keys = isAr
+      ? [item.mobileImageAr, item.mobileAr, item.mobile, item.mobileImage, item.imageAr, item.image]
+      : [item.mobileImage, item.mobile, item.mobileImageAr, item.mobileAr, item.image, item.imageAr];
+    const imageCandidate = keys.find((url) => typeof url === "string" && url.trim());
+    return imageCandidate ? imageCandidate.trim() : "";
+  };
+
+  const items = Array.isArray(pluginAds.items) ? pluginAds.items : [];
+  const ads = items
+    .map((item, index) => {
+      const isAr = locale === "ar";
+      const image = resolveAdImage(item, isAr);
+      const mobileImage = resolveAdMobileImage(item, isAr) || image;
+      const title = getAdValue(item, "title");
+      const subtitle = getAdValue(item, "subtitle");
+      const buttonText = getAdValue(item, "buttonText");
+      const itemLink = getAdValue(item, "link");
+      const placement = (item.placement || "home").trim().toLowerCase() || "home";
+      const market = (item.market || "all").trim().toLowerCase() || "all";
+
+      return {
+        image: createWPImage(image, title || `Ad ${index + 1}`) as WPImage,
+        mobile_image: createWPImage(mobileImage, title || `Ad ${index + 1} Mobile`) || undefined,
+        link: createWPLink(itemLink, buttonText || title),
+        title,
+        subtitle,
+        button_text: buttonText,
+        placement,
+        market,
+      };
+    })
+    .filter((ad) =>
+      Boolean(ad.image?.url || ad.title || ad.subtitle || ad.link?.url)
+    );
+
+  return {
+    enabled: pluginAds.enabled ?? true,
+    items: ads,
+  };
+}
+
 // Transform WordPress Plugin collections settings to frontend format
 function transformCollectionsSettings(pluginCollections: WPPluginCollectionsSettings, locale?: Locale): CollectionsSettings {
   const collections: Collection[] = pluginCollections.items
@@ -950,6 +1048,11 @@ const defaultCollections: CollectionsSettings = {
 const defaultBanners: BannersSettings = {
   enabled: true,
   banners: [],
+};
+
+const defaultAdsSettings: AdsSettings = {
+  enabled: false,
+  items: [],
 };
 
 // Fetch site settings from WordPress Customizer (Appearance > Customize)
@@ -1200,6 +1303,25 @@ export async function getCollectionsSettings(locale?: Locale): Promise<Collectio
 export async function getBannersSettings(locale?: Locale): Promise<BannersSettings> {
   const settings = await getHomePageSettings(locale);
   return settings.banners;
+}
+
+// Fetch ad settings
+export async function getAdSettings(locale?: Locale, frontendHost?: string): Promise<AdsSettings> {
+  const pluginData = await fetchWPAPI<WPPluginAdsSettings>(
+    "/sasanperfumes/v1/ad-settings",
+    {
+      locale,
+      frontendHost,
+      tags: ["ad-settings"],
+      revalidate: 600,
+    }
+  );
+
+  if (pluginData) {
+    return transformAdsSettings(pluginData, locale);
+  }
+
+  return defaultAdsSettings;
 }
 
 // Raw WordPress menu item type from API (uses child_items and ID)
@@ -2358,22 +2480,24 @@ export function mapFAQGroups(items: BilingualField | any[] | undefined, locale: 
 
 // ─── Product Meta Descriptions ────────────────────────────────────
 
-interface ProductMetaResponse {
+interface ProductSeoResponse {
+  seo_title: string;
   meta_description: string;
+  keywords: string;
+  og_image: string;
   source: "yoast" | "auto" | "none";
 }
 
 /**
- * Fetch dynamically generated meta description for a product from the backend.
- * The backend auto-generates 150-160 char descriptions from product data
- * (name, short_description, category, olfactory family, notes, price).
- * If a Yoast SEO meta description has been manually set, it takes priority.
+ * Fetch dynamically generated SEO data for a product from the backend.
+ * The backend prefers Yoast SEO fields when they exist and otherwise auto-generates
+ * a market-agnostic SEO title, description, keywords, and OG image from product data.
  */
-export async function getProductMetaDescription(
+export async function getProductSeo(
   slug: string,
   locale?: Locale
-): Promise<string | null> {
-  const data = await fetchWPAPI<ProductMetaResponse>(
+): Promise<ProductSeoResponse | null> {
+  const data = await fetchWPAPI<ProductSeoResponse>(
     `/sasanperfumes/v1/product-meta/${encodeURIComponent(slug)}`,
     {
       tags: ["products", `product-meta-${slug}`],
@@ -2382,6 +2506,27 @@ export async function getProductMetaDescription(
     }
   );
 
+  if (!data) {
+    return null;
+  }
+
+  return {
+    seo_title: decodeHtmlEntities(data.seo_title || ""),
+    meta_description: decodeHtmlEntities(data.meta_description || ""),
+    keywords: decodeHtmlEntities(data.keywords || ""),
+    og_image: data.og_image || "",
+    source: data.source,
+  };
+}
+
+/**
+ * Backward-compatible helper that returns only the product meta description.
+ */
+export async function getProductMetaDescription(
+  slug: string,
+  locale?: Locale
+): Promise<string | null> {
+  const data = await getProductSeo(slug, locale);
   if (!data || !data.meta_description) {
     return null;
   }
