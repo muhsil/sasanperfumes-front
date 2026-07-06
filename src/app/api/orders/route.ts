@@ -184,63 +184,12 @@ function getInclusiveVatRate(body: { billing?: Partial<OrderAddress>; shipping?:
   return INCLUSIVE_VAT_RATES_BY_COUNTRY[shippingCountry] ?? INCLUSIVE_VAT_RATES_BY_COUNTRY[billingCountry] ?? 0;
 }
 
-function parseMoney(value: unknown): number | null {
-  if (typeof value !== "string" && typeof value !== "number") return null;
-  const parsed = typeof value === "number" ? value : parseFloat(value);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
-function formatMoney(value: number): string {
-  return (Math.round((value + Number.EPSILON) * 100) / 100).toFixed(2);
-}
-
-function getTaxExclusiveAmount(value: string | number | undefined, vatRate: number): string | undefined {
-  const parsed = parseMoney(value);
-  if (parsed === null || vatRate <= 0) {
-    return typeof value === "number" ? formatMoney(value) : value;
-  }
-
-  return formatMoney(parsed / (1 + vatRate));
-}
-
-function isTaxExemptLine(line: { tax_status?: string }): boolean {
-  const taxStatus = line.tax_status?.trim().toLowerCase();
-  return taxStatus === "none" || taxStatus === "non-taxable";
-}
-
-function normalizeLineItemsForInclusiveVat(lineItems: OrderLineItem[], vatRate: number): OrderLineItem[] {
-  if (vatRate <= 0) return lineItems;
-
-  return lineItems.map((lineItem) => {
-    if (isTaxExemptLine(lineItem)) return lineItem;
-
-    return {
-      ...lineItem,
-      ...(lineItem.subtotal !== undefined ? { subtotal: getTaxExclusiveAmount(lineItem.subtotal, vatRate) } : {}),
-      ...(lineItem.total !== undefined ? { total: getTaxExclusiveAmount(lineItem.total, vatRate) } : {}),
-    };
-  });
-}
-
 function normalizeShippingLinesForNoTax(shippingLines: ShippingLine[]): ShippingLine[] {
   return shippingLines.map((shippingLine) => ({
     ...shippingLine,
     total_tax: "0.00",
     taxes: [],
   }));
-}
-
-function normalizeFeeLinesForInclusiveVat(feeLines: FeeLine[], vatRate: number): FeeLine[] {
-  if (vatRate <= 0) return feeLines;
-
-  return feeLines.map((feeLine) => {
-    if (isTaxExemptLine(feeLine)) return feeLine;
-
-    return {
-      ...feeLine,
-      total: getTaxExclusiveAmount(feeLine.total, vatRate) || feeLine.total,
-    };
-  });
 }
 
 const PAYMENT_METHOD_TITLES: Record<string, string> = {
@@ -515,7 +464,7 @@ export async function POST(request: NextRequest) {
         postcode: body.shipping?.postcode || body.billing.postcode || "",
         country: body.shipping?.country || body.billing.country,
       },
-      line_items: normalizeLineItemsForInclusiveVat(lineItems, inclusiveVatRate),
+      line_items: lineItems,
       customer_note: body.customer_note || "",
     };
 
@@ -528,7 +477,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (Array.isArray(body.fee_lines) && body.fee_lines.length > 0) {
-      orderData.fee_lines = normalizeFeeLinesForInclusiveVat(body.fee_lines, inclusiveVatRate);
+      orderData.fee_lines = body.fee_lines;
     }
 
     // For guest checkout, look up existing WooCommerce customer by billing email
@@ -561,11 +510,9 @@ export async function POST(request: NextRequest) {
     }
 
     const metaData = Array.isArray(body.meta_data) ? [...body.meta_data] : [];
+    metaData.push({ key: "_frontend_prices_include_vat", value: "yes" });
     if (inclusiveVatRate > 0) {
-      metaData.push(
-        { key: "_frontend_prices_include_vat", value: "yes" },
-        { key: "_frontend_vat_rate", value: String(inclusiveVatRate) }
-      );
+      metaData.push({ key: "_frontend_vat_rate", value: String(inclusiveVatRate) });
     }
     if (metaData.length > 0) {
       orderData.meta_data = metaData;
