@@ -318,6 +318,11 @@ function buildStoreAPIUrls(
     if (market) {
       url = appendQueryParam(url, "frontend_host", cmsMarketHost(market));
       url = appendQueryParam(url, "_market_cache_bust", `${market}-${Date.now()}`);
+      // Force base currency so the frontend can convert correctly.
+      // Without this, sub-market sites return prices in their local
+      // currency while currency_code still says "AED", causing the
+      // frontend to double-convert (e.g. OMR value × OMR rate).
+      url = appendQueryParam(url, "currency", DEFAULT_API_CURRENCY);
     } else {
       url = appendQueryParam(url, "currency", currencyToUse);
     }
