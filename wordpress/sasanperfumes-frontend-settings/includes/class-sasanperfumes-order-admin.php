@@ -462,27 +462,100 @@ function sasanperfumes_order_admin_render_payment_box($post_or_order) {
         echo '<p class="sasanperfumes-payment-muted">No stored gateway metadata found.</p>';
     }
 
+    $order_totals_data = array(
+        'subtotal_html' => sasanperfumes_order_admin_money(sasanperfumes_order_admin_products_gross_subtotal($order), $currency),
+        'shipping_html' => sasanperfumes_order_admin_money(sasanperfumes_order_admin_shipping_gross_total($order), $currency),
+        'discount_html' => sasanperfumes_order_admin_discount_gross_total($order) > 0
+            ? '- ' . sasanperfumes_order_admin_money(sasanperfumes_order_admin_discount_gross_total($order), $currency)
+            : '',
+        'fees_html'     => sasanperfumes_order_admin_fee_gross_total($order) > 0
+            ? sasanperfumes_order_admin_money(sasanperfumes_order_admin_fee_gross_total($order), $currency)
+            : '',
+        'tax_html'      => sasanperfumes_order_admin_money($order->get_total_tax(), $currency),
+        'total_html'    => sasanperfumes_order_admin_money($order->get_total(), $currency),
+    );
+
+    echo '<script>';
+    echo '(function(){';
+
     if ($order_item_display_map) {
-        echo '<script>';
-        echo '(function(){';
-        echo 'const orderItemMap = ' . wp_json_encode($order_item_display_map) . ';';
-        echo 'function applyOrderGrossDisplay(){';
-        echo 'const rows = document.querySelectorAll("#order_line_items tr[data-order_item_id], #order_fee_line_items tr[data-order_item_id], #order_shipping_line_items tr[data-order_item_id]");';
-        echo 'rows.forEach(function(row){';
-        echo 'const itemId = row.getAttribute("data-order_item_id");';
-        echo 'const data = orderItemMap[itemId];';
-        echo 'if (!data) { return; }';
-        echo 'const unitCell = row.querySelector("td.item_cost .view");';
-        echo 'if (unitCell && data.unit_html !== undefined) { unitCell.innerHTML = data.unit_html || ""; if (data.sort_unit !== "") { const unitParent = row.querySelector("td.item_cost"); if (unitParent) { unitParent.setAttribute("data-sort-value", String(data.sort_unit)); } } }';
-        echo 'const totalCell = row.querySelector("td.line_cost .view");';
-        echo 'if (totalCell && data.total_html !== undefined) { totalCell.innerHTML = data.total_html || ""; const totalParent = row.querySelector("td.line_cost"); if (totalParent && data.sort_total !== "") { totalParent.setAttribute("data-sort-value", String(data.sort_total)); } }';
-        echo 'row.querySelectorAll("td.line_tax .view").forEach(function(cell){ cell.textContent = data.tax_text || ""; });';
-        echo '});';
-        echo '}';
-        echo 'if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", applyOrderGrossDisplay); } else { applyOrderGrossDisplay(); }';
-        echo '})();';
-        echo '</script>';
+        echo 'var orderItemMap = ' . wp_json_encode($order_item_display_map) . ';';
+    } else {
+        echo 'var orderItemMap = {};';
     }
+    echo 'var orderTotals = ' . wp_json_encode($order_totals_data) . ';';
+
+    echo 'function applyOrderGrossDisplay(){';
+
+    // Replace line-item / fee / shipping rows with gross amounts
+    echo 'var rows = document.querySelectorAll("#order_line_items tr[data-order_item_id], #order_fee_line_items tr[data-order_item_id], #order_shipping_line_items tr[data-order_item_id]");';
+    echo 'rows.forEach(function(row){';
+    echo 'var itemId = row.getAttribute("data-order_item_id");';
+    echo 'var data = orderItemMap[itemId];';
+    echo 'if (!data) { return; }';
+    echo 'var unitCell = row.querySelector("td.item_cost .view");';
+    echo 'if (unitCell && data.unit_html !== undefined) { unitCell.innerHTML = data.unit_html || ""; if (data.sort_unit !== "") { var unitParent = row.querySelector("td.item_cost"); if (unitParent) { unitParent.setAttribute("data-sort-value", String(data.sort_unit)); } } }';
+    echo 'var totalCell = row.querySelector("td.line_cost .view");';
+    echo 'if (totalCell && data.total_html !== undefined) { totalCell.innerHTML = data.total_html || ""; var totalParent = row.querySelector("td.line_cost"); if (totalParent && data.sort_total !== "") { totalParent.setAttribute("data-sort-value", String(data.sort_total)); } }';
+    echo 'row.querySelectorAll("td.line_tax .view").forEach(function(cell){ cell.textContent = data.tax_text || ""; });';
+    echo '});';
+
+    // Replace the order totals table (Items Subtotal, Shipping, VAT, Total)
+    echo 'var totalsTable = document.querySelector(".wc-order-totals");';
+    echo 'if (totalsTable) {';
+    echo '  var allRows = totalsTable.querySelectorAll("tr");';
+    echo '  allRows.forEach(function(row) {';
+    echo '    var label = row.querySelector("td.label");';
+    echo '    var total = row.querySelector("td.total");';
+    echo '    if (!label || !total) return;';
+    echo '    var labelText = (label.textContent || "").toLowerCase().replace(/[:\\s]+/g, " ").trim();';
+    // Items Subtotal
+    echo '    if (labelText.indexOf("items subtotal") > -1 || labelText.indexOf("subtotal") > -1) {';
+    echo '      if (orderTotals.subtotal_html) { total.innerHTML = orderTotals.subtotal_html; }';
+    echo '    }';
+    // Shipping
+    echo '    if (labelText.indexOf("shipping") > -1) {';
+    echo '      if (orderTotals.shipping_html) { total.innerHTML = orderTotals.shipping_html; }';
+    echo '    }';
+    // Fees
+    echo '    if (labelText.indexOf("fee") > -1) {';
+    echo '      if (orderTotals.fees_html) { total.innerHTML = orderTotals.fees_html; }';
+    echo '    }';
+    // Discount
+    echo '    if (labelText.indexOf("discount") > -1 || labelText.indexOf("coupon") > -1) {';
+    echo '      if (orderTotals.discount_html) { total.innerHTML = orderTotals.discount_html; }';
+    echo '    }';
+    // VAT/Tax row — change label to "VAT (Included)" and keep amount as informational
+    echo '    if (labelText.indexOf("vat") > -1 || labelText.indexOf("tax") > -1) {';
+    echo '      label.innerHTML = "VAT (Included):";';
+    echo '      if (orderTotals.tax_html) { total.innerHTML = orderTotals.tax_html; }';
+    echo '    }';
+    echo '  });';
+    echo '}';
+
+    // Also handle the HPOS (High-Performance Order Storage) totals if present
+    echo 'var hposTotals = document.querySelector(".wc-order-totals-items");';
+    echo 'if (hposTotals) {';
+    echo '  var hposRows = hposTotals.querySelectorAll("tr");';
+    echo '  hposRows.forEach(function(row) {';
+    echo '    var label = row.querySelector("td.label, th");';
+    echo '    var total = row.querySelector("td.total, td:last-child");';
+    echo '    if (!label || !total || label === total) return;';
+    echo '    var labelText = (label.textContent || "").toLowerCase().replace(/[:\\s]+/g, " ").trim();';
+    echo '    if (labelText.indexOf("items subtotal") > -1 || labelText === "subtotal") {';
+    echo '      if (orderTotals.subtotal_html) { total.innerHTML = orderTotals.subtotal_html; }';
+    echo '    }';
+    echo '    if (labelText.indexOf("vat") > -1 || labelText.indexOf("tax") > -1) {';
+    echo '      label.innerHTML = "VAT (Included):";';
+    echo '      if (orderTotals.tax_html) { total.innerHTML = orderTotals.tax_html; }';
+    echo '    }';
+    echo '  });';
+    echo '}';
+
+    echo '}';
+    echo 'if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", applyOrderGrossDisplay); } else { applyOrderGrossDisplay(); }';
+    echo '})();';
+    echo '</script>';
 
     echo '</div>';
 }

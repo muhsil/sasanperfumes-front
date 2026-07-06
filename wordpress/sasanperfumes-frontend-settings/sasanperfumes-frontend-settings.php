@@ -640,6 +640,9 @@ require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-email-t
 // Include Customer Tracking module (order tracking data display in admin)
 require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-customer-tracking.php';
 
+// Include Tax Settings module (enforce tax-inclusive pricing)
+require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-tax-settings.php';
+
 // Include Order Admin module (order number and payment gateway details in admin)
 require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-order-admin.php';
 
