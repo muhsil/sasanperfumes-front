@@ -49,7 +49,10 @@ export function useCartSWR() {
 
   const cartItems = cart?.items || [];
   const cartItemsCount = cart?.item_count || 0;
-  const cartSubtotal = cart?.totals?.subtotal || "0";
+  const cartSubtotal = String(
+    (parseFloat(cart?.totals?.subtotal || "0") || 0) +
+    (parseFloat(cart?.totals?.subtotal_tax || "0") || 0)
+  );
   const cartTotal = cart?.totals?.total || "0";
 
   const addToCart = async (
