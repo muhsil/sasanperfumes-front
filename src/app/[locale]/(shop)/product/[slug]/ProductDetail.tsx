@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
-import { Heart, Minus, Plus, ChevronDown, X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Move, Check, Star } from "lucide-react";
+import { Heart, Minus, Plus, X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Move, Check, Star } from "lucide-react";
 import { Badge } from "@/components/common/Badge";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { CountdownTimer } from "@/components/common/CountdownTimer";
@@ -216,63 +216,16 @@ function extractInspiredBy(text: string): string {
 function extractFragranceNotes(text: string): { top: string; middle: string; base: string } {
   return {
     top: extractNoteValue(text, [
-      /(?:top notes?|opening notes?|top)\s*(?:are|is|of|:|\-)?\s*([^.!?\n]+)/i,
+      /(?:top notes?|opening notes?|opening with(?: the timeless richness of)?|opens with(?: the timeless richness of)?|top)\s*(?:are|is|of|with|:|\-)?\s*([^.!?\n]+)/i,
     ]),
     middle: extractNoteValue(text, [
       /(?:middle notes?|heart notes?|heart|mid notes?)\s*(?:are|is|reveals|of|:|\-)?\s*([^.!?\n]+)/i,
+      /(?:against the intensity of|against)\s*([^.!?\n]+)/i,
     ]),
     base: extractNoteValue(text, [
       /(?:base notes?|dry down|drydown|base)\s*(?:are|is|of|:|\-)?\s*([^.!?\n]+)/i,
     ]),
   };
-}
-
-function buildSummaryHtml(shortDescriptionHtml: string, descriptionHtml: string): string {
-  if (shortDescriptionHtml) {
-    const shortText = normalizeHtmlContent(shortDescriptionHtml);
-    if (shortText.length >= 70) {
-      return shortDescriptionHtml;
-    }
-  }
-
-  if (descriptionHtml) {
-    const firstParagraph = extractFirstParagraphHtml(descriptionHtml);
-    if (firstParagraph) {
-      const paragraphText = normalizeHtmlContent(firstParagraph);
-      if (paragraphText.length >= 40) {
-        return firstParagraph;
-      }
-    }
-
-    const descriptionText = stripHtmlToText(descriptionHtml);
-    if (descriptionText) {
-      const excerpt = splitIntoSentences(descriptionText).slice(0, 2).join(" ");
-      return `<p>${escapeHtml(excerpt || descriptionText)}</p>`;
-    }
-  }
-
-  return shortDescriptionHtml;
-}
-
-interface AccordionSectionProps {
-  title: string;
-  children: React.ReactNode;
-}
-
-function AccordionSection({ title, children }: AccordionSectionProps) {
-  return (
-    <div className="border-b border-brand-border/70">
-      <div className="flex w-full items-center justify-between py-5 text-left">
-        <span className="text-[14px] font-semibold text-brand-primary">
-          {title}
-        </span>
-        <ChevronDown className="h-4 w-4 rotate-180 text-brand-primary" />
-      </div>
-      <div className="pb-5">
-        {children}
-      </div>
-    </div>
-  );
 }
 
 interface FullscreenGalleryProps {
@@ -967,16 +920,9 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
   const productDisplayName = formatProductDisplayName(product.name);
   const sanitizedShortDescription = product.short_description ? sanitizeProductDescription(product.short_description) : "";
   const sanitizedDescription = product.description ? sanitizeProductDescription(product.description) : "";
-  const shortDescriptionText = normalizeHtmlContent(sanitizedShortDescription);
-  const descriptionText = normalizeHtmlContent(sanitizedDescription);
-  const visibleSummaryHtml = useMemo(
-    () => buildSummaryHtml(sanitizedShortDescription, sanitizedDescription),
-    [sanitizedShortDescription, sanitizedDescription]
-  );
-  const shouldShowShortDescription = Boolean(visibleSummaryHtml);
   const descriptionStoryText = useMemo(
-    () => stripHtmlToText(sanitizedDescription || sanitizedShortDescription || visibleSummaryHtml),
-    [sanitizedDescription, sanitizedShortDescription, visibleSummaryHtml]
+    () => stripHtmlToText(sanitizedDescription || sanitizedShortDescription),
+    [sanitizedDescription, sanitizedShortDescription]
   );
   const noteTerms = useMemo(() => {
     const notesAttribute = product.attributes?.find((attr) => {
@@ -1049,10 +995,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
       product.sku,
     ]
   );
-  const descriptionHtml =
-    sanitizedDescription && (!shortDescriptionText || descriptionText !== shortDescriptionText)
-      ? sanitizedDescription
-      : "";
+  const descriptionHtml = sanitizedDescription || sanitizedShortDescription || "";
   const productTags = (product.tags || []).filter((tag, index, tags) =>
     tags.findIndex((candidate) => candidate.slug === tag.slug) === index
   );
@@ -1780,13 +1723,32 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
             <ClothingSizeGuideModal productId={product.id} locale={locale} />
           </div>
 
-          {/* Notes / key info shown under price */}
-          {shouldShowShortDescription && (
-            <div
-              className="mt-5 text-sm leading-6 text-brand-primary/75"
-              dangerouslySetInnerHTML={{ __html: visibleSummaryHtml }}
-            />
-          )}
+          {/* Fragrance notes shown before purchase controls */}
+          <section className="mt-5 rounded-2xl border border-brand-border/70 bg-transparent p-4">
+            <h3 className="text-[14px] font-semibold text-brand-primary">
+              {isRTL ? "Ø§Ù„Ù†ÙˆØªØ§Øª Ø§Ù„Ø¹Ø·Ø±ÙŠØ©" : "Fragrance Notes"}
+            </h3>
+            <div className="mt-3 space-y-3">
+              {fragranceNoteRows.map((note) => (
+                <div
+                  key={note.label}
+                  className="flex items-start justify-between gap-4 border-b border-brand-border/50 pb-3 last:border-b-0 last:pb-0"
+                >
+                  <span className="shrink-0 text-[12px] font-semibold uppercase tracking-[0.08em] text-brand-muted">
+                    {note.label}
+                  </span>
+                  <span className="text-right text-sm leading-6 text-brand-primary/75">
+                    {note.value || (isRTL ? "ØºÙŠØ± Ù…Ø­Ø¯Ø¯" : "Not specified")}
+                  </span>
+                </div>
+              ))}
+              {noteTerms.length > 0 && (
+                <p className="pt-1 text-sm leading-6 text-brand-primary/60">
+                  {isRTL ? "Ø§Ù„Ù†ÙˆØªØ§Øª Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©:" : "Key notes:"} {noteTerms.join(", ")}
+                </p>
+              )}
+            </div>
+          </section>
 
           {/* Stock status - inline with low stock warning */}
           {isOutOfStock && (
@@ -2010,25 +1972,20 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           <div className="mt-8 space-y-8 border-t border-brand-border/70 pt-6">
             <section>
               <h3 className="text-[14px] font-semibold text-brand-primary">
-                {isRTL ? "النوتات العطرية" : "Fragrance Notes"}
+                {isRTL ? "الوصف" : "Description"}
               </h3>
-              <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                {fragranceNoteRows.map((note) => (
-                  <div key={note.label} className="border-b border-brand-border/60 pb-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-brand-muted">
-                      {note.label}
-                    </p>
-                    <p className="mt-1 text-sm leading-6 text-brand-primary/75">
-                      {note.value || (isRTL ? "غير محدد" : "Not specified")}
-                    </p>
-                  </div>
-                ))}
+              <div className="mt-4">
+                {descriptionHtml ? (
+                  <div
+                    className="prose prose-sm max-w-none text-gray-600"
+                    dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+                  />
+                ) : (
+                  <p className="text-sm text-gray-500">
+                    {isRTL ? "لا يوجد وصف متاح" : "No description available"}
+                  </p>
+                )}
               </div>
-              {noteTerms.length > 0 && (
-                <p className="mt-3 text-sm leading-6 text-brand-primary/60">
-                  {isRTL ? "النوتات الرئيسية:" : "Key notes:"} {noteTerms.join(", ")}
-                </p>
-              )}
             </section>
 
             <section>
@@ -2049,22 +2006,6 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               </div>
             </section>
           </div>
-
-          <div className="mt-8 border-t border-brand-border/70 pt-6">
-                <AccordionSection title={isRTL ? "الوصف" : "Description"}>
-                  {descriptionHtml ? (
-                    <div
-                      className="prose prose-sm max-w-none text-gray-600"
-                      dangerouslySetInnerHTML={{ __html: descriptionHtml }}
-                    />
-                  ) : !shouldShowShortDescription ? (
-                    <p className="text-sm text-gray-500">
-                      {isRTL ? "لا يوجد وصف متاح" : "No description available"}
-                    </p>
-                  ) : null}
-                </AccordionSection>
-
-            </div>
           </div>
           </div>
         </aside>

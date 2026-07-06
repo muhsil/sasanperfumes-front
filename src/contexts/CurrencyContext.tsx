@@ -166,6 +166,21 @@ export function CurrencyProvider({ children, market = internationalMarket }: Cur
         const toCurrencyInfo = getCurrencyInfo();
         if (!toCurrencyInfo) return price;
         if (fromCurrency === currency) return price;
+
+        // Sub-market storefronts (OM / SA / QA) only expose one active currency.
+        // Their product feeds already come through in the market currency amount,
+        // but the Store API still labels those values as AED. If we convert them
+        // again here, we undercut prices on the localized storefront by a second
+        // exchange step. In single-currency markets, preserve the backend amount
+        // and only format it with the market currency.
+        if (
+          market.code !== "intl" &&
+          currencies.length === 1 &&
+          currency === defaultCurrency &&
+          fromCurrency === API_BASE_CURRENCY
+        ) {
+          return price;
+        }
       
         // Look up source currency rate. If not found in the filtered list
         // (e.g. sub-site markets only keep their own currency), fall back to
