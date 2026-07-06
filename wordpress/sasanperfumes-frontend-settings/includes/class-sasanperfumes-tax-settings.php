@@ -53,30 +53,52 @@ add_filter('woocommerce_calc_shipping_tax', 'sasanperfumes_zero_shipping_tax', 1
  * Ensure admin new-order emails are sent to sasanperfumesuae@gmail.com.
  *
  * WooCommerce stores the recipient list in the woocommerce_new_order_settings
- * option.  If the target address is missing, append it.
+ * option, but the email sender also reads the runtime recipient filter. Keep
+ * both paths in sync so frontend order creation cannot bypass the added mailbox.
  */
+function sasanperfumes_normalize_order_email_recipients($recipients, $target = 'sasanperfumesuae@gmail.com') {
+    $recipients = is_string($recipients) ? $recipients : '';
+    $emails = array_filter(array_map('trim', explode(',', $recipients)), 'strlen');
+    $emails[] = $target;
+    $emails = array_values(array_unique(array_filter($emails, 'is_email')));
+
+    return implode(',', $emails);
+}
+
 function sasanperfumes_enforce_admin_order_email() {
     if (!class_exists('WooCommerce')) return;
 
     $target = 'sasanperfumesuae@gmail.com';
     $settings = get_option('woocommerce_new_order_settings', array());
+    $legacy_recipient = (string) get_option('woocommerce_new_order_recipient', '');
 
     if (!is_array($settings)) {
         $settings = array();
     }
 
-    $current = isset($settings['recipient']) ? trim($settings['recipient']) : '';
+    $current = isset($settings['recipient']) ? (string) $settings['recipient'] : '';
+    $normalized = sasanperfumes_normalize_order_email_recipients($current !== '' ? $current : $legacy_recipient, $target);
 
-    if ($current === '') {
-        $settings['recipient'] = $target;
-        update_option('woocommerce_new_order_settings', $settings);
-        return;
+    if ($normalized === '') {
+        $normalized = $target;
     }
 
-    $emails = array_map('trim', explode(',', $current));
-    if (!in_array($target, $emails, true)) {
-        $settings['recipient'] = $current . ',' . $target;
+    if ($current !== $normalized) {
+        $settings['recipient'] = $normalized;
         update_option('woocommerce_new_order_settings', $settings);
+    }
+
+    if (trim($legacy_recipient) !== $normalized) {
+        update_option('woocommerce_new_order_recipient', $normalized);
     }
 }
 add_action('admin_init', 'sasanperfumes_enforce_admin_order_email');
+
+/**
+ * Guarantee the recipient at send time, even if the admin settings page has
+ * not been loaded in the current request.
+ */
+function sasanperfumes_force_new_order_recipient($recipient) {
+    return sasanperfumes_normalize_order_email_recipients((string) $recipient, 'sasanperfumesuae@gmail.com');
+}
+add_filter('woocommerce_email_recipient_new_order', 'sasanperfumes_force_new_order_recipient', 9999, 1);

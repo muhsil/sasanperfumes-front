@@ -84,6 +84,13 @@ class sasanperfumes_Forms {
             $recipients = 'orders@sasanperfumes.com,sasanperfumesuae@gmail.com';
         }
 
+        if (function_exists('sasanperfumes_normalize_order_email_recipients')) {
+            $normalized = sasanperfumes_normalize_order_email_recipients($recipients, 'sasanperfumesuae@gmail.com');
+            if ($normalized !== '') {
+                return $normalized;
+            }
+        }
+
         $emails = array_filter(array_map('trim', explode(',', $recipients)), 'strlen');
         if (empty($emails)) {
             return 'orders@sasanperfumes.com,sasanperfumesuae@gmail.com';
