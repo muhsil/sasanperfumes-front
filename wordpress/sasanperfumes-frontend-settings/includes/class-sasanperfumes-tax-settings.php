@@ -34,3 +34,17 @@ function sasanperfumes_tax_price_suffix($suffix) {
     return '';
 }
 add_filter('woocommerce_get_price_suffix', 'sasanperfumes_tax_price_suffix', 999);
+
+/**
+ * Disable VAT on shipping.
+ *
+ * Shipping rates (e.g. "Flat rate 30 AED") should be shown as-is
+ * without additional tax.  WooCommerce normally adds tax on top of
+ * shipping rates, which inflates them (30 → 31.50 at 5%).  Returning
+ * an empty array from this filter tells WC to apply zero tax to
+ * every shipping line.
+ */
+function sasanperfumes_zero_shipping_tax($taxes, $price, $rates) {
+    return array();
+}
+add_filter('woocommerce_calc_shipping_tax', 'sasanperfumes_zero_shipping_tax', 10, 3);
