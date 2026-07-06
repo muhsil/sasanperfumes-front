@@ -48,3 +48,35 @@ function sasanperfumes_zero_shipping_tax($taxes, $price, $rates) {
     return array();
 }
 add_filter('woocommerce_calc_shipping_tax', 'sasanperfumes_zero_shipping_tax', 10, 3);
+
+/**
+ * Ensure admin new-order emails are sent to sasanperfumesuae@gmail.com.
+ *
+ * WooCommerce stores the recipient list in the woocommerce_new_order_settings
+ * option.  If the target address is missing, append it.
+ */
+function sasanperfumes_enforce_admin_order_email() {
+    if (!class_exists('WooCommerce')) return;
+
+    $target = 'sasanperfumesuae@gmail.com';
+    $settings = get_option('woocommerce_new_order_settings', array());
+
+    if (!is_array($settings)) {
+        $settings = array();
+    }
+
+    $current = isset($settings['recipient']) ? trim($settings['recipient']) : '';
+
+    if ($current === '') {
+        $settings['recipient'] = $target;
+        update_option('woocommerce_new_order_settings', $settings);
+        return;
+    }
+
+    $emails = array_map('trim', explode(',', $current));
+    if (!in_array($target, $emails, true)) {
+        $settings['recipient'] = $current . ',' . $target;
+        update_option('woocommerce_new_order_settings', $settings);
+    }
+}
+add_action('admin_init', 'sasanperfumes_enforce_admin_order_email');
