@@ -780,7 +780,12 @@ export function CartProvider({ children, locale }: CartProviderProps) {
 
   const cartItems = useMemo(() => cart?.items || [], [cart?.items]);
   const cartItemsCount = cart?.item_count || 0;
-  const rawCartSubtotal = cart?.totals?.subtotal || "0";
+  // CoCart's subtotal is always the net amount (excl. tax).  Since all
+  // prices are tax-inclusive, add subtotal_tax so the UI shows gross values.
+  const rawCartSubtotal = String(
+    (parseFloat(cart?.totals?.subtotal || "0") || 0) +
+    (parseFloat(cart?.totals?.subtotal_tax || "0") || 0)
+  );
   const rawCartTotal = cart?.totals?.total || "0";
 
   // Calculate the total bundle items price across all cart items
@@ -842,8 +847,11 @@ export function CartProvider({ children, locale }: CartProviderProps) {
   }, [rawCartTotal, bundleItemsAdjustment]);
 
   const couponDiscount = useMemo(() => {
-    return Math.round(parseFloat(cart?.totals?.discount_total || "0") || 0);
-  }, [cart?.totals?.discount_total]);
+    return Math.round(
+      (parseFloat(cart?.totals?.discount_total || "0") || 0) +
+      (parseFloat(cart?.totals?.discount_tax || "0") || 0)
+    );
+  }, [cart?.totals?.discount_total, cart?.totals?.discount_tax]);
 
   // Normalize cart to null if undefined (SWR returns undefined before first fetch)
   const normalizedCart = cart ?? null;
