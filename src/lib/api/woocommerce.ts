@@ -432,6 +432,34 @@ function hasMeaningfulText(value?: string): boolean {
   return Boolean(value && value.replace(/<[^>]*>/g, "").trim());
 }
 
+function getPlainTextLength(value?: string): number {
+  if (!value) return 0;
+  return value
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .length;
+}
+
+function chooseRicherText(primary?: string, fallback?: string | null): string {
+  const primaryText = primary || "";
+  const fallbackText = fallback || "";
+
+  if (!hasMeaningfulText(primaryText)) {
+    return fallbackText || primaryText;
+  }
+
+  const primaryLength = getPlainTextLength(primaryText);
+  const fallbackLength = getPlainTextLength(fallbackText);
+
+  if (fallbackText && fallbackLength > primaryLength + 80) {
+    return fallbackText;
+  }
+
+  return primaryText;
+}
+
 function mergeLegacyProductCopy(primary: WCProduct, fallback?: WCProduct | null): WCProduct {
   if (!fallback) {
     return primary;
@@ -439,12 +467,8 @@ function mergeLegacyProductCopy(primary: WCProduct, fallback?: WCProduct | null)
 
   return {
     ...primary,
-    short_description: hasMeaningfulText(primary.short_description)
-      ? primary.short_description
-      : (fallback.short_description || primary.short_description || ""),
-    description: hasMeaningfulText(primary.description)
-      ? primary.description
-      : (fallback.description || primary.description || ""),
+    short_description: chooseRicherText(primary.short_description, fallback.short_description),
+    description: chooseRicherText(primary.description, fallback.description),
   };
 }
 

@@ -150,6 +150,110 @@ function normalizeHtmlContent(html: string): string {
     .toLowerCase();
 }
 
+function stripHtmlToText(html: string): string {
+  return decodeHtmlEntities(html.replace(/<[^>]*>/g, " "))
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function extractFirstParagraphHtml(html: string): string {
+  const match = html.match(/<p[^>]*>[\s\S]*?<\/p>/i);
+  return match ? match[0] : "";
+}
+
+function splitIntoSentences(text: string): string[] {
+  return text
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(/(?<=[.!?])\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+function cleanNoteValue(value: string): string {
+  const clipped = value
+    .replace(/\b(?:greet|bring|brings|adding|add|leaving|leave|settles?|settling|unfolds?|unfolding|opens?|opening|reveals?|revealing|creates?|creating|infuses?|infusing|delivers?|delivering|offers?|offering)\b.*$/i, "")
+    .replace(/\s+/g, " ")
+    .replace(/^[:\-,\s]+/, "")
+    .replace(/[.;,\s]+$/, "");
+
+  return clipped
+    .split(/\s*(?:,| and | with )\s*/i)
+    .map((part) => part.replace(/[.;,\s]+$/, "").trim())
+    .filter(Boolean)
+    .join(", ");
+}
+
+function extractNoteValue(text: string, patterns: RegExp[]): string {
+  const normalized = text.replace(/\s+/g, " ").trim();
+  for (const pattern of patterns) {
+    const match = normalized.match(pattern);
+    if (match?.[1]) {
+      const value = cleanNoteValue(match[1]);
+      if (value) {
+        return value;
+      }
+    }
+  }
+  return "";
+}
+
+function extractInspiredBy(text: string): string {
+  return extractNoteValue(text, [
+    /(?:inspired by|inspired from)\s*(?:[:\-]\s*)?([^.!?\n]+)/i,
+  ]);
+}
+
+function extractFragranceNotes(text: string): { top: string; middle: string; base: string } {
+  return {
+    top: extractNoteValue(text, [
+      /(?:top notes?|opening notes?|top)\s*(?:are|is|of|:|\-)?\s*([^.!?\n]+)/i,
+    ]),
+    middle: extractNoteValue(text, [
+      /(?:middle notes?|heart notes?|heart|mid notes?)\s*(?:are|is|reveals|of|:|\-)?\s*([^.!?\n]+)/i,
+    ]),
+    base: extractNoteValue(text, [
+      /(?:base notes?|dry down|drydown|base)\s*(?:are|is|of|:|\-)?\s*([^.!?\n]+)/i,
+    ]),
+  };
+}
+
+function buildSummaryHtml(shortDescriptionHtml: string, descriptionHtml: string): string {
+  if (shortDescriptionHtml) {
+    const shortText = normalizeHtmlContent(shortDescriptionHtml);
+    if (shortText.length >= 70) {
+      return shortDescriptionHtml;
+    }
+  }
+
+  if (descriptionHtml) {
+    const firstParagraph = extractFirstParagraphHtml(descriptionHtml);
+    if (firstParagraph) {
+      const paragraphText = normalizeHtmlContent(firstParagraph);
+      if (paragraphText.length >= 40) {
+        return firstParagraph;
+      }
+    }
+
+    const descriptionText = stripHtmlToText(descriptionHtml);
+    if (descriptionText) {
+      const excerpt = splitIntoSentences(descriptionText).slice(0, 2).join(" ");
+      return `<p>${escapeHtml(excerpt || descriptionText)}</p>`;
+    }
+  }
+
+  return shortDescriptionHtml;
+}
+
 interface AccordionSectionProps {
   title: string;
   children: React.ReactNode;
@@ -865,7 +969,86 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
   const sanitizedDescription = product.description ? sanitizeProductDescription(product.description) : "";
   const shortDescriptionText = normalizeHtmlContent(sanitizedShortDescription);
   const descriptionText = normalizeHtmlContent(sanitizedDescription);
-  const shouldShowShortDescription = Boolean(sanitizedShortDescription);
+  const visibleSummaryHtml = useMemo(
+    () => buildSummaryHtml(sanitizedShortDescription, sanitizedDescription),
+    [sanitizedShortDescription, sanitizedDescription]
+  );
+  const shouldShowShortDescription = Boolean(visibleSummaryHtml);
+  const descriptionStoryText = useMemo(
+    () => stripHtmlToText(sanitizedDescription || sanitizedShortDescription || visibleSummaryHtml),
+    [sanitizedDescription, sanitizedShortDescription, visibleSummaryHtml]
+  );
+  const noteTerms = useMemo(() => {
+    const notesAttribute = product.attributes?.find((attr) => {
+      const attrName = decodeHtmlEntities(attr.name).toLowerCase();
+      return attr.taxonomy === "pa_notes" || attrName === "notes" || attrName === "fragrance notes";
+    });
+    return Array.from(
+      new Set(
+        (notesAttribute?.terms || [])
+          .map((term) => decodeHtmlEntities(term.name).trim())
+          .filter(Boolean)
+      )
+    );
+  }, [product.attributes]);
+  const fragranceNotes = useMemo(() => extractFragranceNotes(descriptionStoryText), [descriptionStoryText]);
+  const inspiredBy = useMemo(() => extractInspiredBy(descriptionStoryText), [descriptionStoryText]);
+  const fragranceFamily = useMemo(() => {
+    const familyAttribute = product.attributes?.find((attr) => decodeHtmlEntities(attr.name).toLowerCase() === "olfactory family");
+    const familyName = familyAttribute?.terms?.[0]?.name;
+    return familyName ? decodeHtmlEntities(familyName) : "";
+  }, [product.attributes]);
+  const fragranceNoteRows = useMemo(
+    () => [
+      {
+        label: isRTL ? "الافتتاحية" : "Top",
+        value: fragranceNotes.top || (noteTerms.length > 0 ? noteTerms.slice(0, 1).join(", ") : ""),
+      },
+      {
+        label: isRTL ? "القلب" : "Middle",
+        value: fragranceNotes.middle || (noteTerms.length > 1 ? noteTerms.slice(1, 2).join(", ") : ""),
+      },
+      {
+        label: isRTL ? "القاعدة" : "Base",
+        value: fragranceNotes.base || (noteTerms.length > 2 ? noteTerms.slice(2, 3).join(", ") : ""),
+      },
+    ],
+    [fragranceNotes.base, fragranceNotes.middle, fragranceNotes.top, isRTL, noteTerms]
+  );
+  const characteristics = useMemo(
+    () =>
+      [
+        {
+          label: isRTL ? "الفئة" : "Category",
+          value: decodeHtmlEntities(categoryNameForBreadcrumb || primaryCategory?.name || ""),
+        },
+        {
+          label: isRTL ? "مستوحى من" : "Inspired by",
+          value: inspiredBy,
+        },
+        {
+          label: isRTL ? "العائلة العطرية" : "Fragrance family",
+          value: fragranceFamily,
+        },
+        {
+          label: isRTL ? "رمز المنتج" : "SKU",
+          value: decodeHtmlEntities(product.sku || ""),
+        },
+        {
+          label: isRTL ? "التوفر" : "Availability",
+          value: product.is_in_stock ? (isRTL ? "متوفر" : "In stock") : (isRTL ? "غير متوفر" : "Out of stock"),
+        },
+      ].filter((item) => Boolean(item.value)),
+    [
+      categoryNameForBreadcrumb,
+      fragranceFamily,
+      inspiredBy,
+      isRTL,
+      primaryCategory?.name,
+      product.is_in_stock,
+      product.sku,
+    ]
+  );
   const descriptionHtml =
     sanitizedDescription && (!shortDescriptionText || descriptionText !== shortDescriptionText)
       ? sanitizedDescription
@@ -1601,7 +1784,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           {shouldShowShortDescription && (
             <div
               className="mt-5 text-sm leading-6 text-brand-primary/75"
-              dangerouslySetInnerHTML={{ __html: sanitizedShortDescription }}
+              dangerouslySetInnerHTML={{ __html: visibleSummaryHtml }}
             />
           )}
 
@@ -1822,6 +2005,49 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               locale={locale}
             />
           )}
+          </div>
+
+          <div className="mt-8 space-y-8 border-t border-brand-border/70 pt-6">
+            <section>
+              <h3 className="text-[14px] font-semibold text-brand-primary">
+                {isRTL ? "النوتات العطرية" : "Fragrance Notes"}
+              </h3>
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                {fragranceNoteRows.map((note) => (
+                  <div key={note.label} className="border-b border-brand-border/60 pb-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-brand-muted">
+                      {note.label}
+                    </p>
+                    <p className="mt-1 text-sm leading-6 text-brand-primary/75">
+                      {note.value || (isRTL ? "غير محدد" : "Not specified")}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              {noteTerms.length > 0 && (
+                <p className="mt-3 text-sm leading-6 text-brand-primary/60">
+                  {isRTL ? "النوتات الرئيسية:" : "Key notes:"} {noteTerms.join(", ")}
+                </p>
+              )}
+            </section>
+
+            <section>
+              <h3 className="text-[14px] font-semibold text-brand-primary">
+                {isRTL ? "الخصائص" : "Characteristics"}
+              </h3>
+              <div className="mt-3 divide-y divide-brand-border/60 border-y border-brand-border/60">
+                {characteristics.map((item) => (
+                  <div key={item.label} className="flex items-start justify-between gap-4 py-3">
+                    <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-brand-muted">
+                      {item.label}
+                    </span>
+                    <span className="max-w-[64%] text-right text-sm leading-6 text-brand-primary/75">
+                      {item.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
           </div>
 
           <div className="mt-8 border-t border-brand-border/70 pt-6">
