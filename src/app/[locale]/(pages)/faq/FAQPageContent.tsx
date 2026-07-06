@@ -137,7 +137,7 @@ export function FAQPageContent({ locale, initialData, dictionary, contactLabel }
     let active = true;
 
     fetchFaqData().then((nextData) => {
-      if (active && nextData) {
+      if (active && nextData && buildGroups(nextData, locale).length > 0) {
         setData(nextData);
       }
     });
