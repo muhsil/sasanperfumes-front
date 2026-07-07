@@ -112,28 +112,6 @@ function getCurrencyMinorUnitForCode(code: string): number {
   return ["BHD", "KWD", "OMR"].includes(code.toUpperCase()) ? 3 : 2;
 }
 
-function buildFreeShippingRate(currencyCode: string, currencySymbol: string): ShippingRate {
-  return {
-    rate_id: `free_shipping:${currencyCode.toUpperCase()}:om`,
-    name: "Free Shipping",
-    description: "Oman shipping is free",
-    delivery_time: "",
-    price: "0",
-    taxes: "0",
-    instance_id: 0,
-    method_id: "free_shipping",
-    meta_data: [],
-    selected: true,
-    currency_code: currencyCode,
-    currency_symbol: currencySymbol,
-    currency_minor_unit: getCurrencyMinorUnitForCode(currencyCode),
-    currency_decimal_separator: ".",
-    currency_thousand_separator: ",",
-    currency_prefix: currencySymbol,
-    currency_suffix: "",
-  };
-}
-
 async function findZoneForCountry(country: string, marketCode?: string): Promise<number | null> {
   const authParams = getBasicAuthParams(marketCode);
   const zonesUrl = `${wpJsonBaseForMarket(marketCode)}/wc/v3/shipping/zones?${authParams}`;
@@ -403,6 +381,7 @@ export async function GET(request: NextRequest) {
   try {
     const marketHint = request.nextUrl.searchParams.get("market");
     const market = await getRequestMarket(marketHint);
+    const shippingMarketCode = market.code === "om" ? "intl" : market.code;
     const country = request.nextUrl.searchParams.get("country") || "AE";
     const city = request.nextUrl.searchParams.get("city") || "";
     const postcode = request.nextUrl.searchParams.get("postcode") || "";
@@ -410,34 +389,6 @@ export async function GET(request: NextRequest) {
     const cartWeight = parseFloat(request.nextUrl.searchParams.get("cart_weight") || "0");
     const currencyCode = request.nextUrl.searchParams.get("currency_code") || siteConfig.defaultCurrency;
     const currencySymbol = request.nextUrl.searchParams.get("currency_symbol") || getCurrencySymbolForCode(currencyCode);
-
-    if (market.code === "om") {
-      const freeShippingRate = buildFreeShippingRate(currencyCode, currencySymbol);
-      const pkg: ShippingPackage = {
-        package_id: 0,
-        name: "Shipping",
-        destination: {
-          address_1: "",
-          address_2: "",
-          city,
-          state: "",
-          postcode,
-          country,
-        },
-        items: [],
-        shipping_rates: [freeShippingRate],
-      };
-
-      return NextResponse.json({
-        success: true,
-        needs_shipping: true,
-        shipping_rates: [pkg],
-        totals: {
-          shipping_total: "0",
-          shipping_tax: "0",
-        },
-      });
-    }
 
     const freightRate = buildFreightRate(country, cartWeight, currencyCode, currencySymbol);
     if (freightRate) {
@@ -467,7 +418,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const zoneId = await findZoneForCountry(country, market.code);
+    const zoneId = await findZoneForCountry(country, shippingMarketCode);
 
     if (zoneId === null) {
       return NextResponse.json(
@@ -476,7 +427,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const methods = await getZoneMethods(zoneId, market.code);
+    const methods = await getZoneMethods(zoneId, shippingMarketCode);
     const shippingRates = buildShippingRates(methods, cartSubtotal, currencyCode, currencySymbol, cartWeight);
 
     const selectedRate = shippingRates.find(r => r.selected);
