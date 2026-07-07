@@ -382,7 +382,9 @@ export default function CheckoutClient() {
         useEffect(() => {
           const fetchShippingCountries = async () => {
             try {
-              const response = await fetch("/api/shipping-countries");
+              const market = marketPrefix.replace(/^\//, "");
+              const query = market ? `?market=${encodeURIComponent(market)}` : "";
+              const response = await fetch(`/api/shipping-countries${query}`);
               const data = await response.json();
               if (data.success && data.countries) {
                 const mapped: CountryOption[] = data.countries.map((c: { code: string; name: string }) => ({
@@ -529,6 +531,7 @@ export default function CheckoutClient() {
           try {
             const subtotal = discountedCartSubtotal;
             const weight = cart?.items_weight || 0;
+            const market = marketPrefix.replace(/^\//, "");
             const params = new URLSearchParams({
               country: country || "AE",
               city: city || "",
@@ -537,6 +540,9 @@ export default function CheckoutClient() {
               cart_weight: String(weight),
               currency_code: currency || siteConfig.defaultCurrency,
             });
+            if (market) {
+              params.set("market", market);
+            }
             const response = await fetch(`/api/shipping?${params.toString()}`);
             const data = await response.json();
             if (data.success && data.shipping_rates) {

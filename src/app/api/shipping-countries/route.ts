@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -44,9 +44,10 @@ const CONTINENT_COUNTRIES: Record<string, string[]> = {
   SA: ["AR", "BO", "BR", "CL", "CO", "EC", "FK", "GF", "GY", "PY", "PE", "SR", "UY", "VE"],
 };
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const market = await getRequestMarket();
+    const marketHint = request.nextUrl.searchParams.get("market");
+    const market = await getRequestMarket(marketHint);
     const authParams = getBasicAuthParams(market.code);
     const apiBase = `${wpJsonBaseForMarket(market.code)}/wc/v3`;
 

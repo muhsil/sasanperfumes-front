@@ -401,7 +401,8 @@ function buildShippingRates(
 
 export async function GET(request: NextRequest) {
   try {
-    const market = await getRequestMarket();
+    const marketHint = request.nextUrl.searchParams.get("market");
+    const market = await getRequestMarket(marketHint);
     const country = request.nextUrl.searchParams.get("country") || "AE";
     const city = request.nextUrl.searchParams.get("city") || "";
     const postcode = request.nextUrl.searchParams.get("postcode") || "";
