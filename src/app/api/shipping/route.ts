@@ -108,6 +108,32 @@ function getCurrencySymbolForCode(code: string): string {
   return CURRENCY_SYMBOLS[code.toUpperCase()] || code.toUpperCase();
 }
 
+function getCurrencyMinorUnitForCode(code: string): number {
+  return ["BHD", "KWD", "OMR"].includes(code.toUpperCase()) ? 3 : 2;
+}
+
+function buildFreeShippingRate(currencyCode: string, currencySymbol: string): ShippingRate {
+  return {
+    rate_id: `free_shipping:${currencyCode.toUpperCase()}:om`,
+    name: "Free Shipping",
+    description: "Oman shipping is free",
+    delivery_time: "",
+    price: "0",
+    taxes: "0",
+    instance_id: 0,
+    method_id: "free_shipping",
+    meta_data: [],
+    selected: true,
+    currency_code: currencyCode,
+    currency_symbol: currencySymbol,
+    currency_minor_unit: getCurrencyMinorUnitForCode(currencyCode),
+    currency_decimal_separator: ".",
+    currency_thousand_separator: ",",
+    currency_prefix: currencySymbol,
+    currency_suffix: "",
+  };
+}
+
 async function findZoneForCountry(country: string, marketCode?: string): Promise<number | null> {
   const authParams = getBasicAuthParams(marketCode);
   const zonesUrl = `${wpJsonBaseForMarket(marketCode)}/wc/v3/shipping/zones?${authParams}`;
@@ -187,20 +213,20 @@ function buildFreightRate(
     price: ratePrice,
     taxes: "0",
     instance_id: 0,
-    method_id: "aramex_freight",
-    meta_data: [
-      { key: "country", value: country.toUpperCase() },
-      { key: "weight", value: weightLabel },
-      { key: "pcs", value: String(freightMatch.row.pcs) },
-    ],
-    selected: true,
-    currency_code: currencyCode,
-    currency_symbol: currencySymbol,
-    currency_minor_unit: 2,
-    currency_decimal_separator: ".",
-    currency_thousand_separator: ",",
-    currency_prefix: currencySymbol,
-    currency_suffix: "",
+      method_id: "aramex_freight",
+      meta_data: [
+        { key: "country", value: country.toUpperCase() },
+        { key: "weight", value: weightLabel },
+        { key: "pcs", value: String(freightMatch.row.pcs) },
+      ],
+      selected: true,
+      currency_code: currencyCode,
+      currency_symbol: currencySymbol,
+      currency_minor_unit: getCurrencyMinorUnitForCode(currencyCode),
+      currency_decimal_separator: ".",
+      currency_thousand_separator: ",",
+      currency_prefix: currencySymbol,
+      currency_suffix: "",
   };
 }
 
@@ -383,6 +409,34 @@ export async function GET(request: NextRequest) {
     const cartWeight = parseFloat(request.nextUrl.searchParams.get("cart_weight") || "0");
     const currencyCode = request.nextUrl.searchParams.get("currency_code") || siteConfig.defaultCurrency;
     const currencySymbol = request.nextUrl.searchParams.get("currency_symbol") || getCurrencySymbolForCode(currencyCode);
+
+    if (market.code === "om") {
+      const freeShippingRate = buildFreeShippingRate(currencyCode, currencySymbol);
+      const pkg: ShippingPackage = {
+        package_id: 0,
+        name: "Shipping",
+        destination: {
+          address_1: "",
+          address_2: "",
+          city,
+          state: "",
+          postcode,
+          country,
+        },
+        items: [],
+        shipping_rates: [freeShippingRate],
+      };
+
+      return NextResponse.json({
+        success: true,
+        needs_shipping: true,
+        shipping_rates: [pkg],
+        totals: {
+          shipping_total: "0",
+          shipping_tax: "0",
+        },
+      });
+    }
 
     const freightRate = buildFreightRate(country, cartWeight, currencyCode, currencySymbol);
     if (freightRate) {
