@@ -281,16 +281,11 @@ async function fetchCurrentProductIdBySlug(
   market: MarketConfig,
   locale: string | null
 ): Promise<number | null> {
-  try {
-    const query = new URLSearchParams({ slug });
-    query.set("lang", locale || "en");
-    query.set("currency", "AED");
+  const query = new URLSearchParams({ slug });
+  query.set("lang", locale || "en");
+  query.set("currency", "AED");
 
-    const response = await fetch(noCacheUrl(`${COCART_WPJSON_BASE}/wc/store/v1/products?${query.toString()}`), {
-      method: "GET",
-      headers: toMarketAwareHeaders(request, market.code, backendHeaders()),
-    });
-
+  const parseProductId = async (response: Response): Promise<number | null> => {
     if (!response.ok) {
       return null;
     }
@@ -303,6 +298,25 @@ async function fetchCurrentProductIdBySlug(
     const firstProduct = data[0] as Record<string, unknown>;
     const candidateId = Number(firstProduct.id);
     return Number.isFinite(candidateId) && candidateId > 0 ? candidateId : null;
+  };
+
+  try {
+    const scopedResponse = await fetch(noCacheUrl(`${COCART_WPJSON_BASE}/wc/store/v1/products?${query.toString()}`), {
+      method: "GET",
+      headers: toMarketAwareHeaders(request, market.code, backendHeaders()),
+    });
+
+    const scopedId = await parseProductId(scopedResponse);
+    if (scopedId) {
+      return scopedId;
+    }
+
+    const unscopedResponse = await fetch(noCacheUrl(`${COCART_WPJSON_BASE}/wc/store/v1/products?${query.toString()}`), {
+      method: "GET",
+      headers: backendHeaders(),
+    });
+
+    return parseProductId(unscopedResponse);
   } catch {
     return null;
   }
