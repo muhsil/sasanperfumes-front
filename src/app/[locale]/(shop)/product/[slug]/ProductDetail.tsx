@@ -948,15 +948,15 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
     () => [
       {
         label: isRTL ? "الافتتاحية" : "Top",
-        value: fragranceNotes.top || (noteTerms.length > 0 ? noteTerms.slice(0, 1).join(", ") : ""),
+        value: (fragranceNotes.top || (noteTerms.length > 0 ? noteTerms.slice(0, 1).join(", ") : "")).trim(),
       },
       {
         label: isRTL ? "القلب" : "Middle",
-        value: fragranceNotes.middle || (noteTerms.length > 1 ? noteTerms.slice(1, 2).join(", ") : ""),
+        value: (fragranceNotes.middle || (noteTerms.length > 1 ? noteTerms.slice(1, 2).join(", ") : "")).trim(),
       },
       {
         label: isRTL ? "القاعدة" : "Base",
-        value: fragranceNotes.base || (noteTerms.length > 2 ? noteTerms.slice(2, 3).join(", ") : ""),
+        value: (fragranceNotes.base || (noteTerms.length > 2 ? noteTerms.slice(2, 3).join(", ") : "")).trim(),
       },
     ],
     [fragranceNotes.base, fragranceNotes.middle, fragranceNotes.top, isRTL, noteTerms]
@@ -1738,7 +1738,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                     {note.label}
                   </span>
                   <span className="text-right text-sm leading-6 text-brand-primary/75">
-                    {note.value || (isRTL ? "ØºÙŠØ± Ù…Ø­Ø¯Ø¯" : "Not specified")}
+                    {note.value}
                   </span>
                 </div>
               ))}
