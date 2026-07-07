@@ -34,6 +34,12 @@ const MARKET_SHIPPING_COUNTRIES = {
   sa: "SA",
 } as const;
 
+const MARKET_SHIPPING_COUNTRY_NAMES = {
+  QA: "Qatar",
+  OM: "Oman",
+  SA: "Saudi Arabia",
+} as const;
+
 const CONTINENT_COUNTRIES: Record<string, string[]> = {
   AF: ["DZ", "AO", "BJ", "BW", "BF", "BI", "CM", "CV", "CF", "TD", "KM", "CG", "CD", "CI", "DJ", "EG", "GQ", "ER", "SZ", "ET", "GA", "GM", "GH", "GN", "GW", "KE", "LS", "LR", "LY", "MG", "MW", "ML", "MR", "MU", "YT", "MA", "MZ", "NA", "NE", "NG", "RE", "RW", "SH", "ST", "SN", "SC", "SL", "SO", "ZA", "SS", "SD", "TZ", "TG", "TN", "UG", "EH", "ZM", "ZW"],
   AN: ["AQ", "BV", "TF", "HM", "GS"],
@@ -53,7 +59,7 @@ export async function GET(request: NextRequest) {
 
     const marketCountryCode = MARKET_SHIPPING_COUNTRIES[market.code as keyof typeof MARKET_SHIPPING_COUNTRIES];
     if (marketCountryCode) {
-      let countryName: string = marketCountryCode;
+      let countryName: string = MARKET_SHIPPING_COUNTRY_NAMES[marketCountryCode as keyof typeof MARKET_SHIPPING_COUNTRY_NAMES] || marketCountryCode;
       const countriesUrl = `${apiBase}/data/countries?${authParams}`;
       const countriesResponse = await fetch(countriesUrl, {
         method: "GET",
@@ -62,7 +68,7 @@ export async function GET(request: NextRequest) {
 
       if (countriesResponse.ok) {
         const wcCountries = (await countriesResponse.json()) as WCCountry[];
-        countryName = wcCountries.find((c) => c.code === marketCountryCode)?.name || marketCountryCode;
+        countryName = wcCountries.find((c) => c.code === marketCountryCode)?.name || countryName;
       }
 
       return NextResponse.json({
