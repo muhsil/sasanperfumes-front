@@ -715,9 +715,51 @@ export const getProductBySlug = cache(async function getProductBySlug(
   const market = await requestMarketForLocale(locale, frontendHost);
   const encodedSlug = encodeURIComponent(slug);
 
+  const fetchCurrentUnscopedProduct = async (targetSlug: string, targetLocale?: Locale): Promise<WCProduct | null> => {
+    const fetchBySlug = async (candidateSlug: string, candidateLocale?: Locale): Promise<WCProduct | null> => {
+      try {
+        const { data } = await fetchStoreAPI<WCProduct[]>(
+          `/products?slug=${encodeURIComponent(candidateSlug)}`,
+          {
+            tags: ["products", `product-${candidateSlug}-${candidateLocale || "default"}-unscoped`],
+            locale: candidateLocale,
+            currency,
+            frontendHost,
+            revalidate: 300,
+          },
+          undefined
+        );
+
+        const products = rebrandApiContent(data);
+        return products.length > 0 ? products[0] : null;
+      } catch {
+        return null;
+      }
+    };
+
+    const direct = await fetchBySlug(targetSlug, targetLocale);
+    if (direct) {
+      return direct;
+    }
+
+    if (targetLocale === "ar" && !targetSlug.endsWith("-ar")) {
+      const arabicCandidate = await fetchBySlug(`${targetSlug}-ar`, targetLocale);
+      if (arabicCandidate) {
+        return arabicCandidate;
+      }
+    }
+
+    if (targetLocale && targetLocale !== "en") {
+      return fetchBySlug(targetSlug, "en");
+    }
+
+    return null;
+  };
+
   const hydrateWithLegacyCopy = async (current: WCProduct | null, targetSlug = slug): Promise<WCProduct | null> => {
     if (!current) {
       try {
+        const currentUnscoped = await fetchCurrentUnscopedProduct(targetSlug, locale);
         const legacyProducts = await fetchAPI<WCProduct[]>(`/products?slug=${encodeURIComponent(targetSlug)}`, {
           tags: ["products", `product-${targetSlug}-legacy`],
           locale: "en",
@@ -726,13 +768,22 @@ export const getProductBySlug = cache(async function getProductBySlug(
           apiBase: LEGACY_STORE_SITE_URL,
         });
 
+        if (currentUnscoped) {
+          const localizedCurrent = localizeMarketProduct(currentUnscoped, locale, market);
+          if (legacyProducts.length === 0) {
+            return localizedCurrent;
+          }
+          return mergeLegacyProductCopy(localizedCurrent, legacyProducts[0]);
+        }
+
         if (legacyProducts.length === 0) {
           return null;
         }
 
         return localizeMarketProduct(legacyProducts[0], locale, market);
       } catch {
-        return null;
+        const currentUnscoped = await fetchCurrentUnscopedProduct(targetSlug, locale);
+        return currentUnscoped ? localizeMarketProduct(currentUnscoped, locale, market) : null;
       }
     }
 
