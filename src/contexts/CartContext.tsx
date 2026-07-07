@@ -14,8 +14,19 @@ import { omnisendTrackAddToCart, type OmnisendLineItem } from "@/lib/utils/omnis
 import { fbTrackAddToCart } from "@/lib/utils/fbpixel";
 import { trackAnalyticsEvent } from "@/lib/utils/analytics";
 
-// Cache key now includes locale for proper multilingual support
-const getCartCacheKey = (locale: string) => `/api/cart?locale=${locale}`;
+function getCurrentMarketCode(): string {
+  if (typeof window === "undefined") return "";
+  return getMarketPrefixFromPath(window.location.pathname).replace(/^\/+/, "").toLowerCase();
+}
+
+// Cache key includes market and locale so localized storefront carts never bleed into each other.
+const getCartCacheKey = (locale: string, marketCode = "") => {
+  return `cart:${locale}:${marketCode || "intl"}`;
+};
+
+function getCartFetchUrl(locale: string) {
+  return `/api/cart?${new URLSearchParams({ locale }).toString()}`;
+}
 
 function getCartActionUrl(locale: string, action: string, params: Record<string, string> = {}) {
   const searchParams = new URLSearchParams({ action, locale });
@@ -47,11 +58,12 @@ const CART_CACHE_TTL = 5 * 60 * 1000; // 5 minutes TTL for localStorage cache
 interface CachedCartData {
   cart: CoCartResponse;
   locale: string;
+  market: string;
   timestamp: number;
 }
 
 // Get cached cart from localStorage
-function getCachedCart(locale: string): CoCartResponse | null {
+function getCachedCart(locale: string, marketCode: string): CoCartResponse | null {
   if (typeof window === "undefined") return null;
   
   try {
@@ -60,8 +72,9 @@ function getCachedCart(locale: string): CoCartResponse | null {
     
     const data: CachedCartData = JSON.parse(cached);
     
-    // Check if cache is for the same locale and not expired
+    // Check if cache is for the same locale + market and not expired
     if (data.locale !== locale) return null;
+    if ((data.market || "") !== marketCode) return null;
     if (Date.now() - data.timestamp > CART_CACHE_TTL) {
       localStorage.removeItem(CART_STORAGE_KEY);
       return null;
@@ -74,7 +87,7 @@ function getCachedCart(locale: string): CoCartResponse | null {
 }
 
 // Save cart to localStorage cache
-function setCachedCart(cart: CoCartResponse, locale: string): void {
+function setCachedCart(cart: CoCartResponse, locale: string, marketCode: string): void {
   if (typeof window === "undefined") return;
   if (cart.items.some((item) => item.item_key.startsWith("temp-"))) return;
   
@@ -82,6 +95,7 @@ function setCachedCart(cart: CoCartResponse, locale: string): void {
     const data: CachedCartData = {
       cart,
       locale,
+      market: marketCode,
       timestamp: Date.now(),
     };
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(data));
@@ -191,14 +205,16 @@ function getHeaders(): HeadersInit {
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
-  
+
   return headers;
 }
 
-// Fetcher that extracts locale from the cache key URL
-async function cartFetcher(url: string): Promise<CoCartResponse | null> {
+// Fetcher that extracts locale from the cache key while keeping market-specific
+// carts isolated on the client without routing CoCart through sub-market headers.
+async function cartFetcher(cacheKey: string): Promise<CoCartResponse | null> {
   try {
-    const response = await fetch(url, {
+    const [, locale = "en"] = cacheKey.split(":");
+    const response = await fetch(getCartFetchUrl(locale), {
       method: "GET",
       headers: getHeaders(),
     });
@@ -259,8 +275,9 @@ interface CartProviderProps {
 }
 
 export function CartProvider({ children, locale }: CartProviderProps) {
-  // Use locale-aware cache key for proper multilingual support
-  const cacheKey = getCartCacheKey(locale);
+  const marketCode = getCurrentMarketCode();
+  // Use market + locale aware cache key so each storefront keeps its own cart session.
+  const cacheKey = getCartCacheKey(locale, marketCode);
   
   // Get authentication state to refresh cart after login
   const { isAuthenticated, user } = useAuth();
@@ -289,9 +306,9 @@ export function CartProvider({ children, locale }: CartProviderProps) {
   // fallback returned by the API when the backend is temporarily down.
   useEffect(() => {
     if (cart && cart.items && cart.items.length > 0) {
-      setCachedCart(cart, locale);
+      setCachedCart(cart, locale, marketCode);
     }
-  }, [cart, locale]);
+  }, [cart, locale, marketCode]);
 
   // Seed SWR cache with localStorage data after hydration to avoid
   // server/client mismatch (React error #418). This runs only on the client
@@ -302,11 +319,11 @@ export function CartProvider({ children, locale }: CartProviderProps) {
   useEffect(() => {
     // Only apply fallback if the current cart is null or empty
     if (cart && cart.items && cart.items.length > 0) return;
-    const cached = getCachedCart(locale);
+    const cached = getCachedCart(locale, marketCode);
     if (cached && cached.items && cached.items.length > 0) {
       mutateCart(cached, { revalidate: false });
     }
-  }, [cart, locale, mutateCart]);
+  }, [cart, locale, marketCode, mutateCart]);
 
   // Refresh cart when user logs in - this ensures the authenticated user's
   // cart is loaded immediately after login

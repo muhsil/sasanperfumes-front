@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { API_BASE, backendHeaders, backendPostHeaders, backendAuthHeaders, noCacheUrl, safeJsonResponse, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
-import { getRequestMarket } from "@/lib/market/server";
+import { internationalMarket, type MarketConfig } from "@/config/market";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -13,6 +13,7 @@ const CURRENCY_COOKIE = "wcml_currency";
 const LOCALE_COOKIE = "NEXT_LOCALE";
 const MARKETS_WITH_SEPARATE_APIS = new Set(["qa", "om", "sa"]);
 const COCART_WPJSON_BASE = `${API_BASE.replace(/\/+$/, "")}/wp-json`;
+const LEGACY_STORE_API_BASE = "https://sasanperfumes.shapehive.com/wp-json/wc/store/v1";
 
 function isInvalidBackendResponse(data: Record<string, unknown>): boolean {
   return data?.code === "invalid_response";
@@ -27,8 +28,6 @@ function blockedBackendError(data: Record<string, unknown>) {
     ),
   };
 }
-
-type MarketConfig = Awaited<ReturnType<typeof getRequestMarket>>;
 
 function normalizeHostWithMarketFallback(rawHost: string | null, marketCode: string): string {
   const hostWithMaybePath = (rawHost || "").split(",")[0].trim().replace(/^https?:\/\//i, "").replace(/:\d+$/, "");
@@ -255,9 +254,77 @@ function createResponseWithCartKey(
   return response;
 }
 
+async function fetchLegacyProductIdentity(sourceProductId: number): Promise<{ slug?: string; sku?: string } | null> {
+  try {
+    const response = await fetch(noCacheUrl(`${LEGACY_STORE_API_BASE}/products/${sourceProductId}`), {
+      method: "GET",
+      headers: backendHeaders(),
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await safeJsonResponse(response);
+    return {
+      slug: typeof data.slug === "string" ? data.slug : undefined,
+      sku: typeof data.sku === "string" ? data.sku : undefined,
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function fetchCurrentProductIdBySlug(
+  slug: string,
+  request: NextRequest,
+  market: MarketConfig,
+  locale: string | null
+): Promise<number | null> {
+  try {
+    const query = new URLSearchParams({ slug });
+    query.set("lang", locale || "en");
+    query.set("currency", "AED");
+
+    const response = await fetch(noCacheUrl(`${COCART_WPJSON_BASE}/wc/store/v1/products?${query.toString()}`), {
+      method: "GET",
+      headers: toMarketAwareHeaders(request, market.code, backendHeaders()),
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await safeJsonResponse(response);
+    if (!Array.isArray(data) || data.length === 0) {
+      return null;
+    }
+
+    const firstProduct = data[0] as Record<string, unknown>;
+    const candidateId = Number(firstProduct.id);
+    return Number.isFinite(candidateId) && candidateId > 0 ? candidateId : null;
+  } catch {
+    return null;
+  }
+}
+
+async function resolveReplacementProductId(
+  sourceProductId: number,
+  request: NextRequest,
+  market: MarketConfig,
+  locale: string | null
+): Promise<number | null> {
+  const legacyIdentity = await fetchLegacyProductIdentity(sourceProductId);
+  if (!legacyIdentity?.slug) {
+    return null;
+  }
+
+  return fetchCurrentProductIdBySlug(legacyIdentity.slug, request, market, locale);
+}
+
 export async function GET(request: NextRequest) {
   try {
-    const market = await getRequestMarket(request.nextUrl.searchParams.get("__market") || request.nextUrl.searchParams.get("market"));
+    const market = internationalMarket;
     const coCartBase = COCART_WPJSON_BASE;
     const cartKey = await getCartKey();
     const authToken = await getAuthToken();
@@ -350,7 +417,7 @@ export async function POST(request: NextRequest) {
   const action = searchParams.get("action");
 
   try {
-    const market = await getRequestMarket(request.nextUrl.searchParams.get("__market") || request.nextUrl.searchParams.get("market"));
+    const market = internationalMarket;
     const wpJsonBase = wpJsonBaseForMarket(market.code);
     const coCartBase = COCART_WPJSON_BASE;
     const cartKey = await getCartKey();
@@ -581,6 +648,52 @@ export async function POST(request: NextRequest) {
           },
           { status: 503 }
         );
+      }
+    }
+
+    if (action === "add" && !response.ok && String(data.code || "") === "cocart_invalid_product" && cartKey) {
+      const retryWithoutCartKeyOptions: RequestInit = {
+        method,
+        headers: authToken ? getAuthHeaders(request, market, authToken) : getGuestHeaders(request, market),
+      };
+
+      if (method !== "DELETE" && Object.keys(body).length > 0) {
+        retryWithoutCartKeyOptions.body = JSON.stringify(body);
+        retryWithoutCartKeyOptions.headers = {
+          ...(retryWithoutCartKeyOptions.headers as Record<string, string>),
+          "Content-Type": "application/json",
+        };
+      }
+
+      response = await fetch(noCacheUrl(baseUrl), retryWithoutCartKeyOptions);
+      data = await safeJsonResponse(response);
+    }
+
+    if (
+      action === "add" &&
+      !response.ok &&
+      String(data.code || "") === "cocart_invalid_product" &&
+      typeof body.id === "string"
+    ) {
+      const sourceProductId = Number(body.id);
+      if (Number.isFinite(sourceProductId) && sourceProductId > 0) {
+        const replacementProductId = await resolveReplacementProductId(sourceProductId, request, market, locale);
+
+        if (replacementProductId && replacementProductId !== sourceProductId) {
+          const retryBody = { ...body, id: String(replacementProductId) };
+          const retryFetchOptions: RequestInit = {
+            method,
+            headers: authToken ? getAuthHeaders(request, market, authToken) : getGuestHeaders(request, market),
+            body: JSON.stringify(retryBody),
+          };
+          retryFetchOptions.headers = {
+            ...(retryFetchOptions.headers as Record<string, string>),
+            "Content-Type": "application/json",
+          };
+
+          response = await fetch(noCacheUrl(url), retryFetchOptions);
+          data = await safeJsonResponse(response);
+        }
       }
     }
 
