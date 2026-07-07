@@ -148,6 +148,7 @@ interface ShippingLine {
   method_title: string;
   total: string;
   total_tax?: string;
+  tax_status?: string;
   taxes?: Array<{ id?: number; total: string }>;
 }
 
@@ -174,6 +175,11 @@ const INCLUSIVE_VAT_RATES_BY_COUNTRY: Record<string, number> = {
   SA: 0.15,
 };
 
+function getCurrencyDecimals(currency?: string): number {
+  const code = (currency || "").trim().toUpperCase();
+  return ["BHD", "KWD", "OMR"].includes(code) ? 3 : 2;
+}
+
 function normalizeCountryCode(value: unknown): string {
   return typeof value === "string" ? value.trim().toUpperCase() : "";
 }
@@ -187,8 +193,43 @@ function getInclusiveVatRate(body: { billing?: Partial<OrderAddress>; shipping?:
 function normalizeShippingLinesForNoTax(shippingLines: ShippingLine[]): ShippingLine[] {
   return shippingLines.map((shippingLine) => ({
     ...shippingLine,
+    tax_status: "none",
     total_tax: "0.00",
     taxes: [],
+  }));
+}
+
+function normalizeOrderLineItemsForInclusiveTax(
+  lineItems: OrderLineItem[],
+  inclusiveVatRate: number,
+  currency?: string
+): OrderLineItem[] {
+  if (inclusiveVatRate <= 0) {
+    return lineItems;
+  }
+
+  const decimals = getCurrencyDecimals(currency);
+  const divisor = 1 + inclusiveVatRate;
+
+  return lineItems.map((lineItem) => {
+    const subtotalSource = lineItem.subtotal ?? lineItem.total ?? "0";
+    const totalSource = lineItem.total ?? lineItem.subtotal ?? "0";
+    const subtotal = Number.parseFloat(String(subtotalSource));
+    const total = Number.parseFloat(String(totalSource));
+
+    return {
+      ...lineItem,
+      subtotal: Number.isFinite(subtotal) ? (subtotal / divisor).toFixed(decimals) : lineItem.subtotal,
+      total: Number.isFinite(total) ? (total / divisor).toFixed(decimals) : lineItem.total,
+    };
+  });
+}
+
+function normalizeFeeLinesForNoTax(feeLines: FeeLine[]): FeeLine[] {
+  return feeLines.map((feeLine) => ({
+    ...feeLine,
+    tax_status: "none",
+    tax_class: "",
   }));
 }
 
@@ -437,6 +478,9 @@ export async function POST(request: NextRequest) {
     const isCod = paymentMethod.toLowerCase() === "cod";
     const inclusiveVatRate = getInclusiveVatRate(body);
     const lineItems = Array.isArray(body.line_items) ? body.line_items : [];
+    const currencyCode = typeof body.currency === "string" && body.currency.trim()
+      ? body.currency.trim().toUpperCase()
+      : undefined;
 
     const orderData: CreateOrderRequest = {
       payment_method: paymentMethod,
@@ -464,7 +508,7 @@ export async function POST(request: NextRequest) {
         postcode: body.shipping?.postcode || body.billing.postcode || "",
         country: body.shipping?.country || body.billing.country,
       },
-      line_items: lineItems,
+      line_items: normalizeOrderLineItemsForInclusiveTax(lineItems, inclusiveVatRate, currencyCode),
       customer_note: body.customer_note || "",
     };
 
@@ -477,7 +521,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (Array.isArray(body.fee_lines) && body.fee_lines.length > 0) {
-      orderData.fee_lines = body.fee_lines;
+      orderData.fee_lines = normalizeFeeLinesForNoTax(body.fee_lines);
     }
 
     // For guest checkout, look up existing WooCommerce customer by billing email

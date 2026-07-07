@@ -25,6 +25,7 @@ function sasanperfumes_enforce_inclusive_tax_settings() {
     }
 }
 add_action('admin_init', 'sasanperfumes_enforce_inclusive_tax_settings');
+add_action('init', 'sasanperfumes_enforce_inclusive_tax_settings', 20);
 
 /**
  * Suffix shown after prices in the shop and cart (e.g. "incl. VAT").
