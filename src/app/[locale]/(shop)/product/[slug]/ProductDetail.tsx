@@ -156,6 +156,19 @@ function stripHtmlToText(html: string): string {
     .trim();
 }
 
+function normalizeDisplayText(value?: string): string {
+  return decodeHtmlEntities((value || "").replace(/<[^>]*>/g, " "))
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function isMeaningfulDisplayText(value?: string): boolean {
+  const normalized = normalizeDisplayText(value);
+  if (!normalized) return false;
+  const lowered = normalized.toLowerCase();
+  return lowered !== "not specified" && lowered !== "n/a" && lowered !== "na" && lowered !== "none";
+}
+
 function escapeHtml(text: string): string {
   return text
     .replace(/&/g, "&amp;")
@@ -406,7 +419,7 @@ function FullscreenGallery({ images, selectedIndex, onClose, onSelectImage, prod
             type="button"
             onClick={requestClose}
             className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-sm transition-colors active:bg-black/75"
-            aria-label={isRTL ? "إغلاق" : "Close fullscreen"}
+            aria-label={isRTL ? "إغلاق العرض الكامل" : "Close fullscreen"}
           >
             <X className="h-6 w-6" />
           </button>
@@ -442,7 +455,7 @@ function FullscreenGallery({ images, selectedIndex, onClose, onSelectImage, prod
                 type="button"
                 onClick={goToPrev}
                 className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/12 text-white backdrop-blur-sm transition-colors active:bg-white/25"
-                aria-label="Previous image"
+                aria-label={isRTL ? "الصورة السابقة" : "Previous image"}
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
@@ -479,7 +492,7 @@ function FullscreenGallery({ images, selectedIndex, onClose, onSelectImage, prod
                 type="button"
                 onClick={goToNext}
                 className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/12 text-white backdrop-blur-sm transition-colors active:bg-white/25"
-                aria-label="Next image"
+                aria-label={isRTL ? "الصورة التالية" : "Next image"}
               >
                 <ChevronRight className="h-5 w-5" />
               </button>
@@ -537,7 +550,7 @@ function FullscreenGallery({ images, selectedIndex, onClose, onSelectImage, prod
         type="button"
         onClick={requestClose}
         className="absolute right-4 top-4 z-20 rounded-full bg-black/50 p-2.5 text-white backdrop-blur-sm transition-colors hover:bg-black/70"
-        aria-label={isRTL ? "إغلاق" : "Close fullscreen"}
+        aria-label={isRTL ? "إغلاق العرض الكامل" : "Close fullscreen"}
       >
         <X className="h-6 w-6" />
       </button>
@@ -933,7 +946,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
       new Set(
         (notesAttribute?.terms || [])
           .map((term) => decodeHtmlEntities(term.name).trim())
-          .filter(Boolean)
+          .filter((term) => Boolean(term) && term.toLowerCase() !== "not specified")
       )
     );
   }, [product.attributes]);
@@ -945,20 +958,21 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
     return familyName ? decodeHtmlEntities(familyName) : "";
   }, [product.attributes]);
   const fragranceNoteRows = useMemo(
-    () => [
-      {
-        label: isRTL ? "الافتتاحية" : "Top",
-        value: (fragranceNotes.top || (noteTerms.length > 0 ? noteTerms.slice(0, 1).join(", ") : "")).trim(),
-      },
-      {
-        label: isRTL ? "القلب" : "Middle",
-        value: (fragranceNotes.middle || (noteTerms.length > 1 ? noteTerms.slice(1, 2).join(", ") : "")).trim(),
-      },
-      {
-        label: isRTL ? "القاعدة" : "Base",
-        value: (fragranceNotes.base || (noteTerms.length > 2 ? noteTerms.slice(2, 3).join(", ") : "")).trim(),
-      },
-    ],
+    () =>
+      [
+        {
+          label: isRTL ? "الافتتاحية" : "Top",
+          value: (fragranceNotes.top || (noteTerms.length > 0 ? noteTerms.slice(0, 1).join(", ") : "")).trim(),
+        },
+        {
+          label: isRTL ? "القلب" : "Middle",
+          value: (fragranceNotes.middle || (noteTerms.length > 1 ? noteTerms.slice(1, 2).join(", ") : "")).trim(),
+        },
+        {
+          label: isRTL ? "القاعدة" : "Base",
+          value: (fragranceNotes.base || (noteTerms.length > 2 ? noteTerms.slice(2, 3).join(", ") : "")).trim(),
+        },
+      ].filter((note) => isMeaningfulDisplayText(note.value)),
     [fragranceNotes.base, fragranceNotes.middle, fragranceNotes.top, isRTL, noteTerms]
   );
   const characteristics = useMemo(
@@ -982,7 +996,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
         },
         {
           label: isRTL ? "التوفر" : "Availability",
-          value: product.is_in_stock ? (isRTL ? "متوفر" : "In stock") : (isRTL ? "غير متوفر" : "Out of stock"),
+          value: product.is_in_stock ? (isRTL ? "متوفر الآن" : "In stock") : (isRTL ? "غير متوفر" : "Out of stock"),
         },
       ].filter((item) => Boolean(item.value)),
     [
@@ -1170,7 +1184,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
             onClick={() => setIsFullscreen(true)}
             data-product-gallery-main
             className="group relative aspect-[4/5] w-full cursor-zoom-in overflow-hidden rounded-lg border border-brand-border/70 bg-brand-beige/20 shadow-[0_18px_42px_rgba(20,15,10,0.08)]"
-            aria-label="Zoom image"
+            aria-label={isRTL ? "تكبير الصورة" : "Zoom image"}
           >
             <Image
               key={`${activeImage.id}-${currentImageSrc}`}
@@ -1668,7 +1682,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                   {!isOutOfStock && (
                     <div className="flex items-center gap-2 text-sm font-medium text-emerald-600">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
-                      <span>{isRTL ? "متوفر" : "In stock"}</span>
+                      <span>{isRTL ? "متوفر الآن" : "In stock"}</span>
                     </div>
                   )}
                 </div>
@@ -1724,31 +1738,28 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           </div>
 
           {/* Fragrance notes shown before purchase controls */}
-          <section className="mt-5 rounded-2xl border border-brand-border/70 bg-transparent p-4">
-            <h3 className="text-[14px] font-semibold text-brand-primary">
-              {isRTL ? "Ø§Ù„Ù†ÙˆØªØ§Øª Ø§Ù„Ø¹Ø·Ø±ÙŠØ©" : "Fragrance Notes"}
-            </h3>
-            <div className="mt-3 space-y-3">
-              {fragranceNoteRows.map((note) => (
-                <div
-                  key={note.label}
-                  className="flex items-start justify-between gap-4 border-b border-brand-border/50 pb-3 last:border-b-0 last:pb-0"
-                >
-                  <span className="shrink-0 text-[12px] font-semibold uppercase tracking-[0.08em] text-brand-muted">
-                    {note.label}
-                  </span>
-                  <span className="text-right text-sm leading-6 text-brand-primary/75">
-                    {note.value}
-                  </span>
-                </div>
-              ))}
-              {noteTerms.length > 0 && (
-                <p className="pt-1 text-sm leading-6 text-brand-primary/60">
-                  {isRTL ? "Ø§Ù„Ù†ÙˆØªØ§Øª Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©:" : "Key notes:"} {noteTerms.join(", ")}
-                </p>
-              )}
-            </div>
-          </section>
+          {fragranceNoteRows.length > 0 && (
+            <section className="mt-5 rounded-2xl border border-brand-border/70 bg-transparent p-4">
+              <h3 className="text-[14px] font-semibold text-brand-primary">
+                {isRTL ? "النوتات العطرية" : "Fragrance Notes"}
+              </h3>
+              <div className="mt-3 space-y-3">
+                {fragranceNoteRows.map((note) => (
+                  <div
+                    key={note.label}
+                    className="space-y-1 border-b border-brand-border/50 pb-3 last:border-b-0 last:pb-0"
+                  >
+                    <span className="shrink-0 text-[12px] font-semibold uppercase tracking-[0.08em] text-brand-muted">
+                      {note.label}
+                    </span>
+                    <span className="block text-sm leading-6 text-brand-primary/75">
+                      {note.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Stock status - inline with low stock warning */}
           {isOutOfStock && (
@@ -1880,7 +1891,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               {selectedVariation && isSelectedVariationOutOfStock && (
                 <div className="flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2">
                   <span className="text-sm font-medium text-red-700">
-                    {isRTL ? "هذا الخيار غير متوفر حالياً" : "This combination is currently out of stock"}
+                    {isRTL ? "هذه المجموعة غير متوفرة حالياً" : "This combination is currently out of stock"}
                   </span>
                 </div>
               )}
@@ -2130,7 +2141,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               ) : isSelectedVariationOutOfStock ? (
                 <>{isRTL ? "غير متوفر" : "out of stock"}</>
               ) : (
-                <><Plus className="h-4 w-4" />{isAddingToCart ? (isRTL ? "جاري الإضافة..." : "adding...") : (isRTL ? "أضف إلى السلة" : "add to cart")}</>
+                  <>{isRTL ? "أضف إلى السلة" : "add to cart"}</>
               )}
             </ProductAddToCartButton>
           </div>
