@@ -30,10 +30,13 @@ class sasanperfumes_Email_Templates {
 		add_filter( 'woocommerce_email_footer_text', array( $this, 'remove_app_promo_from_footer' ), 999 );
 		add_filter( 'woocommerce_email_mobile_messaging', '__return_empty_string' );
 		add_action( 'init', array( $this, 'remove_mobile_app_banner' ) );
+		add_action( 'init', array( $this, 'enforce_email_sender_settings' ), 20 );
+		add_action( 'admin_init', array( $this, 'enforce_email_sender_settings' ), 20 );
 		add_filter( 'woocommerce_email_from_name', array( $this, 'override_email_from_name' ), 999 );
 		add_filter( 'woocommerce_email_from_address', array( $this, 'override_email_from_address' ), 999 );
 		add_filter( 'wp_mail_from_name', array( $this, 'override_email_from_name' ), 999 );
 		add_filter( 'wp_mail_from', array( $this, 'override_email_from_address' ), 999 );
+		add_filter( 'pre_wp_mail', array( $this, 'maybe_send_mail_directly' ), 999, 2 );
 		add_action( 'rest_api_init', array( $this, 'register_email_preview_send_override' ), 999 );
 		add_filter( 'wp_mail', array( $this, 'prepare_large_order_email_for_php_mail' ), 10000 );
 		add_filter( 'woocommerce_email_enabled_customer_new_account', '__return_true', 999 );
@@ -158,6 +161,170 @@ class sasanperfumes_Email_Templates {
 		return 'support@sasanperfumes.com';
 	}
 
+	private function normalize_mail_recipients( $to ) {
+		if ( is_array( $to ) ) {
+			$emails = $to;
+		} else {
+			$emails = preg_split( '/\s*,\s*/', (string) $to, -1, PREG_SPLIT_NO_EMPTY );
+		}
+
+		$emails = array_filter(
+			array_map(
+				static function ( $email ) {
+					return sanitize_email( (string) $email );
+				},
+				$emails
+			),
+			'is_email'
+		);
+
+		return array_values( array_unique( $emails ) );
+	}
+
+	private function mail_body_is_html( $message ) {
+		$message = (string) $message;
+		return ( false !== strpos( $message, '<html' ) )
+			|| ( false !== strpos( $message, '<table' ) )
+			|| ( false !== strpos( $message, '<div' ) )
+			|| ( false !== strpos( $message, '<p' ) )
+			|| ( false !== strpos( $message, '<br' ) );
+	}
+
+	private function build_raw_mail_headers( $headers, $message ) {
+		$lines = array();
+
+		if ( is_string( $headers ) && trim( $headers ) !== '' ) {
+			$lines = preg_split( '/\r\n|\r|\n/', trim( $headers ) );
+		} elseif ( is_array( $headers ) ) {
+			$lines = $headers;
+		}
+
+		$lines = array_values(
+			array_filter(
+				array_map(
+					static function ( $line ) {
+						return trim( (string) $line );
+					},
+					$lines
+				)
+			)
+		);
+
+		$normalized = array();
+		$has_from = false;
+		$has_content_type = false;
+		$has_mime_version = false;
+
+		foreach ( $lines as $line ) {
+			$lower = strtolower( $line );
+			if ( 0 === strpos( $lower, 'from:' ) ) {
+				$has_from = true;
+			}
+			if ( 0 === strpos( $lower, 'content-type:' ) ) {
+				$has_content_type = true;
+			}
+			if ( 0 === strpos( $lower, 'mime-version:' ) ) {
+				$has_mime_version = true;
+			}
+			$normalized[] = $line;
+		}
+
+		if ( ! $has_from ) {
+			$normalized[] = 'From: Sasan Perfumes <support@sasanperfumes.com>';
+		}
+
+		if ( ! $has_mime_version ) {
+			$normalized[] = 'MIME-Version: 1.0';
+		}
+
+		if ( ! $has_content_type ) {
+			$normalized[] = $this->mail_body_is_html( $message )
+				? 'Content-Type: text/html; charset=UTF-8'
+				: 'Content-Type: text/plain; charset=UTF-8';
+		}
+
+		return implode( "\r\n", $normalized );
+	}
+
+	private function send_raw_mail( $to, $subject, $message, $headers = array() ) {
+		$recipients = $this->normalize_mail_recipients( $to );
+
+		if ( empty( $recipients ) ) {
+			return false;
+		}
+
+		$subject = wp_specialchars_decode( (string) $subject, ENT_QUOTES );
+		$message = (string) $message;
+		$header_string = $this->build_raw_mail_headers( $headers, $message );
+		$to_string = implode( ',', $recipients );
+		$sent = false;
+
+		if ( function_exists( 'mail' ) ) {
+			$sent = @mail( $to_string, $subject, $message, $header_string, '-fsupport@sasanperfumes.com' );
+			if ( ! $sent ) {
+				$sent = @mail( $to_string, $subject, $message, $header_string );
+			}
+		}
+
+		return (bool) $sent;
+	}
+
+	private function should_use_raw_mail_fallback( $atts ) {
+		if ( ! is_array( $atts ) ) {
+			return false;
+		}
+
+		$recipients = $this->normalize_mail_recipients( $atts['to'] ?? '' );
+		if ( empty( array_intersect( $recipients, array( 'orders@sasanperfumes.com', 'sasanperfumesuae@gmail.com' ) ) ) ) {
+			return false;
+		}
+
+		$subject = strtolower( (string) ( $atts['subject'] ?? '' ) );
+		$message = strtolower( (string) ( $atts['message'] ?? '' ) );
+
+		if ( false !== strpos( $subject, 'new order' ) || false !== strpos( $subject, 'order #' ) || false !== strpos( $subject, 'test email' ) ) {
+			return true;
+		}
+
+		if ( false !== strpos( $message, 'order details' ) || false !== strpos( $message, 'customer details' ) || false !== strpos( $message, 'new order' ) ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	public function maybe_send_mail_directly( $pre, $atts ) {
+		if ( null !== $pre || ! $this->should_use_raw_mail_fallback( $atts ) ) {
+			return $pre;
+		}
+
+		$sent = $this->send_raw_mail(
+			$atts['to'] ?? '',
+			$atts['subject'] ?? '',
+			$atts['message'] ?? '',
+			$atts['headers'] ?? array()
+		);
+
+		return $sent ? true : $pre;
+	}
+
+	public function enforce_email_sender_settings() {
+		if ( ! class_exists( 'WooCommerce' ) ) {
+			return;
+		}
+
+		$desired_name = 'Sasan Perfumes';
+		$desired_address = 'support@sasanperfumes.com';
+
+		if ( trim( (string) get_option( 'woocommerce_email_from_name', '' ) ) !== $desired_name ) {
+			update_option( 'woocommerce_email_from_name', $desired_name );
+		}
+
+		if ( trim( (string) get_option( 'woocommerce_email_from_address', '' ) ) !== $desired_address ) {
+			update_option( 'woocommerce_email_from_address', $desired_address );
+		}
+	}
+
 	public function prepare_large_order_email_for_php_mail( $args ) {
 		if ( ! isset( $args['message'] ) || ! is_string( $args['message'] ) ) {
 			return $args;
@@ -249,6 +416,16 @@ class sasanperfumes_Email_Templates {
 						'Content-Type: text/html; charset=UTF-8',
 					)
 				);
+				if ( ! $sent ) {
+					$sent = $this->send_raw_mail(
+						$email_address,
+						$email_subject,
+						$email_content,
+						array(
+							'Content-Type: text/html; charset=UTF-8',
+						)
+					);
+				}
 			} finally {
 				remove_filter( 'wp_mail_content_type', $content_type, 999 );
 			}
