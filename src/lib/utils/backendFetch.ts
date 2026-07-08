@@ -71,8 +71,8 @@ export function extractMarketCode(value?: string | null): string {
     const firstPath = parsed.pathname.split("/").filter(Boolean)[0] || "";
     return MARKET_CODES.has(firstPath) ? firstPath : "";
   } catch {
-    const withoutProtocol = raw.replace(/^https?:\/\//, "");
-    const firstPath = withoutProtocol.split("/").filter(Boolean)[1] || "";
+    const withoutProtocol = raw.replace(/^https?:\/\//, "").replace(/^\/+/, "");
+    const firstPath = withoutProtocol.split("/").filter(Boolean)[0] || "";
     return MARKET_CODES.has(firstPath) ? firstPath : "";
   }
 }
