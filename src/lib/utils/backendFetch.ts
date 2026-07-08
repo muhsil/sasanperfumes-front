@@ -1,5 +1,3 @@
-import dns from "dns";
-import https from "https";
 import { siteConfig } from "@/config/site";
 
 const API_BASE = siteConfig.apiUrl;
@@ -125,6 +123,11 @@ function responseHeadersFromNode(headers: Record<string, string | string[] | und
 }
 
 function fetchWithPublicDns(url: string, init: RequestInit = {}): Promise<Response> {
+  // Use indirect runtime require so webpack does not try to bundle Node-only
+  // networking modules into client/server shared chunks.
+  const nodeRequire = eval("require") as NodeRequire;
+  const dns = nodeRequire("dns") as typeof import("dns");
+  const https = nodeRequire("https") as typeof import("https");
   const parsed = new URL(url);
   const body = typeof init.body === "string" || Buffer.isBuffer(init.body) ? init.body : undefined;
   const headers = init.headers instanceof Headers
@@ -146,7 +149,7 @@ function fetchWithPublicDns(url: string, init: RequestInit = {}): Promise<Respon
               return;
             }
             if (typeof options === "object" && options.all) {
-              (callback as (err: NodeJS.ErrnoException | null, addresses: dns.LookupAddress[]) => void)(
+              (callback as (err: NodeJS.ErrnoException | null, addresses: Array<{ address: string; family: 4 }>) => void)(
                 null,
                 addresses.map((address) => ({ address, family: 4 }))
               );
