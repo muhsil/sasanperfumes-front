@@ -1,8 +1,17 @@
+import dns from "dns";
+import https from "https";
 import { siteConfig } from "@/config/site";
 
 const API_BASE = siteConfig.apiUrl;
 const MARKET_CODES = new Set(["qa", "om", "sa"]);
 const BACKEND_FETCH_TIMEOUT_MS = 6000;
+const BACKEND_ORIGIN = (() => {
+  try {
+    return new URL(API_BASE).origin;
+  } catch {
+    return "https://cms.sasanperfumes.com";
+  }
+})();
 const BACKEND_USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36";
 const LEGACY_MEDIA_HOSTS = [["cms", ["fragrance", "network"].join(""), "ae"].join(".")];
@@ -100,6 +109,86 @@ export function backendMarketPostHeaders(market?: string | null, extra?: Headers
   return backendMarketHeaders(market, {
     "Content-Type": "application/json",
     ...headersToRecord(extra),
+  });
+}
+
+function responseHeadersFromNode(headers: Record<string, string | string[] | undefined>): Headers {
+  const responseHeaders = new Headers();
+  Object.entries(headers).forEach(([key, value]) => {
+    if (Array.isArray(value)) {
+      value.forEach((entry) => responseHeaders.append(key, entry));
+    } else if (value !== undefined) {
+      responseHeaders.set(key, value);
+    }
+  });
+  return responseHeaders;
+}
+
+function fetchWithPublicDns(url: string, init: RequestInit = {}): Promise<Response> {
+  const parsed = new URL(url);
+  const body = typeof init.body === "string" || Buffer.isBuffer(init.body) ? init.body : undefined;
+  const headers = init.headers instanceof Headers
+    ? Object.fromEntries(init.headers.entries())
+    : Array.isArray(init.headers)
+      ? Object.fromEntries(init.headers.map(([key, value]) => [key, String(value)]))
+      : Object.fromEntries(Object.entries(init.headers || {}).map(([key, value]) => [key, String(value)]));
+
+  return new Promise<Response>((resolve, reject) => {
+    const request = https.request(
+      parsed,
+      {
+        method: init.method || "GET",
+        headers,
+        lookup: (hostname, options, callback) => {
+          dns.resolve4(hostname, (error, addresses) => {
+            if (error || addresses.length === 0) {
+              callback(error || new Error(`No public DNS A record for ${hostname}`), undefined as never, undefined as never);
+              return;
+            }
+            if (typeof options === "object" && options.all) {
+              (callback as (err: NodeJS.ErrnoException | null, addresses: dns.LookupAddress[]) => void)(
+                null,
+                addresses.map((address) => ({ address, family: 4 }))
+              );
+              return;
+            }
+            callback(null, addresses[0], 4);
+          });
+        },
+      },
+      (incoming) => {
+        const chunks: Buffer[] = [];
+        incoming.on("data", (chunk: Buffer) => chunks.push(chunk));
+        incoming.on("end", () => {
+          resolve(new Response(Buffer.concat(chunks), {
+            status: incoming.statusCode || 200,
+            statusText: incoming.statusMessage || "",
+            headers: responseHeadersFromNode(incoming.headers),
+          }));
+        });
+      }
+    );
+
+    request.on("error", reject);
+    if (body) request.write(body);
+    request.end();
+  });
+}
+
+export function fetchBackendForMarket(url: string, init: RequestInit = {}, market?: string | null): Promise<Response> {
+  const cleanMarket = extractMarketCode(market);
+  if (!MARKET_CODES.has(cleanMarket)) {
+    return fetch(noCacheUrl(url), init);
+  }
+
+  const headers = {
+    ...(backendMarketHeaders(cleanMarket, init.headers) as Record<string, string>),
+    Origin: BACKEND_ORIGIN,
+  };
+
+  return fetchWithPublicDns(noCacheUrl(url), {
+    ...init,
+    headers,
   });
 }
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { siteConfig } from "@/config/site";
 import { getRequestMarket } from "@/lib/market/server";
-import { backendMarketHeaders, backendMarketPostHeaders, extractMarketCode, noCacheUrl, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
+import { backendMarketPostHeaders, extractMarketCode, fetchBackendForMarket, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { buildCheckoutSessionParams, createStripeCheckoutSession } from "@/lib/stripe/api";
 import { getStripeSecretKey } from "@/lib/stripe/config";
@@ -58,11 +58,10 @@ export async function POST(request: NextRequest) {
     const marketHint = extractMarketCode(marketPrefix);
     const market = await getRequestMarket(marketHint || undefined);
     const orderUrl = `${getOrdersApiBase(market.code)}/orders/${orderId}?${getBasicAuthParams(market.code)}`;
-    const orderResponse = await fetch(noCacheUrl(orderUrl), {
+    const orderResponse = await fetchBackendForMarket(orderUrl, {
       method: "GET",
-      headers: backendMarketHeaders(market.code),
       cache: "no-store",
-    });
+    }, market.code);
 
     const order = await orderResponse.json();
     if (!orderResponse.ok) {
@@ -117,7 +116,7 @@ export async function POST(request: NextRequest) {
       })
     );
 
-    await fetch(noCacheUrl(`${getOrdersApiBase(market.code)}/orders/${orderId}?${getBasicAuthParams(market.code)}`), {
+    await fetchBackendForMarket(`${getOrdersApiBase(market.code)}/orders/${orderId}?${getBasicAuthParams(market.code)}`, {
       method: "PUT",
       headers: backendMarketPostHeaders(market.code),
       body: JSON.stringify({
@@ -128,7 +127,7 @@ export async function POST(request: NextRequest) {
           { key: "_stripe_payment_status", value: session.payment_status || "unpaid" },
         ],
       }),
-    }).catch(() => undefined);
+    }, market.code).catch(() => undefined);
 
     return NextResponse.json({
       success: true,
