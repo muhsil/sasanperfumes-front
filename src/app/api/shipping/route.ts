@@ -381,7 +381,60 @@ export async function GET(request: NextRequest) {
   try {
     const marketHint = request.nextUrl.searchParams.get("market");
     const market = await getRequestMarket(marketHint);
-    const shippingMarketCode = market.code === "om" ? "intl" : market.code;
+    if (market.code === "om") {
+      const country = request.nextUrl.searchParams.get("country") || "OM";
+      const city = request.nextUrl.searchParams.get("city") || "";
+      const postcode = request.nextUrl.searchParams.get("postcode") || "";
+      const currencyCode = request.nextUrl.searchParams.get("currency_code") || siteConfig.defaultCurrency;
+      const currencySymbol = request.nextUrl.searchParams.get("currency_symbol") || getCurrencySymbolForCode(currencyCode);
+
+      const pkg: ShippingPackage = {
+        package_id: 0,
+        name: "Shipping",
+        destination: {
+          address_1: "",
+          address_2: "",
+          city,
+          state: "",
+          postcode,
+          country,
+        },
+        items: [],
+        shipping_rates: [
+          {
+            rate_id: "free_shipping:om",
+            name: "Free Shipping",
+            description: "Oman shipping charge",
+            delivery_time: "",
+            price: "0",
+            taxes: "0",
+            instance_id: 0,
+            method_id: "free_shipping",
+            meta_data: [],
+            selected: true,
+            currency_code: currencyCode,
+            currency_symbol: currencySymbol,
+            currency_minor_unit: getCurrencyMinorUnitForCode(currencyCode),
+            currency_decimal_separator: ".",
+            currency_thousand_separator: ",",
+            currency_prefix: currencySymbol,
+            currency_suffix: "",
+          },
+        ],
+      };
+
+      return NextResponse.json({
+        success: true,
+        needs_shipping: true,
+        shipping_rates: [pkg],
+        totals: {
+          shipping_total: "0",
+          shipping_tax: "0",
+        },
+      });
+    }
+
+    const shippingMarketCode = market.code;
     const country = request.nextUrl.searchParams.get("country") || "AE";
     const city = request.nextUrl.searchParams.get("city") || "";
     const postcode = request.nextUrl.searchParams.get("postcode") || "";
