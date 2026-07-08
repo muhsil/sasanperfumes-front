@@ -1180,7 +1180,7 @@ export default function CheckoutClient() {
           shippingLines.push({
             method_id: selectedRate.method_id,
             method_title: selectedRate.name,
-            total: convertPrice(parseFloat(shippingTotal) / 100).toFixed(getCurrencyInfo().decimals),
+            total: (parseFloat(shippingTotal) / divisor).toFixed(getCurrencyInfo().decimals),
           });
         }
       }

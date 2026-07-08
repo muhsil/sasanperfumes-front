@@ -165,6 +165,26 @@ class sasanperfumes_Security {
      * the storefront URL is configured to a separate frontend domain.
      */
     private function force_backend_admin_urls() {
+        $build_backend_root = function(): string {
+            $scheme = 'https';
+            $host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
+            $host = is_array($host) ? '' : trim(explode(',', (string) $host)[0]);
+            if (function_exists('sasanperfumes_resolve_backend_host')) {
+                $host = sasanperfumes_resolve_backend_host($host);
+            } else {
+                $host = preg_replace('/^www\./', '', strtolower((string) $host));
+                if ($host !== '' && preg_match('/(^|\.)sasanperfumes\.com$/', $host)) {
+                    $host = 'cms.sasanperfumes.com';
+                }
+            }
+
+            if ($host === '') {
+                return '';
+            }
+
+            return untrailingslashit($scheme . '://' . $host);
+        };
+
         $build_backend_base = function(): string {
             $scheme = 'https';
             $host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
@@ -207,6 +227,35 @@ class sasanperfumes_Security {
             return trailingslashit($base) . ltrim($path, '/');
         };
 
+        $should_force_backend_url = function(string $path = '', string $url = ''): bool {
+            $request_uri = isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : '';
+            if ($this->is_backend_request_uri($request_uri)) {
+                return true;
+            }
+
+            $candidate = $path !== '' ? $path : (string) parse_url($url, PHP_URL_PATH);
+            if ($candidate === '') {
+                return false;
+            }
+
+            $candidate = $this->strip_market_prefix_from_path($candidate);
+            $backend_prefixes = array(
+                '/wp-admin',
+                '/wp-login.php',
+                '/wp-register.php',
+                '/wp-json',
+                '/xmlrpc.php',
+            );
+
+            foreach ($backend_prefixes as $prefix) {
+                if ($candidate === $prefix || strpos($candidate, $prefix . '/') === 0) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
         $is_backend_context = function(): bool {
             if (is_admin()) {
                 return true;
@@ -216,30 +265,70 @@ class sasanperfumes_Security {
             return $this->is_backend_request_uri($uri);
         };
 
-        add_filter('site_url', function($url, $path = '', $scheme = null, $blog_id = null) use ($build_site_url, $is_backend_context) {
-            if (!$is_backend_context()) {
+        $is_login_request_path = function(string $path = '', string $url = ''): bool {
+            $candidate = $path !== '' ? $path : (string) parse_url($url, PHP_URL_PATH);
+            $candidate = $this->strip_market_prefix_from_path($candidate);
+            return in_array($candidate, array('/wp-login.php', '/wp-register.php', '/wp-signup.php'), true);
+        };
+
+        add_filter('site_url', function($url, $path = '', $scheme = null, $blog_id = null) use ($build_site_url, $build_backend_root, $should_force_backend_url, $is_login_request_path) {
+            if (!$should_force_backend_url((string) $path, (string) $url)) {
+                return $url;
+            }
+
+            if ($is_login_request_path((string) $path, (string) $url)) {
+                $root = $build_backend_root();
+                return $root !== '' ? trailingslashit($root) . ltrim((string) $path, '/') : $url;
+            }
+
+            $backend_url = $build_site_url((string) $path);
+            return $backend_url !== '' ? $backend_url : $url;
+        }, 999, 4);
+
+        add_filter('network_site_url', function($url, $path = '', $scheme = null) use ($build_site_url, $build_backend_root, $should_force_backend_url, $is_login_request_path) {
+            if (!$should_force_backend_url((string) $path, (string) $url)) {
+                return $url;
+            }
+
+            if ($is_login_request_path((string) $path, (string) $url)) {
+                $root = $build_backend_root();
+                return $root !== '' ? trailingslashit($root) . ltrim((string) $path, '/') : $url;
+            }
+
+            $backend_url = $build_site_url((string) $path);
+            return $backend_url !== '' ? $backend_url : $url;
+        }, 999, 3);
+
+        add_filter('admin_url', function($url, $path = '', $blog_id = null, $scheme = 'admin') use ($build_site_url, $should_force_backend_url) {
+            if (!$should_force_backend_url((string) $path, (string) $url)) {
                 return $url;
             }
 
             $backend_url = $build_site_url((string) $path);
             return $backend_url !== '' ? $backend_url : $url;
-        }, 10, 4);
+        }, 999, 4);
 
-        add_filter('network_site_url', function($url, $path = '', $scheme = null) use ($build_site_url, $is_backend_context) {
-            if (!$is_backend_context()) {
+        add_filter('network_admin_url', function($url, $path = '', $scheme = 'admin') use ($build_site_url, $should_force_backend_url) {
+            if (!$should_force_backend_url((string) $path, (string) $url)) {
                 return $url;
             }
 
             $backend_url = $build_site_url((string) $path);
             return $backend_url !== '' ? $backend_url : $url;
-        }, 10, 3);
+        }, 999, 3);
 
-        add_filter('login_url', function($login_url, $redirect = '', $force_reauth = false) use ($build_site_url, $is_backend_context) {
-            if (!$is_backend_context()) {
-                return $login_url;
+        add_filter('user_admin_url', function($url, $path = '', $scheme = 'admin') use ($build_site_url, $should_force_backend_url) {
+            if (!$should_force_backend_url((string) $path, (string) $url)) {
+                return $url;
             }
 
-            $backend_login = $build_site_url('wp-login.php');
+            $backend_url = $build_site_url((string) $path);
+            return $backend_url !== '' ? $backend_url : $url;
+        }, 999, 3);
+
+        add_filter('login_url', function($login_url, $redirect = '', $force_reauth = false) use ($build_backend_root) {
+            $root = $build_backend_root();
+            $backend_login = $root !== '' ? trailingslashit($root) . 'wp-login.php' : $login_url;
             if ($backend_login === '') {
                 return $login_url;
             }
@@ -253,7 +342,7 @@ class sasanperfumes_Security {
             }
 
             return $backend_login;
-        }, 10, 3);
+        }, 999, 3);
     }
 
     /**

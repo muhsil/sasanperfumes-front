@@ -112,6 +112,27 @@ function getCurrencyMinorUnitForCode(code: string): number {
   return ["BHD", "KWD", "OMR"].includes(code.toUpperCase()) ? 3 : 2;
 }
 
+function getCurrencyRateFromAEDForCode(code: string): number {
+  switch (code.toUpperCase()) {
+    case "AED":
+      return 1;
+    case "BHD":
+      return 0.103;
+    case "KWD":
+      return 0.083;
+    case "OMR":
+      return 0.105;
+    case "QAR":
+      return 0.99;
+    case "SAR":
+      return 1.02;
+    case "USD":
+      return 0.27;
+    default:
+      return 1;
+  }
+}
+
 async function findZoneForCountry(country: string, marketCode?: string): Promise<number | null> {
   const authParams = getBasicAuthParams(marketCode);
   const zonesUrl = `${wpJsonBaseForMarket(marketCode)}/wc/v3/shipping/zones?${authParams}`;
@@ -180,7 +201,10 @@ function buildFreightRate(
   }
 
   const countryLabel = FREIGHT_COUNTRY_LABELS[country.toUpperCase()] || country.toUpperCase();
-  const ratePrice = String(Math.round(freightMatch.price * 100));
+  const currencyMinorUnit = getCurrencyMinorUnitForCode(currencyCode);
+  const multiplier = Math.pow(10, currencyMinorUnit);
+  const convertedAmount = freightMatch.price * getCurrencyRateFromAEDForCode(currencyCode);
+  const ratePrice = String(Math.round(convertedAmount * multiplier));
   const weightLabel = freightMatch.row.weightLabel;
 
   return {
@@ -200,11 +224,46 @@ function buildFreightRate(
       selected: true,
       currency_code: currencyCode,
       currency_symbol: currencySymbol,
-      currency_minor_unit: getCurrencyMinorUnitForCode(currencyCode),
+      currency_minor_unit: currencyMinorUnit,
       currency_decimal_separator: ".",
       currency_thousand_separator: ",",
       currency_prefix: currencySymbol,
       currency_suffix: "",
+  };
+}
+
+function buildFixedShippingRate(
+  rateId: string,
+  methodId: string,
+  name: string,
+  description: string,
+  baseAedAmount: number,
+  currencyCode: string,
+  currencySymbol: string
+): ShippingRate {
+  const currencyMinorUnit = getCurrencyMinorUnitForCode(currencyCode);
+  const multiplier = Math.pow(10, currencyMinorUnit);
+  const convertedAmount = baseAedAmount * getCurrencyRateFromAEDForCode(currencyCode);
+  const price = String(Math.round(convertedAmount * multiplier));
+
+  return {
+    rate_id: rateId,
+    name,
+    description,
+    delivery_time: "",
+    price,
+    taxes: "0",
+    instance_id: 0,
+    method_id: methodId,
+    meta_data: [],
+    selected: true,
+    currency_code: currencyCode,
+    currency_symbol: currencySymbol,
+    currency_minor_unit: currencyMinorUnit,
+    currency_decimal_separator: ".",
+    currency_thousand_separator: ",",
+    currency_prefix: currencySymbol,
+    currency_suffix: "",
   };
 }
 
@@ -261,6 +320,8 @@ function buildShippingRates(
   cartWeight: number
 ): ShippingRate[] {
   const rates: ShippingRate[] = [];
+  const currencyMinorUnit = getCurrencyMinorUnitForCode(currencyCode);
+  const priceMultiplier = Math.pow(10, currencyMinorUnit);
 
   for (const method of methods) {
     if (!method.enabled) continue;
@@ -273,25 +334,25 @@ function buildShippingRates(
       if (rules.length > 0 && cartWeight > 0) {
         const weightCost = calculateWeightBasedCost(rules, cartWeight);
         if (weightCost !== null) {
-          price = String(Math.round(weightCost * 100));
+          price = String(Math.round(weightCost * priceMultiplier));
         } else {
           const cost = method.settings?.cost?.value || "0";
-          price = String(Math.round(parseFloat(cost) * 100));
+          price = String(Math.round(parseFloat(cost) * priceMultiplier));
         }
       } else {
         const cost = method.settings?.cost?.value || "0";
-        price = String(Math.round(parseFloat(cost) * 100));
+        price = String(Math.round(parseFloat(cost) * priceMultiplier));
       }
     } else if (method.method_id === "flexible_shipping_single" || method.method_id === "flexible_shipping") {
       const rules = parseFlexibleShippingRules(method.settings);
       if (rules.length > 0 && cartWeight > 0) {
         const weightCost = calculateWeightBasedCost(rules, cartWeight);
         if (weightCost !== null) {
-          price = String(Math.round(weightCost * 100));
+          price = String(Math.round(weightCost * priceMultiplier));
         }
       } else {
         const cost = method.settings?.cost?.value || "0";
-        price = String(Math.round(parseFloat(cost) * 100));
+        price = String(Math.round(parseFloat(cost) * priceMultiplier));
       }
     } else if (method.method_id === "free_shipping") {
       price = "0";
@@ -318,7 +379,7 @@ function buildShippingRates(
         selected: false,
         currency_code: currencyCode,
         currency_symbol: currencySymbol,
-        currency_minor_unit: 2,
+        currency_minor_unit: currencyMinorUnit,
         currency_decimal_separator: ".",
         currency_thousand_separator: ",",
         currency_prefix: currencySymbol,
@@ -329,10 +390,10 @@ function buildShippingRates(
       continue;
     } else if (method.method_id === "local_pickup") {
       const cost = method.settings?.cost?.value || "0";
-      price = String(Math.round(parseFloat(cost) * 100));
+      price = String(Math.round(parseFloat(cost) * priceMultiplier));
     } else {
       const cost = method.settings?.cost?.value || "0";
-      price = String(Math.round(parseFloat(cost) * 100));
+      price = String(Math.round(parseFloat(cost) * priceMultiplier));
     }
 
     rates.push({
@@ -348,7 +409,7 @@ function buildShippingRates(
       selected: false,
       currency_code: currencyCode,
       currency_symbol: currencySymbol,
-      currency_minor_unit: 2,
+      currency_minor_unit: currencyMinorUnit,
       currency_decimal_separator: ".",
       currency_thousand_separator: ",",
       currency_prefix: currencySymbol,
@@ -381,60 +442,8 @@ export async function GET(request: NextRequest) {
   try {
     const marketHint = request.nextUrl.searchParams.get("market");
     const market = await getRequestMarket(marketHint);
-    if (market.code === "om") {
-      const country = request.nextUrl.searchParams.get("country") || "OM";
-      const city = request.nextUrl.searchParams.get("city") || "";
-      const postcode = request.nextUrl.searchParams.get("postcode") || "";
-      const currencyCode = request.nextUrl.searchParams.get("currency_code") || siteConfig.defaultCurrency;
-      const currencySymbol = request.nextUrl.searchParams.get("currency_symbol") || getCurrencySymbolForCode(currencyCode);
-
-      const pkg: ShippingPackage = {
-        package_id: 0,
-        name: "Shipping",
-        destination: {
-          address_1: "",
-          address_2: "",
-          city,
-          state: "",
-          postcode,
-          country,
-        },
-        items: [],
-        shipping_rates: [
-          {
-            rate_id: "free_shipping:om",
-            name: "Free Shipping",
-            description: "Oman shipping charge",
-            delivery_time: "",
-            price: "0",
-            taxes: "0",
-            instance_id: 0,
-            method_id: "free_shipping",
-            meta_data: [],
-            selected: true,
-            currency_code: currencyCode,
-            currency_symbol: currencySymbol,
-            currency_minor_unit: getCurrencyMinorUnitForCode(currencyCode),
-            currency_decimal_separator: ".",
-            currency_thousand_separator: ",",
-            currency_prefix: currencySymbol,
-            currency_suffix: "",
-          },
-        ],
-      };
-
-      return NextResponse.json({
-        success: true,
-        needs_shipping: true,
-        shipping_rates: [pkg],
-        totals: {
-          shipping_total: "0",
-          shipping_tax: "0",
-        },
-      });
-    }
-
     const shippingMarketCode = market.code;
+    const isOmanMarket = String(shippingMarketCode).toLowerCase() === "om";
     const country = request.nextUrl.searchParams.get("country") || "AE";
     const city = request.nextUrl.searchParams.get("city") || "";
     const postcode = request.nextUrl.searchParams.get("postcode") || "";
@@ -442,6 +451,16 @@ export async function GET(request: NextRequest) {
     const cartWeight = parseFloat(request.nextUrl.searchParams.get("cart_weight") || "0");
     const currencyCode = request.nextUrl.searchParams.get("currency_code") || siteConfig.defaultCurrency;
     const currencySymbol = request.nextUrl.searchParams.get("currency_symbol") || getCurrencySymbolForCode(currencyCode);
+    const buildOmanFallbackRate = () =>
+      buildFixedShippingRate(
+        "flat_rate:om:fixed",
+        "flat_rate",
+        "Shipping",
+        "Oman shipping charge",
+        30,
+        currencyCode,
+        currencySymbol
+      );
 
     const freightRate = buildFreightRate(country, cartWeight, currencyCode, currencySymbol);
     if (freightRate) {
@@ -471,9 +490,65 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    if (isOmanMarket) {
+      const fallbackRate = buildOmanFallbackRate();
+      const pkg: ShippingPackage = {
+        package_id: 0,
+        name: "Shipping",
+        destination: {
+          address_1: "",
+          address_2: "",
+          city,
+          state: "",
+          postcode,
+          country,
+        },
+        items: [],
+        shipping_rates: [fallbackRate],
+      };
+
+      return NextResponse.json({
+        success: true,
+        needs_shipping: true,
+        shipping_rates: [pkg],
+        totals: {
+          shipping_total: fallbackRate.price,
+          shipping_tax: "0",
+        },
+      });
+    }
+
     const zoneId = await findZoneForCountry(country, shippingMarketCode);
 
     if (zoneId === null) {
+      if (isOmanMarket) {
+        const fallbackRate = buildOmanFallbackRate();
+        const pkg: ShippingPackage = {
+          package_id: 0,
+          name: "Shipping",
+          destination: {
+            address_1: "",
+            address_2: "",
+            city,
+            state: "",
+            postcode,
+            country,
+          },
+          items: [],
+          shipping_rates: [fallbackRate],
+        };
+
+        return NextResponse.json({
+          success: true,
+          needs_shipping: true,
+          shipping_rates: [pkg],
+          totals: {
+            shipping_total: fallbackRate.price,
+            shipping_tax: "0",
+          },
+        });
+      }
+
       return NextResponse.json(
         { success: false, error: { code: "no_credentials", message: "WooCommerce API credentials not configured" } },
         { status: 500 }
@@ -482,6 +557,34 @@ export async function GET(request: NextRequest) {
 
     const methods = await getZoneMethods(zoneId, shippingMarketCode);
     const shippingRates = buildShippingRates(methods, cartSubtotal, currencyCode, currencySymbol, cartWeight);
+
+    if (shippingRates.length === 0 && isOmanMarket) {
+      const fallbackRate = buildOmanFallbackRate();
+      const pkg: ShippingPackage = {
+        package_id: 0,
+        name: "Shipping",
+        destination: {
+          address_1: "",
+          address_2: "",
+          city,
+          state: "",
+          postcode,
+          country,
+        },
+        items: [],
+        shipping_rates: [fallbackRate],
+      };
+
+      return NextResponse.json({
+        success: true,
+        needs_shipping: true,
+        shipping_rates: [pkg],
+        totals: {
+          shipping_total: fallbackRate.price,
+          shipping_tax: "0",
+        },
+      });
+    }
 
     const selectedRate = shippingRates.find(r => r.selected);
     const shippingTotal = selectedRate ? selectedRate.price : "0";
