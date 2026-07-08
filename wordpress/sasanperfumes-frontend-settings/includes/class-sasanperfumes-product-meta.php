@@ -370,13 +370,19 @@ function sasanperfumes_build_english_product_meta_desc($name, $short_desc, $cate
  * Format: "{short_desc}. {name} من Sasan Perfumes. عائلة العطر: {olfactory}. المكونات: {notes}. السعر: {price} درهم. توصيل مجاني للطلبات فوق 500 درهم."
  * Truncated at word boundary to max 160 characters.
  */
+/**
+ * Build Arabic meta description (150-160 chars target).
+ *
+ * Format: "{short_desc}. {name} من Sasan Perfumes. عائلة العطر: {olfactory}. النوتات: {notes}. السعر: {price} AED. توصيل مجاني للطلبات فوق 500 AED."
+ * Truncated at word boundary to max 160 characters.
+ */
 function sasanperfumes_build_arabic_product_meta_desc($name, $short_desc, $category, $olfactory, $notes, $price) {
-    $brand = 'Sasan Perfumes';
+    $brand = "Sasan Perfumes";
 
-    $desc_snippet = '';
+    $desc_snippet = "";
     if (!empty($short_desc)) {
         if (mb_strlen($short_desc) > 80) {
-            $desc_snippet = preg_replace('/\s+\S*$/u', '', mb_substr($short_desc, 0, 80));
+            $desc_snippet = preg_replace("/\s+\S*$/u", "", mb_substr($short_desc, 0, 80));
         } else {
             $desc_snippet = $short_desc;
         }
@@ -396,28 +402,21 @@ function sasanperfumes_build_arabic_product_meta_desc($name, $short_desc, $categ
     }
 
     if (!empty($notes)) {
-        $parts[] = 'المكونات: ' . implode('، ', $notes) . '.';
+        $parts[] = 'النوتات: ' . implode('، ', $notes) . '.';
     }
 
     if (!empty($price)) {
         $formatted_price = intval($price);
-        $parts[] = "السعر: {$formatted_price} درهم.";
+        $parts[] = "السعر: {$formatted_price} AED.";
     }
 
-    $parts[] = 'توصيل مجاني للطلبات فوق 500 درهم.';
+    $parts[] = "توصيل مجاني للطلبات فوق 500 AED.";
 
-    $description = implode(' ', $parts);
+    $description = implode(" ", $parts);
 
     return sasanperfumes_truncate_meta_desc($description, 160);
 }
 
-/**
- * Truncate a string to max length at a word boundary, appending "..." if truncated.
- *
- * @param string $text
- * @param int    $max_length
- * @return string
- */
 function sasanperfumes_truncate_meta_desc($text, $max_length = 160) {
     if (mb_strlen($text) <= $max_length) {
         return $text;
