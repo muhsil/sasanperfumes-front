@@ -1483,6 +1483,9 @@ export default function CheckoutClient() {
                   order_key: data.order_key,
                   locale,
                   market_prefix: marketPrefix,
+                  order_total: data.order?.total,
+                  order_currency: data.order?.currency,
+                  customer_email: billingInfo.email || formData.shipping.email || data.order?.billing?.email,
                 }),
               });
 

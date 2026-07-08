@@ -47,6 +47,9 @@ export async function POST(request: NextRequest) {
     const orderKey = String(body.order_key || "");
     const locale = String(body.locale || "en");
     const marketPrefix = String(body.market_prefix || "");
+    const fallbackAmount = Number(body.order_total);
+    const fallbackCurrency = String(body.order_currency || "");
+    const fallbackEmail = String(body.customer_email || "");
 
     if (!orderId || !orderKey) {
       return NextResponse.json(
@@ -63,24 +66,42 @@ export async function POST(request: NextRequest) {
       cache: "no-store",
     }, market.code);
 
-    const order = await orderResponse.json();
+    let order: any = await orderResponse.json();
+    const hasFallbackOrder = Number.isFinite(fallbackAmount) && fallbackAmount > 0;
+
     if (!orderResponse.ok) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: order.code || "order_fetch_failed",
-            message: order.message || "Failed to fetch order before creating Stripe session.",
+      if (!hasFallbackOrder) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: order.code || "order_fetch_failed",
+              message: order.message || "Failed to fetch order before creating Stripe session.",
+            },
           },
-        },
-        { status: orderResponse.status }
-      );
+          { status: orderResponse.status }
+        );
+      }
+
+      order = {
+        order_key: orderKey,
+        total: String(fallbackAmount),
+        currency: fallbackCurrency || siteConfig.defaultCurrency,
+        billing: fallbackEmail ? { email: fallbackEmail } : undefined,
+      };
     }
 
-    if (order.order_key !== orderKey) {
+    if (orderResponse.ok && order.order_key && order.order_key !== orderKey) {
       return NextResponse.json(
         { success: false, error: { code: "invalid_order_key", message: "Invalid order key." } },
         { status: 403 }
+      );
+    }
+
+    if (!orderResponse.ok && !order.order_key) {
+      return NextResponse.json(
+        { success: false, error: { code: "order_fetch_failed", message: "Failed to prepare Stripe checkout session." } },
+        { status: 500 }
       );
     }
 
@@ -103,13 +124,13 @@ export async function POST(request: NextRequest) {
 
     const session = await createStripeCheckoutSession(
       secretKey,
-        buildCheckoutSessionParams({
-          orderId,
-          orderKey,
-          amount,
-          currency: order.currency || siteConfig.defaultCurrency,
-          customerEmail: order.billing?.email,
-          successUrl,
+      buildCheckoutSessionParams({
+        orderId,
+        orderKey,
+        amount,
+        currency: order.currency || fallbackCurrency || siteConfig.defaultCurrency,
+        customerEmail: order.billing?.email || fallbackEmail || undefined,
+        successUrl,
         cancelUrl,
         marketCode: market.code,
         locale,
