@@ -366,7 +366,7 @@ function getProductUILabels(locale?: Locale) {
   return {
     inStockText: isArabic ? "متوفر" : "In Stock",
     outOfStockText: isArabic ? "غير متوفر" : "Out of Stock",
-    addToCartText: isArabic ? "أضف للسلة" : "Add to Cart",
+    addToCartText: isArabic ? "أضف إلى السلة" : "Add to Cart",
   };
 }
 
