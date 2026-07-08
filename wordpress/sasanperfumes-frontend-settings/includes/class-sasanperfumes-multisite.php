@@ -15,6 +15,140 @@ function sasanperfumes_normalize_frontend_host_segment($segment): string {
     return trim($normalized, " \t\n\r\0\x0B");
 }
 
+/**
+ * Resolve the CMS backend host for admin/login URLs.
+ *
+ * The storefront can live on the public frontend domain, but wp-admin and
+ * wp-login.php should always stay on the CMS host. When the request host is the
+ * public storefront domain, this helper rewrites it to the cms subdomain while
+ * preserving any backend site path separately.
+ */
+function sasanperfumes_resolve_backend_host(?string $host): string {
+    $normalized = strtolower(trim((string) $host));
+    if ($normalized === '') {
+        return '';
+    }
+
+    $normalized = preg_replace('/\s+/', '', $normalized);
+    if ($normalized === '') {
+        return '';
+    }
+
+    $normalized = preg_replace('/[?#].*$/', '', $normalized);
+    if ($normalized === '') {
+        return '';
+    }
+
+    if (strpos($normalized, '/') !== false) {
+        $normalized = explode('/', $normalized, 2)[0];
+    }
+
+    $normalized = preg_replace('/:\d+$/', '', $normalized);
+    $normalized = preg_replace('/^www\./', '', $normalized);
+
+    if ($normalized === '') {
+        return '';
+    }
+
+    if (strpos($normalized, 'cms.') === 0) {
+        return $normalized;
+    }
+
+    if (preg_match('/(^|\.)sasanperfumes\.com$/', $normalized)) {
+        return 'cms.sasanperfumes.com';
+    }
+
+    return $normalized;
+}
+
+/**
+ * Reserved frontend prefixes that should be ignored when detecting backend routes.
+ *
+ * These include both market prefixes and locale prefixes, because wp-admin and
+ * wp-login.php should never be treated as storefront pages even if they appear
+ * under /ar, /en, /sa, /om, or /qa.
+ */
+function sasanperfumes_get_reserved_frontend_request_prefixes(): array {
+    return array('qa', 'om', 'sa', 'en', 'ar');
+}
+
+function sasanperfumes_strip_backend_request_prefixes_from_path($path): string {
+    $path = '/' . ltrim((string) $path, '/');
+    $path = preg_replace('#/+#', '/', $path);
+
+    $segments = array_values(array_filter(explode('/', trim($path, '/')), 'strlen'));
+    if (empty($segments)) {
+        return '/';
+    }
+
+    $reserved_prefixes = sasanperfumes_get_reserved_frontend_request_prefixes();
+    while (!empty($segments) && in_array(strtolower((string) $segments[0]), $reserved_prefixes, true)) {
+        array_shift($segments);
+    }
+
+    return empty($segments) ? '/' : '/' . implode('/', $segments);
+}
+
+function sasanperfumes_is_woocommerce_payment_request(string $request_uri): bool {
+    $path = parse_url((string) $request_uri, PHP_URL_PATH);
+    $path = sasanperfumes_strip_backend_request_prefixes_from_path($path ? $path : '/');
+    $query = array();
+    parse_str((string) parse_url((string) $request_uri, PHP_URL_QUERY), $query);
+
+    if (!empty($query['pay_for_order'])) {
+        return true;
+    }
+
+    $payment_paths = array(
+        '/checkout/order-pay',
+        '/checkout/order-received',
+        '/order-pay',
+        '/wc-api',
+    );
+
+    foreach ($payment_paths as $payment_path) {
+        if ($path === $payment_path || strpos($path, $payment_path . '/') === 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function sasanperfumes_is_backend_request_uri(string $request_uri): bool {
+    if (strpos((string) $request_uri, 'rest_route=') !== false) {
+        return true;
+    }
+
+    if (sasanperfumes_is_woocommerce_payment_request($request_uri)) {
+        return true;
+    }
+
+    $path = parse_url((string) $request_uri, PHP_URL_PATH);
+    $path = sasanperfumes_strip_backend_request_prefixes_from_path($path ? $path : '/');
+
+    $backend_prefixes = array(
+        '/wp-json',
+        '/wp-admin',
+        '/wp-login.php',
+        '/xmlrpc.php',
+        '/wp-content',
+        '/wp-includes',
+        '/wp-cron.php',
+        '/favicon.ico',
+        '/robots.txt',
+        '/sitemap.xml',
+    );
+
+    foreach ($backend_prefixes as $prefix) {
+        if ($path === $prefix || strpos($path, $prefix . '/') === 0) {
+            return true;
+        }
+    }
+
+    return (bool) preg_match('/\.(?:css|js|json|png|jpe?g|gif|svg|webp|ico|txt|xml|map|woff2?|ttf|eot|otf|pdf)$/i', $path);
+}
+
 function sasanperfumes_normalize_frontend_host(?string $host): string {
     $normalized = strtolower(trim((string) $host));
     if (!$normalized) return '';

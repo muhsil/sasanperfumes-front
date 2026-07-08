@@ -169,6 +169,14 @@ class sasanperfumes_Security {
             $scheme = 'https';
             $host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
             $host = is_array($host) ? '' : trim(explode(',', (string) $host)[0]);
+            if (function_exists('sasanperfumes_resolve_backend_host')) {
+                $host = sasanperfumes_resolve_backend_host($host);
+            } else {
+                $host = preg_replace('/^www\./', '', strtolower((string) $host));
+                if ($host !== '' && preg_match('/(^|\.)sasanperfumes\.com$/', $host)) {
+                    $host = 'cms.sasanperfumes.com';
+                }
+            }
             if ($host === '') {
                 return '';
             }
@@ -246,6 +254,27 @@ class sasanperfumes_Security {
 
             return $backend_login;
         }, 10, 3);
+    }
+
+    /**
+     * Determine whether the current request is for backend/admin routing.
+     *
+     * This recognizes both market prefixes (qa/om/sa) and locale prefixes
+     * (en/ar) so admin and login URLs never get treated like storefront pages.
+     */
+    private function is_backend_request_uri($request_uri) {
+        if (function_exists('sasanperfumes_is_backend_request_uri')) {
+            return sasanperfumes_is_backend_request_uri((string) $request_uri);
+        }
+
+        $path = parse_url((string) $request_uri, PHP_URL_PATH);
+        $path = '/' . ltrim((string) $path, '/');
+
+        return (
+            strpos($path, '/wp-admin') === 0 ||
+            strpos($path, '/wp-login.php') === 0 ||
+            strpos($path, '/wp-json') === 0
+        );
     }
 
     /**

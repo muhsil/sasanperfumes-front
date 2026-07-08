@@ -58,7 +58,7 @@ function isBlockedRequest(request: NextRequest): boolean {
     if (userAgent.includes(bot)) return true;
   }
 
-  const lowerPath = pathname.toLowerCase();
+  const lowerPath = stripReservedRequestPrefixes(pathname.toLowerCase());
 
   for (const blocked of BLOCKED_PATHS) {
     if (lowerPath === blocked || lowerPath.startsWith(blocked + "/")) return true;
@@ -69,6 +69,20 @@ function isBlockedRequest(request: NextRequest): boolean {
   }
 
   return false;
+}
+
+function stripReservedRequestPrefixes(pathname: string): string {
+  const segments = pathname.split("/").filter(Boolean);
+
+  while (segments.length > 0) {
+    const first = segments[0]?.toLowerCase();
+    if (!MARKET_PREFIX_SEGMENTS.has(first || "") && !LOCALE_SEGMENTS.has(first || "")) {
+      break;
+    }
+    segments.shift();
+  }
+
+  return `/${segments.join("/")}` || "/";
 }
 
 function addSecurityHeaders(response: NextResponse): NextResponse {

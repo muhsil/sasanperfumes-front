@@ -115,6 +115,10 @@ class sasanperfumes_Frontend_Urls {
     }
 
     private function is_backend_request_uri($request_uri) {
+        if (function_exists('sasanperfumes_is_backend_request_uri')) {
+            return sasanperfumes_is_backend_request_uri((string) $request_uri);
+        }
+
         if (strpos((string) $request_uri, 'rest_route=') !== false) {
             return true;
         }
@@ -149,6 +153,10 @@ class sasanperfumes_Frontend_Urls {
     }
 
     private function is_woocommerce_payment_request($request_uri) {
+        if (function_exists('sasanperfumes_is_woocommerce_payment_request')) {
+            return sasanperfumes_is_woocommerce_payment_request((string) $request_uri);
+        }
+
         $path = parse_url((string) $request_uri, PHP_URL_PATH);
         $path = $this->strip_market_prefix_from_path($path ? $path : '/');
         $query = array();
