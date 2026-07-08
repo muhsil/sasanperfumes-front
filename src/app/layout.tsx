@@ -20,30 +20,71 @@ const notoSansArabic = Noto_Sans_Arabic({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: `${siteConfig.name} | UAE, GCC & International Fragrances`,
-  description: siteConfig.description,
-  metadataBase: new URL(siteConfig.url),
-  robots: INDEX_FOLLOW_ROBOTS,
-  icons: {
-    icon: "/sasan-fav.png",
-    shortcut: "/sasan-fav.png",
-    apple: "/sasan-fav.png",
-  },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: siteConfig.name,
-  },
-  formatDetection: {
-    telephone: true,
-    email: true,
-    address: true,
-  },
-  other: {
-    "mobile-web-app-capable": "yes",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const headersList = await headers();
+  const localeHeader = headersList.get("x-locale") || "en";
+  const locale = localeHeader === "ar" ? "ar" : "en";
+  const marketCodeHeader = headersList.get("x-market") || "intl";
+  const marketCode = marketCodeHeader === "qa" || marketCodeHeader === "om" || marketCodeHeader === "sa"
+    ? marketCodeHeader
+    : "intl";
+  const titleSuffix = marketCode === "intl"
+    ? locale === "ar"
+      ? "عطور الإمارات الفاخرة"
+      : "Premium UAE Fragrances"
+    : marketCode === "qa"
+      ? locale === "ar"
+        ? "عطور قطر الفاخرة"
+        : "Premium Qatar Fragrances"
+      : marketCode === "om"
+        ? locale === "ar"
+          ? "عطور عمان الفاخرة"
+          : "Premium Oman Fragrances"
+        : locale === "ar"
+          ? "عطور السعودية الفاخرة"
+          : "Premium Saudi Arabia Fragrances";
+  const description =
+    locale === "ar"
+      ? marketCode === "qa"
+        ? "عطور فاخرة، عود، معطر شعر، ومجموعات هدايا من Sasan Perfumes Qatar. تسوق بالريال القطري مع توصيل سريع داخل قطر. بخبرة عطرية تتجاوز 60 عاماً، نمزج التراث بالأناقة العصرية."
+        : marketCode === "om"
+          ? "عطور فاخرة، عود، معطر شعر، ومجموعات هدايا من Sasan Perfumes Oman. تسوق بالريال العُماني مع توصيل سريع داخل عمان. بخبرة عطرية تتجاوز 60 عاماً، نمزج التراث بالأناقة العصرية."
+          : marketCode === "sa"
+            ? "عطور فاخرة، عود، معطر شعر، ومجموعات هدايا من Sasan Perfumes Saudi Arabia. تسوق بالريال السعودي مع توصيل سريع داخل السعودية. بخبرة عطرية تتجاوز 60 عاماً، نمزج التراث بالأناقة العصرية."
+            : "عطور فاخرة، عود، معطر شعر، ومجموعات هدايا من Sasan Perfumes. تسوق بالدرهم الإماراتي مع توصيل سريع داخل الإمارات والأسواق الدولية. بخبرة عطرية تتجاوز 60 عاماً، نمزج التراث بالأناقة العصرية."
+      : marketCode === "qa"
+        ? "Premium perfumes, oud, hair mist, and gift sets from Sasan Perfumes Qatar. Shop in QAR with fast delivery across Qatar. With over 60 years of fragrance heritage, we blend tradition with modern elegance."
+        : marketCode === "om"
+          ? "Premium perfumes, oud, hair mist, and gift sets from Sasan Perfumes Oman. Shop in OMR with fast delivery across Oman. With over 60 years of fragrance heritage, we blend tradition with modern elegance."
+          : marketCode === "sa"
+            ? "Premium perfumes, oud, hair mist, and gift sets from Sasan Perfumes Saudi Arabia. Shop in SAR with fast delivery across Saudi Arabia. With over 60 years of fragrance heritage, we blend tradition with modern elegance."
+            : siteConfig.description;
+
+  return {
+    title: `${siteConfig.name} | ${titleSuffix}`,
+    description,
+    metadataBase: new URL(siteConfig.url),
+    robots: INDEX_FOLLOW_ROBOTS,
+    icons: {
+      icon: "/sasan-fav.png",
+      shortcut: "/sasan-fav.png",
+      apple: "/sasan-fav.png",
+    },
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "default",
+      title: siteConfig.name,
+    },
+    formatDetection: {
+      telephone: true,
+      email: true,
+      address: true,
+    },
+    other: {
+      "mobile-web-app-capable": "yes",
+    },
+  };
+}
 
 export default async function RootLayout({
   children,
