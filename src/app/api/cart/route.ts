@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { API_BASE, backendHeaders, backendPostHeaders, backendAuthHeaders, noCacheUrl, safeJsonResponse, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
-import { internationalMarket, type MarketConfig } from "@/config/market";
+import { type MarketConfig } from "@/config/market";
+import { getRequestMarket } from "@/lib/market/server";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -42,9 +43,14 @@ function normalizeHostWithMarketFallback(rawHost: string | null, marketCode: str
   return `${host}/${marketCode}`;
 }
 
-async function getCartKey(): Promise<string | null> {
+function getCartKeyCookieName(marketCode?: string | null): string {
+  const market = (marketCode || "").toLowerCase();
+  return market && market !== "intl" ? `${CART_KEY_COOKIE}_${market}` : CART_KEY_COOKIE;
+}
+
+async function getCartKey(marketCode?: string | null): Promise<string | null> {
   const cookieStore = await cookies();
-  return cookieStore.get(CART_KEY_COOKIE)?.value || null;
+  return cookieStore.get(getCartKeyCookieName(marketCode))?.value || null;
 }
 
 async function getAuthToken(): Promise<string | null> {
@@ -226,12 +232,13 @@ function createResponseWithCartKey(
   data: Record<string, unknown>,
   cartKey: string | null,
   newAuthToken: string | null = null,
-  status: number = 200
+  status: number = 200,
+  marketCode?: string | null
 ): NextResponse {
   const response = NextResponse.json(data, { status });
   
   if (cartKey) {
-    response.cookies.set(CART_KEY_COOKIE, cartKey, {
+    response.cookies.set(getCartKeyCookieName(marketCode), cartKey, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -336,11 +343,27 @@ async function resolveReplacementProductId(
   return fetchCurrentProductIdBySlug(legacyIdentity.slug, request, market, locale);
 }
 
+function shouldRetryProductLookup(errorCode: string, errorMessage: string): boolean {
+  const code = errorCode.toLowerCase();
+  const message = errorMessage.toLowerCase();
+
+  return (
+    code === "cocart_invalid_product" ||
+    code === "woocommerce_rest_invalid_product_id" ||
+    code === "woocommerce_rest_product_not_purchasable" ||
+    code === "product_not_purchasable" ||
+    message.includes("cannot be added to the cart") ||
+    message.includes("cannot be purchased") ||
+    message.includes("not purchasable") ||
+    message.includes("invalid product")
+  );
+}
+
 export async function GET(request: NextRequest) {
   try {
-    const market = internationalMarket;
+    const market = await getRequestMarket();
     const coCartBase = COCART_WPJSON_BASE;
-    const cartKey = await getCartKey();
+    const cartKey = await getCartKey(market.code);
     const authToken = await getAuthToken();
     const currency = await getCurrency();
     const locale = await getLocale(request);
@@ -371,7 +394,7 @@ export async function GET(request: NextRequest) {
       return createResponseWithCartKey({
         success: false,
         error: blockedBackendError(data),
-      }, null, null, 503);
+      }, null, null, 503, market.code);
     }
 
     if (!response.ok && authToken && isAuthError(response.status, data)) {
@@ -409,11 +432,11 @@ export async function GET(request: NextRequest) {
         success: false,
         cart: null,
         error: { code: "backend_unavailable", message: (data.message as string) || "Cart backend unavailable." },
-      }, null);
+      }, null, null, 200, market.code);
     }
 
     const newCartKey = data.cart_key ? (data.cart_key as string) : null;
-    return createResponseWithCartKey({ success: true, cart: data }, newCartKey, refreshedToken);
+    return createResponseWithCartKey({ success: true, cart: data }, newCartKey, refreshedToken, 200, market.code);
   } catch (error) {
     return NextResponse.json(
       {
@@ -431,10 +454,10 @@ export async function POST(request: NextRequest) {
   const action = searchParams.get("action");
 
   try {
-    const market = internationalMarket;
+    const market = await getRequestMarket();
     const wpJsonBase = wpJsonBaseForMarket(market.code);
     const coCartBase = COCART_WPJSON_BASE;
-    const cartKey = await getCartKey();
+    const cartKey = await getCartKey(market.code);
     const authToken = await getAuthToken();
     const currency = await getCurrency();
     const locale = await getLocale(request);
@@ -554,7 +577,7 @@ export async function POST(request: NextRequest) {
         }
         
         const newCartKey = coCartData.cart_key ? (coCartData.cart_key as string) : null;
-        return createResponseWithCartKey({ success: true, cart: coCartData }, newCartKey);
+        return createResponseWithCartKey({ success: true, cart: coCartData }, newCartKey, null, 200, market.code);
       }
       default:
         return NextResponse.json(
@@ -665,7 +688,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (action === "add" && !response.ok && String(data.code || "") === "cocart_invalid_product" && cartKey) {
+    if (action === "add" && !response.ok && cartKey && shouldRetryProductLookup(String(data.code || ""), String(data.message || ""))) {
       const retryWithoutCartKeyOptions: RequestInit = {
         method,
         headers: authToken ? getAuthHeaders(request, market, authToken) : getGuestHeaders(request, market),
@@ -686,8 +709,8 @@ export async function POST(request: NextRequest) {
     if (
       action === "add" &&
       !response.ok &&
-      String(data.code || "") === "cocart_invalid_product" &&
-      typeof body.id === "string"
+      (typeof body.id === "string" || typeof body.id === "number") &&
+      shouldRetryProductLookup(String(data.code || ""), String(data.message || ""))
     ) {
       const sourceProductId = Number(body.id);
       if (Number.isFinite(sourceProductId) && sourceProductId > 0) {
@@ -725,7 +748,7 @@ export async function POST(request: NextRequest) {
     }
 
     const newCartKey = data.cart_key ? (data.cart_key as string) : null;
-    return createResponseWithCartKey({ success: true, cart: data }, newCartKey, refreshedToken);
+    return createResponseWithCartKey({ success: true, cart: data }, newCartKey, refreshedToken, 200, market.code);
   } catch (error) {
     return NextResponse.json(
       {
