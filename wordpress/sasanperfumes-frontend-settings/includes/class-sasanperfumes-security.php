@@ -35,6 +35,7 @@ class sasanperfumes_Security {
         $this->disable_file_editing();
         $this->add_security_headers();
         $this->protect_login();
+        $this->force_backend_admin_urls();
         $this->disable_unnecessary_features();
         $this->fix_admin_rest_url();
         $this->force_mail_from();
@@ -124,6 +125,9 @@ class sasanperfumes_Security {
             if (defined('XMLRPC_REQUEST') && XMLRPC_REQUEST) return;
 
             $uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
+            if ($this->is_backend_request_uri($uri)) {
+                return;
+            }
             $path = parse_url((string) $uri, PHP_URL_PATH);
             $query = array();
             parse_str((string) parse_url((string) $uri, PHP_URL_QUERY), $query);
@@ -152,6 +156,96 @@ class sasanperfumes_Security {
             wp_redirect($this->frontend_redirect_url, 301);
             exit;
         }, 1);
+    }
+
+    /**
+     * Force backend/admin/login URLs to stay on the CMS host instead of the storefront.
+     *
+     * This keeps wp-admin and wp-login.php isolated on the WordPress backend even when
+     * the storefront URL is configured to a separate frontend domain.
+     */
+    private function force_backend_admin_urls() {
+        $build_backend_base = function(): string {
+            $scheme = 'https';
+            $host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
+            $host = is_array($host) ? '' : trim(explode(',', (string) $host)[0]);
+            if ($host === '') {
+                return '';
+            }
+
+            $request_uri = isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : '/';
+            $request_path = parse_url($request_uri, PHP_URL_PATH) ?: '/';
+            $normalized = $host . ($request_path ? $request_path : '');
+
+            if (function_exists('sasanperfumes_normalize_frontend_host_with_market')) {
+                $normalized = sasanperfumes_normalize_frontend_host_with_market($normalized);
+            } else {
+                $normalized = preg_replace('/^www\./', '', strtolower($host));
+            }
+
+            if ($normalized === '') {
+                return '';
+            }
+
+            return untrailingslashit($scheme . '://' . $normalized);
+        };
+
+        $build_site_url = function(string $path = '') use ($build_backend_base): string {
+            $base = $build_backend_base();
+            if ($base === '') {
+                return '';
+            }
+
+            return trailingslashit($base) . ltrim($path, '/');
+        };
+
+        $is_backend_context = function(): bool {
+            if (is_admin()) {
+                return true;
+            }
+
+            $uri = isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : '';
+            return $this->is_backend_request_uri($uri);
+        };
+
+        add_filter('site_url', function($url, $path = '', $scheme = null, $blog_id = null) use ($build_site_url, $is_backend_context) {
+            if (!$is_backend_context()) {
+                return $url;
+            }
+
+            $backend_url = $build_site_url((string) $path);
+            return $backend_url !== '' ? $backend_url : $url;
+        }, 10, 4);
+
+        add_filter('network_site_url', function($url, $path = '', $scheme = null) use ($build_site_url, $is_backend_context) {
+            if (!$is_backend_context()) {
+                return $url;
+            }
+
+            $backend_url = $build_site_url((string) $path);
+            return $backend_url !== '' ? $backend_url : $url;
+        }, 10, 3);
+
+        add_filter('login_url', function($login_url, $redirect = '', $force_reauth = false) use ($build_site_url, $is_backend_context) {
+            if (!$is_backend_context()) {
+                return $login_url;
+            }
+
+            $backend_login = $build_site_url('wp-login.php');
+            if ($backend_login === '') {
+                return $login_url;
+            }
+
+            if (!empty($redirect)) {
+                $backend_login = add_query_arg('redirect_to', $redirect, $backend_login);
+            }
+
+            if ($force_reauth) {
+                $backend_login = add_query_arg('reauth', '1', $backend_login);
+            }
+
+            return $backend_login;
+        }, 10, 3);
     }
 
     /**

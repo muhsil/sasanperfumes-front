@@ -178,6 +178,32 @@ function BackgroundMedia({
   );
 }
 
+function SectionHeading({
+  title,
+  description,
+  align = "left",
+}: {
+  title?: ReactNode;
+  description?: ReactNode;
+  align?: "left" | "center";
+}) {
+  const centered = align === "center";
+  return (
+    <div className={centered ? "mx-auto max-w-3xl text-center" : ""}>
+      {title && (
+        <h2 className="mt-3 text-3xl font-normal leading-tight text-brand-primary md:text-5xl">
+          {title}
+        </h2>
+      )}
+      {description && (
+        <p className="mt-4 text-sm leading-7 text-brand-primary/66 md:text-base md:leading-8">
+          {description}
+        </p>
+      )}
+    </div>
+  );
+}
+
 async function HomepageServicesSection({ locale, isRTL }: { locale: Locale; isRTL: boolean }) {
   const toggles = await getFeatureToggles();
   if (!toggles.sasanperfumes_home_services_enabled) return null;
@@ -224,17 +250,17 @@ export default async function AboutPage({ params }: AboutPageProps) {
   if (!toggles.sasanperfumes_about_enabled) notFound();
   const dictionary = await getDictionary(locale as Locale);
   const isRTL = locale === "ar";
-  const [wpPageConfig, wpPageConfigFallback, legacyWordPressPage] = await Promise.all([
+  const [wpPageConfig, wpPageConfigFallback, wpAboutPage] = await Promise.all([
     getStaticPageContent("about"),
     getStaticPageContent("about-us"),
     getPageBySlug("about-us", locale as Locale),
   ]);
 
   const wp = wpPageConfig || wpPageConfigFallback;
-  const legacyTitle = legacyWordPressPage ? stripHtmlTags(legacyWordPressPage.title.rendered) : "";
-  const legacyBodyHtml = legacyWordPressPage?.content?.rendered || "";
-  const legacyBodyText = legacyBodyHtml ? stripHtmlTags(legacyBodyHtml) : "";
-  const hasLegacyWordPressContent = Boolean(legacyBodyText || legacyTitle);
+  const wpAboutTitle = wpAboutPage ? stripHtmlTags(wpAboutPage.title.rendered) : "";
+  const wpAboutBodyHtml = wpAboutPage?.content?.rendered || "";
+  const wpAboutBodyText = wpAboutBodyHtml ? stripHtmlTags(wpAboutBodyHtml) : "";
+  const hasWordPressFallbackContent = Boolean(wpAboutBodyText || wpAboutTitle);
   const aboutImages = {
     hero: pickImageUrl(wp?.heroImage, wp?.hero_image),
     story: pickImageUrl(wp?.storyImage, wp?.story_image),
@@ -321,24 +347,15 @@ export default async function AboutPage({ params }: AboutPageProps) {
   const hasIngredientsContent = Boolean(ingredientsTitle || ingredientsSubtitle || ingredientsDesc || ingredientItems.length > 0);
   const hasCtaContent = Boolean(ctaTitle || ctaSubtitle || (ctaButton && ctaLink));
   const hasCMSContent = hasHeroContent || hasStoryContent || hasUniqueContent || hasJourneyContent || hasMissionContent || hasIngredientsContent || hasCtaContent;
-  const pageHeading = title || legacyTitle || dictionary.common.about;
+  const pageHeading = title || wpAboutTitle || dictionary.common.about;
 
   return (
-    <main className="bg-white text-brand-primary">
-      <style>{`
-        @media (min-width: 1024px) {
-          .about-hero-square,
-          .about-story-square,
-          .about-mission-square {
-            height: 50vw;
-          }
-        }
-      `}</style>
+    <main className="bg-[#f6f0ea] text-brand-primary">
       <JsonLd data={generateFAQJsonLd(brandFaqItems)} />
 
       <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} />
 
-      {!hasCMSContent && hasLegacyWordPressContent && (
+      {!hasCMSContent && hasWordPressFallbackContent && (
         <section className="bg-white px-4 py-16 md:py-20 lg:py-28">
           <div className="mx-auto max-w-4xl">
             <h1 className="mb-8 text-3xl font-light leading-tight text-brand-primary md:text-5xl">
@@ -346,70 +363,86 @@ export default async function AboutPage({ params }: AboutPageProps) {
             </h1>
             <div
               className="prose prose-stone max-w-none text-brand-primary/80 [&_p]:text-base [&_p]:leading-8 [&_img]:w-full [&_img]:rounded-lg"
-              dangerouslySetInnerHTML={{ __html: legacyBodyHtml }}
+              dangerouslySetInnerHTML={{ __html: wpAboutBodyHtml }}
             />
           </div>
         </section>
       )}
 
       {(hasHeroContent || hasHeroMedia) && (
-        <section className="bg-[#f8f3ef]">
-          <div className={`grid ${hasHeroContent && hasHeroMedia ? "about-hero-square lg:grid-cols-2 lg:items-stretch" : ""}`}>
+        <section className="relative overflow-hidden bg-[linear-gradient(180deg,#f7f1eb_0%,#ffffff_100%)]">
+          <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-brand-gold/10 to-transparent" />
+          <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 md:py-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-12 lg:py-20">
             {hasHeroContent && (
-              <div className={`flex flex-col justify-center gap-10 px-4 py-10 md:py-14 lg:order-2 lg:min-h-0 lg:justify-between lg:py-16 ${isRTL ? "lg:order-1" : ""}`}>
+              <div className={`relative z-10 flex flex-col justify-center gap-8 ${isRTL ? "lg:order-2" : ""}`}>
                 <div className="max-w-3xl">
                   {heroSubtitle && (
-                    <p className="mb-5 text-xs font-semibold uppercase tracking-[0.18em] text-brand-primary/55">
+                    <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.26em] text-brand-primary/52">
                       {heroSubtitle}
                     </p>
                   )}
                   {title && (
-                    <h1 className="max-w-[12ch] text-2xl font-normal leading-[1.05] tracking-normal text-brand-primary sm:text-3xl md:text-5xl lg:text-6xl">
+                    <h1 className="max-w-[13ch] text-4xl font-normal leading-[1.02] tracking-normal text-brand-primary sm:text-5xl lg:text-6xl">
                       {title}
                     </h1>
                   )}
                 </div>
                 <div className="max-w-2xl">
                   {heroDescription && (
-                    <p className="text-sm leading-7 text-brand-primary/70 md:text-base md:leading-8 lg:text-lg">
+                    <p className="text-base leading-8 text-brand-primary/70 md:text-lg">
                       {heroDescription}
                     </p>
                   )}
                   {ctaButton && ctaLink && (
                     <Link
                       href={ctaLink}
-                      className="mt-8 inline-flex min-h-11 items-center gap-3 bg-brand-primary px-6 text-sm font-semibold text-white transition-colors hover:bg-brand-primary-dark"
+                      className="mt-8 inline-flex min-h-12 items-center gap-3 rounded-full bg-brand-primary px-7 text-sm font-semibold text-white transition-colors hover:bg-brand-primary-dark"
                     >
                       {ctaButton}
                       <ArrowRight className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />
                     </Link>
                   )}
                 </div>
-              </div>
-            )}
-            {hasHeroMedia && (
-              <BackgroundMedia
-                image={aboutImages.hero}
-                label={title || dictionary.common.about}
-                className={`min-h-[320px] sm:min-h-[420px] md:min-h-[520px] lg:order-1 lg:h-full lg:min-h-0 ${isRTL ? "lg:order-2" : ""}`}
-              >
                 {heroStats.length > 0 && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-brand-primary/30 px-4 py-8 text-white">
-                    <div className="flex w-full max-w-3xl flex-col items-center justify-center gap-3 text-center sm:gap-4 md:gap-5">
+                  <div className="grid gap-3 sm:grid-cols-2">
                     {heroStats.map((stat, idx) => (
                       <div
                         key={idx}
-                        className="max-w-[18ch] text-center text-xl font-bold leading-tight text-white opacity-50 transition-opacity duration-300 hover:opacity-100 sm:text-2xl md:text-3xl lg:text-4xl"
+                        className="rounded-2xl border border-brand-primary/8 bg-white/80 px-4 py-4 text-sm font-medium leading-6 text-brand-primary shadow-[0_10px_30px_rgba(29,24,20,0.06)] backdrop-blur-sm"
                       >
-                        <span className="block">
-                          {stat}
-                        </span>
+                        {stat}
                       </div>
                     ))}
-                    </div>
                   </div>
                 )}
-              </BackgroundMedia>
+              </div>
+            )}
+            {hasHeroMedia && (
+              <div className={`relative ${isRTL ? "lg:order-1" : ""}`}>
+                <div className="absolute -inset-4 rounded-[36px] bg-brand-gold/10 blur-3xl" />
+                <div className="relative overflow-hidden rounded-[32px] border border-brand-primary/10 bg-white shadow-[0_24px_80px_rgba(29,24,20,0.10)]">
+                  <BackgroundMedia
+                    image={aboutImages.hero}
+                    label={title || dictionary.common.about}
+                    className="min-h-[360px] sm:min-h-[460px] lg:min-h-[640px]"
+                  >
+                    {heroStats.length > 0 && (
+                      <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          {heroStats.map((stat, idx) => (
+                            <div
+                              key={idx}
+                              className="rounded-2xl bg-white/92 px-4 py-3 text-sm font-medium leading-6 text-brand-primary shadow-[0_10px_35px_rgba(29,24,20,0.12)] backdrop-blur-sm"
+                            >
+                              {stat}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </BackgroundMedia>
+                </div>
+              </div>
             )}
           </div>
         </section>
@@ -421,20 +454,16 @@ export default async function AboutPage({ params }: AboutPageProps) {
 
       {(hasStoryContent || aboutImages.story) && (
         <section id="brand-story" className="bg-white">
-          <div className={`grid ${hasStoryContent && aboutImages.story ? "about-story-square lg:grid-cols-2 lg:items-stretch" : ""}`}>
+          <div className="mx-auto grid max-w-7xl gap-8 px-4 py-16 md:py-20 lg:grid-cols-[0.95fr_1.05fr] lg:items-stretch lg:gap-10 lg:py-28">
             {hasStoryContent && (
-              <div className={`flex min-h-[420px] flex-col justify-center px-4 py-16 md:py-20 lg:min-h-0 xl:px-16 ${isRTL ? "lg:order-2" : ""}`}>
-                {mainTitle && (
-                  <h2 className="max-w-xl text-3xl font-normal leading-tight text-brand-primary md:text-5xl">
-                    {mainTitle}
-                  </h2>
-                )}
+              <div className={`flex flex-col justify-center ${isRTL ? "lg:order-2" : ""}`}>
+                <SectionHeading title={mainTitle || pageHeading} />
                 {storyParagraphs.length > 0 && (
-                  <div className="mt-8 max-w-2xl space-y-5">
+                  <div className="mt-8 space-y-4 rounded-[28px] border border-brand-primary/8 bg-[#f8f3ef] p-6 md:p-8">
                     {storyParagraphs.map((paragraph, idx) => (
                       <p
                         key={idx}
-                        className="text-base leading-7 text-brand-primary/65 md:text-lg md:leading-8"
+                        className="text-base leading-8 text-brand-primary/68 md:text-lg md:leading-9"
                       >
                         {paragraph}
                       </p>
@@ -444,11 +473,16 @@ export default async function AboutPage({ params }: AboutPageProps) {
               </div>
             )}
             {aboutImages.story && (
-              <BackgroundMedia
-                image={aboutImages.story}
-                label={mainTitle || dictionary.common.about}
-                className={`lg:h-full lg:min-h-0 ${isRTL ? "lg:order-1" : ""}`}
-              />
+              <div className={`relative ${isRTL ? "lg:order-1" : ""}`}>
+                <div className="absolute -inset-4 rounded-[36px] bg-brand-primary/5 blur-3xl" />
+                <div className="relative overflow-hidden rounded-[32px] border border-brand-primary/10 bg-white shadow-[0_24px_80px_rgba(29,24,20,0.08)]">
+                  <BackgroundMedia
+                    image={aboutImages.story}
+                    label={mainTitle || dictionary.common.about}
+                    className="min-h-[340px] sm:min-h-[420px] lg:min-h-[640px]"
+                  />
+                </div>
+              </div>
             )}
           </div>
         </section>
@@ -456,55 +490,59 @@ export default async function AboutPage({ params }: AboutPageProps) {
 
       {(hasUniqueContent || aboutImages.detail) && (
         <section id="sourcing" className="bg-[#f8f3ef]">
-          <div className={`grid ${hasUniqueContent && aboutImages.detail ? "lg:grid-cols-2" : ""}`}>
+          <div className="mx-auto grid max-w-7xl gap-8 px-4 py-16 md:py-20 lg:grid-cols-[1fr_0.95fr] lg:items-stretch lg:gap-10 lg:py-28">
             {hasUniqueContent && (
-              <div className={`flex min-h-[420px] flex-col justify-center bg-brand-primary px-4 py-16 text-white md:py-20 xl:px-16 ${isRTL ? "lg:order-2" : ""}`}>
-                <Sparkles className="mb-8 h-8 w-8 text-brand-gold" />
-                {uniqueTitle && (
-                  <h2 className="max-w-xl text-3xl font-normal leading-tight md:text-5xl">
-                    {uniqueTitle}
-                  </h2>
-                )}
-                {uniqueSubtitle && (
-                  <p className="mt-5 max-w-xl text-sm leading-7 text-white/58 md:text-base">
-                    {uniqueSubtitle}
-                  </p>
-                )}
-                {uniqueContent && (
-                  <p className="mt-8 max-w-2xl text-base leading-8 text-white/78 md:text-lg">
-                    {uniqueContent}
-                  </p>
-                )}
+              <div className={`relative overflow-hidden rounded-[32px] bg-brand-primary px-6 py-10 text-white shadow-[0_24px_80px_rgba(29,24,20,0.12)] md:px-10 md:py-12 lg:px-12 lg:py-14 ${isRTL ? "lg:order-2" : ""}`}>
+                <div className="absolute -right-20 top-0 h-52 w-52 rounded-full bg-brand-gold/15 blur-3xl" />
+                <div className="relative">
+                  <Sparkles className="mb-8 h-8 w-8 text-brand-gold" />
+                  {uniqueTitle && (
+                    <h2 className="max-w-xl text-3xl font-normal leading-tight md:text-5xl">
+                      {uniqueTitle}
+                    </h2>
+                  )}
+                  {uniqueSubtitle && (
+                    <p className="mt-5 max-w-xl text-sm leading-7 text-white/64 md:text-base">
+                      {uniqueSubtitle}
+                    </p>
+                  )}
+                  {uniqueContent && (
+                    <p className="mt-8 max-w-2xl text-base leading-8 text-white/82 md:text-lg">
+                      {uniqueContent}
+                    </p>
+                  )}
+                </div>
               </div>
             )}
             {aboutImages.detail && (
-              <BackgroundMedia
-                image={aboutImages.detail}
-                label={uniqueTitle || dictionary.common.about}
-                className={isRTL ? "lg:order-1" : ""}
-              />
+              <div className={`relative ${isRTL ? "lg:order-1" : ""}`}>
+                <div className="absolute -inset-4 rounded-[36px] bg-brand-gold/8 blur-3xl" />
+                <div className="relative overflow-hidden rounded-[32px] border border-brand-primary/10 bg-white shadow-[0_24px_80px_rgba(29,24,20,0.08)]">
+                  <BackgroundMedia
+                    image={aboutImages.detail}
+                    label={uniqueTitle || dictionary.common.about}
+                    className="min-h-[340px] sm:min-h-[420px] lg:min-h-[640px]"
+                  />
+                </div>
+              </div>
             )}
           </div>
         </section>
       )}
 
       {hasJourneyContent && (
-        <section className="bg-[#f8f3ef] px-4 py-16 md:py-20 lg:py-28">
+        <section className="bg-white px-4 py-16 md:py-20 lg:py-28">
           <div className="mx-auto max-w-7xl">
-            {(journeyTitle || journeyContent) && (
-              <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
-                {journeyTitle && (
-                  <h2 className="max-w-2xl text-3xl font-normal leading-tight text-brand-primary md:text-5xl">
-                    {journeyTitle}
-                  </h2>
-                )}
-                {journeyContent && (
+            <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-end">
+                <SectionHeading title={journeyTitle} />
+              {journeyContent && (
+                <div className="rounded-[28px] border border-brand-primary/8 bg-[#f8f3ef] p-6 md:p-8">
                   <p className="text-base leading-8 text-brand-primary/70 md:text-lg">
                     {journeyContent}
                   </p>
-                )}
-              </div>
-            )}
+                </div>
+              )}
+            </div>
 
             {(coreValuesTitle || coreValuesSubtitle) && (
               <div className="mt-14 max-w-3xl">
@@ -522,25 +560,27 @@ export default async function AboutPage({ params }: AboutPageProps) {
             )}
 
             {valueItems.length > 0 && (
-              <div className="mt-8 grid gap-px overflow-hidden border border-brand-primary/10 bg-brand-primary/10 md:grid-cols-3">
+              <div className="mt-8 grid gap-4 md:grid-cols-3">
                 {valueItems.map((item, idx) => {
                   const icons = [Leaf, CheckCircle2, FlaskConical];
                   const Icon = icons[idx % icons.length];
                   return (
-                    <article key={idx} className="bg-white p-5">
-                      <div className="mb-5 flex items-center justify-between">
-                        <Icon className="h-5 w-5 text-brand-gold" />
+                    <article key={idx} className="rounded-[28px] border border-brand-primary/10 bg-[#faf7f3] p-6 shadow-[0_10px_30px_rgba(29,24,20,0.04)]">
+                      <div className="mb-8 flex items-center justify-between">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm">
+                          <Icon className="h-5 w-5 text-brand-gold" />
+                        </div>
                         <span className="text-[11px] font-semibold text-brand-primary/35">
                           {String(idx + 1).padStart(2, "0")}
                         </span>
                       </div>
                       {item.title && (
-                        <h3 className="text-base font-normal text-brand-primary">
+                        <h3 className="text-lg font-normal text-brand-primary">
                           {item.title}
                         </h3>
                       )}
                       {item.description && (
-                        <p className="mt-3 text-xs leading-6 text-brand-primary/62">
+                        <p className="mt-3 text-sm leading-7 text-brand-primary/62">
                           {item.description}
                         </p>
                       )}
@@ -554,20 +594,21 @@ export default async function AboutPage({ params }: AboutPageProps) {
       )}
 
       {(hasMissionContent || aboutImages.mission) && (
-        <section className="bg-white">
-          <div className={`grid ${hasMissionContent && aboutImages.mission ? "about-mission-square lg:grid-cols-2 lg:items-stretch" : ""}`}>
+        <section className="bg-[#f8f3ef]">
+          <div className="mx-auto grid max-w-7xl gap-8 px-4 py-16 md:py-20 lg:grid-cols-[1fr_0.95fr] lg:items-stretch lg:gap-10 lg:py-28">
             {hasMissionContent && (
-              <div className={`flex min-h-[420px] flex-col justify-center px-4 py-16 md:py-20 lg:order-2 lg:min-h-0 xl:px-16 ${isRTL ? "lg:order-1" : ""}`}>
+              <div className={`relative rounded-[32px] bg-brand-primary px-6 py-10 text-white shadow-[0_24px_80px_rgba(29,24,20,0.12)] md:px-10 md:py-12 lg:px-12 lg:py-14 ${isRTL ? "lg:order-2" : ""}`}>
+                <div className="absolute inset-x-0 top-0 h-px bg-white/10" />
                 <div className="space-y-8">
                   {(missionTitle || missionContent) && (
                     <div>
                       {missionTitle && (
-                        <h2 className="border-b border-brand-primary/15 pb-4 text-2xl font-normal text-brand-primary md:text-3xl">
+                        <h2 className="border-b border-white/12 pb-4 text-2xl font-normal md:text-3xl">
                           {missionTitle}
                         </h2>
                       )}
                       {missionContent && (
-                        <p className="mt-4 text-base leading-8 text-brand-primary/66">
+                        <p className="mt-4 text-base leading-8 text-white/72">
                           {missionContent}
                         </p>
                       )}
@@ -576,12 +617,12 @@ export default async function AboutPage({ params }: AboutPageProps) {
                   {(visionTitle || visionContent) && (
                     <div>
                       {visionTitle && (
-                        <h2 className="border-b border-brand-primary/15 pb-4 text-2xl font-normal text-brand-primary md:text-3xl">
+                        <h2 className="border-b border-white/12 pb-4 text-2xl font-normal md:text-3xl">
                           {visionTitle}
                         </h2>
                       )}
                       {visionContent && (
-                        <p className="mt-4 text-base leading-8 text-brand-primary/66">
+                        <p className="mt-4 text-base leading-8 text-white/72">
                           {visionContent}
                         </p>
                       )}
@@ -591,46 +632,40 @@ export default async function AboutPage({ params }: AboutPageProps) {
               </div>
             )}
             {aboutImages.mission && (
-              <BackgroundMedia
-                image={aboutImages.mission}
-                label={missionTitle || dictionary.common.about}
-                className={`lg:order-1 lg:h-full lg:min-h-0 ${isRTL ? "lg:order-2" : ""}`}
-              />
+              <div className={`relative ${isRTL ? "lg:order-1" : ""}`}>
+                <div className="absolute -inset-4 rounded-[36px] bg-brand-primary/5 blur-3xl" />
+                <div className="relative overflow-hidden rounded-[32px] border border-brand-primary/10 bg-white shadow-[0_24px_80px_rgba(29,24,20,0.08)]">
+                  <BackgroundMedia
+                    image={aboutImages.mission}
+                    label={missionTitle || dictionary.common.about}
+                    className="min-h-[340px] sm:min-h-[420px] lg:min-h-[640px]"
+                  />
+                </div>
+              </div>
             )}
           </div>
         </section>
       )}
 
       {hasIngredientsContent && (
-        <section className="bg-[#f8f3ef] px-4 py-16 md:py-20 lg:py-28">
+        <section className="bg-white px-4 py-16 md:py-20 lg:py-28">
           <div className="mx-auto max-w-7xl">
             {(ingredientsTitle || ingredientsSubtitle || ingredientsDesc) && (
-              <div className="grid gap-8 lg:grid-cols-2 lg:items-end">
-                {(ingredientsTitle || ingredientsSubtitle) && (
-                  <div>
-                    {ingredientsTitle && (
-                      <h2 className="max-w-xl text-3xl font-normal leading-tight text-brand-primary md:text-5xl">
-                        {ingredientsTitle}
-                      </h2>
-                    )}
-                    {ingredientsSubtitle && (
-                      <p className="mt-5 text-base leading-7 text-brand-primary/62">
-                        {ingredientsSubtitle}
-                      </p>
-                    )}
-                  </div>
-                )}
+              <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-end">
+                <SectionHeading title={ingredientsTitle} description={ingredientsSubtitle} />
                 {ingredientsDesc && (
-                  <p className="border-s border-brand-primary/15 ps-6 text-base leading-8 text-brand-primary/70">
-                    {ingredientsDesc}
-                  </p>
+                  <div className="rounded-[28px] border border-brand-primary/8 bg-[#f8f3ef] p-6 md:p-8">
+                    <p className="text-base leading-8 text-brand-primary/70">
+                      {ingredientsDesc}
+                    </p>
+                  </div>
                 )}
               </div>
             )}
             {ingredientItems.length > 0 && (
-              <div className="mt-12 grid gap-px overflow-hidden border border-brand-primary/10 bg-brand-primary/10 md:grid-cols-3">
+              <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {ingredientItems.map((item, idx) => (
-                  <article key={idx} className="bg-white">
+                  <article key={idx} className="overflow-hidden rounded-[28px] border border-brand-primary/10 bg-[#faf7f3] shadow-[0_10px_30px_rgba(29,24,20,0.04)]">
                     {item.image && (
                       <div className="relative aspect-square overflow-hidden bg-brand-beige">
                         <Image
@@ -646,7 +681,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
                       </div>
                     )}
                     {(item.title || item.description) && (
-                      <div className="p-7">
+                      <div className="p-6 md:p-7">
                         {item.title && <h3 className="text-xl font-normal text-brand-primary">{item.title}</h3>}
                         {item.description && <p className="mt-3 text-sm leading-7 text-brand-primary/60">{item.description}</p>}
                       </div>
@@ -660,21 +695,19 @@ export default async function AboutPage({ params }: AboutPageProps) {
       )}
 
       {brandFaqItems.length > 0 && (
-        <section className="bg-white px-4 py-16 md:py-20 lg:py-28">
+        <section className="bg-[#f8f3ef] px-4 py-16 md:py-20 lg:py-28">
           <div className="mx-auto max-w-7xl">
-            <h2 className="mb-8 max-w-xl text-3xl font-normal leading-tight text-brand-primary md:text-5xl">
-              {isRTL ? "الأسئلة الشائعة" : "Frequently Asked Questions"}
-            </h2>
-            <div className="max-w-4xl space-y-0">
+            <SectionHeading title={isRTL ? "الأسئلة الشائعة" : "Frequently Asked Questions"} />
+            <div className="mx-auto mt-10 max-w-4xl overflow-hidden rounded-[28px] border border-brand-primary/10 bg-white shadow-[0_10px_30px_rgba(29,24,20,0.04)]">
               {brandFaqItems.map((item, idx) => (
-                <details key={idx} className="group border-t border-brand-grey-beige last:border-b">
-                  <summary className={`flex cursor-pointer items-start justify-between gap-4 py-5 text-start text-sm font-normal text-brand-primary md:text-base ${isRTL ? "flex-row-reverse" : ""}`}>
+                <details key={idx} className="group border-t border-brand-primary/8 first:border-t-0">
+                  <summary className={`flex cursor-pointer items-start justify-between gap-4 px-6 py-5 text-start text-sm font-normal text-brand-primary md:px-8 md:text-base ${isRTL ? "flex-row-reverse" : ""}`}>
                     <span className="flex-1">{item.question}</span>
                     <svg className={`mt-0.5 h-4 w-4 shrink-0 text-brand-primary/40 transition-transform duration-300 group-open:rotate-180 ${isRTL ? "rotate-180 group-open:rotate-0" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
                     </svg>
                   </summary>
-                  <div className="pb-5 text-start text-sm leading-relaxed text-brand-primary/60">
+                  <div className="px-6 pb-5 text-start text-sm leading-relaxed text-brand-primary/60 md:px-8">
                     {item.answer}
                   </div>
                 </details>
@@ -686,24 +719,31 @@ export default async function AboutPage({ params }: AboutPageProps) {
 
       {hasCtaContent && (
         <section className="bg-white px-4 pb-16 md:pb-20 lg:pb-28">
-          <div className="mx-auto max-w-7xl bg-brand-primary px-6 py-12 text-white md:px-10 md:py-14 lg:px-14">
-            {ctaTitle && (
-              <h2 className="mb-4 max-w-4xl text-3xl font-normal leading-tight text-white md:text-5xl">{ctaTitle}</h2>
-            )}
-            {ctaSubtitle && (
-              <p className="mb-8 max-w-2xl text-sm leading-7 text-white/70 md:text-base md:leading-8">
-                {ctaSubtitle}
-              </p>
-            )}
-            {ctaButton && ctaLink && (
-              <Link
-                href={ctaLink}
-                className="inline-flex min-h-11 items-center gap-3 bg-white px-6 text-sm font-semibold text-brand-primary transition-colors hover:bg-white/85"
-              >
-                {ctaButton}
-                <ArrowRight className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />
-              </Link>
-            )}
+          <div className="mx-auto max-w-7xl">
+            <div className="relative overflow-hidden rounded-[32px] bg-brand-primary px-6 py-12 text-white shadow-[0_24px_80px_rgba(29,24,20,0.12)] md:px-10 md:py-14 lg:px-14">
+              <div className="absolute -left-20 top-0 h-64 w-64 rounded-full bg-brand-gold/15 blur-3xl" />
+              <div className="relative">
+                {ctaTitle && (
+                  <h2 className="max-w-4xl text-3xl font-normal leading-tight text-white md:text-5xl">
+                    {ctaTitle}
+                  </h2>
+                )}
+                {ctaSubtitle && (
+                  <p className="mt-4 max-w-2xl text-sm leading-7 text-white/72 md:text-base md:leading-8">
+                    {ctaSubtitle}
+                  </p>
+                )}
+                {ctaButton && ctaLink && (
+                  <Link
+                    href={ctaLink}
+                    className="mt-8 inline-flex min-h-12 items-center gap-3 rounded-full bg-white px-7 text-sm font-semibold text-brand-primary transition-colors hover:bg-white/85"
+                  >
+                    {ctaButton}
+                    <ArrowRight className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />
+                  </Link>
+                )}
+              </div>
+            </div>
           </div>
         </section>
       )}

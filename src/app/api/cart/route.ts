@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { API_BASE, backendHeaders, backendPostHeaders, backendAuthHeaders, noCacheUrl, safeJsonResponse, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
 import { type MarketConfig } from "@/config/market";
@@ -14,7 +14,6 @@ const CURRENCY_COOKIE = "wcml_currency";
 const LOCALE_COOKIE = "NEXT_LOCALE";
 const MARKETS_WITH_SEPARATE_APIS = new Set(["qa", "om", "sa"]);
 const COCART_WPJSON_BASE = `${API_BASE.replace(/\/+$/, "")}/wp-json`;
-const LEGACY_STORE_API_BASE = "https://sasanperfumes.shapehive.com/wp-json/wc/store/v1";
 
 function isInvalidBackendResponse(data: Record<string, unknown>): boolean {
   return data?.code === "invalid_response";
@@ -261,88 +260,6 @@ function createResponseWithCartKey(
   return response;
 }
 
-async function fetchLegacyProductIdentity(sourceProductId: number): Promise<{ slug?: string; sku?: string } | null> {
-  try {
-    const response = await fetch(noCacheUrl(`${LEGACY_STORE_API_BASE}/products/${sourceProductId}`), {
-      method: "GET",
-      headers: backendHeaders(),
-    });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const data = await safeJsonResponse(response);
-    return {
-      slug: typeof data.slug === "string" ? data.slug : undefined,
-      sku: typeof data.sku === "string" ? data.sku : undefined,
-    };
-  } catch {
-    return null;
-  }
-}
-
-async function fetchCurrentProductIdBySlug(
-  slug: string,
-  request: NextRequest,
-  market: MarketConfig,
-  locale: string | null
-): Promise<number | null> {
-  const query = new URLSearchParams({ slug });
-  query.set("lang", locale || "en");
-  query.set("currency", "AED");
-
-  const parseProductId = async (response: Response): Promise<number | null> => {
-    if (!response.ok) {
-      return null;
-    }
-
-    const data = await safeJsonResponse(response);
-    if (!Array.isArray(data) || data.length === 0) {
-      return null;
-    }
-
-    const firstProduct = data[0] as Record<string, unknown>;
-    const candidateId = Number(firstProduct.id);
-    return Number.isFinite(candidateId) && candidateId > 0 ? candidateId : null;
-  };
-
-  try {
-    const scopedResponse = await fetch(noCacheUrl(`${COCART_WPJSON_BASE}/wc/store/v1/products?${query.toString()}`), {
-      method: "GET",
-      headers: toMarketAwareHeaders(request, market.code, backendHeaders()),
-    });
-
-    const scopedId = await parseProductId(scopedResponse);
-    if (scopedId) {
-      return scopedId;
-    }
-
-    const unscopedResponse = await fetch(noCacheUrl(`${COCART_WPJSON_BASE}/wc/store/v1/products?${query.toString()}`), {
-      method: "GET",
-      headers: backendHeaders(),
-    });
-
-    return parseProductId(unscopedResponse);
-  } catch {
-    return null;
-  }
-}
-
-async function resolveReplacementProductId(
-  sourceProductId: number,
-  request: NextRequest,
-  market: MarketConfig,
-  locale: string | null
-): Promise<number | null> {
-  const legacyIdentity = await fetchLegacyProductIdentity(sourceProductId);
-  if (!legacyIdentity?.slug) {
-    return null;
-  }
-
-  return fetchCurrentProductIdBySlug(legacyIdentity.slug, request, market, locale);
-}
-
 function shouldRetryProductLookup(errorCode: string, errorMessage: string): boolean {
   const code = errorCode.toLowerCase();
   const message = errorMessage.toLowerCase();
@@ -361,7 +278,7 @@ function shouldRetryProductLookup(errorCode: string, errorMessage: string): bool
 
 export async function GET(request: NextRequest) {
   try {
-    const market = await getRequestMarket();
+    const market = await getRequestMarket(request.nextUrl.searchParams.get("market"));
     const coCartBase = COCART_WPJSON_BASE;
     const cartKey = await getCartKey(market.code);
     const authToken = await getAuthToken();
@@ -454,8 +371,7 @@ export async function POST(request: NextRequest) {
   const action = searchParams.get("action");
 
   try {
-    const market = await getRequestMarket();
-    const wpJsonBase = wpJsonBaseForMarket(market.code);
+    const market = await getRequestMarket(searchParams.get("market"));    const wpJsonBase = wpJsonBaseForMarket(market.code);
     const coCartBase = COCART_WPJSON_BASE;
     const cartKey = await getCartKey(market.code);
     const authToken = await getAuthToken();
@@ -705,35 +621,6 @@ export async function POST(request: NextRequest) {
       response = await fetch(noCacheUrl(baseUrl), retryWithoutCartKeyOptions);
       data = await safeJsonResponse(response);
     }
-
-    if (
-      action === "add" &&
-      !response.ok &&
-      (typeof body.id === "string" || typeof body.id === "number") &&
-      shouldRetryProductLookup(String(data.code || ""), String(data.message || ""))
-    ) {
-      const sourceProductId = Number(body.id);
-      if (Number.isFinite(sourceProductId) && sourceProductId > 0) {
-        const replacementProductId = await resolveReplacementProductId(sourceProductId, request, market, locale);
-
-        if (replacementProductId && replacementProductId !== sourceProductId) {
-          const retryBody = { ...body, id: String(replacementProductId) };
-          const retryFetchOptions: RequestInit = {
-            method,
-            headers: authToken ? getAuthHeaders(request, market, authToken) : getGuestHeaders(request, market),
-            body: JSON.stringify(retryBody),
-          };
-          retryFetchOptions.headers = {
-            ...(retryFetchOptions.headers as Record<string, string>),
-            "Content-Type": "application/json",
-          };
-
-          response = await fetch(noCacheUrl(url), retryFetchOptions);
-          data = await safeJsonResponse(response);
-        }
-      }
-    }
-
     if (!response.ok) {
       return NextResponse.json(
         {

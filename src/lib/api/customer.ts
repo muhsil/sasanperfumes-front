@@ -1,4 +1,4 @@
-import { getCountryTimezone } from "@/lib/utils";
+import { getCountryTimezone, getMarketPrefixFromPath } from "@/lib/utils";
 import { countries } from "@/components/common/CountrySelect";
 
 export interface CustomerAddress {
@@ -168,15 +168,47 @@ export interface CustomerOperationResponse<T> {
   error?: CustomerError;
 }
 
+function getCurrentMarketCode(): string {
+  if (typeof window === "undefined") return "";
+  return getMarketPrefixFromPath(window.location.pathname).replace(/^\/+/, "").toLowerCase();
+}
+
+function buildMarketAwareUrl(path: string, params?: Record<string, string>): string {
+  const marketCode = getCurrentMarketCode();
+  const searchParams = new URLSearchParams(params || {});
+  if (marketCode) {
+    searchParams.set("market", marketCode);
+  }
+  const query = searchParams.toString();
+  return query ? `${path}?${query}` : path;
+}
+
+function getMarketAwareHeaders(): HeadersInit {
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+  };
+
+  if (typeof window !== "undefined") {
+    const marketCode = getCurrentMarketCode();
+    const host = window.location.hostname.replace(/^www\./, "");
+    if (host) {
+      headers["X-Frontend-Host"] = marketCode ? `${host}/${marketCode}` : host;
+    }
+    if (marketCode) {
+      headers["X-Market"] = marketCode;
+    }
+  }
+
+  return headers;
+}
+
 export async function getCustomer(
   customerId: number
 ): Promise<CustomerOperationResponse<Customer>> {
   try {
     const response = await fetch(`/api/customer?customerId=${customerId}`, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getMarketAwareHeaders(),
     });
 
     const result = await response.json();
@@ -214,9 +246,7 @@ export async function updateCustomer(
   try {
     const response = await fetch(`/api/customer?customerId=${customerId}`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getMarketAwareHeaders(),
       body: JSON.stringify(customerData),
     });
 
@@ -265,11 +295,9 @@ export async function getCustomerOrders(
       searchParams.set("per_page", params.per_page.toString());
     if (params?.status) searchParams.set("status", params.status);
 
-    const response = await fetch(`/api/orders?${searchParams.toString()}`, {
+    const response = await fetch(buildMarketAwareUrl("/api/orders", Object.fromEntries(searchParams.entries())), {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getMarketAwareHeaders(),
     });
 
     const result = await response.json();
@@ -304,11 +332,9 @@ export async function getOrder(
   orderId: number
 ): Promise<CustomerOperationResponse<Order>> {
   try {
-    const response = await fetch(`/api/orders?orderId=${orderId}`, {
+    const response = await fetch(buildMarketAwareUrl("/api/orders", { orderId: orderId.toString() }), {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getMarketAwareHeaders(),
     });
 
     const result = await response.json();
@@ -343,11 +369,9 @@ export async function getOrderNotes(
   orderId: number
 ): Promise<CustomerOperationResponse<OrderNote[]>> {
   try {
-    const response = await fetch(`/api/orders/notes?orderId=${orderId}`, {
+    const response = await fetch(buildMarketAwareUrl("/api/orders/notes", { orderId: orderId.toString() }), {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getMarketAwareHeaders(),
     });
 
     const result = await response.json();
@@ -384,11 +408,9 @@ export async function updateCustomerAddress(
   address: CustomerAddress
 ): Promise<CustomerOperationResponse<Customer>> {
   try {
-    const response = await fetch(`/api/customer?customerId=${customerId}`, {
+    const response = await fetch(buildMarketAwareUrl("/api/customer", { customerId: customerId.toString() }), {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getMarketAwareHeaders(),
       body: JSON.stringify({ [addressType]: address }),
     });
 
@@ -591,11 +613,9 @@ export async function saveSavedAddresses(
   addresses: SavedAddress[]
 ): Promise<CustomerOperationResponse<Customer>> {
   try {
-    const response = await fetch(`/api/customer?customerId=${customerId}`, {
+    const response = await fetch(buildMarketAwareUrl("/api/customer", { customerId: customerId.toString() }), {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getMarketAwareHeaders(),
       body: JSON.stringify({
         meta_data: [
           {

@@ -69,6 +69,15 @@ function buildCountries(storeList: Store[]): Country[] {
   return result;
 }
 
+function getStoreFallbackImage(store: Store): string {
+  const key = `${store.name} ${store.nameAr} ${store.region} ${store.city} ${store.cityAr} ${store.floor} ${store.floorAr}`.toLowerCase();
+  if (key.includes("muwaileh") || key.includes("مويلح")) return "/images/store-locator/sharjah-muwaileh.svg";
+  if (key.includes("central souk") || key.includes("السوق المركزي")) return "/images/store-locator/sharjah-central-souk.svg";
+  if (key.includes("shuwaiheen") || key.includes("الشويهين")) return "/images/store-locator/sharjah-al-shuwaiheen.svg";
+  if (key.includes("khalifa city") || key.includes("مدينة خليفة")) return "/images/store-locator/abu-dhabi-khalifa-city.svg";
+  return "/images/store-locator/store-default.svg";
+}
+
 interface StoreLocatorDict {
   heroTitle: string;
   heroSubtitle: string;
@@ -191,21 +200,21 @@ export default function StoreLocatorClient({ dict, locale, stores: storeList, co
               <div className="grid gap-px sm:grid-cols-2 lg:grid-cols-3">
                 {country.regions.flatMap((region) =>
                   region.stores.map((store) => (
-                    <div key={store.id} className="group border border-[#e7ded7] bg-white">
+                    <div key={store.id} className="group overflow-hidden rounded-[28px] border border-[#e7ded7] bg-white shadow-[0_10px_30px_rgba(29,24,20,0.04)] transition-transform duration-300 hover:-translate-y-1">
                       {/* Store Image */}
-                      <div className="relative h-48 overflow-hidden bg-[#f8f3ef]">
-                        {store.image ? (
-                          <Image
-                            src={store.image}
-                            alt={isRTL ? store.nameAr : store.name}
-                            fill
-                            className="object-cover transition-transform duration-500 group-hover:scale-105"
-                          />
-                        ) : (
-                          <div className="flex h-full items-center justify-center text-5xl font-light text-brand-primary/20">
-                            {(isRTL ? store.nameAr : store.name).slice(0, 1)}
+                      <div className="relative aspect-[16/10] overflow-hidden bg-[#f8f3ef]">
+                        <Image
+                          src={store.image || getStoreFallbackImage(store)}
+                          alt={isRTL ? store.nameAr : store.name}
+                          fill
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-brand-primary/60 to-transparent p-4">
+                          <div className="inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-primary">
+                            <MapPin className="h-3 w-3 text-brand-gold" />
+                            Google Maps
                           </div>
-                        )}
+                        </div>
                       </div>
 
                       {/* Store Details */}
@@ -228,7 +237,7 @@ export default function StoreLocatorClient({ dict, locale, stores: storeList, co
                           href={store.googleMapsUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="mt-4 inline-flex items-center gap-2 border-b border-brand-primary pb-1 text-xs font-normal tracking-[0.1em] text-brand-primary uppercase"
+                          className="mt-5 inline-flex items-center gap-2 rounded-full border border-brand-primary/12 bg-[#f8f3ef] px-4 py-2 text-xs font-medium tracking-[0.1em] text-brand-primary uppercase transition-colors hover:bg-brand-primary hover:text-white"
                         >
                           <Navigation className="h-3 w-3" />
                           {content.getDirections}

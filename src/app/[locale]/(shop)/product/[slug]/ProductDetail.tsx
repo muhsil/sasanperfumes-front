@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Image from "next/image";
@@ -162,11 +162,31 @@ function normalizeDisplayText(value?: string): string {
     .trim();
 }
 
+function isPlaceholderDisplayText(value?: string): boolean {
+  const normalized = normalizeDisplayText(value)
+    .toLowerCase()
+    .replace(/[.!?,;:\u061b\u061f]+$/g, "")
+    .trim();
+  if (!normalized) return true;
+
+  return [
+    "not specified",
+    "not available",
+    "unknown",
+    "n/a",
+    "na",
+    "none",
+    "غير محدد",
+    "غير مذكور",
+    "غير متوفر",
+    "غير متاح",
+    "لا يوجد",
+    "لا يوجد وصف متاح",
+  ].includes(normalized);
+}
+
 function isMeaningfulDisplayText(value?: string): boolean {
-  const normalized = normalizeDisplayText(value);
-  if (!normalized) return false;
-  const lowered = normalized.toLowerCase();
-  return lowered !== "not specified" && lowered !== "n/a" && lowered !== "na" && lowered !== "none";
+  return !isPlaceholderDisplayText(value);
 }
 
 function escapeHtml(text: string): string {
@@ -212,7 +232,7 @@ function extractNoteValue(text: string, patterns: RegExp[]): string {
     const match = normalized.match(pattern);
     if (match?.[1]) {
       const value = cleanNoteValue(match[1]);
-      if (value) {
+      if (isMeaningfulDisplayText(value)) {
         return value;
       }
     }
@@ -946,8 +966,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
       new Set(
         (notesAttribute?.terms || [])
           .map((term) => decodeHtmlEntities(term.name).trim())
-          .filter((term) => Boolean(term) && term.toLowerCase() !== "not specified")
-      )
+          .filter((term) => isMeaningfulDisplayText(term))      )
     );
   }, [product.attributes]);
   const fragranceNotes = useMemo(() => extractFragranceNotes(descriptionStoryText), [descriptionStoryText]);
@@ -1009,7 +1028,22 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
       product.sku,
     ]
   );
-  const descriptionHtml = sanitizedDescription || sanitizedShortDescription || "";
+  const descriptionHtml = useMemo(() => {
+    const descriptionText = stripHtmlToText(sanitizedDescription);
+    const shortDescriptionText = stripHtmlToText(sanitizedShortDescription);
+
+    if (!descriptionText) return sanitizedShortDescription;
+    if (!shortDescriptionText) return sanitizedDescription;
+    if (descriptionText === shortDescriptionText) return sanitizedDescription;
+    if (descriptionText.includes(shortDescriptionText) && descriptionText.length >= shortDescriptionText.length + 40) {
+      return sanitizedDescription;
+    }
+    if (shortDescriptionText.includes(descriptionText) && shortDescriptionText.length >= descriptionText.length + 40) {
+      return sanitizedShortDescription;
+    }
+
+    return descriptionText.length >= shortDescriptionText.length ? sanitizedDescription : sanitizedShortDescription;
+  }, [sanitizedDescription, sanitizedShortDescription]);
   const productTags = (product.tags || []).filter((tag, index, tags) =>
     tags.findIndex((candidate) => candidate.slug === tag.slug) === index
   );
@@ -1743,17 +1777,15 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               <h3 className="text-[14px] font-semibold text-brand-primary">
                 {isRTL ? "النوتات العطرية" : "Fragrance Notes"}
               </h3>
-              <div className="mt-3 space-y-3">
+              <div className="mt-3 divide-y divide-brand-border/60 border-y border-brand-border/60">
                 {fragranceNoteRows.map((note) => (
                   <div
                     key={note.label}
-                    className="space-y-1 border-b border-brand-border/50 pb-3 last:border-b-0 last:pb-0"
-                  >
+                    className="flex items-start justify-between gap-4 py-3"                  >
                     <span className="shrink-0 text-[12px] font-semibold uppercase tracking-[0.08em] text-brand-muted">
                       {note.label}
                     </span>
-                    <span className="block text-sm leading-6 text-brand-primary/75">
-                      {note.value}
+                    <span className="max-w-[68%] text-right text-sm leading-6 text-brand-primary/75 rtl:text-left">                      {note.value}
                     </span>
                   </div>
                 ))}

@@ -37,7 +37,6 @@ import type {
 } from "@/types/wordpress";
 
 const WP_API_BASE = `${siteConfig.apiUrl}/wp-json`;
-const LEGACY_WP_API_BASE = "https://sasanperfumes.shapehive.com/wp-json";
 const WP_API_HEADERS = backendHeaders();
 const WP_NAMESPACE_FALLBACKS = ["sasanperfumes/v1"];
 const CMS_FORCE_DYNAMIC_CACHE = process.env.NEXT_PUBLIC_DISABLE_CMS_CACHE === "true" || process.env.DISABLE_CMS_CACHE === "true";
@@ -1936,11 +1935,6 @@ export async function getPageBySlug(slug: string, locale?: Locale): Promise<WPPa
     return currentPage;
   }
 
-  const legacyPage = await fetchPageBySlugFromApi(slug, locale, LEGACY_WP_API_BASE);
-  if (legacyPage) {
-    return legacyPage;
-  }
-
   if (normalizeStaticPageSlug(slug) === "track-order") {
     return buildTrackOrderSyntheticPage(locale);
   }
@@ -1950,28 +1944,17 @@ export async function getPageBySlug(slug: string, locale?: Locale): Promise<WPPa
 
 // Fetch all published WordPress pages
 export async function getPages(locale?: Locale): Promise<WPPage[]> {
-  const [currentPages, legacyPages] = await Promise.all([
-    fetchWPAPI<WPPage[]>(
-      "/wp/v2/pages?per_page=100&status=publish&_embed",
-      {
-        tags: ["pages"],
-        locale,
-        revalidate: 300,
-      }
-    ),
-    fetchWPAPI<WPPage[]>(
-      "/wp/v2/pages?per_page=100&status=publish&_embed",
-      {
-        tags: ["pages", "legacy-pages"],
-        locale,
-        revalidate: 300,
-        apiBase: LEGACY_WP_API_BASE,
-      }
-    ),
-  ]);
+  const currentPages = await fetchWPAPI<WPPage[]>(
+    "/wp/v2/pages?per_page=100&status=publish&_embed",
+    {
+      tags: ["pages"],
+      locale,
+      revalidate: 300,
+    }
+  );
 
   const pages = new Map<string, WPPage>();
-  for (const page of [...(currentPages || []), ...(legacyPages || [])]) {
+  for (const page of currentPages || []) {
     if (isFunctionalPageSlug(page.slug) || pages.has(page.slug)) {
       continue;
     }
@@ -2012,9 +1995,7 @@ export interface PageSeoData {
 // Fetch SEO data for a page by its slug from WordPress
 // Used by frontend pages to get dynamic SEO content from WordPress Pages editor + Yoast
 export async function getPageSeo(slug: string, locale?: Locale): Promise<PageSeoData | null> {
-  const page =
-    (await fetchPageBySlugFromApi(slug, locale)) ||
-    (await fetchPageBySlugFromApi(slug, locale, LEGACY_WP_API_BASE));
+  const page = await fetchPageBySlugFromApi(slug, locale);
   const fallback = buildStaticPageSeoFallback(slug, locale);
 
   if (!page) {
@@ -3219,9 +3200,8 @@ function buildStaticPageFallbackContent(slug: string): StaticPageResponse | null
  */
 export async function getStaticPageContent(slug: string): Promise<StaticPageResponse | null> {
   const current = await fetchStaticPageContentFromApi(slug);
-  const legacy = await fetchStaticPageContentFromApi(slug, LEGACY_WP_API_BASE);
   const fallback = buildStaticPageFallbackContent(slug);
-  const merged = mergeStaticPageContent(current, legacy || fallback);
+  const merged = mergeStaticPageContent(current, fallback);
 
   return merged ? rebrandApiContent(merged) : fallback;
 }
@@ -3535,14 +3515,10 @@ export async function getBlogPosts(
 ): Promise<{ posts: BlogPost[]; total: number; totalPages: number }> {
   const market = extractWPMarketFromHost(frontendHost) || await detectMarketFromRequest();
   const url = `/wp/v2/posts?per_page=100&page=1&_embed=true`;
-  const [currentResult, legacyResult] = await Promise.all([
-    fetchBlogAPI(url, market, frontendHost, ["blog"], undefined),
-    fetchBlogAPI(url, market, frontendHost, ["blog", "legacy-blog"], LEGACY_WP_API_BASE),
-  ]);
+  const currentResult = await fetchBlogAPI(url, market, frontendHost, ["blog"], undefined);
 
   const mergedRaw = [
     ...(currentResult?.raw || []),
-    ...(legacyResult?.raw || []),
   ];
   const raw = Array.from(
     new Map(
@@ -3581,9 +3557,7 @@ export async function getBlogPosts(
 export async function getBlogPost(slug: string, frontendHost?: string): Promise<BlogPost | null> {
   const market = extractWPMarketFromHost(frontendHost) || await detectMarketFromRequest();
   const url = `/wp/v2/posts?slug=${encodeURIComponent(slug)}&_embed=true`;
-  const result =
-    (await fetchBlogAPI(url, market, frontendHost, ["blog", `blog-${slug}`])) ||
-    (await fetchBlogAPI(url, market, frontendHost, ["blog", `blog-${slug}`, "legacy-blog"], LEGACY_WP_API_BASE));
+  const result = await fetchBlogAPI(url, market, frontendHost, ["blog", `blog-${slug}`]);
   if (!result) return null;
 
   const { raw } = result;

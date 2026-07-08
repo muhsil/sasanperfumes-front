@@ -179,6 +179,38 @@ export function getLocalizedMarketPath(pathname: string, locale: string, marketP
   return getLocalizedPath(joinPathSegments([normalizedMarket, ...rest], suffix), locale);
 }
 
+export function repairMojibakeText(text: string): string {
+  if (!text) return text;
+
+  // If the text already contains Arabic script, leave it alone.
+  if (/[\u0600-\u06ff]/.test(text)) {
+    return text;
+  }
+
+  // Only attempt repair when we see common UTF-8 mojibake markers.
+  if (!/[ÃÂØÙÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþ]/.test(text)) {
+    return text;
+  }
+
+  try {
+    const bytes = Uint8Array.from(text, (char) => char.charCodeAt(0) & 0xff);
+    const repaired = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+
+    if (repaired && repaired !== text) {
+      const hasArabic = /[\u0600-\u06ff]/.test(repaired);
+      const stillLooksBroken = /[ÃÂØÙÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþ]/.test(repaired);
+
+      if (hasArabic || !stillLooksBroken) {
+        return repaired;
+      }
+    }
+  } catch {
+    // Fall back to the original text below.
+  }
+
+  return text;
+}
+
 export function decodeHtmlEntities(text: string): string {
   const entities: Record<string, string> = {
     "&amp;": "&",
@@ -197,7 +229,7 @@ export function decodeHtmlEntities(text: string): string {
     .replace(/\\(&#?\w+;)/g, "$1")
     .replace(/\\+(?=['"])/g, "");
   
-  return cleaned
+  return repairMojibakeText(cleaned)
     .replace(/&(?:amp|lt|gt|quot|#0?39|apos|nbsp);/g, (match) => entities[match] || match)
     .replace(/&#(\d+);/g, (_, code) => { const n = Number(code); return n >= 0 && n <= 0x10FFFF ? String.fromCodePoint(n) : `&#${code};`; })
     .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => { const n = parseInt(hex, 16); return n >= 0 && n <= 0x10FFFF ? String.fromCodePoint(n) : `&#x${hex};`; });

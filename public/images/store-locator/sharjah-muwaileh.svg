@@ -1,0 +1,36 @@
+<svg width="1200" height="750" viewBox="0 0 1200 750" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="750" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F7F1EA"/>
+      <stop offset="1" stop-color="#EEE1D0"/>
+    </linearGradient>
+    <linearGradient id="card" x1="240" y1="120" x2="960" y2="630" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#FFF8F1" stop-opacity="0.76"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="750" fill="url(#bg)"/>
+  <circle cx="190" cy="150" r="110" fill="#B88C52" fill-opacity="0.08"/>
+  <circle cx="980" cy="620" r="180" fill="#17120F" fill-opacity="0.05"/>
+  <g opacity="0.22" stroke="#D6C6B3" stroke-width="2">
+    <path d="M120 180H1080"/>
+    <path d="M120 260H1080"/>
+    <path d="M120 340H1080"/>
+    <path d="M120 420H1080"/>
+    <path d="M120 500H1080"/>
+    <path d="M120 580H1080"/>
+    <path d="M220 110V630"/>
+    <path d="M360 110V630"/>
+    <path d="M500 110V630"/>
+    <path d="M640 110V630"/>
+    <path d="M780 110V630"/>
+    <path d="M920 110V630"/>
+  </g>
+  <rect x="240" y="120" width="720" height="510" rx="36" fill="url(#card)" stroke="#E5D7C8"/>
+  <path d="M413 234C413 213.013 430.013 196 451 196H749C769.987 196 787 213.013 787 234V516C787 536.987 769.987 554 749 554H451C430.013 554 413 536.987 413 516V234Z" fill="#17120F" fill-opacity="0.93"/>
+  <path d="M602 268c-21.2 0-38.4 17.2-38.4 38.4 0 14.9 10.2 28.5 25 33.5l13.4 41.9 13.4-41.9c14.8-5 25-18.6 25-33.5 0-21.2-17.2-38.4-38.4-38.4Z" fill="#B88C52"/>
+  <circle cx="602" cy="306" r="11" fill="#fff"/>
+  <text x="602" y="404" fill="#F8E7D1" font-family="Arial, Helvetica, sans-serif" font-size="58" font-weight="700" text-anchor="middle" letter-spacing="4">SHARJAH</text>
+  <text x="602" y="468" fill="#D8C5B2" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="600" text-anchor="middle" letter-spacing="3">MUWAILEH COMMERCIAL</text>
+  <text x="602" y="610" fill="#7C6D5E" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="600" text-anchor="middle">Google Maps Preview</text>
+</svg>

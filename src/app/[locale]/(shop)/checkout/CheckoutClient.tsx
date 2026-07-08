@@ -179,6 +179,7 @@ const sanitizeCheckoutMessage = (message: string): string => {
 
 export default function CheckoutClient() {
   const marketPrefix = useMarketPrefix();
+  const marketCode = useMemo(() => marketPrefix.replace(/^\//, "").toLowerCase(), [marketPrefix]);
   const { locale } = useParams<{ locale: string }>();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -234,7 +235,33 @@ export default function CheckoutClient() {
         const shippingInfoTrackedRef = useRef<string | null>(null);
         const paymentInfoTrackedRef = useRef(false);
 
-        const [addressErrors, setAddressErrors] = useState<{ shippingAddress?: string; shippingCity?: string; billingAddress?: string; billingCity?: string }>({});
+  const [addressErrors, setAddressErrors] = useState<{ shippingAddress?: string; shippingCity?: string; billingAddress?: string; billingCity?: string }>({});
+
+  const buildCheckoutApiUrl = useCallback((path: string, params: Record<string, string> = {}) => {
+    const searchParams = new URLSearchParams(params);
+    if (marketCode) {
+      searchParams.set("market", marketCode);
+    }
+    const query = searchParams.toString();
+    return query ? `${path}?${query}` : path;
+  }, [marketCode]);
+
+  const getCheckoutApiHeaders = useCallback((extra: HeadersInit = {}): HeadersInit => {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      ...(extra as Record<string, string>),
+    };
+    if (typeof window !== "undefined") {
+      const host = window.location.hostname.replace(/^www\./, "");
+      if (host) {
+        headers["X-Frontend-Host"] = marketCode ? `${host}/${marketCode}` : host;
+      }
+    }
+    if (marketCode) {
+      headers["X-Market"] = marketCode;
+    }
+    return headers;
+  }, [marketCode]);
   
   const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
   const divisor = Math.pow(10, currencyMinorUnit);
@@ -360,9 +387,7 @@ export default function CheckoutClient() {
           const fetchPaymentGateways = async () => {
             setIsLoadingGateways(true);
             try {
-              const market = marketPrefix.replace(/^\//, "");
-              const query = market ? `?market=${encodeURIComponent(market)}` : "";
-              const response = await fetch(`/api/payment-gateways${query}`);
+              const response = await fetch(buildCheckoutApiUrl("/api/payment-gateways"));
               const data = await response.json();
               if (data.success && data.gateways) {
                 setPaymentGateways(data.gateways);
@@ -382,9 +407,7 @@ export default function CheckoutClient() {
         useEffect(() => {
           const fetchShippingCountries = async () => {
             try {
-              const market = marketPrefix.replace(/^\//, "");
-              const query = market ? `?market=${encodeURIComponent(market)}` : "";
-              const response = await fetch(`/api/shipping-countries${query}`);
+              const response = await fetch(buildCheckoutApiUrl("/api/shipping-countries"));
               const data = await response.json();
               if (data.success && data.countries) {
                 const mapped: CountryOption[] = data.countries.map((c: { code: string; name: string }) => ({
@@ -455,9 +478,9 @@ export default function CheckoutClient() {
               let verifyUrl = "";
               
               if (tabbyPaymentId) {
-                verifyUrl = `/api/tabby/verify-payment?payment_id=${tabbyPaymentId}`;
+                verifyUrl = buildCheckoutApiUrl("/api/tabby/verify-payment", { payment_id: tabbyPaymentId });
               } else if (tamaraOrderId) {
-                verifyUrl = `/api/tamara/verify-payment?order_id=${tamaraOrderId}`;
+                verifyUrl = buildCheckoutApiUrl("/api/tamara/verify-payment", { order_id: tamaraOrderId });
               }
               
               if (verifyUrl) {
@@ -531,7 +554,6 @@ export default function CheckoutClient() {
           try {
             const subtotal = discountedCartSubtotal;
             const weight = cart?.items_weight || 0;
-            const market = marketPrefix.replace(/^\//, "");
             const params = new URLSearchParams({
               country: country || "AE",
               city: city || "",
@@ -540,10 +562,7 @@ export default function CheckoutClient() {
               cart_weight: String(weight),
               currency_code: currency || siteConfig.defaultCurrency,
             });
-            if (market) {
-              params.set("market", market);
-            }
-            const response = await fetch(`/api/shipping?${params.toString()}`);
+            const response = await fetch(buildCheckoutApiUrl("/api/shipping", Object.fromEntries(params.entries())));
             const data = await response.json();
             if (data.success && data.shipping_rates) {
               setShippingPackages(data.shipping_rates);
@@ -602,7 +621,7 @@ export default function CheckoutClient() {
           try {
             const response = await fetch("/api/shipping", {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: getCheckoutApiHeaders(),
               body: JSON.stringify({ rate_id: rateId, package_id: packageId, shipping_rates: shippingPackages }),
             });
             const data = await response.json();
@@ -778,7 +797,7 @@ export default function CheckoutClient() {
 
     setIsCheckingEmail(true);
     try {
-      const response = await fetch(`/api/customer/check-email?email=${encodeURIComponent(email)}`);
+      const response = await fetch(buildCheckoutApiUrl("/api/customer/check-email", { email }));
       const data = await response.json();
       
       if (data.success && data.data.isRegistered) {
@@ -967,9 +986,7 @@ export default function CheckoutClient() {
         try {
           const customerResponse = await fetch("/api/customer", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: getCheckoutApiHeaders(),
             body: JSON.stringify({
               email: formData.shipping.email,
               username: formData.shipping.email,
@@ -1247,11 +1264,9 @@ export default function CheckoutClient() {
         meta_data: [...getOrderMetaData(), ...(giftWrap ? [{ key: "_gift_wrap", value: "yes" }] : [])],
       };
 
-      const response = await fetch("/api/orders", {
+      const response = await fetch(buildCheckoutApiUrl("/api/orders"), {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: getCheckoutApiHeaders(),
         body: JSON.stringify(orderPayload),
       });
 
@@ -1304,9 +1319,9 @@ export default function CheckoutClient() {
               await saveSavedAddresses(user.user_id, updatedAddresses);
             }
 
-            await fetch(`/api/customer?customerId=${user.user_id}`, {
+            await fetch(buildCheckoutApiUrl("/api/customer", { customerId: String(user.user_id) }), {
               method: "PUT",
-              headers: { "Content-Type": "application/json" },
+              headers: getCheckoutApiHeaders(),
               body: JSON.stringify({
                 billing: orderPayload.billing,
                 shipping: orderPayload.shipping,
@@ -1367,11 +1382,9 @@ export default function CheckoutClient() {
       
             if (isTabbyPayment) {
               // Initiate Tabby payment directly
-              const tabbyResponse = await fetch("/api/tabby/create-session", {
+              const tabbyResponse = await fetch(buildCheckoutApiUrl("/api/tabby/create-session"), {
                 method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
+                headers: getCheckoutApiHeaders(),
                 body: JSON.stringify({
                   order_id: data.order_id,
                   order_key: data.order_key,
@@ -1410,11 +1423,9 @@ export default function CheckoutClient() {
               }
             } else if (isTamaraPayment) {
               // Initiate Tamara payment directly
-              const tamaraResponse = await fetch("/api/tamara/create-checkout", {
+              const tamaraResponse = await fetch(buildCheckoutApiUrl("/api/tamara/create-checkout"), {
                 method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
+                headers: getCheckoutApiHeaders(),
                 body: JSON.stringify({
                   order_id: data.order_id,
                   order_key: data.order_key,
@@ -1464,11 +1475,9 @@ export default function CheckoutClient() {
                 throw new Error(tamaraData.error?.message || "Failed to initiate Tamara payment");
               }
               } else if (isWooPayments) {
-              const stripeResponse = await fetch("/api/stripe/create-checkout-session", {
+              const stripeResponse = await fetch(buildCheckoutApiUrl("/api/stripe/create-checkout-session"), {
                 method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
+                headers: getCheckoutApiHeaders(),
                 body: JSON.stringify({
                   order_id: data.order_id,
                   order_key: data.order_key,

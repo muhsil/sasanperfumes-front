@@ -3,10 +3,20 @@
 import useSWR, { mutate } from "swr";
 import type { CoCartResponse, CoCartItem, CartOperationResponse } from "@/lib/api/cocart";
 import { getAuthToken } from "@/lib/api/auth";
+import { getMarketPrefixFromPath } from "@/lib/utils";
 
-const CART_CACHE_KEY = "/api/cart";
+const CART_API_PATH = "/api/cart";
 
-function getHeaders(): HeadersInit {
+function getCartCacheKey(marketCode: string): string {
+  return `${CART_API_PATH}:${marketCode || "intl"}`;
+}
+
+function getCurrentMarketCode(): string {
+  if (typeof window === "undefined") return "";
+  return getMarketPrefixFromPath(window.location.pathname).replace(/^\/+/, "").toLowerCase();
+}
+
+function getHeaders(marketCode: string): HeadersInit {
   const headers: HeadersInit = {
     "Content-Type": "application/json",
   };
@@ -15,14 +25,27 @@ function getHeaders(): HeadersInit {
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
+
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname.replace(/^www\./, "");
+    if (host) {
+      headers["X-Frontend-Host"] = marketCode ? `${host}/${marketCode}` : host;
+    }
+  }
+
+  if (marketCode) {
+    headers["X-Market"] = marketCode;
+  }
   
   return headers;
 }
 
 async function cartFetcher(): Promise<CoCartResponse | null> {
-  const response = await fetch(CART_CACHE_KEY, {
+  const marketCode = getCurrentMarketCode();
+  const url = marketCode ? `${CART_API_PATH}?market=${encodeURIComponent(marketCode)}` : CART_API_PATH;
+  const response = await fetch(url, {
     method: "GET",
-    headers: getHeaders(),
+    headers: getHeaders(marketCode),
   });
 
   const data = await response.json();
@@ -35,8 +58,11 @@ async function cartFetcher(): Promise<CoCartResponse | null> {
 }
 
 export function useCartSWR() {
+  const marketCode = getCurrentMarketCode();
+  const cartCacheKey = getCartCacheKey(marketCode);
+
   const { data: cart, error, isLoading, isValidating } = useSWR<CoCartResponse | null>(
-    CART_CACHE_KEY,
+    cartCacheKey,
     cartFetcher,
     {
       revalidateOnFocus: false,
@@ -107,7 +133,7 @@ export function useCartSWR() {
 
     // Optimistically update the cache
     await mutate(
-      CART_CACHE_KEY,
+      cartCacheKey,
       (currentCart: CoCartResponse | null | undefined) => {
         if (!currentCart) return currentCart;
         return {
@@ -120,17 +146,17 @@ export function useCartSWR() {
     );
 
     try {
-      const response = await fetch("/api/cart?action=add", {
-        method: "POST",
-        headers: getHeaders(),
-        body: JSON.stringify(body),
-      });
+    const response = await fetch(marketCode ? `/api/cart?action=add&market=${encodeURIComponent(marketCode)}` : "/api/cart?action=add", {
+      method: "POST",
+      headers: getHeaders(marketCode),
+      body: JSON.stringify(body),
+    });
 
       const data = await response.json();
 
       if (!data.success) {
         // Rollback on error
-        await mutate(CART_CACHE_KEY);
+        await mutate(cartCacheKey);
         return {
           success: false,
           error: {
@@ -142,7 +168,7 @@ export function useCartSWR() {
       }
 
       // Update cache with actual data
-      await mutate(CART_CACHE_KEY, data.cart, false);
+      await mutate(cartCacheKey, data.cart, false);
 
       return {
         success: true,
@@ -150,7 +176,7 @@ export function useCartSWR() {
       };
     } catch (error) {
       // Rollback on error
-      await mutate(CART_CACHE_KEY);
+      await mutate(cartCacheKey);
       return {
         success: false,
         error: {
@@ -167,7 +193,7 @@ export function useCartSWR() {
   ): Promise<CartOperationResponse> => {
     // Optimistically update the quantity
     await mutate(
-      CART_CACHE_KEY,
+      cartCacheKey,
       (currentCart: CoCartResponse | null | undefined) => {
         if (!currentCart) return currentCart;
         return {
@@ -183,16 +209,16 @@ export function useCartSWR() {
     );
 
     try {
-      const response = await fetch(`/api/cart?action=update&item_key=${encodeURIComponent(itemKey)}`, {
+      const response = await fetch(marketCode ? `/api/cart?action=update&item_key=${encodeURIComponent(itemKey)}&market=${encodeURIComponent(marketCode)}` : `/api/cart?action=update&item_key=${encodeURIComponent(itemKey)}`, {
         method: "POST",
-        headers: getHeaders(),
+        headers: getHeaders(marketCode),
         body: JSON.stringify({ quantity: String(quantity) }),
       });
 
       const data = await response.json();
 
       if (!data.success) {
-        await mutate(CART_CACHE_KEY);
+        await mutate(cartCacheKey);
         return {
           success: false,
           error: {
@@ -203,14 +229,14 @@ export function useCartSWR() {
         };
       }
 
-      await mutate(CART_CACHE_KEY, data.cart, false);
+      await mutate(cartCacheKey, data.cart, false);
 
       return {
         success: true,
         cart: data.cart,
       };
     } catch (error) {
-      await mutate(CART_CACHE_KEY);
+      await mutate(cartCacheKey);
       return {
         success: false,
         error: {
@@ -224,7 +250,7 @@ export function useCartSWR() {
   const removeCartItem = async (itemKey: string): Promise<CartOperationResponse> => {
     // Optimistically remove the item
     await mutate(
-      CART_CACHE_KEY,
+      cartCacheKey,
       (currentCart: CoCartResponse | null | undefined) => {
         if (!currentCart) return currentCart;
         const removedItem = currentCart.items.find((item) => item.item_key === itemKey);
@@ -238,15 +264,15 @@ export function useCartSWR() {
     );
 
     try {
-      const response = await fetch(`/api/cart?action=remove&item_key=${encodeURIComponent(itemKey)}`, {
+      const response = await fetch(marketCode ? `/api/cart?action=remove&item_key=${encodeURIComponent(itemKey)}&market=${encodeURIComponent(marketCode)}` : `/api/cart?action=remove&item_key=${encodeURIComponent(itemKey)}`, {
         method: "POST",
-        headers: getHeaders(),
+        headers: getHeaders(marketCode),
       });
 
       const data = await response.json();
 
       if (!data.success) {
-        await mutate(CART_CACHE_KEY);
+        await mutate(cartCacheKey);
         return {
           success: false,
           error: {
@@ -257,14 +283,14 @@ export function useCartSWR() {
         };
       }
 
-      await mutate(CART_CACHE_KEY, data.cart, false);
+      await mutate(cartCacheKey, data.cart, false);
 
       return {
         success: true,
         cart: data.cart,
       };
     } catch (error) {
-      await mutate(CART_CACHE_KEY);
+      await mutate(cartCacheKey);
       return {
         success: false,
         error: {
@@ -278,7 +304,7 @@ export function useCartSWR() {
   const clearCart = async (): Promise<CartOperationResponse> => {
     // Optimistically clear the cart
     await mutate(
-      CART_CACHE_KEY,
+      cartCacheKey,
       (currentCart: CoCartResponse | null | undefined) => {
         if (!currentCart) return currentCart;
         return {
@@ -291,15 +317,15 @@ export function useCartSWR() {
     );
 
     try {
-      const response = await fetch("/api/cart?action=clear", {
+      const response = await fetch(marketCode ? `/api/cart?action=clear&market=${encodeURIComponent(marketCode)}` : "/api/cart?action=clear", {
         method: "POST",
-        headers: getHeaders(),
+        headers: getHeaders(marketCode),
       });
 
       const data = await response.json();
 
       if (!data.success) {
-        await mutate(CART_CACHE_KEY);
+        await mutate(cartCacheKey);
         return {
           success: false,
           error: {
@@ -310,14 +336,14 @@ export function useCartSWR() {
         };
       }
 
-      await mutate(CART_CACHE_KEY, data.cart, false);
+      await mutate(cartCacheKey, data.cart, false);
 
       return {
         success: true,
         cart: data.cart,
       };
     } catch (error) {
-      await mutate(CART_CACHE_KEY);
+      await mutate(cartCacheKey);
       return {
         success: false,
         error: {
@@ -329,7 +355,7 @@ export function useCartSWR() {
   };
 
   const refreshCart = async () => {
-    await mutate(CART_CACHE_KEY);
+    await mutate(cartCacheKey);
   };
 
   return {
@@ -350,4 +376,4 @@ export function useCartSWR() {
 }
 
 // Export mutate function for external cache invalidation
-export const invalidateCartCache = () => mutate(CART_CACHE_KEY);
+export const invalidateCartCache = () => mutate((key) => typeof key === "string" && key.startsWith(CART_API_PATH));

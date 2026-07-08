@@ -19,17 +19,48 @@ function getCurrentMarketCode(): string {
   return getMarketPrefixFromPath(window.location.pathname).replace(/^\/+/, "").toLowerCase();
 }
 
+function getMarketAwareHeaders(marketCode: string): HeadersInit {
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+  };
+
+  const token = getAuthToken();
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname.replace(/^www\./, "");
+    if (host) {
+      headers["X-Frontend-Host"] = marketCode ? `${host}/${marketCode}` : host;
+    }
+  }
+
+  if (marketCode) {
+    headers["X-Market"] = marketCode;
+  }
+
+  return headers;
+}
+
 // Cache key includes market and locale so localized storefront carts never bleed into each other.
 const getCartCacheKey = (locale: string, marketCode = "") => {
   return `cart:${locale}:${marketCode || "intl"}`;
 };
 
-function getCartFetchUrl(locale: string) {
-  return `/api/cart?${new URLSearchParams({ locale }).toString()}`;
+function getCartFetchUrl(locale: string, marketCode = "") {
+  const searchParams = new URLSearchParams({ locale });
+  if (marketCode) {
+    searchParams.set("market", marketCode);
+  }
+  return `/api/cart?${searchParams.toString()}`;
 }
 
-function getCartActionUrl(locale: string, action: string, params: Record<string, string> = {}) {
+function getCartActionUrl(locale: string, action: string, params: Record<string, string> = {}, marketCode = "") {
   const searchParams = new URLSearchParams({ action, locale });
+  if (marketCode) {
+    searchParams.set("market", marketCode);
+  }
   Object.entries(params).forEach(([key, value]) => {
     searchParams.set(key, value);
   });
@@ -196,27 +227,14 @@ function deferCartSideEffects(callback: () => void) {
   window.setTimeout(callback, 0);
 }
 
-function getHeaders(): HeadersInit {
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
-  };
-  
-  const token = getAuthToken();
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-
-  return headers;
-}
-
 // Fetcher that extracts locale from the cache key while keeping market-specific
 // carts isolated on the client without routing CoCart through sub-market headers.
 async function cartFetcher(cacheKey: string): Promise<CoCartResponse | null> {
   try {
-    const [, locale = "en"] = cacheKey.split(":");
-    const response = await fetch(getCartFetchUrl(locale), {
+    const [, locale = "en", marketCode = ""] = cacheKey.split(":");
+    const response = await fetch(getCartFetchUrl(locale, marketCode), {
       method: "GET",
-      headers: getHeaders(),
+      headers: getMarketAwareHeaders(marketCode),
     });
 
     const data = await response.json();
@@ -394,11 +412,11 @@ export function CartProvider({ children, locale }: CartProviderProps) {
         if (variation) body.variation = variation;
         if (itemData) body.cart_item_data = itemData;
 
-        const response = await fetch(getCartActionUrl(locale, "add"), {
-          method: "POST",
-          headers: getHeaders(),
-          body: JSON.stringify(body),
-        });
+    const response = await fetch(getCartActionUrl(locale, "add", {}, marketCode), {
+      method: "POST",
+      headers: getMarketAwareHeaders(marketCode),
+      body: JSON.stringify(body),
+    });
 
         const data = await response.json();
 
@@ -552,9 +570,9 @@ export function CartProvider({ children, locale }: CartProviderProps) {
       );
 
       try {
-        const response = await fetch(getCartActionUrl(locale, "update", { item_key: key }), {
+        const response = await fetch(getCartActionUrl(locale, "update", { item_key: key }, marketCode), {
           method: "POST",
-          headers: getHeaders(),
+          headers: getMarketAwareHeaders(marketCode),
           body: JSON.stringify({ quantity: String(quantity) }),
         });
 
@@ -610,9 +628,9 @@ export function CartProvider({ children, locale }: CartProviderProps) {
       );
 
       try {
-        const response = await fetch(getCartActionUrl(locale, "remove", { item_key: key }), {
+        const response = await fetch(getCartActionUrl(locale, "remove", { item_key: key }, marketCode), {
           method: "POST",
-          headers: getHeaders(),
+          headers: getMarketAwareHeaders(marketCode),
         });
 
         const data = await response.json();
@@ -686,9 +704,9 @@ export function CartProvider({ children, locale }: CartProviderProps) {
     );
 
     try {
-      const response = await fetch(getCartActionUrl(locale, "clear"), {
+      const response = await fetch(getCartActionUrl(locale, "clear", {}, marketCode), {
         method: "POST",
-        headers: getHeaders(),
+        headers: getMarketAwareHeaders(marketCode),
       });
 
       const data = await response.json();
@@ -730,9 +748,9 @@ export function CartProvider({ children, locale }: CartProviderProps) {
     }
 
     try {
-      const response = await fetch(getCartActionUrl(locale, "apply-coupon"), {
+      const response = await fetch(getCartActionUrl(locale, "apply-coupon", {}, marketCode), {
         method: "POST",
-        headers: getHeaders(),
+        headers: getMarketAwareHeaders(marketCode),
         body: JSON.stringify({ code: normalizedCode }),
       });
 
@@ -762,9 +780,9 @@ export function CartProvider({ children, locale }: CartProviderProps) {
 
   const removeCoupon = useCallback(async (code: string): Promise<boolean> => {
     try {
-      const response = await fetch(getCartActionUrl(locale, "remove-coupon"), {
+      const response = await fetch(getCartActionUrl(locale, "remove-coupon", {}, marketCode), {
         method: "POST",
-        headers: getHeaders(),
+        headers: getMarketAwareHeaders(marketCode),
         body: JSON.stringify({ code }),
       });
 

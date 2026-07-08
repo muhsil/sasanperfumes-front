@@ -1,0 +1,43 @@
+<svg width="1200" height="750" viewBox="0 0 1200 750" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="750" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8F3EE"/>
+      <stop offset="1" stop-color="#EFE5D8"/>
+    </linearGradient>
+    <linearGradient id="card" x1="240" y1="120" x2="960" y2="630" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.88"/>
+      <stop offset="1" stop-color="#FFF9F3" stop-opacity="0.72"/>
+    </linearGradient>
+    <filter id="shadow" x="180" y="86" width="840" height="600" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="24" stdDeviation="28" flood-color="#2C2218" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="750" fill="url(#bg)"/>
+  <g opacity="0.24" stroke="#D2C4B1" stroke-width="2">
+    <path d="M110 160H1090"/>
+    <path d="M110 230H1090"/>
+    <path d="M110 300H1090"/>
+    <path d="M110 370H1090"/>
+    <path d="M110 440H1090"/>
+    <path d="M110 510H1090"/>
+    <path d="M110 580H1090"/>
+    <path d="M180 110V640"/>
+    <path d="M320 110V640"/>
+    <path d="M460 110V640"/>
+    <path d="M600 110V640"/>
+    <path d="M740 110V640"/>
+    <path d="M880 110V640"/>
+    <path d="M1020 110V640"/>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="240" y="120" width="720" height="510" rx="36" fill="url(#card)" stroke="#E5D7C8"/>
+  </g>
+  <path d="M391 247C391 208.9 421.9 178 460 178H740C778.1 178 809 208.9 809 247V493C809 531.1 778.1 562 740 562H460C421.9 562 391 531.1 391 493V247Z" fill="#17120F" fill-opacity="0.92"/>
+  <path d="M560 238h80l32 32v176l-32 32h-80l-32-32V270l32-32Z" fill="#fff" fill-opacity="0.18"/>
+  <circle cx="600" cy="300" r="48" fill="#B88C52" fill-opacity="0.18"/>
+  <path d="M600 276c-18.2 0-33 14.8-33 33 0 12.8 8.7 24.4 21.4 28.6L600 374l11.6-36.4c12.7-4.2 21.4-15.8 21.4-28.6 0-18.2-14.8-33-33-33Z" fill="#B88C52"/>
+  <circle cx="600" cy="309" r="10" fill="#fff"/>
+  <text x="600" y="410" fill="#F9E8D3" font-family="Arial, Helvetica, sans-serif" font-size="56" font-weight="700" text-anchor="middle" letter-spacing="4">LOCATION</text>
+  <text x="600" y="470" fill="#D8C5B2" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="600" text-anchor="middle" letter-spacing="3">GOOGLE MAP PREVIEW</text>
+  <text x="600" y="616" fill="#7C6D5E" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="600" text-anchor="middle">Sasan Perfumes Store</text>
+</svg>

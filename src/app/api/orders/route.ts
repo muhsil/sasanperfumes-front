@@ -293,7 +293,7 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get("status");
 
   try {
-    const market = await getRequestMarket();
+    const market = await getRequestMarket(searchParams.get("market"));
     let url: string;
     
     if (orderId) {
@@ -468,7 +468,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const market = await getRequestMarket();
+    const market = await getRequestMarket(request.nextUrl.searchParams.get("market"));
     const body = await request.json();
     const paymentMethod =
       typeof body.payment_method === "string" && body.payment_method.trim()
@@ -643,7 +643,7 @@ interface UpdateOrderRequest {
 
 export async function PUT(request: NextRequest) {
   try {
-    const market = await getRequestMarket();
+    const market = await getRequestMarket(request.nextUrl.searchParams.get("market"));
     const body: UpdateOrderRequest = await request.json();
     
     if (!body.order_id) {

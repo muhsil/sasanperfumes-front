@@ -57,8 +57,6 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
 // Default currency for Store API requests - ensures prices are returned in the base currency
 const DEFAULT_API_CURRENCY = API_BASE_CURRENCY;
 const BACKEND_FETCH_TIMEOUT_MS = 8000;
-const LEGACY_STORE_SITE_URL = "https://sasanperfumes.shapehive.com";
-
 function cmsApiHostName(): string {
   try {
     return new URL(siteConfig.apiUrl).hostname;
@@ -432,51 +430,8 @@ function hasMeaningfulText(value?: string): boolean {
   return Boolean(value && value.replace(/<[^>]*>/g, "").trim());
 }
 
-function getPlainTextLength(value?: string): number {
-  if (!value) return 0;
-  return value
-    .replace(/<[^>]*>/g, " ")
-    .replace(/&nbsp;/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .length;
-}
-
-function chooseRicherText(primary?: string, fallback?: string | null): string {
-  const primaryText = primary || "";
-  const fallbackText = fallback || "";
-
-  if (!hasMeaningfulText(primaryText)) {
-    return fallbackText || primaryText;
-  }
-
-  const primaryLength = getPlainTextLength(primaryText);
-  const fallbackLength = getPlainTextLength(fallbackText);
-
-  if (fallbackText && fallbackLength > primaryLength + 80) {
-    return fallbackText;
-  }
-
-  return primaryText;
-}
-
-function mergeLegacyProductCopy(primary: WCProduct, fallback?: WCProduct | null): WCProduct {
-  if (!fallback) {
-    return primary;
-  }
-
-  return {
-    ...primary,
-    short_description: chooseRicherText(primary.short_description, fallback.short_description),
-    description: chooseRicherText(primary.description, fallback.description),
-  };
-}
-
 async function requestMarketForLocale(locale?: Locale, frontendHost?: string): Promise<string | undefined> {
-  if (locale !== "ar") {
-    return undefined;
-  }
-
+  void locale;
   return extractMarketFromHost(frontendHost) || await detectMarketFromRequest();
 }
 
@@ -611,8 +566,10 @@ export async function getProducts(params?: {
       revalidate: 300,
     });
 
+    const market = await requestMarketForLocale(params?.locale, params?.frontendHost);
+
     // Fallback: if non-English locale returns 0 products (no translations), retry without locale
-    if (products.length === 0 && params?.locale && params.locale !== "en") {
+    if (products.length === 0 && params?.locale && params.locale !== "en" && !market) {
       const fallback = await fetchAPIWithPagination<WCProduct[]>(endpoint, {
         tags: ["products"],
         locale: "en",
@@ -634,42 +591,16 @@ export async function getProducts(params?: {
 
     const dedupedProducts = deduplicateWPMLTranslations(visibleProducts, params?.locale);
 
-    const market = await requestMarketForLocale(params?.locale, params?.frontendHost);
     const localizedProducts = localizeMarketProducts(dedupedProducts, params?.locale, market);
-    let enrichedProducts = localizedProducts;
-
-    if (localizedProducts.some((product) => !hasMeaningfulText(product.short_description) || !hasMeaningfulText(product.description))) {
-      try {
-        const legacyResult = await fetchAPIWithPagination<WCProduct[]>(endpoint, {
-          tags: ["products", "legacy-products"],
-          locale: "en",
-          currency: params?.currency,
-          frontendHost: params?.frontendHost,
-          revalidate: 300,
-          apiBase: LEGACY_STORE_SITE_URL,
-        });
-
-        const legacyMap = new Map(
-          deduplicateWPMLTranslations(legacyResult.data, "en").map((product) => [product.slug, product] as const)
-        );
-
-        enrichedProducts = localizedProducts.map((product) =>
-          mergeLegacyProductCopy(product, legacyMap.get(product.slug))
-        );
-      } catch (error) {
-        console.warn(`Failed to fetch legacy products for fallback content: ${formatFetchError(error)}`);
-      }
-    }
-
     return {
-      products: enrichedProducts,
+      products: localizedProducts,
       total: total - (products.length - dedupedProducts.length),
       totalPages,
     };
   } catch (error) {
     console.warn(`Failed to fetch products: ${formatFetchError(error)}`);
     const market = extractMarketFromHost(params?.frontendHost) || await detectMarketFromRequest();
-    if (market && params?.locale && params.locale !== "en") {
+    if (!market && params?.locale && params.locale !== "en") {
       try {
         const fallback = await getProducts({
           ...params,
@@ -749,7 +680,7 @@ export const getProductBySlug = cache(async function getProductBySlug(
       }
     }
 
-    if (targetLocale && targetLocale !== "en") {
+    if (!market && targetLocale && targetLocale !== "en") {
       return fetchBySlug(targetSlug, "en");
     }
 
@@ -758,33 +689,8 @@ export const getProductBySlug = cache(async function getProductBySlug(
 
   const hydrateWithLegacyCopy = async (current: WCProduct | null, targetSlug = slug): Promise<WCProduct | null> => {
     if (!current) {
-      try {
-        const currentUnscoped = await fetchCurrentUnscopedProduct(targetSlug, locale);
-        const legacyProducts = await fetchAPI<WCProduct[]>(`/products?slug=${encodeURIComponent(targetSlug)}`, {
-          tags: ["products", `product-${targetSlug}-legacy`],
-          locale: "en",
-          currency,
-          frontendHost,
-          apiBase: LEGACY_STORE_SITE_URL,
-        });
-
-        if (currentUnscoped) {
-          const localizedCurrent = localizeMarketProduct(currentUnscoped, locale, market);
-          if (legacyProducts.length === 0) {
-            return localizedCurrent;
-          }
-          return mergeLegacyProductCopy(localizedCurrent, legacyProducts[0]);
-        }
-
-        if (legacyProducts.length === 0) {
-          return null;
-        }
-
-        return localizeMarketProduct(legacyProducts[0], locale, market);
-      } catch {
-        const currentUnscoped = await fetchCurrentUnscopedProduct(targetSlug, locale);
-        return currentUnscoped ? localizeMarketProduct(currentUnscoped, locale, market) : null;
-      }
+      const currentUnscoped = await fetchCurrentUnscopedProduct(targetSlug, locale);
+      return currentUnscoped ? localizeMarketProduct(currentUnscoped, locale, market) : null;
     }
 
     const localizedProduct = localizeMarketProduct(current, locale, market);
@@ -792,23 +698,7 @@ export const getProductBySlug = cache(async function getProductBySlug(
       return localizedProduct;
     }
 
-    try {
-      const legacyProducts = await fetchAPI<WCProduct[]>(`/products?slug=${encodeURIComponent(targetSlug)}`, {
-        tags: ["products", `product-${targetSlug}-legacy`],
-        locale: "en",
-        currency,
-        frontendHost,
-        apiBase: LEGACY_STORE_SITE_URL,
-      });
-
-      if (legacyProducts.length === 0) {
-        return localizedProduct;
-      }
-
-      return mergeLegacyProductCopy(localizedProduct, legacyProducts[0]);
-    } catch {
-      return localizedProduct;
-    }
+    return localizedProduct;
   };
 
   try {
@@ -837,7 +727,7 @@ export const getProductBySlug = cache(async function getProductBySlug(
         }
       }
 
-      if (locale !== "en") {
+      if (!market && locale !== "en") {
         const englishProducts = await fetchAPI<WCProduct[]>(`/products?slug=${encodedSlug}`, {
           tags: ["products", `product-${slug}-en-fallback`],
           locale: "en",
@@ -863,7 +753,7 @@ export const getProductBySlug = cache(async function getProductBySlug(
 
     return hydrateWithLegacyCopy(null, slug);
   } catch {
-    if (market && locale && locale !== "en") {
+    if (!market && locale && locale !== "en") {
       try {
         const englishProducts = await fetchAPI<WCProduct[]>(`/products?slug=${encodedSlug}`, {
           tags: ["products", `product-${slug}-en-fallback`],
@@ -1229,6 +1119,7 @@ export const getCategoryBySlug = cache(async function getCategoryBySlug(
   frontendHost?: string
 ): Promise<WCCategory | null> {
   try {
+    const market = extractMarketFromHost(frontendHost) || await detectMarketFromRequest();
     const categories = await getCategories(locale, currency, frontendHost);
     
     // First, try to find by exact slug match
@@ -1250,7 +1141,7 @@ export const getCategoryBySlug = cache(async function getCategoryBySlug(
     
     // Fallback: If locale is not English, try to find by matching with English categories
     // This handles cases where the mapping might be incomplete
-    if (locale && locale !== "en") {
+    if (!market && locale && locale !== "en") {
       const englishCategories = await getCategories("en", currency, frontendHost);
       
       // Find the English category with this slug
@@ -1313,14 +1204,41 @@ export async function getProductsByCategory(
     return { products: [], total: 0, totalPages: 0 };
   }
 
-  const result = await getProducts({
-    category: category.id.toString(),
-    ...params,
-  });
+  const categoryIdsToTry: number[] = [];
 
-  // getProducts already handles locale fallback internally,
-  // so if Arabic returned 0 it already fell back to English
-  return result;
+  // WPML stores Arabic-localized category rows separately, but the WooCommerce
+  // Store API still attaches many translated products to the English category
+  // IDs. Query the canonical English category first for non-English locales so
+  // category pages keep showing the translated products instead of going empty.
+  if (params?.locale && params.locale !== "en") {
+    const englishCategory = await getCategoryBySlug(
+      categorySlug,
+      "en",
+      params?.currency,
+      params?.frontendHost
+    );
+
+    if (englishCategory) {
+      categoryIdsToTry.push(englishCategory.id);
+    }
+  }
+
+  categoryIdsToTry.push(category.id);
+
+  let lastResult: WCProductsResponse = { products: [], total: 0, totalPages: 0 };
+  for (const categoryId of categoryIdsToTry) {
+    const result = await getProducts({
+      category: categoryId.toString(),
+      ...params,
+    });
+
+    lastResult = result;
+    if (result.products.length > 0) {
+      return result;
+    }
+  }
+
+  return lastResult;
 }
 
 // Get products filtered by a fragrance note attribute term slug
@@ -2006,11 +1924,13 @@ export async function getFeaturedProducts(params?: {
         (!product.catalog_visibility || product.catalog_visibility === "visible" || product.catalog_visibility === "catalog")
     );
 
+    const market = await requestMarketForLocale(params?.locale, params?.frontendHost);
+
     // Fallback: if non-English locale returns 0 featured products, retry without locale
-    if (visibleFeatured.length === 0 && params?.locale && params.locale !== "en") {
+    if (visibleFeatured.length === 0 && params?.locale && params.locale !== "en" && !market) {
       return getFeaturedProducts({ ...params, locale: "en" });
     }
-    const market = await requestMarketForLocale(params?.locale, params?.frontendHost);
+
     const localizedFeatured = localizeMarketProducts(visibleFeatured, params?.locale, market);
 
     return {
