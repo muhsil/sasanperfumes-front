@@ -521,7 +521,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (Array.isArray(body.fee_lines) && body.fee_lines.length > 0) {
-      orderData.fee_lines = normalizeFeeLinesForNoTax(body.fee_lines);
+      const feeLines = market.code === "intl"
+        ? body.fee_lines
+        : body.fee_lines.filter((feeLine: FeeLine) => (feeLine?.name || "").toLowerCase() !== "customs fees");
+      orderData.fee_lines = normalizeFeeLinesForNoTax(feeLines);
     }
 
     // For guest checkout, look up existing WooCommerce customer by billing email
