@@ -265,6 +265,16 @@ export default function CheckoutClient() {
   
   const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
   const divisor = Math.pow(10, currencyMinorUnit);
+  const selectedShippingRateDetails = useMemo(() => {
+    if (!selectedShippingRate || shippingPackages.length === 0) return null;
+    return (
+      shippingPackages.flatMap((pkg) => pkg.shipping_rates || []).find((rate) => rate.rate_id === selectedShippingRate) ||
+      shippingPackages.flatMap((pkg) => pkg.shipping_rates || []).find((rate) => rate.selected) ||
+      null
+    );
+  }, [selectedShippingRate, shippingPackages]);
+  const shippingCurrencyMinorUnit = selectedShippingRateDetails?.currency_minor_unit ?? currencyMinorUnit;
+  const shippingDivisor = Math.pow(10, shippingCurrencyMinorUnit);
   const cartDiscounts = useMemo(
     () => {
       try {
@@ -641,7 +651,7 @@ export default function CheckoutClient() {
               if (shippingInfoTrackedRef.current !== shippingInfoKey && selectedRate) {
                 trackAnalyticsEvent("add_shipping_info", {
                   currency: currency || siteConfig.defaultCurrency,
-                  value: parseFloat(data.totals?.shipping_total || shippingTotal || "0") / divisor,
+                  value: parseFloat(data.totals?.shipping_total || shippingTotal || "0") / Math.pow(10, selectedRate.currency_minor_unit || shippingCurrencyMinorUnit),
                   shipping_tier: selectedRate.name || rateId,
                   items: checkoutAnalyticsItems,
                 });
@@ -692,8 +702,10 @@ export default function CheckoutClient() {
       try {
         const allowCustomsFee = !marketPrefix;
         if (shippingPackages.length > 0) {
-          const shipping = parseFloat(shippingTotal) || 0;
-          return discountedCartSubtotal + shipping + cartFeeTotal;
+          const subtotalMajor = (discountedCartSubtotal || 0) / divisor;
+          const shippingMajor = (parseFloat(shippingTotal) || 0) / shippingDivisor;
+          const feesMajor = (cartFeeTotal || 0) / divisor;
+          return subtotalMajor + shippingMajor + feesMajor;
         }
         const baseTotal = parseFloat(cartTotal) || 0;
         const serverCustomsFeeTotal = allowCustomsFee
@@ -707,7 +719,7 @@ export default function CheckoutClient() {
         console.error("[Checkout] Failed to calculate checkout total:", err);
         return Math.max(parseFloat(cartTotal) || 0, 0);
       }
-    }, [discountedCartSubtotal, shippingTotal, shippingPackages, cartTotal, cartFeeTotal, customsFee, cart?.fees, promotionalDiscountTotal, marketPrefix]);
+    }, [discountedCartSubtotal, shippingTotal, shippingPackages, cartTotal, cartFeeTotal, customsFee, cart?.fees, promotionalDiscountTotal, marketPrefix, divisor, shippingDivisor]);
 
     const checkoutAnalyticsItems = useMemo(() => {
       return cartItems
@@ -1180,7 +1192,7 @@ export default function CheckoutClient() {
           shippingLines.push({
             method_id: selectedRate.method_id,
             method_title: selectedRate.name,
-            total: (parseFloat(shippingTotal) / divisor).toFixed(getCurrencyInfo().decimals),
+            total: ((parseFloat(shippingTotal) || 0) / shippingDivisor).toFixed(getCurrencyInfo().decimals),
           });
         }
       }
@@ -1279,7 +1291,7 @@ export default function CheckoutClient() {
       if (!paymentInfoTrackedRef.current) {
         trackAnalyticsEvent("add_payment_info", {
           currency: currency || siteConfig.defaultCurrency,
-          value: checkoutTotal / divisor,
+          value: checkoutTotal,
           payment_type: selectedPaymentGateway?.title || formData.paymentMethod,
           items: checkoutAnalyticsItems,
         });
@@ -1361,12 +1373,13 @@ export default function CheckoutClient() {
             // This ensures the payment gateway receives the exact amount calculated by the backend
             // and avoids any potential mismatch between frontend and backend calculations
             const orderTotal = parseFloat(data.order?.total) || 0;
+            const paymentCurrencyDecimals = getCurrencyInfo().decimals;
             
             // Calculate frontend amount for comparison/logging purposes
-            const frontendPaymentAmount = checkoutTotal / divisor;
+            const frontendPaymentAmount = checkoutTotal;
             
-            // Use the WooCommerce order total as the payment amount (rounded to 2 decimal places)
-            const paymentAmount = Math.round(orderTotal * 100) / 100;
+            // Use the WooCommerce order total as the payment amount at the active currency precision
+            const paymentAmount = Number(orderTotal.toFixed(paymentCurrencyDecimals));
             
             // Log if there's a significant difference between frontend and backend calculations
             // This helps identify potential pricing discrepancies for debugging
@@ -1404,7 +1417,7 @@ export default function CheckoutClient() {
                   order_items: cartItems.map((item) => ({
                     title: item.name,
                     quantity: item.quantity.value,
-                    unit_price: parseFloat(item.totals.subtotal) / item.quantity.value / 100,
+                    unit_price: parseFloat(item.totals.subtotal) / item.quantity.value / divisor,
                     category: "General",
                   })),
                   language: locale === "ar" ? "ar" : "en",
@@ -1458,7 +1471,7 @@ export default function CheckoutClient() {
                   items: cartItems.map((item) => ({
                     name: item.name,
                     quantity: item.quantity.value,
-                    unit_price: parseFloat(item.totals.subtotal) / item.quantity.value / 100,
+                    unit_price: parseFloat(item.totals.subtotal) / item.quantity.value / divisor,
                     sku: item.id?.toString() || "",
                   })),
                   success_url: `${baseUrl}/${locale}/order-confirmation`,
@@ -2455,12 +2468,12 @@ export default function CheckoutClient() {
                                 <span>{isRTL ? "الشحن" : "Shipping"}</span>
                                 {parseFloat(shippingTotal) > 0 ? (
                                   <FormattedPrice
-                                    price={parseFloat(shippingTotal) / divisor}
+                                    price={(parseFloat(shippingTotal) || 0) / shippingDivisor}
                                     iconSize="xs"
                                   />
                                 ) : parseFloat(cart?.totals?.shipping_total || "0") > 0 ? (
                                   <FormattedPrice
-                                    price={parseFloat(cart?.totals?.shipping_total || "0") / divisor}
+                                    price={(parseFloat(cart?.totals?.shipping_total || "0") || 0) / shippingDivisor}
                                     iconSize="xs"
                                   />
                                 ) : (
@@ -2503,7 +2516,7 @@ export default function CheckoutClient() {
               <div className="hidden py-4 text-lg font-bold text-brand-primary lg:flex lg:justify-between">
                 <span>{isRTL ? "الإجمالي" : "Total"}</span>
                 <FormattedPrice
-                  price={checkoutTotal / divisor}
+                  price={checkoutTotal}
                   iconSize="sm"
                 />
               </div>
@@ -2562,7 +2575,7 @@ export default function CheckoutClient() {
           <div className="flex flex-col">
             <span className="text-xs text-brand-muted">{isRTL ? "الإجمالي" : "Total"}</span>
             <FormattedPrice
-              price={checkoutTotal / divisor}
+              price={checkoutTotal}
               className="text-base font-bold text-brand-primary"
               iconSize="xs"
             />
