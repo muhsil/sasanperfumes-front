@@ -1,4 +1,5 @@
 const STRIPE_API_BASE = "https://api.stripe.com/v1";
+const THREE_DECIMAL_CURRENCIES = new Set(["BHD", "KWD", "OMR"]);
 
 export interface StripeCheckoutSession {
   id: string;
@@ -13,6 +14,10 @@ function appendParam(params: URLSearchParams, key: string, value: unknown) {
   params.append(key, String(value));
 }
 
+function getCurrencyMinorUnit(currency: string): number {
+  return THREE_DECIMAL_CURRENCIES.has(currency.toUpperCase()) ? 3 : 2;
+}
+
 export function buildCheckoutSessionParams(input: {
   orderId: number | string;
   orderKey: string;
@@ -25,7 +30,8 @@ export function buildCheckoutSessionParams(input: {
   locale?: string;
 }) {
   const params = new URLSearchParams();
-  const amountMinor = Math.round(input.amount * 100);
+  const currencyMinorUnit = getCurrencyMinorUnit(input.currency);
+  const amountMinor = Math.round(input.amount * Math.pow(10, currencyMinorUnit));
 
   appendParam(params, "mode", "payment");
   appendParam(params, "payment_method_types[]", "card");
@@ -95,4 +101,3 @@ export function getPaymentIntentId(session: StripeCheckoutSession): string | und
   if (typeof session.payment_intent === "string") return session.payment_intent;
   return session.payment_intent.id;
 }
-
