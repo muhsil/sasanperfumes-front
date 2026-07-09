@@ -627,7 +627,7 @@ $syncOptions = !sasanperfumes_arg_has($argv, '--skip-options');
 $postTypesArg = sasanperfumes_arg_get(
     $argv,
     '--post-types',
-    'product,page,sasanperfumes_product_page,sasanperfumes_service,sasanperfumes_guide,sasanperfumes_note,sasanperfumes_size_guide'
+    'product,page,sasanperfumes_product_page,sasanperfumes_guide,sasanperfumes_note'
 );
 $taxArg = sasanperfumes_arg_get(
     $argv,

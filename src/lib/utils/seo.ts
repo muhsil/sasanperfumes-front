@@ -303,7 +303,6 @@ export function generateLocalBusinessJsonLd(marketCode: MarketCode = "intl") {
           { "@type": "OfferCatalog", name: "All Over Spray" },
           { "@type": "OfferCatalog", name: "Hair Mist" },
           { "@type": "OfferCatalog", name: "Gift Sets" },
-          { "@type": "OfferCatalog", name: "Private Labeling" },
         ],
       },
       sameAs: socialLinks,

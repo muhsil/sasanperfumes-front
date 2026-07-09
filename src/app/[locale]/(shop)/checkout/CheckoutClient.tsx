@@ -28,7 +28,6 @@ import { trackAnalyticsEvent } from "@/lib/utils/analytics";
 import type { CoCartItem } from "@/lib/api/cocart";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { GiftWrapOption } from "@/components/checkout/GiftWrapOption";
-import { CheckoutLoyaltyPoints } from "@/components/checkout/CheckoutLoyaltyPoints";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 import { calculateCartDiscounts, getCartDiscountTotal } from "@/lib/discountRules";
 
@@ -102,6 +101,12 @@ const PAYMENT_METHOD_COUNTRY_AVAILABILITY: Record<string, PaymentMethodCountryAv
   "tamara-gateway": { type: "include", countries: ["AE", "SA", "BH"] },
   tamara: { type: "include", countries: ["AE", "SA", "BH"] },
   cod: { type: "include", countries: ["AE"] },
+};
+
+const MARKET_DEFAULT_COUNTRIES: Record<string, string> = {
+  qa: "QA",
+  om: "OM",
+  sa: "SA",
 };
 
 const WOO_PAYMENTS_METHODS = new Set(["woocommerce_payments", "stripe", "card"]);
@@ -180,6 +185,7 @@ const sanitizeCheckoutMessage = (message: string): string => {
 export default function CheckoutClient() {
   const marketPrefix = useMarketPrefix();
   const marketCode = useMemo(() => marketPrefix.replace(/^\//, "").toLowerCase(), [marketPrefix]);
+  const defaultCheckoutCountry = MARKET_DEFAULT_COUNTRIES[marketCode] || "AE";
   const { locale } = useParams<{ locale: string }>();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -289,8 +295,8 @@ export default function CheckoutClient() {
   const promotionalDiscountTotal = getCartDiscountTotal(cartDiscounts);
 
   const [formData, setFormData] = useState<CheckoutFormData>({
-    shipping: { ...emptyAddress },
-    billing: { ...emptyAddress },
+    shipping: { ...emptyAddress, country: defaultCheckoutCountry },
+    billing: { ...emptyAddress, country: defaultCheckoutCountry },
     sameAsShipping: true,
     paymentMethod: "stripe",
     orderNotes: "",
@@ -321,7 +327,7 @@ export default function CheckoutClient() {
                 city: defaultAddress.city || "",
                 state: defaultAddress.state || "",
                 postalCode: defaultAddress.postcode || "",
-                country: resolveCountryCode(defaultAddress.country),
+                country: resolveCountryCode(defaultAddress.country) || defaultCheckoutCountry,
                 phone: defaultAddress.phone || "",
                 email: defaultAddress.email || customer.email || "",
               };
@@ -340,7 +346,7 @@ export default function CheckoutClient() {
                 city: customer.shipping?.city || "",
                 state: customer.shipping?.state || "",
                 postalCode: customer.shipping?.postcode || "",
-                country: resolveCountryCode(customer.shipping?.country || ""),
+                country: resolveCountryCode(customer.shipping?.country || "") || defaultCheckoutCountry,
                 phone: customer.shipping?.phone || customer.billing?.phone || "",
                 email: customer.billing?.email || customer.email || "",
               };
@@ -353,7 +359,7 @@ export default function CheckoutClient() {
                 city: customer.billing?.city || "",
                 state: customer.billing?.state || "",
                 postalCode: customer.billing?.postcode || "",
-                country: resolveCountryCode(customer.billing?.country || ""),
+                country: resolveCountryCode(customer.billing?.country || "") || defaultCheckoutCountry,
                 phone: customer.billing?.phone || "",
                 email: customer.billing?.email || customer.email || "",
               };
@@ -564,8 +570,9 @@ export default function CheckoutClient() {
           try {
             const subtotal = discountedCartSubtotal;
             const weight = cart?.items_weight || 0;
+            const shippingCountry = country || defaultCheckoutCountry;
             const params = new URLSearchParams({
-              country: country || "AE",
+              country: shippingCountry,
               city: city || "",
               postcode: postcode || "",
               cart_subtotal: String(subtotal),
@@ -2459,11 +2466,6 @@ export default function CheckoutClient() {
                                   </span>
                                 </div>
                               ))}
-                              <CheckoutLoyaltyPoints
-                                subtotal={cartSubtotal}
-                                isRTL={isRTL}
-                                divisor={divisor}
-                              />
                               <div className="flex justify-between text-sm text-brand-muted">
                                 <span>{isRTL ? "الشحن" : "Shipping"}</span>
                                 {parseFloat(shippingTotal) > 0 ? (

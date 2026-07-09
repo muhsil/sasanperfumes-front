@@ -6,9 +6,5 @@ export { CollectionsSection, CollectionsSectionSkeleton } from "./CollectionsSec
 export { BannersSection, BannersSectionSkeleton } from "./BannersSection";
 export { AdsSection } from "./AdsSection";
 export { VideoHero } from "./VideoHero";
-export { BrandsSlider } from "./BrandsSlider";
-export { ServicesSlider } from "./ServicesSlider";
-export { ServicesWithAnimation } from "./ServicesWithAnimation";
-export { HomepageServicesGrid, HomepageServicesGridSkeleton } from "./HomepageServicesGrid";
 export { SeoContentSection } from "./SeoContentSection";
 export { OurStorySection } from "./OurStorySection";

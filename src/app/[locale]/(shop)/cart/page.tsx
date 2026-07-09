@@ -20,7 +20,6 @@ import { featureFlags, type Locale } from "@/config/site";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { useProductMeta } from "@/hooks/useProductCategories";
 import { SuggestedProducts } from "@/components/checkout/SuggestedProducts";
-import { CartLoyaltyPoints } from "@/components/cart/CartLoyaltyPoints";
 import type { CoCartItem } from "@/lib/api/cocart";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 import { trackAnalyticsEvent } from "@/lib/utils/analytics";
@@ -740,12 +739,6 @@ export default function CartPage() {
                   iconSize="sm"
                 />
               </div>
-
-              <CartLoyaltyPoints
-                subtotal={cartSubtotal}
-                isRTL={isRTL}
-                divisor={divisor}
-              />
 
               <p className="mb-3 text-center text-xs text-brand-muted">
                 {isRTL ? "جميع الأسعار شاملة ضريبة القيمة المضافة" : "All prices are inclusive of VAT"}

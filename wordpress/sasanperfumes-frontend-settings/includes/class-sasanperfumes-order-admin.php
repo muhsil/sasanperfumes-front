@@ -410,7 +410,12 @@ function sasanperfumes_order_admin_render_payment_box($post_or_order) {
     sasanperfumes_order_admin_row('Payment Method', $order->get_payment_method_title() . ' (' . $order->get_payment_method() . ')');
     sasanperfumes_order_admin_row('Transaction / Payment ID', $order->get_transaction_id());
     sasanperfumes_order_admin_row('Order Key', $order->get_order_key());
-    sasanperfumes_order_admin_row('Total Paid', sasanperfumes_order_admin_money($order->get_total(), $currency));
+    $order_total = sasanperfumes_order_admin_amount_value($order->get_total());
+    $amount_paid = method_exists($order, 'get_total_paid') ? sasanperfumes_order_admin_amount_value($order->get_total_paid()) : 0.0;
+    $balance_due = round(max(0, $order_total - $amount_paid), 2);
+    sasanperfumes_order_admin_row('Order Total', sasanperfumes_order_admin_money($order_total, $currency));
+    sasanperfumes_order_admin_row('Amount Paid', sasanperfumes_order_admin_money($amount_paid, $currency));
+    sasanperfumes_order_admin_row('Balance Due', $balance_due > 0 ? sasanperfumes_order_admin_money($balance_due, $currency) : sasanperfumes_order_admin_money(0, $currency));
     sasanperfumes_order_admin_row('Currency', $currency);
     sasanperfumes_order_admin_row('Created Time', sasanperfumes_order_admin_format_date($order->get_date_created()));
     sasanperfumes_order_admin_row('Paid Time', sasanperfumes_order_admin_format_date($order->get_date_paid()));

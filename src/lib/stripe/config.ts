@@ -22,6 +22,16 @@ export function getStripePublishableKey(): string {
   ).trim();
 }
 
+export function getStripeWebhookSecret(): string {
+  return (
+    process.env.STRIPE_WEBHOOK_SECRET ||
+    process.env.STRIPE_ENDPOINT_SECRET ||
+    getEnvVar("STRIPE_WEBHOOK_SECRET") ||
+    getEnvVar("STRIPE_ENDPOINT_SECRET") ||
+    ""
+  ).trim();
+}
+
 export function isStripeConfigured(): boolean {
   return Boolean(getStripeSecretKey());
 }

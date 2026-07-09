@@ -205,6 +205,13 @@ export interface DynamicNavigationItem {
   hasBrandsMegaMenu?: boolean;
 }
 
+const REMOVED_ROUTE_PREFIXES = [
+  "/services",
+  "/private-labeling",
+  "/size-guide",
+  "/account/loyalty",
+];
+
 /**
  * Check if a menu item should have a mega menu
  * Only "Shop All" / "Shop" / live perfume-category headings should have mega menu
@@ -377,8 +384,12 @@ export function getDynamicNavigationItems(
   }
 
   const topLevelItems = menuItems.filter((item) => item.parent === 0);
+  const visibleTopLevelItems = topLevelItems.filter((item) => {
+    const normalizedPath = stripMenuRoutePrefix(normalizeMenuUrl(item.url, locale, pathPrefix).split("?")[0]).replace(/\/$/, "");
+    return !REMOVED_ROUTE_PREFIXES.some((prefix) => normalizedPath === prefix || normalizedPath.startsWith(`${prefix}/`));
+  });
 
-  if (topLevelItems.length === 0 || !shouldUseLiveHeaderNavigation(topLevelItems)) {
+  if (visibleTopLevelItems.length === 0 || !shouldUseLiveHeaderNavigation(visibleTopLevelItems)) {
     return navigationItems.map((item, index) => ({
       id: index + 1,
       name: item.name[locale],
@@ -388,7 +399,7 @@ export function getDynamicNavigationItems(
     }));
   }
 
-  const normalizedItems = topLevelItems
+  const normalizedItems = visibleTopLevelItems
     .map((item, index) => {
       const title = locale === "ar" ? translateToArabic(item.title) : decodeHtmlEntities(item.title);
     const href = normalizeMenuUrl(item.url, locale, pathPrefix);

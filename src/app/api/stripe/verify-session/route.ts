@@ -61,7 +61,12 @@ export async function GET(request: NextRequest) {
     }
 
     const market = await getRequestMarket();
-    const paymentStatus = session.payment_status === "paid" ? "success" : session.status === "expired" ? "failed" : "pending";
+    const paymentStatus =
+      session.payment_status === "paid" || session.status === "complete"
+        ? "success"
+        : session.status === "expired"
+          ? "failed"
+          : "pending";
     const paymentIntentId = getPaymentIntentId(session);
 
     if (paymentStatus === "success") {

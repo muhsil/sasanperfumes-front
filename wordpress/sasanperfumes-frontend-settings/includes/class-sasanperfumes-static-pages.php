@@ -451,13 +451,6 @@ function sasanperfumes_sp_rest_init() {
         'methods' => 'GET', 'callback' => 'sasanperfumes_sp_get_page', 'permission_callback' => '__return_true',
         'args' => ['slug' => ['required' => true, 'sanitize_callback' => 'sanitize_text_field']],
     ]);
-    sasanperfumes_register_rest_route( '/notes-seo/(?P<slug>[a-zA-Z0-9_-]+)', [
-        'methods' => 'GET', 'callback' => 'sasanperfumes_sp_get_note_seo', 'permission_callback' => '__return_true',
-        'args' => ['slug' => ['required' => true, 'sanitize_callback' => 'sanitize_text_field']],
-    ]);
-    sasanperfumes_register_rest_route( '/notes-seo', [
-        'methods' => 'GET', 'callback' => 'sasanperfumes_sp_get_all_notes_seo', 'permission_callback' => '__return_true',
-    ]);
 }
 
 function sasanperfumes_sp_get_page($request) {
@@ -538,121 +531,6 @@ function sasanperfumes_sp_get_page($request) {
     }
 
     return new WP_REST_Response($data, 200);
-}
-
-// --- Notes SEO ---
-function sasanperfumes_sp_get_note_seo($request) {
-    $slug = $request['slug'];
-    return new WP_REST_Response([
-        'name' => ['en' => get_option("sasanperfumes_note_{$slug}_name_en", ''), 'ar' => get_option("sasanperfumes_note_{$slug}_name_ar", '')],
-        'title' => ['en' => get_option("sasanperfumes_note_{$slug}_title_en", ''), 'ar' => get_option("sasanperfumes_note_{$slug}_title_ar", '')],
-        'description' => ['en' => get_option("sasanperfumes_note_{$slug}_desc_en", ''), 'ar' => get_option("sasanperfumes_note_{$slug}_desc_ar", '')],
-    ], 200);
-}
-
-function sasanperfumes_sp_get_all_notes_seo() {
-    global $wpdb;
-    $rows = $wpdb->get_results(
-        "SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name LIKE 'sasanperfumes_note_%'"
-    );
-    $notes = [];
-    foreach ($rows as $row) {
-        if (preg_match('/^sasanperfumes_note_(.+)_(name|title|desc)_(en|ar)$/', $row->option_name, $m)) {
-            $slug = $m[1]; $field = $m[2]; $lang = $m[3];
-            if (!isset($notes[$slug])) $notes[$slug] = ['name'=>['en'=>'','ar'=>''],'title'=>['en'=>'','ar'=>''],'description'=>['en'=>'','ar'=>'']];
-            $api_field = $field === 'desc' ? 'description' : $field;
-            $notes[$slug][$api_field][$lang] = $row->option_value;
-        }
-    }
-    // Only return notes with content
-    return new WP_REST_Response(array_filter($notes, function($n) {
-        return !empty($n['name']['en']) || !empty($n['title']['en']);
-    }), 200);
-}
-
-// --- Notes SEO Admin ---
-function sasanperfumes_sp_notes_admin_menu() {
-    add_submenu_page('sasanperfumes-settings', 'Notes SEO', 'Notes SEO', 'manage_options', 'sasanperfumes-notes-seo', 'sasanperfumes_sp_notes_render');
-}
-
-function sasanperfumes_sp_notes_render() {
-    if (!current_user_can('manage_options')) return;
-
-    // Save
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && check_admin_referer('sasanperfumes_notes_seo_save')) {
-        $notes = (array)($_POST['sasanperfumes_notes'] ?? []);
-        foreach ($notes as $slug => $data) {
-            $slug = sanitize_key($slug);
-            foreach (['name_en','name_ar','title_en','title_ar','desc_en','desc_ar'] as $f) {
-                $fn = strpos($f, 'desc') !== false ? 'sanitize_textarea_field' : 'sanitize_text_field';
-                update_option("sasanperfumes_note_{$slug}_{$f}", $fn($data[$f] ?? ''));
-            }
-        }
-        // Handle new notes
-        $new = (array)($_POST['sasanperfumes_new_notes'] ?? []);
-        foreach ($new as $entry) {
-            $slug = sanitize_key($entry['slug'] ?? '');
-            if (empty($slug)) continue;
-            foreach (['name_en','name_ar','title_en','title_ar','desc_en','desc_ar'] as $f) {
-                $fn = strpos($f, 'desc') !== false ? 'sanitize_textarea_field' : 'sanitize_text_field';
-                update_option("sasanperfumes_note_{$slug}_{$f}", $fn($entry[$f] ?? ''));
-            }
-        }
-        echo '<div class="notice notice-success"><p>Notes SEO saved!</p></div>';
-    }
-
-    // Load all notes
-    global $wpdb;
-    $rows = $wpdb->get_results(
-        "SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name LIKE 'sasanperfumes_note_%'"
-    );
-    $notes = [];
-    foreach ($rows as $row) {
-        if (preg_match('/^sasanperfumes_note_(.+)_(name|title|desc)_(en|ar)$/', $row->option_name, $m)) {
-            $slug = $m[1]; $field = $m[2] . '_' . $m[3];
-            if (!isset($notes[$slug])) $notes[$slug] = [];
-            $notes[$slug][$field] = $row->option_value;
-        }
-    }
-    ksort($notes);
-
-    echo '<div class="wrap"><h1>Notes SEO Content</h1>';
-    echo '<p class="description">SEO content for fragrance note pages (/notes/slug). Each note has name, title, and description in EN/AR.</p>';
-    echo '<form method="post">';
-    wp_nonce_field('sasanperfumes_notes_seo_save');
-
-    if (!empty($notes)) {
-        foreach ($notes as $slug => $data) {
-            echo '<div style="background:#f9f9f9;padding:15px;margin:15px 0;border:1px solid #ddd;border-radius:4px;">';
-            echo '<h3 style="margin-top:0;">' . esc_html($slug) . '</h3>';
-            echo '<table class="form-table" style="margin:0;">';
-            echo '<tr><th>Name (EN)</th><td><input type="text" name="sasanperfumes_notes[' . esc_attr($slug) . '][name_en]" value="' . esc_attr($data['name_en'] ?? '') . '" class="regular-text"></td>';
-            echo '<th>Name (AR)</th><td><input type="text" name="sasanperfumes_notes[' . esc_attr($slug) . '][name_ar]" value="' . esc_attr($data['name_ar'] ?? '') . '" class="regular-text" dir="rtl"></td></tr>';
-            echo '<tr><th>Title (EN)</th><td><input type="text" name="sasanperfumes_notes[' . esc_attr($slug) . '][title_en]" value="' . esc_attr($data['title_en'] ?? '') . '" class="large-text"></td>';
-            echo '<th>Title (AR)</th><td><input type="text" name="sasanperfumes_notes[' . esc_attr($slug) . '][title_ar]" value="' . esc_attr($data['title_ar'] ?? '') . '" class="large-text" dir="rtl"></td></tr>';
-            echo '<tr><th>Desc (EN)</th><td><textarea name="sasanperfumes_notes[' . esc_attr($slug) . '][desc_en]" rows="2" class="large-text">' . esc_textarea($data['desc_en'] ?? '') . '</textarea></td>';
-            echo '<th>Desc (AR)</th><td><textarea name="sasanperfumes_notes[' . esc_attr($slug) . '][desc_ar]" rows="2" class="large-text" dir="rtl">' . esc_textarea($data['desc_ar'] ?? '') . '</textarea></td></tr>';
-            echo '</table></div>';
-        }
-    } else {
-        echo '<p>No notes yet. Use the "Add New Note" section below or run the populate script.</p>';
-    }
-
-    // Add new note form
-    echo '<hr><h2>Add New Note</h2>';
-    echo '<div style="background:#fff3cd;padding:15px;margin:15px 0;border:1px solid #ffc107;border-radius:4px;">';
-    echo '<table class="form-table" style="margin:0;">';
-    echo '<tr><th>Slug</th><td><input type="text" name="sasanperfumes_new_notes[0][slug]" class="regular-text" placeholder="e.g. amber, rose, oud"></td></tr>';
-    echo '<tr><th>Name (EN)</th><td><input type="text" name="sasanperfumes_new_notes[0][name_en]" class="regular-text"></td>';
-    echo '<th>Name (AR)</th><td><input type="text" name="sasanperfumes_new_notes[0][name_ar]" class="regular-text" dir="rtl"></td></tr>';
-    echo '<tr><th>Title (EN)</th><td><input type="text" name="sasanperfumes_new_notes[0][title_en]" class="large-text"></td>';
-    echo '<th>Title (AR)</th><td><input type="text" name="sasanperfumes_new_notes[0][title_ar]" class="large-text" dir="rtl"></td></tr>';
-    echo '<tr><th>Desc (EN)</th><td><textarea name="sasanperfumes_new_notes[0][desc_en]" rows="2" class="large-text"></textarea></td>';
-    echo '<th>Desc (AR)</th><td><textarea name="sasanperfumes_new_notes[0][desc_ar]" rows="2" class="large-text" dir="rtl"></textarea></td></tr>';
-    echo '</table></div>';
-
-    echo '<p class="submit"><input type="submit" class="button-primary" value="Save All Notes"></p>';
-    echo '</form></div>';
 }
 
 // --- Sample Content Initialization ---
@@ -739,5 +617,4 @@ function sasanperfumes_sp_populate_about_sample_content() {
 }
 
 // --- Init ---
-add_action('admin_menu', 'sasanperfumes_sp_notes_admin_menu', 26);
 add_action('rest_api_init', 'sasanperfumes_sp_rest_init');

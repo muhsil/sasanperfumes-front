@@ -80,14 +80,10 @@ function sasanperfumes_adv_get_scent_guide() {
     ];
 
     $sections   = get_option('sasanperfumes_scent_guide_sections', $default_sections);
-    $size_chart = get_option('sasanperfumes_size_chart', $default_size_chart);
-
-    // Separate enable flags — fall back to legacy combined flag if new options not yet set
+    // Separate enable flag — fall back to legacy combined flag if new option not yet set
     $legacy_enabled = (bool) get_option('sasanperfumes_scent_guide_enabled', true);
     $raw_scent = get_option('sasanperfumes_scent_guide_section_enabled');
-    $raw_size  = get_option('sasanperfumes_size_guide_enabled');
     $scent_enabled = ($raw_scent !== false) ? (bool) $raw_scent : $legacy_enabled;
-    $size_enabled  = ($raw_size  !== false) ? (bool) $raw_size  : $legacy_enabled;
 
     return rest_ensure_response([
         'scentGuide' => [
@@ -96,12 +92,6 @@ function sasanperfumes_adv_get_scent_guide() {
             'titleAr'  => get_option('sasanperfumes_scent_guide_title_ar', 'دليل العطور'),
             'imageUrl' => get_option('sasanperfumes_scent_guide_image', ''),
             'sections' => is_array($sections) ? $sections : $default_sections,
-        ],
-        'sizeGuide' => [
-            'enabled'   => $size_enabled,
-            'title'     => get_option('sasanperfumes_size_guide_title_en', 'Size Guide'),
-            'titleAr'   => get_option('sasanperfumes_size_guide_title_ar', 'دليل المقاسات'),
-            'sizeChart' => is_array($size_chart) ? $size_chart : $default_size_chart,
         ],
     ]);
 }

@@ -84,6 +84,12 @@ const FREIGHT_COUNTRY_LABELS: Record<string, string> = {
   QA: "Qatar",
 };
 
+const MARKET_DEFAULT_COUNTRIES: Record<string, string> = {
+  qa: "QA",
+  om: "OM",
+  sa: "SA",
+};
+
 const CONTINENT_COUNTRIES: Record<string, string[]> = {
   AF: ["DZ", "AO", "BJ", "BW", "BF", "BI", "CM", "CV", "CF", "TD", "KM", "CG", "CD", "CI", "DJ", "EG", "GQ", "ER", "SZ", "ET", "GA", "GM", "GH", "GN", "GW", "KE", "LS", "LR", "LY", "MG", "MW", "ML", "MR", "MU", "YT", "MA", "MZ", "NA", "NE", "NG", "RE", "RW", "SH", "ST", "SN", "SC", "SL", "SO", "ZA", "SS", "SD", "TZ", "TG", "TN", "UG", "EH", "ZM", "ZW"],
   AN: ["AQ", "BV", "TF", "HM", "GS"],
@@ -110,27 +116,6 @@ function getCurrencySymbolForCode(code: string): string {
 
 function getCurrencyMinorUnitForCode(code: string): number {
   return ["BHD", "KWD", "OMR"].includes(code.toUpperCase()) ? 3 : 2;
-}
-
-function getCurrencyRateFromAEDForCode(code: string): number {
-  switch (code.toUpperCase()) {
-    case "AED":
-      return 1;
-    case "BHD":
-      return 0.103;
-    case "KWD":
-      return 0.083;
-    case "OMR":
-      return 0.105;
-    case "QAR":
-      return 0.99;
-    case "SAR":
-      return 1.02;
-    case "USD":
-      return 0.27;
-    default:
-      return 1;
-  }
 }
 
 async function findZoneForCountry(country: string, marketCode?: string): Promise<number | null> {
@@ -203,8 +188,7 @@ function buildFreightRate(
   const countryLabel = FREIGHT_COUNTRY_LABELS[country.toUpperCase()] || country.toUpperCase();
   const currencyMinorUnit = getCurrencyMinorUnitForCode(currencyCode);
   const multiplier = Math.pow(10, currencyMinorUnit);
-  const convertedAmount = freightMatch.price * getCurrencyRateFromAEDForCode(currencyCode);
-  const ratePrice = String(Math.round(convertedAmount * multiplier));
+  const ratePrice = String(Math.round(freightMatch.price * multiplier));
   const weightLabel = freightMatch.row.weightLabel;
 
   return {
@@ -237,14 +221,13 @@ function buildFixedShippingRate(
   methodId: string,
   name: string,
   description: string,
-  baseAedAmount: number,
+  amount: number,
   currencyCode: string,
   currencySymbol: string
 ): ShippingRate {
   const currencyMinorUnit = getCurrencyMinorUnitForCode(currencyCode);
   const multiplier = Math.pow(10, currencyMinorUnit);
-  const convertedAmount = baseAedAmount * getCurrencyRateFromAEDForCode(currencyCode);
-  const price = String(Math.round(convertedAmount * multiplier));
+  const price = String(Math.round(amount * multiplier));
 
   return {
     rate_id: rateId,
@@ -444,7 +427,9 @@ export async function GET(request: NextRequest) {
     const market = await getRequestMarket(marketHint);
     const shippingMarketCode = market.code;
     const isOmanMarket = String(shippingMarketCode).toLowerCase() === "om";
-    const country = request.nextUrl.searchParams.get("country") || "AE";
+    const requestedCountry = (request.nextUrl.searchParams.get("country") || "AE").toUpperCase();
+    const marketCountry = MARKET_DEFAULT_COUNTRIES[String(shippingMarketCode).toLowerCase()] || "";
+    const country = marketCountry || requestedCountry;
     const city = request.nextUrl.searchParams.get("city") || "";
     const postcode = request.nextUrl.searchParams.get("postcode") || "";
     const cartSubtotal = parseFloat(request.nextUrl.searchParams.get("cart_subtotal") || "0");

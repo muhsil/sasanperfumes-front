@@ -1,6 +1,6 @@
 ﻿import Link from "next/link";
 import Image from "next/image";
-import { Suspense, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { ArrowRight, CheckCircle2, FlaskConical, Leaf, Sparkles } from "lucide-react";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
@@ -13,7 +13,6 @@ import {
   getStaticPageContent,
   pickLocale,
   mapRepeater,
-  getServices,
   getFeatureToggles,
   stripHtmlTags,
 } from "@/lib/api/wordpress";
@@ -21,7 +20,6 @@ import { BLUR_DATA_URL } from "@/lib/utils";
 import { shouldUseUnoptimizedImage } from "@/lib/utils/image";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
-import { ServicesWithAnimation } from "@/components/sections";
 import { getRequestMarket } from "@/lib/market/server";
 import { getMarketPathPrefix } from "@/config/market";
 
@@ -201,21 +199,6 @@ function SectionHeading({
         </p>
       )}
     </div>
-  );
-}
-
-async function HomepageServicesSection({ locale, isRTL }: { locale: Locale; isRTL: boolean }) {
-  const toggles = await getFeatureToggles();
-  if (!toggles.sasanperfumes_home_services_enabled) return null;
-  const services = await getServices();
-  if (!services || services.length === 0) return null;
-
-  return (
-    <ServicesWithAnimation
-      services={services.slice(0, 8)}
-      locale={locale}
-      isRTL={isRTL}
-    />
   );
 }
 
@@ -447,10 +430,6 @@ export default async function AboutPage({ params }: AboutPageProps) {
           </div>
         </section>
       )}
-
-      <Suspense fallback={null}>
-        <HomepageServicesSection locale={locale as Locale} isRTL={isRTL} />
-      </Suspense>
 
       {(hasStoryContent || aboutImages.story) && (
         <section id="brand-story" className="bg-white">

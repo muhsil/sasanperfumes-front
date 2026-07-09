@@ -1,4 +1,3 @@
-﻿import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   MapPin,
@@ -72,9 +71,6 @@ export default async function ContactPage({ params }: ContactPageProps) {
     whatsapp: pickLocale(wp?.whatsapp, locale, ""),
     callUs: pickLocale(wp?.call_us, locale, ""),
     emailUs: pickLocale(wp?.email_us, locale, ""),
-    ctaTitle: pickLocale(wp?.cta_title, locale, ""),
-    ctaSubtitle: pickLocale(wp?.cta_subtitle, locale, ""),
-    ctaButton: pickLocale(wp?.cta_button, locale, ""),
   };
 
   const sendMessage = pickLocale(wp?.send_message, locale, "");
@@ -181,21 +177,6 @@ export default async function ContactPage({ params }: ContactPageProps) {
       </section>
       )}
 
-      {/* CTA Section */}
-      {content.ctaTitle && (
-      <section className="bg-brand-primary py-16 text-brand-ivory md:py-24">
-        <div className="px-4 max-w-4xl mx-auto text-center">
-          <h2 className="mb-4 font-title text-3xl text-brand-ivory md:text-4xl">{content.ctaTitle}</h2>
-          {content.ctaSubtitle && <p className="mb-8 text-sm text-brand-ivory/70">{content.ctaSubtitle}</p>}
-          <Link
-            href={`${pathPrefix}/${locale}/private-labeling`}
-            className="inline-flex rounded-full border border-brand-gold bg-brand-gold px-8 py-3 text-xs font-semibold uppercase text-brand-primary transition-colors hover:bg-brand-ivory"
-          >
-            {content.ctaButton}
-          </Link>
-        </div>
-      </section>
-      )}
     </div>
   );
 }

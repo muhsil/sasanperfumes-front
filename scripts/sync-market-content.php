@@ -530,11 +530,9 @@ $postTypes = array(
     'page',
     'product',
     'product_variation',
-    'sasanperfumes_service',
     'sasanperfumes_product_page',
     'sasanperfumes_guide',
     'sasanperfumes_note',
-    'sasanperfumes_size_guide',
 );
 
 $taxonomies = array(

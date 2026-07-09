@@ -326,9 +326,12 @@ class sasanperfumes_Security {
             return $backend_url !== '' ? $backend_url : $url;
         }, 999, 3);
 
-        add_filter('login_url', function($login_url, $redirect = '', $force_reauth = false) use ($build_backend_root) {
-            $root = $build_backend_root();
-            $backend_login = $root !== '' ? trailingslashit($root) . 'wp-login.php' : $login_url;
+        add_filter('login_url', function($login_url, $redirect = '', $force_reauth = false) use ($build_site_url, $build_backend_root) {
+            $backend_login = $build_site_url('wp-login.php');
+            if ($backend_login === '') {
+                $root = $build_backend_root();
+                $backend_login = $root !== '' ? trailingslashit($root) . 'wp-login.php' : $login_url;
+            }
             if ($backend_login === '') {
                 return $login_url;
             }
@@ -343,6 +346,32 @@ class sasanperfumes_Security {
 
             return $backend_login;
         }, 999, 3);
+    }
+
+    /**
+     * Strip market and locale prefixes from a request path so backend routes
+     * such as /wp-admin and /wp-login.php are recognized even when they are
+     * nested under /qa, /om, /sa, /en, or /ar.
+     */
+    private function strip_market_prefix_from_path($path) {
+        if (function_exists('sasanperfumes_strip_backend_request_prefixes_from_path')) {
+            return sasanperfumes_strip_backend_request_prefixes_from_path((string) $path);
+        }
+
+        $path = '/' . ltrim((string) $path, '/');
+        $path = preg_replace('#/+#', '/', $path);
+
+        $segments = array_values(array_filter(explode('/', trim($path, '/')), 'strlen'));
+        if (empty($segments)) {
+            return '/';
+        }
+
+        $reserved_prefixes = array('qa', 'om', 'sa', 'en', 'ar');
+        while (!empty($segments) && in_array(strtolower((string) $segments[0]), $reserved_prefixes, true)) {
+            array_shift($segments);
+        }
+
+        return empty($segments) ? '/' : '/' . implode('/', $segments);
     }
 
     /**

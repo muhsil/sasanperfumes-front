@@ -6,8 +6,6 @@ import { useRouter } from "next/navigation";
 import { User, Package, MapPin, Heart, Settings, LogOut, ChevronRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/common/Button";
-import { LoyaltyDashboard } from "@/components/account/LoyaltyDashboard";
-import { ReferralProgram } from "@/components/account/ReferralProgram";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 interface AccountPageProps {
@@ -142,10 +140,6 @@ export default function AccountPage({ params }: AccountPageProps) {
           </div>
 
           <div className="space-y-5 lg:col-span-2">
-            <LoyaltyDashboard locale={locale as "en" | "ar"} customerId={user?.user_id ? parseInt(String(user.user_id)) : undefined} />
-
-            <ReferralProgram locale={locale as "en" | "ar"} customerId={user?.user_id ? parseInt(String(user.user_id)) : undefined} />
-
             <div className="overflow-hidden rounded-lg border border-brand-border/70 bg-brand-ivory shadow-[0_18px_44px_rgba(20,15,10,0.08)]">
               <nav>
                 <ul className="divide-y divide-brand-border/70">

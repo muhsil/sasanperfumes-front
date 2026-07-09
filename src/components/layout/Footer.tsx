@@ -9,6 +9,13 @@ import { NewsletterForm } from "@/components/common/NewsletterForm";
 import { SocialIconLinks } from "@/components/common/SocialIconLinks";
 import { shouldUseUnoptimizedImage } from "@/lib/utils/image";
 
+const REMOVED_ROUTE_PREFIXES = [
+  "/services",
+  "/private-labeling",
+  "/size-guide",
+  "/account/loyalty",
+];
+
 const SLUG_TOGGLE_MAP: Record<string, keyof FeatureToggles> = {
   "/shop": "sasanperfumes_shop_enabled",
   "/about": "sasanperfumes_about_enabled",
@@ -17,7 +24,6 @@ const SLUG_TOGGLE_MAP: Record<string, keyof FeatureToggles> = {
   "/contact-us": "sasanperfumes_contact_enabled",
   "/blog": "sasanperfumes_blog_enabled",
   "/brands": "sasanperfumes_brands_page_enabled",
-  "/services": "sasanperfumes_services_page_enabled",
   "/what-we-do": "sasanperfumes_what_we_do_enabled",
   "/store-locator": "sasanperfumes_store_locator_enabled",
   "/store-listing": "sasanperfumes_store_locator_enabled",
@@ -30,9 +36,6 @@ const SLUG_TOGGLE_MAP: Record<string, keyof FeatureToggles> = {
   "/privacy-policy": "sasanperfumes_privacy_enabled",
   "/delivery-policy": "sasanperfumes_privacy_enabled",
   "/terms-and-conditions": "sasanperfumes_terms_enabled",
-  "/private-labeling": "sasanperfumes_private_labeling_enabled",
-  "/size-guide": "sasanperfumes_size_guide_enabled",
-  "/account/loyalty": "sasanperfumes_loyalty_enabled",
 };
 
 interface FooterProps {
@@ -57,11 +60,14 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
   const csLinkItems = footerSettings?.customerService?.items ?? [];
 
   const isLinkEnabled = (url: string): boolean => {
-    if (!featureToggles) return true;
     const normalizedUrl = normalizeMenuUrl(url, locale);
     const pathForToggle = normalizedUrl.startsWith("/") && !normalizedUrl.startsWith(`/${locale}/`)
       ? normalizedUrl
       : normalizedUrl.replace(/^\/(en|ar)(?=\/|$)/, "");
+    if (REMOVED_ROUTE_PREFIXES.some((prefix) => pathForToggle === prefix || pathForToggle.startsWith(`${prefix}/`))) {
+      return false;
+    }
+    if (!featureToggles) return true;
     const toggleKey = SLUG_TOGGLE_MAP[pathForToggle.split("?")[0]] || SLUG_TOGGLE_MAP[url];
     if (!toggleKey) return true;
     return featureToggles[toggleKey] !== false;

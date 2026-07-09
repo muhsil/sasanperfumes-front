@@ -43,7 +43,6 @@ Our focus is a simple, polished fragrance experience: discover a scent, choose a
 
 ## Shopping
 - All Products: ${siteConfig.url}/en/shop
-- Private Labeling: ${siteConfig.url}/en/private-labeling
 
 ${categoriesSection}
 

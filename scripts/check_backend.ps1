@@ -22,10 +22,6 @@ $endpoints = @(
     @{ Path = "sasanperfumes/v1/whatsapp"; Name = "WhatsApp Floating Button Config" },
     @{ Path = "sasanperfumes/v1/brands"; Name = "All Brands & Product Taxonomy Notes" },
     @{ Path = "sasanperfumes/v1/brands-page"; Name = "Brands Listing Page Settings" },
-    @{ Path = "sasanperfumes/v1/brands-slider"; Name = "Homepage Brands Slider Settings" },
-    @{ Path = "sasanperfumes/v1/services"; Name = "Services Listing API" },
-    @{ Path = "sasanperfumes/v1/services-page"; Name = "Services Page Settings" },
-    @{ Path = "sasanperfumes/v1/private-labeling"; Name = "Private Labeling Landing Content" },
     @{ Path = "wp/v2/posts"; Name = "WordPress Core Blog Posts API" }
 )
 

@@ -22,12 +22,10 @@ function sasanperfumes_ft_toggles() {
         ['key'=>'sasanperfumes_terms_enabled',          'label'=>'Terms Page',            'group'=>'Core Pages',       'default'=>true,  'desc'=>'Show /terms-and-conditions page'],
         ['key'=>'sasanperfumes_reviews_enabled',        'label'=>'Reviews',               'group'=>'Pages & Features', 'default'=>true,  'desc'=>'Show product reviews and review form on product pages'],
         ['key'=>'sasanperfumes_brands_page_enabled',    'label'=>'Brands Page',           'group'=>'Pages & Features', 'default'=>true,  'desc'=>'Show /brands listing page'],
-        ['key'=>'sasanperfumes_services_page_enabled',  'label'=>'Services Page',         'group'=>'Pages & Features', 'default'=>true,  'desc'=>'Show /services listing page and detail pages'],
         ['key'=>'sasanperfumes_what_we_do_enabled',     'label'=>'What We Do Page',       'group'=>'Pages & Features', 'default'=>true,  'desc'=>'Show /what-we-do page'],
         ['key'=>'sasanperfumes_blog_enabled',           'label'=>'Blog',                  'group'=>'Pages & Features', 'default'=>true,  'desc'=>'Show /blog listing and detail pages'],
         ['key'=>'sasanperfumes_store_locator_enabled',  'label'=>'Store Locator',         'group'=>'Pages & Features', 'default'=>true,  'desc'=>'Show /store-locator page'],
         ['key'=>'sasanperfumes_faq_enabled',            'label'=>'FAQ Page',              'group'=>'Pages & Features', 'default'=>true,  'desc'=>'Show /faq page'],
-        ['key'=>'sasanperfumes_private_labeling_enabled','label'=>'Private Labeling',      'group'=>'Pages & Features', 'default'=>true,  'desc'=>'Show /private-labeling landing page'],
 
         // Homepage section toggles (these overlap with per-section settings but provide a quick master list)
         ['key'=>'sasanperfumes_home_services_enabled',  'label'=>'Homepage Services',     'group'=>'Homepage Sections','default'=>true,  'desc'=>'Show services section on homepage'],
@@ -37,7 +35,6 @@ function sasanperfumes_ft_toggles() {
         ['key'=>'sasanperfumes_categories_enabled',     'label'=>'Categories',            'group'=>'Homepage Sections','default'=>true,  'desc'=>'Show homepage categories section', 'storage'=>'theme_mod'],
         ['key'=>'sasanperfumes_collections_enabled',    'label'=>'Collections',           'group'=>'Homepage Sections','default'=>true,  'desc'=>'Show homepage collections section', 'storage'=>'theme_mod'],
         ['key'=>'sasanperfumes_banners_enabled',        'label'=>'Banners',               'group'=>'Homepage Sections','default'=>true,  'desc'=>'Show homepage banner section', 'storage'=>'theme_mod'],
-        ['key'=>'sasanperfumes_brands_slider_enabled',  'label'=>'Brands Slider',         'group'=>'Homepage Sections','default'=>false, 'desc'=>'Show brands slider on homepage', 'storage'=>'theme_mod'],
         ['key'=>'sasanperfumes_home_wcus_enabled',      'label'=>'Why Choose Us',         'group'=>'Homepage Sections','default'=>true,  'desc'=>'Show homepage Why Choose Us section'],
         ['key'=>'sasanperfumes_home_story_enabled',     'label'=>'Our Story',             'group'=>'Homepage Sections','default'=>true,  'desc'=>'Show homepage Our Story section'],
         ['key'=>'sasanperfumes_home_faq_enabled',       'label'=>'Home FAQ',              'group'=>'Homepage Sections','default'=>true,  'desc'=>'Show homepage FAQ section'],
@@ -52,9 +49,6 @@ function sasanperfumes_ft_toggles() {
         ['key'=>'sasanperfumes_gift_wrap_enabled',      'label'=>'Gift Wrap',             'group'=>'Global Features',  'default'=>false, 'desc'=>'Enable gift wrap option'],
         ['key'=>'sasanperfumes_video_hero_enabled',     'label'=>'Video Hero',            'group'=>'Global Features',  'default'=>false, 'desc'=>'Enable video hero content'],
         ['key'=>'sasanperfumes_scent_guide_enabled',    'label'=>'Scent Guide',           'group'=>'Global Features',  'default'=>true,  'desc'=>'Enable scent guide modal/section'],
-        ['key'=>'sasanperfumes_size_guide_enabled',     'label'=>'Size Guide',            'group'=>'Global Features',  'default'=>false, 'desc'=>'Enable size guide'],
-        ['key'=>'sasanperfumes_loyalty_enabled',        'label'=>'Loyalty Program',       'group'=>'Global Features',  'default'=>false, 'desc'=>'Enable loyalty program'],
-        ['key'=>'sasanperfumes_referral_enabled',       'label'=>'Referral Program',      'group'=>'Global Features',  'default'=>false, 'desc'=>'Enable referral program'],
     ];
 }
 
@@ -135,10 +129,7 @@ function sasanperfumes_ft_render() {
             <tbody>
             <?php
             $ref = [
-                ['Size Guide',     'sasanperfumes_size_guide_enabled',          'sasanperfumes → Advanced'],
-                ['Loyalty',        'sasanperfumes_loyalty_enabled',             'sasanperfumes → Loyalty Points'],
                 ['Scent Guide',    'sasanperfumes_scent_guide_section_enabled', 'sasanperfumes → Advanced'],
-                ['Brands Slider',  'sasanperfumes_brands_slider_enabled',      'sasanperfumes → Brands Slider'],
                 ['Popup',          'sasanperfumes_popup_enabled',               'sasanperfumes → Promotions'],
                 ['Chat Widget',    'sasanperfumes_chat_enabled',                'sasanperfumes → Advanced'],
                 ['Gift Wrap',      'sasanperfumes_gift_wrap_enabled',           'sasanperfumes → Advanced'],
@@ -185,9 +176,6 @@ function sasanperfumes_ft_api() {
     }
 
     // Include existing toggles from other modules for convenience
-    $out['sasanperfumes_size_guide_enabled']          = (bool) get_option('sasanperfumes_size_guide_enabled', 0);
-    $out['sasanperfumes_loyalty_enabled']             = (bool) get_option('sasanperfumes_loyalty_enabled', 0);
-    $out['sasanperfumes_brands_slider_enabled']       = (bool) get_theme_mod('sasanperfumes_brands_slider_enabled', false);
     $out['sasanperfumes_popup_enabled']               = (bool) get_option('sasanperfumes_popup_enabled', false);
     $out['sasanperfumes_hero_enabled']                = (bool) get_theme_mod('sasanperfumes_hero_enabled', true);
     $out['sasanperfumes_categories_enabled']          = (bool) get_theme_mod('sasanperfumes_categories_enabled', true);

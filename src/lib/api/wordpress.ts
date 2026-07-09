@@ -1775,7 +1775,6 @@ const defaultFooterSettings: FooterSettings = {
       { label: { en: "Track Order", ar: "تتبع الطلب" }, url: "/track-order" },
       { label: { en: "Privacy Policy", ar: "سياسة الخصوصية" }, url: "/privacy" },
       { label: { en: "Terms & Conditions", ar: "الشروط والأحكام" }, url: "/terms-and-conditions" },
-      { label: { en: "Private Labeling", ar: "التصنيع الخاص" }, url: "/private-labeling" },
     ],
   },
   social: {
@@ -1818,7 +1817,7 @@ export async function getFooterSettings(frontendHost?: string): Promise<FooterSe
   } : defaultFooterSettings;
 
   const legacyQuickLinkUrls = ["/", "/shop", "/category/perfumes", "/category/all-over-spray", "/category/sasan-hair-mist", "/category/gift-set", "/contact"];
-  const legacyCustomerServiceUrls = ["/faq", "/shipping", "/returns", "/track-order", "/privacy", "/terms-and-conditions", "/private-labeling"];
+  const legacyCustomerServiceUrls = ["/faq", "/shipping", "/returns", "/track-order", "/privacy", "/terms-and-conditions"];
 
   const liveQuickLinks: FooterSettings["quickLinks"]["items"] = [
     { label: { en: "About Us", ar: "من نحن" }, url: "/about-us" },
@@ -2872,7 +2871,7 @@ function buildStaticPageFallbackContent(slug: string): StaticPageResponse | null
         ],
         cta_title: bi("Need a direct line to the right team?", "هل تحتاج إلى الوصول المباشر للفريق المناسب؟"),
         cta_subtitle: bi("We can help with product availability, regional stores, and business inquiries.", "يمكننا المساعدة في توفر المنتجات والمتاجر الإقليمية والاستفسارات التجارية."),
-        cta_button: bi("Visit Private Labeling", "زيارة العلامة الخاصة"),
+        cta_button: bi("Contact Our Team", "تواصل مع فريقنا"),
       };
 
     case "privacy":
@@ -3324,22 +3323,6 @@ export async function getProductMetaDescription(
   return data.meta_description;
 }
 
-// ─── Notes SEO ────────────────────────────────────────────────────
-
-interface NoteSeoResponse {
-  name: BilingualField;
-  title: BilingualField;
-  description: BilingualField;
-  attributeSlug?: string;
-}
-
-export async function getNoteSeo(slug: string): Promise<NoteSeoResponse | null> {
-  return fetchWPAPI<NoteSeoResponse>(
-    `/sasanperfumes/v1/notes-seo/${encodeURIComponent(slug)}`,
-    { tags: ["notes-seo", `note-${slug}`], revalidate: 300 }
-  );
-}
-
 // ─── Brands ───────────────────────────────────────────────────────
 
 export interface BrandItem {
@@ -3386,56 +3369,6 @@ export async function getBrandsPageSettings(): Promise<BrandsPageSettings | null
   const data = await fetchWPAPI<BrandsPageSettings>(
     `/sasanperfumes/v1/brands-page`,
     { tags: ["brands-page"], revalidate: 300 }
-  );
-  return data ? rebrandApiContent(data) : null;
-}
-
-// ─── Services ─────────────────────────────────────────────────────
-
-export interface ServiceItem {
-  id: number;
-  slug: string;
-  title: BilingualField;
-  excerpt: BilingualField;
-  content: BilingualField;
-  image: string;
-  bannerImage: string;
-  icon: string;
-  features: { image: string; title: BilingualField; description: BilingualField }[];
-  seo: { title: BilingualField; description: BilingualField };
-}
-
-interface ServicesPageSettings {
-  title: BilingualField;
-  subtitle: BilingualField;
-  description: BilingualField;
-  bannerImage: string;
-  ctaTitle: BilingualField;
-  ctaButton: BilingualField;
-  ctaLink: string;
-  seo: { title: BilingualField; description: BilingualField };
-}
-
-export async function getServices(): Promise<ServiceItem[]> {
-  const data = await fetchWPAPI<ServiceItem[]>(
-    `/sasanperfumes/v1/services`,
-    { tags: ["services"], revalidate: 300 }
-  );
-  return rebrandApiContent(data ?? []);
-}
-
-export async function getService(slug: string): Promise<ServiceItem | null> {
-  const data = await fetchWPAPI<ServiceItem>(
-    `/sasanperfumes/v1/services/${encodeURIComponent(slug)}`,
-    { tags: ["services", `service-${slug}`], revalidate: 300 }
-  );
-  return data ? rebrandApiContent(data) : null;
-}
-
-export async function getServicesPageSettings(): Promise<ServicesPageSettings | null> {
-  const data = await fetchWPAPI<ServicesPageSettings>(
-    `/sasanperfumes/v1/services-page`,
-    { tags: ["services-page"], revalidate: 300 }
   );
   return data ? rebrandApiContent(data) : null;
 }
@@ -3591,19 +3524,14 @@ export interface FeatureToggles {
   sasanperfumes_terms_enabled: boolean;
   sasanperfumes_reviews_enabled: boolean;
   sasanperfumes_brands_page_enabled: boolean;
-  sasanperfumes_services_page_enabled: boolean;
   sasanperfumes_what_we_do_enabled: boolean;
   sasanperfumes_blog_enabled: boolean;
   sasanperfumes_store_locator_enabled: boolean;
   sasanperfumes_faq_enabled: boolean;
-  sasanperfumes_private_labeling_enabled: boolean;
   sasanperfumes_home_services_enabled: boolean;
   sasanperfumes_home_blog_enabled: boolean;
   sasanperfumes_home_notes_enabled: boolean;
-  sasanperfumes_size_guide_enabled: boolean;
-  sasanperfumes_loyalty_enabled: boolean;
   sasanperfumes_scent_guide_enabled: boolean;
-  sasanperfumes_brands_slider_enabled: boolean;
   sasanperfumes_popup_enabled: boolean;
   sasanperfumes_ab_popup_enabled: boolean;
   sasanperfumes_chat_enabled: boolean;
@@ -3630,19 +3558,14 @@ const defaultFeatureToggles: FeatureToggles = {
   sasanperfumes_terms_enabled: true,
   sasanperfumes_reviews_enabled: true,
   sasanperfumes_brands_page_enabled: true,
-  sasanperfumes_services_page_enabled: true,
   sasanperfumes_what_we_do_enabled: true,
   sasanperfumes_blog_enabled: true,
   sasanperfumes_store_locator_enabled: true,
   sasanperfumes_faq_enabled: true,
-  sasanperfumes_private_labeling_enabled: true,
   sasanperfumes_home_services_enabled: true,
   sasanperfumes_home_blog_enabled: false,
   sasanperfumes_home_notes_enabled: true,
-  sasanperfumes_size_guide_enabled: false,
-  sasanperfumes_loyalty_enabled: false,
   sasanperfumes_scent_guide_enabled: true,
-  sasanperfumes_brands_slider_enabled: true,
   sasanperfumes_popup_enabled: false,
   sasanperfumes_ab_popup_enabled: false,
   sasanperfumes_chat_enabled: false,
@@ -3668,15 +3591,12 @@ const forcedVisibleSectionToggles = new Set([
   "sasanperfumes_terms_enabled",
   "sasanperfumes_reviews_enabled",
   "sasanperfumes_brands_page_enabled",
-  "sasanperfumes_services_page_enabled",
   "sasanperfumes_what_we_do_enabled",
   "sasanperfumes_store_locator_enabled",
   "sasanperfumes_faq_enabled",
-  "sasanperfumes_private_labeling_enabled",
   "sasanperfumes_home_services_enabled",
   "sasanperfumes_home_notes_enabled",
   "sasanperfumes_scent_guide_enabled",
-  "sasanperfumes_brands_slider_enabled",
   "sasanperfumes_hero_enabled",
   "sasanperfumes_categories_enabled",
   "sasanperfumes_collections_enabled",
@@ -3732,89 +3652,6 @@ export async function getFeatureToggles(frontendHost?: string): Promise<FeatureT
   return normalizeFeatureToggles(data);
 }
 
-// ─── Private Labeling ───
-interface BilingualField {
-  en: string;
-  ar: string;
-}
-
-interface BilingualList {
-  en: string[];
-  ar: string[];
-}
-
-interface PLRepeaterItem {
-  image: string;
-  title: BilingualField;
-  description: BilingualField;
-}
-
-export interface PrivateLabelingData {
-  hero: {
-    title: BilingualField;
-    subtitle: BilingualField;
-    description: BilingualField;
-    image: string;
-    ctaText: BilingualField;
-    ctaLink: string;
-  };
-  intro: {
-    heading: BilingualField;
-    description: BilingualField;
-    image: string;
-  };
-  whatIs: {
-    title: BilingualField;
-    description: BilingualField;
-    image: string;
-  };
-  sectionTitles?: {
-    whyChoose: BilingualField;
-    process: BilingualField;
-    products: BilingualField;
-    benefits: BilingualField;
-  };
-  whyChoose: PLRepeaterItem[];
-  process: PLRepeaterItem[];
-  products: PLRepeaterItem[];
-  benefits: PLRepeaterItem[];
-  cta: {
-    title: BilingualField;
-    description: BilingualField;
-    buttonText: BilingualField;
-    buttonLink: string;
-  };
-  form?: {
-    title: BilingualField;
-    description: BilingualField;
-    fullNameLabel: BilingualField;
-    emailLabel: BilingualField;
-    phoneLabel: BilingualField;
-    serviceLabel: BilingualField;
-    messageLabel: BilingualField;
-    submitLabel: BilingualField;
-    sendingLabel: BilingualField;
-    successTitle: BilingualField;
-    successMessage: BilingualField;
-    selectServiceLabel: BilingualField;
-    consentLabel: BilingualField;
-    errorMessage: BilingualField;
-    networkErrorMessage: BilingualField;
-    services: BilingualList;
-  };
-  seo: {
-    title: BilingualField;
-    description: BilingualField;
-  };
-}
-
-export async function getPrivateLabelingData(): Promise<PrivateLabelingData | null> {
-  return fetchWPAPI<PrivateLabelingData>("/sasanperfumes/v1/private-labeling", {
-    tags: ["private-labeling"],
-    revalidate: 300,
-  });
-}
-
 // ─── WhatsApp Settings ───
 export interface WhatsAppSettings {
   enabled: boolean;
@@ -3830,42 +3667,6 @@ export async function getWhatsAppSettings(): Promise<WhatsAppSettings | null> {
     tags: ["whatsapp-settings"],
     revalidate: 600,
   });
-}
-
-// â”€â”€â”€ Brands Slider â”€â”€â”€
-
-export interface BrandsSliderData {
-  enabled: boolean;
-  heading: { en: string; ar: string };
-  subtitle?: { en: string; ar: string };
-  slider_options?: {
-    desktop_count: number;
-    tablet_count: number;
-    mobile_count: number;
-    autoplay: boolean;
-    autoplay_speed: number;
-    loop: boolean;
-    arrows: boolean;
-    dots: boolean;
-  };
-  brands: Array<{
-    name: string;
-    image: string;
-    url: string;
-  }>;
-}
-
-export async function getBrandsSliderData(locale?: Locale): Promise<BrandsSliderData | null> {
-  const data = await fetchWPAPI<BrandsSliderData>(
-    "/sasanperfumes/v1/brands-slider",
-    {
-      locale,
-      tags: ["brands-slider"],
-      revalidate: 600,
-    }
-  );
-
-  return rebrandApiContent(data ?? null);
 }
 
 /* ── Discount Rules ── */

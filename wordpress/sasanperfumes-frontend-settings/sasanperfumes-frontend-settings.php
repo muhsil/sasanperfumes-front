@@ -376,7 +376,7 @@ add_action('rest_api_init', 'sasanperfumes_register_customer_access_routes');
  * hiding all metaboxes including image upload buttons. The classic editor works fine.
  */
 add_filter('use_block_editor_for_post_type', function ($use_block, $post_type) {
-    $classic_only = ['sasanperfumes_service', 'sasanperfumes_product_page', 'sasanperfumes_guide', 'sasanperfumes_size_guide', 'sasanperfumes_note'];
+    $classic_only = ['sasanperfumes_product_page', 'sasanperfumes_guide'];
     return in_array($post_type, $classic_only, true) ? false : $use_block;
 }, 10, 2);
 
@@ -450,7 +450,7 @@ if (!function_exists('sasanperfumes_sanitize_link')) {
  */
 add_action('admin_enqueue_scripts', function($hook) {
     $is_sasanperfumes = strpos($hook, 'sasanperfumes-settings') !== false || strpos($hook, 'sasanperfumes-') !== false;
-    $is_cpt = in_array(get_post_type(), ['sasanperfumes_service','sasanperfumes_guide','sasanperfumes_product_page','sasanperfumes_note','sasanperfumes_size_guide','page']);
+    $is_cpt = in_array(get_post_type(), ['sasanperfumes_guide','sasanperfumes_product_page','page']);
     $is_media_tax = in_array($hook, ['term.php', 'edit-tags.php'], true)
         && isset($_GET['taxonomy'])
         && in_array($_GET['taxonomy'], ['product_brand', 'product_cat'], true);
@@ -489,7 +489,7 @@ add_action('admin_enqueue_scripts', function($hook) {
 add_action('admin_enqueue_scripts', function() {
     $screen = get_current_screen();
     if (!$screen) return;
-    $needs_media = in_array($screen->post_type, ['sasanperfumes_service','sasanperfumes_guide','sasanperfumes_product_page','sasanperfumes_note','sasanperfumes_size_guide','page'], true)
+    $needs_media = in_array($screen->post_type, ['sasanperfumes_guide','sasanperfumes_product_page','page'], true)
         || (isset($screen->id) && strpos($screen->id, 'sasanperfumes-') !== false)
         || in_array($screen->taxonomy, ['product_brand', 'product_cat'], true);
     if (!$needs_media) return;
@@ -608,7 +608,6 @@ add_action('wp_ajax_sasanperfumes_search_products', function() {
  * 7. Guide Pages - Dynamic guide/article CPT with bilingual support
  * 8. Field Helpers - Shared reusable field components
  * 9. Page Fields - Metaboxes on native WP Pages (replaces static-pages + home-sections)
- * 10. Notes CPT - Fragrance notes as CPT (replaces notes-seo submenu)
  */
 
 // Include Settings module (homepage, header, SEO, mobile settings)
@@ -661,9 +660,6 @@ require_once sasanperfumes_SETTINGS_PATH . 'includes/sasanperfumes-field-helpers
 // Include Page Fields module (metaboxes on native WP Pages: About, Contact, FAQ, etc. + Home sections)
 require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-page-fields.php';
 
-// Include Notes CPT module (fragrance notes as individual posts, like Guides)
-require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-notes-cpt.php';
-
 // Include Product Meta module (dynamic SEO meta descriptions for products)
 require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-product-meta.php';
 
@@ -677,20 +673,8 @@ require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-promoti
 // Stock Alerts: back-in-stock email subscriptions
 require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-stock-alerts.php';
 
-// Loyalty Points: earn/redeem points, coupon generation
-require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-loyalty.php';
-
-// Referral Program: customer referral settings, coupons, and REST API
-require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-referral.php';
-
 // Advanced Settings: live chat, scent guide, gift wrap, video hero, abandoned cart popup
 require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-advanced-settings.php';
-
-// Size Guide Manager: clothing size guide templates, chart builder, category/product assignment
-require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-size-guide.php';
-
-// Brands Slider: homepage brand/partner logo carousel
-require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-brands-slider.php';
 
 // Static Pages: CMS-editable content for About, Contact, FAQ, Shipping, Returns, Privacy, Terms, Store Locator, What We Do
 require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-static-pages.php';
@@ -700,12 +684,6 @@ require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-feature
 
 // Brand Pages: extended brand metadata, perfume notes, brand detail page REST API
 require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-brand-pages.php';
-
-// Services CPT: service items with features, admin, REST API
-require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-services.php';
-
-// Private Labeling: landing page settings, enquiry form submissions
-require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-private-labeling.php';
 
 // WhatsApp Floating Button: CMS-managed number, message, toggles
 require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-whatsapp.php';

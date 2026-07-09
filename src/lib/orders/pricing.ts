@@ -11,10 +11,15 @@ export interface OrderPricingFeeLike {
   total_tax?: MoneyLike;
 }
 
+interface OrderPricingShippingLineLike {
+  total_tax?: MoneyLike;
+}
+
 export interface OrderPricingOrderLike {
   total?: MoneyLike;
   shipping_total?: MoneyLike;
   shipping_tax?: MoneyLike;
+  shipping_lines?: OrderPricingShippingLineLike[] | null;
   discount_total?: MoneyLike;
   discount_tax?: MoneyLike;
   fee_lines?: OrderPricingFeeLike[] | null;
@@ -43,7 +48,19 @@ export function getGrossLineItemUnitPrice(item: OrderPricingLineItemLike): numbe
   return Math.round((getGrossLineItemTotal(item) / quantity + Number.EPSILON) * 100) / 100;
 }
 
-export function getGrossShippingTotal(order: Pick<OrderPricingOrderLike, "shipping_total" | "shipping_tax">): number {
+function getShippingTaxFromLines(order: Pick<OrderPricingOrderLike, "shipping_lines">): number {
+  if (!order.shipping_lines || order.shipping_lines.length === 0) {
+    return 0;
+  }
+
+  return order.shipping_lines.reduce((sum, line) => sum + parseOrderMoney(line.total_tax), 0);
+}
+
+export function getGrossShippingTotal(order: Pick<OrderPricingOrderLike, "shipping_total" | "shipping_tax" | "shipping_lines">): number {
+  if (order.shipping_lines && order.shipping_lines.length > 0) {
+    return getInclusiveAmount(order.shipping_total, getShippingTaxFromLines(order));
+  }
+
   return getInclusiveAmount(order.shipping_total, order.shipping_tax);
 }
 

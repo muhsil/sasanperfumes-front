@@ -7,6 +7,7 @@ const defaultLocale = siteConfig.defaultLocale;
 const MARKET_PREFIX_SEGMENTS = new Set<string>(["qa", "om", "sa"]);
 const LOCALE_SEGMENTS = new Set<string>(["en", "ar"]);
 const LEGACY_BRAND_CATEGORY_SLUGS = new Set<string>(["flower-scents", "rimal", "serenity", "liwan"]);
+const CMS_BACKEND_ORIGIN = "https://cms.sasanperfumes.com";
 
 const COUNTRY_TO_MARKET: Record<string, string> = {
   OM: "om",
@@ -107,6 +108,61 @@ function addNoStoreHeaders(response: NextResponse): NextResponse {
   response.headers.set("Pragma", "no-cache");
   response.headers.set("Expires", "0");
   return response;
+}
+
+function isBackendLoginOrAdminPath(pathname: string): boolean {
+  const segments = pathname.split("/").filter(Boolean);
+  if (segments.length === 0) return false;
+
+  const working = [...segments];
+  while (working.length > 0 && LOCALE_SEGMENTS.has((working[0] || "").toLowerCase())) {
+    working.shift();
+  }
+
+  if (working.length > 0 && MARKET_PREFIX_SEGMENTS.has((working[0] || "").toLowerCase())) {
+    working.shift();
+    while (working.length > 0 && LOCALE_SEGMENTS.has((working[0] || "").toLowerCase())) {
+      working.shift();
+    }
+  }
+
+  const candidate = `/${working.join("/")}`.replace(/\/+/g, "/");
+  return (
+    candidate === "/wp-admin" ||
+    candidate.startsWith("/wp-admin/") ||
+    candidate === "/wp-login.php" ||
+    candidate.startsWith("/wp-login.php/") ||
+    candidate === "/wp-login" ||
+    candidate.startsWith("/wp-login/")
+  );
+}
+
+function redirectBackendRequestToCms(request: NextRequest): NextResponse | undefined {
+  const segments = request.nextUrl.pathname.split("/").filter(Boolean);
+  if (segments.length === 0) return;
+
+  const working = [...segments];
+  while (working.length > 0 && LOCALE_SEGMENTS.has((working[0] || "").toLowerCase())) {
+    working.shift();
+  }
+
+  let market = "";
+  if (working.length > 0 && MARKET_PREFIX_SEGMENTS.has((working[0] || "").toLowerCase())) {
+    market = (working.shift() || "").toLowerCase();
+    while (working.length > 0 && LOCALE_SEGMENTS.has((working[0] || "").toLowerCase())) {
+      working.shift();
+    }
+  }
+
+  const candidate = `/${working.join("/")}`.replace(/\/+/g, "/");
+  if (!isBackendLoginOrAdminPath(candidate)) {
+    return;
+  }
+
+  const redirectUrl = new URL(CMS_BACKEND_ORIGIN);
+  redirectUrl.pathname = `${market ? `/${market}` : ""}${candidate}`;
+  redirectUrl.search = request.nextUrl.search;
+  return addSecurityHeaders(NextResponse.redirect(redirectUrl, 302));
 }
 
 function redirectToPath(request: NextRequest, pathname: string, status = 301): NextResponse {

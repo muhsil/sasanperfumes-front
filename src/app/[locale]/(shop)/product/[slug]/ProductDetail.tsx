@@ -11,13 +11,11 @@ import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { CountdownTimer } from "@/components/common/CountdownTimer";
 import { SocialShareModal } from "@/components/common/SocialShareModal";
 import { BackInStockAlert } from "@/components/common/BackInStockAlert";
-import { ClothingSizeGuideModal } from "@/components/common/ClothingSizeGuideModal";
 import { RelatedProducts } from "@/components/shop/RelatedProducts";
 import { RecentlyViewed } from "@/components/shop/RecentlyViewed";
 import { ProductAddons } from "@/components/shop/ProductAddons";
 import { ProductAddToCartButton } from "@/components/shop/ProductAddToCartButton";
 import VariationStockBadge from "@/components/shop/VariationStockBadge";
-import { LoyaltyPointsBadge } from "@/components/shop/LoyaltyPointsBadge";
 import { ProductBadges } from "@/components/shop/ProductBadges";
 import { DiscountInfo } from "@/components/shop/DiscountInfo";
 import { ProductReviews } from "@/components/shop/ProductReviews";
@@ -1755,20 +1753,11 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
 
               {!isOutOfStock && hasPrice && (
                 <>
-                  <LoyaltyPointsBadge
-                    priceAed={parseInt(getDisplayPrice(product, selectedVariation).price) / Math.pow(10, product.prices.currency_minor_unit)}
-                    isAr={isRTL}
-                  />
                   {product.on_sale && product.sale_end && <CountdownTimer endDate={product.sale_end} locale={locale} />}
                 </>
               )}
 
           </div>
-          </div>
-
-
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
-            <ClothingSizeGuideModal productId={product.id} locale={locale} />
           </div>
 
           {/* Fragrance notes shown before purchase controls */}
