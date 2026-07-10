@@ -34,6 +34,7 @@ type FreightDisplayRow = {
   weight: string;
   pcs: string;
   saudi_arabia: string;
+  oman: string;
   bahrain: string;
   kuwait: string;
   qatar: string;
@@ -197,6 +198,7 @@ export default async function ShippingPage({ params }: ShippingPageProps) {
             weight: String(row.weight ?? row.weight_label ?? row.weightLabel ?? ""),
             pcs: String(row.pcs ?? row.pieces ?? ""),
             saudi_arabia: String(row.saudi_arabia ?? row.saudiArabia ?? row.sa ?? ""),
+            oman: String(row.oman ?? row.omanAr ?? row.oman_ar ?? row.om ?? ""),
             bahrain: String(row.bahrain ?? row.bh ?? ""),
             kuwait: String(row.kuwait ?? row.kw ?? ""),
             qatar: String(row.qatar ?? row.qa ?? ""),
@@ -253,12 +255,13 @@ export default async function ShippingPage({ params }: ShippingPageProps) {
               )
             ) : (
               <div className="overflow-x-auto border border-[#e7ded7]">
-                <table className="w-full min-w-[720px] border-collapse text-sm">
+                <table className="w-full min-w-[840px] border-collapse text-sm">
                   <thead>
                     <tr className="border-b border-[#e7ded7] bg-[#faf7f3] text-brand-primary">
                       <th className="px-4 py-3 text-left font-medium">{locale === "ar" ? "الوزن" : "Weight"}</th>
                       <th className="px-4 py-3 text-left font-medium">{locale === "ar" ? "القطع" : "PCS"}</th>
                       <th className="px-4 py-3 text-left font-medium">{locale === "ar" ? "السعودية" : "Saudi Arabia"}</th>
+                      <th className="px-4 py-3 text-left font-medium">{locale === "ar" ? "عمان" : "Oman"}</th>
                       <th className="px-4 py-3 text-left font-medium">{locale === "ar" ? "البحرين" : "Bahrain"}</th>
                       <th className="px-4 py-3 text-left font-medium">{locale === "ar" ? "الكويت" : "Kuwait"}</th>
                       <th className="px-4 py-3 text-left font-medium">{locale === "ar" ? "قطر" : "Qatar"}</th>
@@ -270,6 +273,7 @@ export default async function ShippingPage({ params }: ShippingPageProps) {
                         <td className="px-4 py-3 text-brand-primary">{row.weight}</td>
                         <td className="px-4 py-3 text-brand-primary">{row.pcs}</td>
                         <td className="px-4 py-3 text-brand-primary/75">{row.saudi_arabia}</td>
+                        <td className="px-4 py-3 text-brand-primary/75">{row.oman}</td>
                         <td className="px-4 py-3 text-brand-primary/75">{row.bahrain}</td>
                         <td className="px-4 py-3 text-brand-primary/75">{row.kuwait}</td>
                         <td className="px-4 py-3 text-brand-primary/75">{row.qatar}</td>

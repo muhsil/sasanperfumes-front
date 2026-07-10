@@ -1,4 +1,4 @@
-export type FreightCountryCode = "SA" | "BH" | "KW" | "QA";
+export type FreightCountryCode = "SA" | "OM" | "BH" | "KW" | "QA";
 
 export interface FreightChargeRow {
   weightKg: number;
@@ -11,22 +11,23 @@ export interface FreightChargeDisplayRow {
   weight: string;
   pcs: string;
   saudi_arabia: string;
+  oman: string;
   bahrain: string;
   kuwait: string;
   qatar: string;
 }
 
 const DEFAULT_FREIGHT_TABLE: FreightChargeRow[] = [
-  { weightKg: 0.5, weightLabel: "0.5KG", pcs: 1, charges: { SA: 30, BH: 91, KW: 107, QA: 30 } },
-  { weightKg: 1, weightLabel: "1KG", pcs: 2, charges: { SA: 30, BH: 110, KW: 128, QA: 30 } },
-  { weightKg: 1.5, weightLabel: "1.5KG", pcs: 3, charges: { SA: 30, BH: 125, KW: 145, QA: 30 } },
-  { weightKg: 1.5, weightLabel: "1.5KG", pcs: 4, charges: { SA: 30, BH: 125, KW: 145, QA: 30 } },
-  { weightKg: 2, weightLabel: "2KG", pcs: 5, charges: { SA: 30, BH: 140, KW: 162, QA: 30 } },
-  { weightKg: 2.5, weightLabel: "2.5KG", pcs: 6, charges: { SA: 30, BH: 154, KW: 178, QA: 30 } },
-  { weightKg: 3, weightLabel: "3KG", pcs: 8, charges: { SA: 30, BH: 169, KW: 195, QA: 30 } },
-  { weightKg: 3.5, weightLabel: "3.5KG", pcs: 9, charges: { SA: 30, BH: 183, KW: 212, QA: 30 } },
-  { weightKg: 4, weightLabel: "4KG", pcs: 10, charges: { SA: 30, BH: 200, KW: 229, QA: 30 } },
-  { weightKg: 5, weightLabel: "5KG", pcs: 12, charges: { SA: 30, BH: 226, KW: 263, QA: 30 } },
+  { weightKg: 0.5, weightLabel: "0.5KG", pcs: 1, charges: { SA: 30, OM: 3, BH: 91, KW: 107, QA: 30 } },
+  { weightKg: 1, weightLabel: "1KG", pcs: 2, charges: { SA: 30, OM: 3, BH: 110, KW: 128, QA: 30 } },
+  { weightKg: 1.5, weightLabel: "1.5KG", pcs: 3, charges: { SA: 30, OM: 3, BH: 125, KW: 145, QA: 30 } },
+  { weightKg: 1.5, weightLabel: "1.5KG", pcs: 4, charges: { SA: 30, OM: 3, BH: 125, KW: 145, QA: 30 } },
+  { weightKg: 2, weightLabel: "2KG", pcs: 5, charges: { SA: 30, OM: 3, BH: 140, KW: 162, QA: 30 } },
+  { weightKg: 2.5, weightLabel: "2.5KG", pcs: 6, charges: { SA: 30, OM: 3, BH: 154, KW: 178, QA: 30 } },
+  { weightKg: 3, weightLabel: "3KG", pcs: 8, charges: { SA: 30, OM: 3, BH: 169, KW: 195, QA: 30 } },
+  { weightKg: 3.5, weightLabel: "3.5KG", pcs: 9, charges: { SA: 30, OM: 3, BH: 183, KW: 212, QA: 30 } },
+  { weightKg: 4, weightLabel: "4KG", pcs: 10, charges: { SA: 30, OM: 3, BH: 200, KW: 229, QA: 30 } },
+  { weightKg: 5, weightLabel: "5KG", pcs: 12, charges: { SA: 30, OM: 3, BH: 226, KW: 263, QA: 30 } },
 ];
 
 function formatNumber(value: number): string {
@@ -35,7 +36,7 @@ function formatNumber(value: number): string {
 
 function normalizeCountryCode(value: unknown): FreightCountryCode | null {
   const code = String(value || "").trim().toUpperCase();
-  if (code === "SA" || code === "BH" || code === "KW" || code === "QA") {
+  if (code === "SA" || code === "OM" || code === "BH" || code === "KW" || code === "QA") {
     return code;
   }
   return null;
@@ -46,7 +47,7 @@ export function getShippingFreightTable(): FreightChargeRow[] {
 }
 
 export function getShippingFreightCountries(): FreightCountryCode[] {
-  return ["SA", "BH", "KW", "QA"];
+  return ["SA", "OM", "BH", "KW", "QA"];
 }
 
 export function getShippingFreightDisplayRows(): FreightChargeDisplayRow[] {
@@ -54,6 +55,7 @@ export function getShippingFreightDisplayRows(): FreightChargeDisplayRow[] {
     weight: row.weightLabel,
     pcs: String(row.pcs),
     saudi_arabia: formatNumber(row.charges.SA),
+    oman: formatNumber(row.charges.OM),
     bahrain: formatNumber(row.charges.BH),
     kuwait: formatNumber(row.charges.KW),
     qatar: formatNumber(row.charges.QA),

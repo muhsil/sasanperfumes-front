@@ -618,8 +618,8 @@ export default function CheckoutClient() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [couponDiscount, promotionalDiscountTotal, formData.shipping.country, formData.shipping.city, formData.shipping.postalCode, cartSubtotal]);
 
-        // Calculate customs fee client-side for every storefront so QA/SA/OM
-        // follow the same charge model as the main site.
+        // Calculate customs fee client-side from the active market subtotal so
+        // each storefront keeps its own checkout totals.
         const customsFee = useMemo(() => {
           const country = formData.shipping.country;
           if (!country || country === "AE") return null;

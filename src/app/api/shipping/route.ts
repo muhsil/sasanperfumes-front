@@ -78,6 +78,7 @@ interface ZoneLocation {
 
 const FREIGHT_COUNTRY_LABELS: Record<string, string> = {
   SA: "Saudi Arabia",
+  OM: "Oman",
   BH: "Bahrain",
   KW: "Kuwait",
   QA: "Qatar",
@@ -458,7 +459,7 @@ export async function GET(request: NextRequest) {
         "flat_rate",
         "Shipping",
         "Oman shipping charge",
-        30,
+        3,
         currencyCode,
         currencySymbol
       );
