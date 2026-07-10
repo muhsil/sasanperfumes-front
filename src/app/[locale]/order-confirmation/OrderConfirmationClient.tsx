@@ -5,7 +5,6 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/common/Button";
 import { OrderPrice, OrderCurrencyBadge } from "@/components/common/OrderPrice";
-import { siteConfig } from "@/config/site";
 import { useCart } from "@/contexts/CartContext";
 import { OrderBundleItemsList, isOrderBundleProduct, isOrderFreeGift } from "@/components/cart/OrderBundleItemsList";
 import { fbTrackPurchase } from "@/lib/utils/fbpixel";
@@ -15,6 +14,7 @@ import { decodeHtmlEntities } from "@/lib/utils";
 import { normalizeFrontendPaymentUrl } from "@/lib/utils/payment";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 import { getGrossDiscountTotal, getGrossFeeTotal, getGrossLineItemTotal, getGrossLineItemUnitPrice, getGrossOrderSubtotal, getGrossShippingTotal } from "@/lib/orders/pricing";
+import { getMarketDefaultCurrency } from "@/config/market";
 
 interface OrderMetaData {
   id: number;
@@ -119,6 +119,8 @@ function isLikelyCardPayment(method: string, methodTitle = ""): boolean {
 
 export default function OrderConfirmationClient({ locale }: OrderConfirmationClientProps) {
   const marketPrefix = useMarketPrefix();
+  const marketCode = marketPrefix.replace(/^\//, "").toLowerCase();
+  const marketCurrency = getMarketDefaultCurrency(marketCode || "intl");
   const searchParams = useSearchParams();
   const orderId = searchParams.get("order_id");
   const orderKey = searchParams.get("order_key");
@@ -133,6 +135,26 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
   const cartClearedRef = useRef(false);
   const paymentVerifiedRef = useRef(false);
   const purchaseTrackedRef = useRef(false);
+
+  const getMarketHeaders = useCallback((extra: HeadersInit = {}): HeadersInit => {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      ...(extra as Record<string, string>),
+    };
+
+    if (typeof window !== "undefined") {
+      const host = window.location.hostname.replace(/^www\./, "");
+      if (host) {
+        headers["X-Frontend-Host"] = marketCode ? `${host}/${marketCode}` : host;
+      }
+    }
+
+    if (marketCode) {
+      headers["X-Market"] = marketCode;
+    }
+
+    return headers;
+  }, [marketCode]);
 
   const [order, setOrder] = useState<OrderData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -190,12 +212,12 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
       if (isTabbyPayment) {
         const tabbyResponse = await fetch("/api/tabby/create-session", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: getMarketHeaders(),
           body: JSON.stringify({
             order_id: order.id,
             order_key: order.order_key,
             amount: orderTotal,
-            currency: order.currency || siteConfig.defaultCurrency,
+            currency: order.currency || marketCurrency,
             description: `Order #${order.id}`,
             buyer: {
               name: `${order.billing.first_name} ${order.billing.last_name}`,
@@ -231,12 +253,12 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
       } else if (isTamaraPayment) {
         const tamaraResponse = await fetch("/api/tamara/create-checkout", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: getMarketHeaders(),
           body: JSON.stringify({
             order_id: order.id,
             order_key: order.order_key,
             total_amount: orderTotal,
-            currency: order.currency || siteConfig.defaultCurrency,
+            currency: order.currency || marketCurrency,
             country_code: order.billing.country || "AE",
             locale: locale === "ar" ? "ar_SA" : "en_US",
             consumer: {
@@ -474,7 +496,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
             tax: orderTax,
             shipping: orderShipping,
             discount: orderDiscount,
-            currency: fetchedOrder.currency || siteConfig.defaultCurrency,
+            currency: fetchedOrder.currency || marketCurrency,
             market: orderMarket,
             payment_method: paymentMethod || undefined,
             items: fetchedOrder.line_items.map((item) => {
@@ -491,7 +513,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
           fbTrackPurchase({
             contentIds: fetchedOrder.line_items.map((item) => String(item.product_id)),
             value: orderTotal,
-            currency: fetchedOrder.currency || siteConfig.defaultCurrency,
+            currency: fetchedOrder.currency || marketCurrency,
             numItems: fetchedOrder.line_items.reduce((sum, item) => sum + item.quantity, 0),
           });
         }

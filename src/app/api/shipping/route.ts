@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { siteConfig } from "@/config/site";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { getRequestMarket } from "@/lib/market/server";
 import { resolveFreightPrice } from "@/config/shipping";
@@ -451,7 +450,7 @@ export async function GET(request: NextRequest) {
     const postcode = request.nextUrl.searchParams.get("postcode") || "";
     const cartSubtotal = parseFloat(request.nextUrl.searchParams.get("cart_subtotal") || "0");
     const cartWeight = parseFloat(request.nextUrl.searchParams.get("cart_weight") || "0");
-    const currencyCode = request.nextUrl.searchParams.get("currency_code") || siteConfig.defaultCurrency;
+    const currencyCode = request.nextUrl.searchParams.get("currency_code") || market.defaultCurrency;
     const currencySymbol = request.nextUrl.searchParams.get("currency_symbol") || getCurrencySymbolForCode(currencyCode);
     const buildOmanFallbackRate = () =>
       buildFixedShippingRate(

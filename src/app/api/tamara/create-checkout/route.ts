@@ -1,8 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { siteConfig } from "@/config/site";
+import { getMarketByHost, normalizeMarketHost } from "@/config/market";
 import { getEnvVar } from "@/lib/utils/loadEnv";
 
 const TAMARA_API_URL = "https://api.tamara.co/checkout";
+
+function getMarketCurrency(request: NextRequest): string {
+  const marketCode = request.headers.get("x-market")?.toLowerCase();
+  if (marketCode === "qa" || marketCode === "om" || marketCode === "sa") {
+    return getMarketByHost(`sasanperfumes.com/${marketCode}`).defaultCurrency;
+  }
+
+  const marketHint =
+    request.headers.get("x-frontend-host") ||
+    request.headers.get("x-forwarded-host") ||
+    request.headers.get("host");
+  const market = getMarketByHost(
+    normalizeMarketHost(marketHint)
+  );
+  return market.defaultCurrency;
+}
 
 interface TamaraCheckoutRequest {
   order_id: number;
@@ -70,6 +86,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body: TamaraCheckoutRequest = await request.json();
+    const marketCurrency = getMarketCurrency(request);
     
     console.log("Tamara create-checkout request:", {
       order_id: body.order_id,
@@ -117,7 +134,7 @@ export async function POST(request: NextRequest) {
       order_number: `${order_id}`,
       total_amount: {
         amount: total_amount.toFixed(2),
-        currency: currency || siteConfig.defaultCurrency,
+        currency: currency || marketCurrency,
       },
       description: `Order #${order_id}`,
       country_code: country_code || "AE",
@@ -131,11 +148,11 @@ export async function POST(request: NextRequest) {
         quantity: item.quantity,
         unit_price: {
           amount: item.unit_price.toFixed(2),
-          currency: currency || siteConfig.defaultCurrency,
+          currency: currency || marketCurrency,
         },
         total_amount: {
           amount: (item.unit_price * item.quantity).toFixed(2),
-          currency: currency || siteConfig.defaultCurrency,
+          currency: currency || marketCurrency,
         },
       })),
       consumer: {
@@ -168,17 +185,17 @@ export async function POST(request: NextRequest) {
       },
       shipping_amount: {
         amount: shipping_amount.toFixed(2),
-        currency: currency || siteConfig.defaultCurrency,
+        currency: currency || marketCurrency,
       },
       tax_amount: {
         amount: tax_amount.toFixed(2),
-        currency: currency || siteConfig.defaultCurrency,
+        currency: currency || marketCurrency,
       },
       discount: {
         name: discount_name,
         amount: {
           amount: discount_amount.toFixed(2),
-          currency: currency || siteConfig.defaultCurrency,
+          currency: currency || marketCurrency,
         },
       },
     };

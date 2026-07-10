@@ -1,9 +1,25 @@
 import { NextResponse } from "next/server";
-import { siteConfig } from "@/config/site";
+import { getMarketByHost, normalizeMarketHost } from "@/config/market";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { API_BASE as BASE_URL, backendHeaders, noCacheUrl } from "@/lib/utils/backendFetch";
 
 const API_BASE = `${BASE_URL}/wp-json/wc/v3`;
+
+function getMarketCurrency(request: Request): string {
+  const marketCode = request.headers.get("x-market")?.toLowerCase();
+  if (marketCode === "qa" || marketCode === "om" || marketCode === "sa") {
+    return getMarketByHost(`sasanperfumes.com/${marketCode}`).defaultCurrency;
+  }
+
+  const marketHint =
+    request.headers.get("x-frontend-host") ||
+    request.headers.get("x-forwarded-host") ||
+    request.headers.get("host");
+  const market = getMarketByHost(
+    normalizeMarketHost(marketHint)
+  );
+  return market.defaultCurrency;
+}
 
 function getBasicAuthParams(): string {
   const { consumerKey, consumerSecret } = getWcCredentials();
@@ -55,6 +71,7 @@ export async function POST(request: Request): Promise<NextResponse<ValidateRespo
   try {
     const body: ValidateRequest = await request.json();
     const { code, subtotal = 0 } = body;
+    const marketCurrency = getMarketCurrency(request);
 
     if (!code || typeof code !== "string") {
       return NextResponse.json(
@@ -135,7 +152,7 @@ export async function POST(request: Request): Promise<NextResponse<ValidateRespo
       return NextResponse.json({
         valid: false,
         code: "min_spend",
-        message: `Minimum spend of ${minimumAmount.toFixed(2)} ${siteConfig.defaultCurrency} required for this coupon`,
+        message: `Minimum spend of ${minimumAmount.toFixed(2)} ${marketCurrency} required for this coupon`,
       });
     }
 
@@ -145,7 +162,7 @@ export async function POST(request: Request): Promise<NextResponse<ValidateRespo
       return NextResponse.json({
         valid: false,
         code: "max_spend",
-        message: `Maximum spend of ${maximumAmount.toFixed(2)} ${siteConfig.defaultCurrency} exceeded for this coupon`,
+        message: `Maximum spend of ${maximumAmount.toFixed(2)} ${marketCurrency} exceeded for this coupon`,
       });
     }
 

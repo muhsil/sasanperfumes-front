@@ -54,6 +54,19 @@ export const marketConfigs: MarketConfig[] = [
 
 export const internationalMarket = marketConfigs.find((market) => market.code === "intl")!;
 
+export function getMarketDefaultCurrency(market: MarketConfig | MarketCode | string | null | undefined): Currency {
+  if (!market) {
+    return siteConfig.defaultCurrency;
+  }
+
+  if (typeof market === "string") {
+    const normalizedCode = market.replace(/^\/+/, "").toLowerCase();
+    return marketConfigs.find((config) => config.code === normalizedCode)?.defaultCurrency || siteConfig.defaultCurrency;
+  }
+
+  return market.defaultCurrency || siteConfig.defaultCurrency;
+}
+
 export function normalizeMarketHost(value?: string | null): string {
   if (!value) return "";
 

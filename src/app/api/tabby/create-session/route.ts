@@ -1,8 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { siteConfig } from "@/config/site";
+import { getMarketByHost, normalizeMarketHost } from "@/config/market";
 import { getEnvVar } from "@/lib/utils/loadEnv";
 
 const TABBY_API_URL = "https://api.tabby.ai/api/v2/checkout";
+
+function getMarketCurrency(request: NextRequest): string {
+  const marketCode = request.headers.get("x-market")?.toLowerCase();
+  if (marketCode === "qa" || marketCode === "om" || marketCode === "sa") {
+    return getMarketByHost(`sasanperfumes.com/${marketCode}`).defaultCurrency;
+  }
+
+  const marketHint =
+    request.headers.get("x-frontend-host") ||
+    request.headers.get("x-forwarded-host") ||
+    request.headers.get("host");
+  const market = getMarketByHost(
+    normalizeMarketHost(marketHint)
+  );
+  return market.defaultCurrency;
+}
 
 interface TabbySessionRequest {
   order_id: number;
@@ -56,6 +72,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body: TabbySessionRequest = await request.json();
+    const marketCurrency = getMarketCurrency(request);
     
     console.log("Tabby create-session request:", {
       order_id: body.order_id,
@@ -98,7 +115,7 @@ export async function POST(request: NextRequest) {
     const tabbyPayload = {
       payment: {
         amount: amount.toFixed(2),
-        currency: currency || siteConfig.defaultCurrency,
+        currency: currency || marketCurrency,
         description: description || `Order #${order_id}`,
         buyer: {
           phone: buyer.phone,

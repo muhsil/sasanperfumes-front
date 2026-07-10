@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { siteConfig } from "@/config/site";
 import { getRequestMarket } from "@/lib/market/server";
 import { backendMarketPostHeaders, extractMarketCode, fetchBackendForMarket, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
@@ -86,7 +85,7 @@ export async function POST(request: NextRequest) {
       order = {
         order_key: orderKey,
         total: String(fallbackAmount),
-        currency: fallbackCurrency || siteConfig.defaultCurrency,
+        currency: fallbackCurrency || market.defaultCurrency,
         billing: fallbackEmail ? { email: fallbackEmail } : undefined,
       };
     }
@@ -128,7 +127,7 @@ export async function POST(request: NextRequest) {
         orderId,
         orderKey,
         amount,
-        currency: order.currency || fallbackCurrency || siteConfig.defaultCurrency,
+        currency: order.currency || fallbackCurrency || market.defaultCurrency,
         customerEmail: order.billing?.email || fallbackEmail || undefined,
         successUrl,
         cancelUrl,
