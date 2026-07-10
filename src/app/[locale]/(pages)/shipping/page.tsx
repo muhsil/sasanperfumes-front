@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { GroupedFAQAccordion, type FAQGroup } from "@/components/common/GroupedFAQAccordion";
 import { PolicyContent } from "@/components/common/PolicyContent";
 import { getDictionary } from "@/i18n";
+import { siteConfig } from "@/config/site";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { getPageSeo, getStaticPageContent, pickLocale, mapRepeater, mapFAQGroups, getFeatureToggles } from "@/lib/api/wordpress";
 import { getShippingFreightDisplayRows } from "@/config/shipping";
@@ -16,11 +17,92 @@ interface ShippingPageProps {
   params: Promise<{ locale: string }>;
 }
 
-function getDefaultKeywords(currencyCode: string) {
+function getDefaultKeywords() {
   return {
     en: ["perfume shipping", "fragrance delivery", "UAE shipping", "Dubai delivery", "GCC shipping", "express delivery", "shipping policy", "Sasan Perfumes", "delivery time", "Saudi Arabia perfume shipping", "Oman perfume delivery", "order tracking"],
     ar: ["شحن عطور", "توصيل عطور", "شحن الإمارات", "سياسة الشحن", "شحن دبي", "شحن دول الخليج", "توصيل سريع", "Sasan Perfumes", "مدة التوصيل", "شحن عطور السعودية", "شحن عطور عمان", "تتبع الشحن"],
   };
+}
+
+type ShippingDisplayRow = {
+  location: string;
+  cost: string;
+  delivery: string;
+};
+
+type FreightDisplayRow = {
+  weight: string;
+  pcs: string;
+  saudi_arabia: string;
+  bahrain: string;
+  kuwait: string;
+  qatar: string;
+};
+
+function pickShippingRowValue(row: Record<string, unknown>, key: string, locale: string, fallback = ""): string {
+  const value = row[key];
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    const bilingual = value as Record<string, unknown>;
+    const bilingualValue = locale === "ar" ? bilingual.ar : bilingual.en;
+    if (typeof bilingualValue === "string" && bilingualValue.trim()) {
+      return bilingualValue.trim();
+    }
+  }
+
+  const localeKey = locale === "ar" ? `${key}_ar` : `${key}_en`;
+  const camelKey = locale === "ar" ? `${key}Ar` : `${key}En`;
+  const extraKeys = [localeKey, camelKey, `${key}_label`, `${key}Label`];
+
+  const candidates: unknown[] = [value, ...extraKeys.map((candidateKey) => row[candidateKey])];
+  for (const candidate of candidates) {
+    if (typeof candidate === "string" && candidate.trim()) {
+      return candidate.trim();
+    }
+    if (typeof candidate === "number" && Number.isFinite(candidate)) {
+      return String(candidate);
+    }
+  }
+
+  return fallback;
+}
+
+function formatPreviewRatePrice(price: string | number | undefined, currencyCode: string, currencyMinorUnit: number): string {
+  const amount = typeof price === "number" ? price : parseFloat(String(price ?? "0"));
+  const safeMinorUnit = Number.isFinite(currencyMinorUnit) ? currencyMinorUnit : 2;
+  const divisor = Math.pow(10, safeMinorUnit);
+  const numericAmount = Number.isFinite(amount) ? amount / divisor : 0;
+  return `${currencyCode} ${numericAmount.toFixed(safeMinorUnit)}`;
+}
+
+async function fetchInternationalShippingPreview(currencyCode: string, locale: Locale): Promise<ShippingDisplayRow[]> {
+  try {
+    const previewUrl = new URL("/api/shipping", siteConfig.url);
+    previewUrl.searchParams.set("country", "AE");
+    previewUrl.searchParams.set("city", "Dubai");
+    previewUrl.searchParams.set("postcode", "00000");
+    previewUrl.searchParams.set("cart_subtotal", "0");
+    previewUrl.searchParams.set("cart_weight", "0");
+    previewUrl.searchParams.set("currency_code", currencyCode);
+
+    const response = await fetch(previewUrl.toString(), { cache: "no-store" });
+    if (!response.ok) return [];
+
+    const data = await response.json();
+    const packages: Array<{ shipping_rates?: Array<{ name?: string; price?: string; currency_code?: string; currency_minor_unit?: number; description?: string }> }> = Array.isArray(data?.shipping_rates)
+      ? data.shipping_rates
+      : [];
+    const flatRates = packages.flatMap((pkg) => (Array.isArray(pkg.shipping_rates) ? pkg.shipping_rates : []));
+
+    return flatRates
+      .map((rate: { name?: string; price?: string; currency_code?: string; currency_minor_unit?: number; description?: string }) => ({
+        location: (rate.name || (locale === "ar" ? "جيبلي للشحن" : "Jeebly Shipping")).trim(),
+        cost: formatPreviewRatePrice(rate.price, rate.currency_code || currencyCode, Number(rate.currency_minor_unit ?? 2)),
+        delivery: (rate.description || (locale === "ar" ? "يتم الحساب عند الدفع" : "Calculated at checkout")).trim(),
+      }))
+      .filter((row: ShippingDisplayRow) => row.location || row.cost || row.delivery);
+  } catch {
+    return [];
+  }
 }
 
 export async function generateMetadata({
@@ -37,8 +119,7 @@ export async function generateMetadata({
   const wpSeo = await getPageSeo("shipping", lang);
 
   const market = await getRequestMarket();
-  const currencyCode = market.defaultCurrency;
-  const defaultKeywords = getDefaultKeywords(currencyCode);
+  const defaultKeywords = getDefaultKeywords();
   return generateSeoMetadata({
     title: wpSeo?.title || pageContent.seo.title,
     description: wpSeo?.description || pageContent.seo.description,
@@ -59,17 +140,22 @@ export default async function ShippingPage({ params }: ShippingPageProps) {
   const dictionary = await getDictionary(locale as Locale);
   const wp = await getStaticPageContent("shipping");
   const currencyCode = market.defaultCurrency;
+  const isInternationalMarket = market.code === "intl";
 
   const title = pickLocale(wp?.title, locale, locale === "ar" ? "الشحن والتوصيل" : "Shipping & Delivery");
   const ratesTitle = pickLocale(
     wp?.rates_title,
     locale,
-    locale === "ar" ? `رسوم الشحن عبر أرامكس بعملة ${currencyCode}` : `Aramex Freight Charges in ${currencyCode}`
+    isInternationalMarket
+      ? (locale === "ar" ? `رسوم الشحن عبر جيبلي بعملة ${currencyCode}` : `Jeebly Shipping Charges in ${currencyCode}`)
+      : (locale === "ar" ? `رسوم الشحن عبر أرامكس بعملة ${currencyCode}` : `Aramex Freight Charges in ${currencyCode}`)
   );
   const ratesNote = pickLocale(
     wp?.rates_note,
     locale,
-    locale === "ar" ? `جميع الأسعار موضحة بعملة ${currencyCode}.` : `All freight charges are shown in ${currencyCode}.`
+    isInternationalMarket
+      ? (locale === "ar" ? `جميع رسوم الشحن موضحة بعملة ${currencyCode}.` : `All shipping charges are shown in ${currencyCode}.`)
+      : (locale === "ar" ? `جميع الأسعار موضحة بعملة ${currencyCode}.` : `All freight charges are shown in ${currencyCode}.`)
   );
 
   // FAQ-style grouped content
@@ -83,21 +169,40 @@ export default async function ShippingPage({ params }: ShippingPageProps) {
     url: link.url || '',
   }));
 
-  const freightRowsSource = Array.isArray((wp as Record<string, unknown> | null)?.shipping_freight_rates)
-    ? ((wp as Record<string, unknown>).shipping_freight_rates as Array<Record<string, unknown>>)
+  const intlRowsSource = isInternationalMarket
+    ? (Array.isArray((wp as Record<string, unknown> | null)?.shipping_rates)
+        ? ((wp as Record<string, unknown>).shipping_rates as Array<Record<string, unknown>>)
+        : [])
     : [];
 
-  const freightRows =
-    freightRowsSource.length > 0
-      ? freightRowsSource.map((row) => ({
-          weight: String(row.weight ?? row.weight_label ?? row.weightLabel ?? ""),
-          pcs: String(row.pcs ?? row.pieces ?? ""),
-          saudi_arabia: String(row.saudi_arabia ?? row.saudiArabia ?? row.sa ?? ""),
-          bahrain: String(row.bahrain ?? row.bh ?? ""),
-          kuwait: String(row.kuwait ?? row.kw ?? ""),
-          qatar: String(row.qatar ?? row.qa ?? ""),
-        }))
-      : getShippingFreightDisplayRows();
+  const freightRowsSource = !isInternationalMarket
+    ? (Array.isArray((wp as Record<string, unknown> | null)?.shipping_freight_rates)
+        ? ((wp as Record<string, unknown>).shipping_freight_rates as Array<Record<string, unknown>>)
+        : [])
+    : [];
+
+  const intlRows: ShippingDisplayRow[] = isInternationalMarket
+    ? (intlRowsSource.length > 0
+        ? intlRowsSource.map((row) => ({
+            location: pickShippingRowValue(row, "location", locale, locale === "ar" ? "جيبلي للشحن" : "Jeebly Shipping"),
+            cost: pickShippingRowValue(row, "cost", locale, ""),
+            delivery: pickShippingRowValue(row, "delivery", locale, locale === "ar" ? "يتم الحساب عند الدفع" : "Calculated at checkout"),
+          }))
+        : await fetchInternationalShippingPreview(currencyCode, locale as Locale))
+    : [];
+
+  const freightRows: FreightDisplayRow[] = !isInternationalMarket
+    ? (freightRowsSource.length > 0
+        ? freightRowsSource.map((row) => ({
+            weight: String(row.weight ?? row.weight_label ?? row.weightLabel ?? ""),
+            pcs: String(row.pcs ?? row.pieces ?? ""),
+            saudi_arabia: String(row.saudi_arabia ?? row.saudiArabia ?? row.sa ?? ""),
+            bahrain: String(row.bahrain ?? row.bh ?? ""),
+            kuwait: String(row.kuwait ?? row.kw ?? ""),
+            qatar: String(row.qatar ?? row.qa ?? ""),
+          }))
+        : getShippingFreightDisplayRows())
+    : [];
 
   const breadcrumbItems = [
     { name: dictionary.footer.shippingInfo, href: `${pathPrefix}/${locale}/shipping` },
@@ -115,32 +220,65 @@ export default async function ShippingPage({ params }: ShippingPageProps) {
               <h2 className="text-2xl font-light text-brand-primary">{ratesTitle}</h2>
               {ratesNote && <p className="text-sm leading-7 text-brand-primary/70">{ratesNote}</p>}
             </div>
-            <div className="overflow-x-auto border border-[#e7ded7]">
-              <table className="w-full min-w-[720px] border-collapse text-sm">
-                <thead>
-                  <tr className="border-b border-[#e7ded7] bg-[#faf7f3] text-brand-primary">
-                    <th className="px-4 py-3 text-left font-medium">{locale === "ar" ? "الوزن" : "Weight"}</th>
-                    <th className="px-4 py-3 text-left font-medium">{locale === "ar" ? "القطع" : "PCS"}</th>
-                    <th className="px-4 py-3 text-left font-medium">{locale === "ar" ? "السعودية" : "Saudi Arabia"}</th>
-                    <th className="px-4 py-3 text-left font-medium">{locale === "ar" ? "البحرين" : "Bahrain"}</th>
-                    <th className="px-4 py-3 text-left font-medium">{locale === "ar" ? "الكويت" : "Kuwait"}</th>
-                    <th className="px-4 py-3 text-left font-medium">{locale === "ar" ? "قطر" : "Qatar"}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {freightRows.map((row, index) => (
-                    <tr key={`${row.weight}-${row.pcs}-${index}`} className="border-b border-[#e7ded7] last:border-b-0">
-                      <td className="px-4 py-3 text-brand-primary">{row.weight}</td>
-                      <td className="px-4 py-3 text-brand-primary">{row.pcs}</td>
-                      <td className="px-4 py-3 text-brand-primary/75">{row.saudi_arabia}</td>
-                      <td className="px-4 py-3 text-brand-primary/75">{row.bahrain}</td>
-                      <td className="px-4 py-3 text-brand-primary/75">{row.kuwait}</td>
-                      <td className="px-4 py-3 text-brand-primary/75">{row.qatar}</td>
+            {isInternationalMarket ? (
+              intlRows.length > 0 ? (
+                <div className="overflow-x-auto border border-[#e7ded7]">
+                  <table className="w-full min-w-[560px] border-collapse text-sm">
+                    <thead>
+                      <tr className="border-b border-[#e7ded7] bg-[#faf7f3] text-brand-primary">
+                        <th className="px-4 py-3 text-left font-medium">{locale === "ar" ? "الخدمة" : "Method"}</th>
+                        <th className="px-4 py-3 text-left font-medium">{locale === "ar" ? "التكلفة" : "Cost"}</th>
+                        <th className="px-4 py-3 text-left font-medium">{locale === "ar" ? "التسليم" : "Delivery"}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {intlRows.map((row, index) => (
+                        <tr key={`${row.location}-${row.cost}-${index}`} className="border-b border-[#e7ded7] last:border-b-0">
+                          <td className="px-4 py-3 text-brand-primary">{row.location}</td>
+                          <td className="px-4 py-3 text-brand-primary/75">{row.cost}</td>
+                          <td className="px-4 py-3 text-brand-primary/75">{row.delivery}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="rounded-lg border border-[#e7ded7] bg-[#faf7f3] p-5">
+                  <p className="text-sm leading-7 text-brand-primary/75">
+                    {locale === "ar"
+                      ? "يتم احتساب رسوم الشحن عبر جيبلي عند إتمام الطلب."
+                      : "Jeebly shipping is calculated at checkout."}
+                  </p>
+                </div>
+              )
+            ) : (
+              <div className="overflow-x-auto border border-[#e7ded7]">
+                <table className="w-full min-w-[720px] border-collapse text-sm">
+                  <thead>
+                    <tr className="border-b border-[#e7ded7] bg-[#faf7f3] text-brand-primary">
+                      <th className="px-4 py-3 text-left font-medium">{locale === "ar" ? "الوزن" : "Weight"}</th>
+                      <th className="px-4 py-3 text-left font-medium">{locale === "ar" ? "القطع" : "PCS"}</th>
+                      <th className="px-4 py-3 text-left font-medium">{locale === "ar" ? "السعودية" : "Saudi Arabia"}</th>
+                      <th className="px-4 py-3 text-left font-medium">{locale === "ar" ? "البحرين" : "Bahrain"}</th>
+                      <th className="px-4 py-3 text-left font-medium">{locale === "ar" ? "الكويت" : "Kuwait"}</th>
+                      <th className="px-4 py-3 text-left font-medium">{locale === "ar" ? "قطر" : "Qatar"}</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {freightRows.map((row, index) => (
+                      <tr key={`${row.weight}-${row.pcs}-${index}`} className="border-b border-[#e7ded7] last:border-b-0">
+                        <td className="px-4 py-3 text-brand-primary">{row.weight}</td>
+                        <td className="px-4 py-3 text-brand-primary">{row.pcs}</td>
+                        <td className="px-4 py-3 text-brand-primary/75">{row.saudi_arabia}</td>
+                        <td className="px-4 py-3 text-brand-primary/75">{row.bahrain}</td>
+                        <td className="px-4 py-3 text-brand-primary/75">{row.kuwait}</td>
+                        <td className="px-4 py-3 text-brand-primary/75">{row.qatar}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </section>
 
           <PolicyContent

@@ -118,6 +118,22 @@ function getCurrencyMinorUnitForCode(code: string): number {
   return ["BHD", "KWD", "OMR"].includes(code.toUpperCase()) ? 3 : 2;
 }
 
+function getShippingMethodDisplayName(method: ZoneMethod, marketCode?: string): string {
+  const normalizedMarket = String(marketCode || "").toLowerCase();
+  if (normalizedMarket === "intl" && method.method_id === "flat_rate") {
+    return "Jeebly Shipping";
+  }
+
+  const providedTitle = (method.title || method.method_title || "").trim();
+  if (providedTitle) {
+    return providedTitle;
+  }
+
+  return method.method_id
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 async function findZoneForCountry(country: string, marketCode?: string): Promise<number | null> {
   const authParams = getBasicAuthParams(marketCode);
   const zonesUrl = `${wpJsonBaseForMarket(marketCode)}/wc/v3/shipping/zones?${authParams}`;
@@ -300,7 +316,8 @@ function buildShippingRates(
   cartSubtotal: number,
   currencyCode: string,
   currencySymbol: string,
-  cartWeight: number
+  cartWeight: number,
+  marketCode?: string
 ): ShippingRate[] {
   const rates: ShippingRate[] = [];
   const currencyMinorUnit = getCurrencyMinorUnitForCode(currencyCode);
@@ -310,7 +327,7 @@ function buildShippingRates(
     if (!method.enabled) continue;
 
     let price = "0";
-    const name = method.title || method.method_title;
+    const name = getShippingMethodDisplayName(method, marketCode);
 
     if (method.method_id === "flat_rate") {
       const rules = parseFlexibleShippingRules(method.settings);
@@ -541,7 +558,14 @@ export async function GET(request: NextRequest) {
     }
 
     const methods = await getZoneMethods(zoneId, shippingMarketCode);
-    const shippingRates = buildShippingRates(methods, cartSubtotal, currencyCode, currencySymbol, cartWeight);
+    const shippingRates = buildShippingRates(
+      methods,
+      cartSubtotal,
+      currencyCode,
+      currencySymbol,
+      cartWeight,
+      shippingMarketCode
+    );
 
     if (shippingRates.length === 0 && isOmanMarket) {
       const fallbackRate = buildOmanFallbackRate();
