@@ -616,11 +616,9 @@ export default function CheckoutClient() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [couponDiscount, promotionalDiscountTotal, formData.shipping.country, formData.shipping.city, formData.shipping.postalCode, cartSubtotal]);
 
-        // Calculate customs fee client-side only on the international storefront.
-        // The market-specific storefronts already have local pricing/shipping rules,
-        // so we do not want to add an extra customs charge there.
+        // Calculate customs fee client-side for every storefront so QA/SA/OM
+        // follow the same charge model as the main site.
         const customsFee = useMemo(() => {
-          if (marketPrefix) return null;
           const country = formData.shipping.country;
           if (!country || country === "AE") return null;
           // 20% of cart subtotal (subtotal is in minor units)
@@ -631,7 +629,7 @@ export default function CheckoutClient() {
             name: "Customs fees",
             fee: String(feeAmount),
           };
-        }, [formData.shipping.country, cartSubtotal, marketPrefix]);
+        }, [formData.shipping.country, cartSubtotal]);
 
         const handleSelectShippingRate = async (rateId: string, packageId: number = 0) => {
           setSelectedShippingRate(rateId);
@@ -683,31 +681,26 @@ export default function CheckoutClient() {
     // Calculate total fees -- merge client-side customs fee with any existing cart.fees
     const cartFeeTotal = useMemo(() => {
       try {
-        const allowCustomsFee = !marketPrefix;
         let total = 0;
         const fees = Array.isArray(cart?.fees) ? cart.fees : [];
-        if (fees.length > 0) {
-          total += fees
-            .filter(fee => allowCustomsFee || fee?.name?.toLowerCase() !== "customs fees")
-            .reduce((sum, fee) => sum + (parseFloat(fee?.fee) || 0), 0);
-        }
-        if (allowCustomsFee && customsFee) {
-          total += parseFloat(customsFee.fee) || 0;
-        } else if (allowCustomsFee && fees.length > 0) {
-          total += fees
-            .filter(fee => fee?.name?.toLowerCase() === "customs fees")
-            .reduce((sum, fee) => sum + (parseFloat(fee?.fee) || 0), 0);
-        }
+        const nonCustomsFeesTotal = fees
+          .filter(fee => fee?.name?.toLowerCase() !== "customs fees")
+          .reduce((sum, fee) => sum + (parseFloat(fee?.fee) || 0), 0);
+        const customsFeesTotal = customsFee
+          ? (parseFloat(customsFee.fee) || 0)
+          : fees
+              .filter(fee => fee?.name?.toLowerCase() === "customs fees")
+              .reduce((sum, fee) => sum + (parseFloat(fee?.fee) || 0), 0);
+        total += nonCustomsFeesTotal + customsFeesTotal;
         return total;
       } catch (err) {
         console.error("[Checkout] Failed to calculate fees:", err);
         return 0;
       }
-    }, [customsFee, cart?.fees, marketPrefix]);
+    }, [customsFee, cart?.fees]);
 
     const checkoutTotal = useMemo(() => {
       try {
-        const allowCustomsFee = !marketPrefix;
         if (shippingPackages.length > 0) {
           const subtotalMajor = (discountedCartSubtotal || 0) / divisor;
           const shippingMajor = (parseFloat(shippingTotal) || 0) / shippingDivisor;
@@ -715,18 +708,16 @@ export default function CheckoutClient() {
           return subtotalMajor + shippingMajor + feesMajor;
         }
         const baseTotal = parseFloat(cartTotal) || 0;
-        const serverCustomsFeeTotal = allowCustomsFee
-          ? (Array.isArray(cart?.fees) ? cart.fees : [])
-              .filter(fee => fee?.name?.toLowerCase() === "customs fees")
-              .reduce((sum, fee) => sum + (parseFloat(fee?.fee) || 0), 0)
-          : 0;
-        const clientCustomsFee = allowCustomsFee && customsFee ? (parseFloat(customsFee.fee) || 0) : 0;
+        const serverCustomsFeeTotal = (Array.isArray(cart?.fees) ? cart.fees : [])
+          .filter(fee => fee?.name?.toLowerCase() === "customs fees")
+          .reduce((sum, fee) => sum + (parseFloat(fee?.fee) || 0), 0);
+        const clientCustomsFee = customsFee ? (parseFloat(customsFee.fee) || 0) : 0;
         return Math.max(baseTotal - promotionalDiscountTotal - serverCustomsFeeTotal + clientCustomsFee, 0);
       } catch (err) {
         console.error("[Checkout] Failed to calculate checkout total:", err);
         return Math.max(parseFloat(cartTotal) || 0, 0);
       }
-    }, [discountedCartSubtotal, shippingTotal, shippingPackages, cartTotal, cartFeeTotal, customsFee, cart?.fees, promotionalDiscountTotal, marketPrefix, divisor, shippingDivisor]);
+    }, [discountedCartSubtotal, shippingTotal, shippingPackages, cartTotal, cartFeeTotal, customsFee, cart?.fees, promotionalDiscountTotal, divisor, shippingDivisor]);
 
     const checkoutAnalyticsItems = useMemo(() => {
       return cartItems
@@ -1239,11 +1230,10 @@ export default function CheckoutClient() {
         coupon_lines: couponLines,
         ...(() => {
           const feeLines: Array<{ name: string; total: string }> = [];
-          const allowCustomsFee = !marketPrefix;
           // Add non-customs fees from cart.fees
           if (Array.isArray(cart?.fees) && cart.fees.length > 0) {
             cart.fees
-              .filter(fee => allowCustomsFee || fee?.name?.toLowerCase() !== "customs fees")
+              .filter(fee => fee?.name?.toLowerCase() !== "customs fees")
               .forEach(fee => {
                 feeLines.push({
                   name: fee.name,
@@ -1261,12 +1251,12 @@ export default function CheckoutClient() {
             }
           });
           // Add client-side customs fee, or server-side customs fees if no client-side
-          if (allowCustomsFee && customsFee) {
+          if (customsFee) {
             feeLines.push({
               name: customsFee.name,
               total: convertPrice(parseFloat(customsFee.fee) / divisor).toFixed(getCurrencyInfo().decimals),
             });
-          } else if (allowCustomsFee && Array.isArray(cart?.fees) && cart.fees.length > 0) {
+          } else if (Array.isArray(cart?.fees) && cart.fees.length > 0) {
             cart.fees
               .filter(fee => fee?.name?.toLowerCase() === "customs fees")
               .forEach(fee => {

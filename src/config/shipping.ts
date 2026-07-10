@@ -19,16 +19,16 @@ export interface FreightChargeDisplayRow {
 }
 
 const DEFAULT_FREIGHT_TABLE: FreightChargeRow[] = [
-  { weightKg: 0.5, weightLabel: "0.5KG", pcs: 1, charges: { SA: 100, BH: 91, KW: 107, QA: 99 } },
-  { weightKg: 1, weightLabel: "1KG", pcs: 2, charges: { SA: 107, BH: 110, KW: 128, QA: 107 } },
-  { weightKg: 1.5, weightLabel: "1.5KG", pcs: 3, charges: { SA: 115, BH: 125, KW: 145, QA: 113 } },
-  { weightKg: 1.5, weightLabel: "1.5KG", pcs: 4, charges: { SA: 115, BH: 125, KW: 145, QA: 113 } },
-  { weightKg: 2, weightLabel: "2KG", pcs: 5, charges: { SA: 121, BH: 140, KW: 162, QA: 120 } },
-  { weightKg: 2.5, weightLabel: "2.5KG", pcs: 6, charges: { SA: 127, BH: 154, KW: 178, QA: 127 } },
-  { weightKg: 3, weightLabel: "3KG", pcs: 8, charges: { SA: 135, BH: 169, KW: 195, QA: 133 } },
-  { weightKg: 3.5, weightLabel: "3.5KG", pcs: 9, charges: { SA: 141, BH: 183, KW: 212, QA: 140 } },
-  { weightKg: 4, weightLabel: "4KG", pcs: 10, charges: { SA: 147, BH: 200, KW: 229, QA: 146 } },
-  { weightKg: 5, weightLabel: "5KG", pcs: 12, charges: { SA: 161, BH: 226, KW: 263, QA: 160 } },
+  { weightKg: 0.5, weightLabel: "0.5KG", pcs: 1, charges: { SA: 30, BH: 91, KW: 107, QA: 30 } },
+  { weightKg: 1, weightLabel: "1KG", pcs: 2, charges: { SA: 30, BH: 110, KW: 128, QA: 30 } },
+  { weightKg: 1.5, weightLabel: "1.5KG", pcs: 3, charges: { SA: 30, BH: 125, KW: 145, QA: 30 } },
+  { weightKg: 1.5, weightLabel: "1.5KG", pcs: 4, charges: { SA: 30, BH: 125, KW: 145, QA: 30 } },
+  { weightKg: 2, weightLabel: "2KG", pcs: 5, charges: { SA: 30, BH: 140, KW: 162, QA: 30 } },
+  { weightKg: 2.5, weightLabel: "2.5KG", pcs: 6, charges: { SA: 30, BH: 154, KW: 178, QA: 30 } },
+  { weightKg: 3, weightLabel: "3KG", pcs: 8, charges: { SA: 30, BH: 169, KW: 195, QA: 30 } },
+  { weightKg: 3.5, weightLabel: "3.5KG", pcs: 9, charges: { SA: 30, BH: 183, KW: 212, QA: 30 } },
+  { weightKg: 4, weightLabel: "4KG", pcs: 10, charges: { SA: 30, BH: 200, KW: 229, QA: 30 } },
+  { weightKg: 5, weightLabel: "5KG", pcs: 12, charges: { SA: 30, BH: 226, KW: 263, QA: 30 } },
 ];
 
 function formatNumber(value: number): string {
