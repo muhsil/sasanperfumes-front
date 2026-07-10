@@ -1,5 +1,3 @@
-import { getEnvVar } from "@/lib/utils/loadEnv";
-
 export type FreightCountryCode = "SA" | "BH" | "KW" | "QA";
 
 export interface FreightChargeRow {
@@ -35,15 +33,6 @@ function formatNumber(value: number): string {
   return Number.isFinite(value) ? value.toFixed(2) : "0.00";
 }
 
-function toNumber(value: unknown, fallback = 0): number {
-  if (typeof value === "number") return Number.isFinite(value) ? value : fallback;
-  if (typeof value === "string") {
-    const parsed = parseFloat(value.replace(/[^0-9.-]/g, ""));
-    return Number.isFinite(parsed) ? parsed : fallback;
-  }
-  return fallback;
-}
-
 function normalizeCountryCode(value: unknown): FreightCountryCode | null {
   const code = String(value || "").trim().toUpperCase();
   if (code === "SA" || code === "BH" || code === "KW" || code === "QA") {
@@ -52,66 +41,7 @@ function normalizeCountryCode(value: unknown): FreightCountryCode | null {
   return null;
 }
 
-function parseFreightRow(row: Record<string, unknown>): FreightChargeRow | null {
-  const weightLabel = String(row.weightLabel ?? row.weight ?? row.weight_kg ?? "").trim();
-  const weightKg = toNumber(row.weightKg ?? row.weight_kg ?? row.weight ?? weightLabel, Number.NaN);
-  const pcs = Math.max(0, Math.round(toNumber(row.pcs ?? row.pieces ?? row.quantity, 0)));
-
-  const charges = {
-    SA: toNumber(row.saudi_arabia ?? row.saudiArabia ?? row.sa ?? row.sa_cost ?? row.saudi_cost, Number.NaN),
-    BH: toNumber(row.bahrain ?? row.bh ?? row.bh_cost, Number.NaN),
-    KW: toNumber(row.kuwait ?? row.kw ?? row.kw_cost, Number.NaN),
-    QA: toNumber(row.qatar ?? row.qa ?? row.qa_cost, Number.NaN),
-  };
-
-  if (!weightLabel && !Number.isFinite(weightKg)) {
-    return null;
-  }
-
-  if (![charges.SA, charges.BH, charges.KW, charges.QA].some((value) => Number.isFinite(value))) {
-    return null;
-  }
-
-  return {
-    weightKg: Number.isFinite(weightKg) ? weightKg : toNumber(weightLabel, 0),
-    weightLabel: weightLabel || `${weightKg}KG`,
-    pcs,
-    charges: {
-      SA: Number.isFinite(charges.SA) ? charges.SA : 0,
-      BH: Number.isFinite(charges.BH) ? charges.BH : 0,
-      KW: Number.isFinite(charges.KW) ? charges.KW : 0,
-      QA: Number.isFinite(charges.QA) ? charges.QA : 0,
-    },
-  };
-}
-
-function parseFreightTableEnv(raw: string | undefined): FreightChargeRow[] | null {
-  if (!raw) return null;
-
-  try {
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return null;
-
-    const rows = parsed
-      .map((item) => (item && typeof item === "object" ? parseFreightRow(item as Record<string, unknown>) : null))
-      .filter((row): row is FreightChargeRow => Boolean(row));
-
-    return rows.length > 0 ? rows : null;
-  } catch {
-    return null;
-  }
-}
-
 export function getShippingFreightTable(): FreightChargeRow[] {
-  const raw =
-    getEnvVar("SHIPPING_FREIGHT_TABLE_JSON") ||
-    getEnvVar("NEXT_PUBLIC_SHIPPING_FREIGHT_TABLE_JSON");
-
-  const rows = parseFreightTableEnv(raw);
-  if (rows && rows.length > 0) {
-    return rows.sort((a, b) => a.weightKg - b.weightKg || a.pcs - b.pcs);
-  }
-
   return [...DEFAULT_FREIGHT_TABLE].sort((a, b) => a.weightKg - b.weightKg || a.pcs - b.pcs);
 }
 
