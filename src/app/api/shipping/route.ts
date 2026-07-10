@@ -118,20 +118,42 @@ function getCurrencyMinorUnitForCode(code: string): number {
   return ["BHD", "KWD", "OMR"].includes(code.toUpperCase()) ? 3 : 2;
 }
 
+const SHIPPING_BRAND_PATTERNS = [/jeebly/i, /aramex/i, /جيبلي/i, /أرامكس/i];
+
+function containsShippingBrand(value: string): boolean {
+  return SHIPPING_BRAND_PATTERNS.some((pattern) => pattern.test(value));
+}
+
+function titleCase(value: string): string {
+  return value
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 function getShippingMethodDisplayName(method: ZoneMethod, marketCode?: string): string {
   const normalizedMarket = String(marketCode || "").toLowerCase();
+  const providedTitle = (method.title || method.method_title || "").trim();
   if (normalizedMarket === "intl" && method.method_id === "flat_rate") {
-    return "Jeebly Shipping";
+    return "Shipping";
   }
 
-  const providedTitle = (method.title || method.method_title || "").trim();
   if (providedTitle) {
+    if (containsShippingBrand(providedTitle)) {
+      return "Shipping";
+    }
+
+    if (method.method_id === "flat_rate" && /^flat rate$/i.test(providedTitle)) {
+      return "Shipping";
+    }
+
     return providedTitle;
   }
 
-  return method.method_id
-    .replace(/[_-]+/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
+  if (method.method_id === "flat_rate") {
+    return "Shipping";
+  }
+
+  return titleCase(method.method_id);
 }
 
 async function findZoneForCountry(country: string, marketCode?: string): Promise<number | null> {
@@ -209,8 +231,8 @@ function buildFreightRate(
 
   return {
     rate_id: `aramex_freight:${country.toUpperCase()}:${weightLabel}`,
-    name: `Aramex Freight ${countryLabel} ${weightLabel}`,
-    description: `${countryLabel} freight charge`,
+    name: `Shipping ${countryLabel} ${weightLabel}`.trim(),
+    description: `${countryLabel} shipping charge`,
     delivery_time: "",
     price: ratePrice,
     taxes: "0",

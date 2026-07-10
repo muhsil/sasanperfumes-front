@@ -67,6 +67,21 @@ function pickShippingRowValue(row: Record<string, unknown>, key: string, locale:
   return fallback;
 }
 
+const SHIPPING_BRAND_PATTERNS = [/jeebly/i, /aramex/i, /جيبلي/i, /أرامكس/i];
+
+function normalizeShippingDisplayText(value: unknown, fallback: string): string {
+  if (typeof value !== "string") {
+    return fallback;
+  }
+
+  const trimmed = value.replace(/\s+/g, " ").trim();
+  if (!trimmed) {
+    return fallback;
+  }
+
+  return SHIPPING_BRAND_PATTERNS.some((pattern) => pattern.test(trimmed)) ? fallback : trimmed;
+}
+
 function formatPreviewRatePrice(price: string | number | undefined, currencyCode: string, currencyMinorUnit: number): string {
   const amount = typeof price === "number" ? price : parseFloat(String(price ?? "0"));
   const safeMinorUnit = Number.isFinite(currencyMinorUnit) ? currencyMinorUnit : 2;
@@ -96,9 +111,12 @@ async function fetchInternationalShippingPreview(currencyCode: string, locale: L
 
     return flatRates
       .map((rate: { name?: string; price?: string; currency_code?: string; currency_minor_unit?: number; description?: string }) => ({
-        location: (rate.name || (locale === "ar" ? "جيبلي للشحن" : "Jeebly Shipping")).trim(),
+        location: normalizeShippingDisplayText(rate.name, locale === "ar" ? "الشحن" : "Shipping"),
         cost: formatPreviewRatePrice(rate.price, rate.currency_code || currencyCode, Number(rate.currency_minor_unit ?? 2)),
-        delivery: (rate.description || (locale === "ar" ? "يتم الحساب عند الدفع" : "Calculated at checkout")).trim(),
+        delivery: normalizeShippingDisplayText(
+          rate.description,
+          locale === "ar" ? "يتم الحساب عند الدفع" : "Calculated at checkout"
+        ),
       }))
       .filter((row: ShippingDisplayRow) => row.location || row.cost || row.delivery);
   } catch {
@@ -143,21 +161,28 @@ export default async function ShippingPage({ params }: ShippingPageProps) {
   const currencyCode = market.defaultCurrency;
   const isInternationalMarket = market.code === "intl";
 
-  const title = pickLocale(wp?.title, locale, locale === "ar" ? "الشحن والتوصيل" : "Shipping & Delivery");
+  const titleFallback = locale === "ar" ? "الشحن والتوصيل" : "Shipping & Delivery";
+  const title = normalizeShippingDisplayText(pickLocale(wp?.title, locale, titleFallback), titleFallback);
+  const shippingRatesTitleFallback = locale === "ar"
+    ? `رسوم الشحن بعملة ${currencyCode}`
+    : `Shipping Charges in ${currencyCode}`;
+  const shippingRatesNoteFallback = locale === "ar"
+    ? `جميع رسوم الشحن موضحة بعملة ${currencyCode}.`
+    : `All shipping charges are shown in ${currencyCode}.`;
   const ratesTitle = pickLocale(
     wp?.rates_title,
     locale,
-    isInternationalMarket
-      ? (locale === "ar" ? `رسوم الشحن عبر جيبلي بعملة ${currencyCode}` : `Jeebly Shipping Charges in ${currencyCode}`)
-      : (locale === "ar" ? `رسوم الشحن عبر أرامكس بعملة ${currencyCode}` : `Aramex Freight Charges in ${currencyCode}`)
+    shippingRatesTitleFallback
   );
-  const ratesNote = pickLocale(
+  const ratesNote = normalizeShippingDisplayText(
+    pickLocale(
     wp?.rates_note,
     locale,
-    isInternationalMarket
-      ? (locale === "ar" ? `جميع رسوم الشحن موضحة بعملة ${currencyCode}.` : `All shipping charges are shown in ${currencyCode}.`)
-      : (locale === "ar" ? `جميع الأسعار موضحة بعملة ${currencyCode}.` : `All freight charges are shown in ${currencyCode}.`)
+      shippingRatesNoteFallback
+    ),
+    shippingRatesNoteFallback
   );
+  const normalizedRatesTitle = normalizeShippingDisplayText(ratesTitle, shippingRatesTitleFallback);
 
   // FAQ-style grouped content
   const wpFaqGroups = mapFAQGroups(wp?.shipping_faq_groups, locale);
@@ -185,9 +210,20 @@ export default async function ShippingPage({ params }: ShippingPageProps) {
   const intlRows: ShippingDisplayRow[] = isInternationalMarket
     ? (intlRowsSource.length > 0
         ? intlRowsSource.map((row) => ({
-            location: pickShippingRowValue(row, "location", locale, locale === "ar" ? "جيبلي للشحن" : "Jeebly Shipping"),
+            location: normalizeShippingDisplayText(
+              pickShippingRowValue(row, "location", locale, locale === "ar" ? "الشحن" : "Shipping"),
+              locale === "ar" ? "الشحن" : "Shipping"
+            ),
             cost: pickShippingRowValue(row, "cost", locale, ""),
-            delivery: pickShippingRowValue(row, "delivery", locale, locale === "ar" ? "يتم الحساب عند الدفع" : "Calculated at checkout"),
+            delivery: normalizeShippingDisplayText(
+              pickShippingRowValue(
+                row,
+                "delivery",
+                locale,
+                locale === "ar" ? "يتم الحساب عند الدفع" : "Calculated at checkout"
+              ),
+              locale === "ar" ? "يتم الحساب عند الدفع" : "Calculated at checkout"
+            ),
           }))
         : await fetchInternationalShippingPreview(currencyCode, locale as Locale))
     : [];
@@ -219,7 +255,7 @@ export default async function ShippingPage({ params }: ShippingPageProps) {
         <div className="max-w-3xl mx-auto space-y-16">
           <section className="space-y-4">
             <div className="space-y-2">
-              <h2 className="text-2xl font-light text-brand-primary">{ratesTitle}</h2>
+              <h2 className="text-2xl font-light text-brand-primary">{normalizedRatesTitle}</h2>
               {ratesNote && <p className="text-sm leading-7 text-brand-primary/70">{ratesNote}</p>}
             </div>
             {isInternationalMarket ? (
@@ -248,8 +284,8 @@ export default async function ShippingPage({ params }: ShippingPageProps) {
                 <div className="rounded-lg border border-[#e7ded7] bg-[#faf7f3] p-5">
                   <p className="text-sm leading-7 text-brand-primary/75">
                     {locale === "ar"
-                      ? "يتم احتساب رسوم الشحن عبر جيبلي عند إتمام الطلب."
-                      : "Jeebly shipping is calculated at checkout."}
+                      ? "يتم احتساب رسوم الشحن عند إتمام الطلب."
+                      : "Shipping is calculated at checkout."}
                   </p>
                 </div>
               )
