@@ -1,5 +1,9 @@
 import { decodeHtmlEntities, stripHtml } from "@/lib/utils";
 import type { WCProduct } from "@/types/woocommerce";
+import {
+  PRODUCT_SEARCH_ALIASES_EXTENSION_KEY,
+  readProductSearchAliases,
+} from "@/lib/productLocalization";
 
 const ARABIC_DIACRITICS = /[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]/g;
 const NON_ALPHANUMERIC = /[^\p{L}\p{N}]+/gu;
@@ -203,23 +207,44 @@ export function tokenizeSearchText(value: string): string[] {
 }
 
 function collectProductSearchFields(product: WCProduct): SearchFieldGroups {
+  const aliases = readProductSearchAliases(product.extensions?.[PRODUCT_SEARCH_ALIASES_EXTENSION_KEY]);
   const attributeFields = (product.attributes || []).flatMap((attribute) => [
     attribute.name,
     ...(attribute.terms || []).map((term) => term.name),
   ]);
+  const aliasAttributeFields = aliases?.attributes || [];
 
   return {
-    names: uniqueValues([normalizeSearchText(product.name || "")]),
+    names: uniqueValues([
+      normalizeSearchText(product.name || ""),
+      ...(aliases?.names || []).map((value) => normalizeSearchText(value)),
+    ]),
     slugs: uniqueValues([normalizeSearchText(product.slug || "")]),
-    categories: uniqueValues((product.categories || []).map((category) => normalizeSearchText(category.name))),
-    brands: uniqueValues((product.brands || []).map((brand) => normalizeSearchText(brand.name))),
-    tags: uniqueValues((product.tags || []).map((tag) => normalizeSearchText(tag.name))),
-    attributes: uniqueValues(attributeFields.map((field) => normalizeSearchText(field))),
+    categories: uniqueValues([
+      ...(product.categories || []).map((category) => normalizeSearchText(category.name)),
+      ...(aliases?.categories || []).map((value) => normalizeSearchText(value)),
+    ]),
+    brands: uniqueValues([
+      ...(product.brands || []).map((brand) => normalizeSearchText(brand.name)),
+      ...(aliases?.brands || []).map((value) => normalizeSearchText(value)),
+    ]),
+    tags: uniqueValues([
+      ...(product.tags || []).map((tag) => normalizeSearchText(tag.name)),
+      ...(aliases?.tags || []).map((value) => normalizeSearchText(value)),
+    ]),
+    attributes: uniqueValues([
+      ...attributeFields.map((field) => normalizeSearchText(field)),
+      ...aliasAttributeFields.map((field) => normalizeSearchText(field)),
+    ]),
     descriptions: uniqueValues([
       normalizeSearchText(product.short_description || ""),
       normalizeSearchText(product.description || ""),
+      ...(aliases?.descriptions || []).map((value) => normalizeSearchText(value)),
     ]),
-    identifiers: uniqueValues([normalizeSearchText(product.sku || "")]),
+    identifiers: uniqueValues([
+      normalizeSearchText(product.sku || ""),
+      ...(aliases?.identifiers || []).map((value) => normalizeSearchText(value)),
+    ]),
   };
 }
 

@@ -4,6 +4,15 @@ import https from "https";
 import { disableRuntimeCache, siteConfig, API_BASE_CURRENCY, type Locale, type Currency } from "@/config/site";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import {
+  buildProductSearchAliases,
+  localizeProductAttributes,
+  localizeProductHtml,
+  localizeProductTaxonomyItems,
+  localizeProductText,
+  PRODUCT_SEARCH_ALIASES_EXTENSION_KEY,
+  readProductSearchAliases,
+} from "@/lib/productLocalization";
+import {
   backendHeaders,
   extractMarketCode,
 } from "@/lib/utils/backendFetch";
@@ -359,16 +368,30 @@ function deduplicateWPMLTranslations(products: WCProduct[], locale?: Locale): WC
   return result;
 }
 
+function localizeMarketProducts(products: WCProduct[], locale?: Locale): WCProduct[] {
+  return products.map((product) => localizeArabicProduct(product, locale));
+}
+
 function getProductUILabels(locale?: Locale) {
-  const isArabic = locale === "ar";
+  const arabic = getArabicProductLabels();
+  return locale === "ar"
+    ? arabic
+    : {
+        inStockText: "In Stock",
+        outOfStockText: "Out of Stock",
+        addToCartText: "Add to Cart",
+      };
+}
+
+function getArabicProductLabels() {
   return {
-    inStockText: isArabic ? "متوفر" : "In Stock",
-    outOfStockText: isArabic ? "غير متوفر" : "Out of Stock",
-    addToCartText: isArabic ? "أضف إلى السلة" : "Add to Cart",
+    inStockText: "متوفر",
+    outOfStockText: "غير متوفر",
+    addToCartText: "أضف إلى السلة",
   };
 }
 
-const ARABIC_MARKET_PRODUCT_COPY: Record<string, {
+const ARABIC_PRODUCT_COPY_OVERRIDES: Record<string, {
   name: string;
   shortDescription: string;
   description: string;
@@ -390,22 +413,28 @@ const ARABIC_MARKET_PRODUCT_COPY: Record<string, {
   },
 };
 
-function localizeMarketProduct(product: WCProduct, locale?: Locale, market?: string): WCProduct {
-  if (locale !== "ar" || !market) {
+function localizeArabicProduct(product: WCProduct, locale?: Locale): WCProduct {
+  if (locale !== "ar") {
     return product;
   }
 
-  const copy = ARABIC_MARKET_PRODUCT_COPY[product.slug];
-  if (!copy) {
-    return product;
-  }
-
-  const labels = getProductUILabels(locale);
-  return {
+  const labels = getArabicProductLabels();
+  const existingAliases = readProductSearchAliases(product.extensions?.[PRODUCT_SEARCH_ALIASES_EXTENSION_KEY]);
+  const searchAliases = existingAliases || buildProductSearchAliases(product);
+  const localizedProduct: WCProduct = {
     ...product,
-    name: copy.name,
-    short_description: copy.shortDescription,
-    description: copy.description,
+    name: localizeProductText(product.name || "", locale),
+    short_description: localizeProductHtml(product.short_description || "", locale),
+    description: localizeProductHtml(product.description || "", locale),
+    images: (product.images || []).map((image) => ({
+      ...image,
+      name: localizeProductText(image.name || "", locale),
+      alt: localizeProductText(image.alt || "", locale),
+    })),
+    categories: localizeProductTaxonomyItems(product.categories || [], locale),
+    brands: localizeProductTaxonomyItems(product.brands || [], locale),
+    tags: localizeProductTaxonomyItems(product.tags || [], locale),
+    attributes: localizeProductAttributes(product.attributes || [], locale),
     stock_availability: product.stock_availability
       ? {
           ...product.stock_availability,
@@ -419,11 +448,47 @@ function localizeMarketProduct(product: WCProduct, locale?: Locale, market?: str
           single_text: labels.addToCartText,
         }
       : product.add_to_cart,
+    extensions: {
+      ...(product.extensions || {}),
+      [PRODUCT_SEARCH_ALIASES_EXTENSION_KEY]: searchAliases,
+    },
+  };
+
+  const copy = ARABIC_PRODUCT_COPY_OVERRIDES[product.slug];
+  if (!copy) {
+    return localizedProduct;
+  }
+
+  return {
+    ...localizedProduct,
+    name: copy.name,
+    short_description: copy.shortDescription,
+    description: copy.description,
   };
 }
 
-function localizeMarketProducts(products: WCProduct[], locale?: Locale, market?: string): WCProduct[] {
-  return products.map((product) => localizeMarketProduct(product, locale, market));
+function addBadgeTag(product: WCProduct, tagSlug: string, locale?: Locale): WCProduct {
+  const normalized = tagSlug.trim().toLowerCase();
+  if (!normalized) {
+    return product;
+  }
+
+  const existingTags = product.tags || [];
+  if (existingTags.some((tag) => tag.slug.trim().toLowerCase() === normalized)) {
+    return product;
+  }
+
+  return {
+    ...product,
+    tags: [
+      ...existingTags,
+      {
+        id: 0,
+        name: locale === "ar" ? "جديد" : "New",
+        slug: normalized,
+      },
+    ],
+  };
 }
 
 function hasMeaningfulText(value?: string): boolean {
@@ -591,7 +656,7 @@ export async function getProducts(params?: {
 
     const dedupedProducts = deduplicateWPMLTranslations(visibleProducts, params?.locale);
 
-    const localizedProducts = localizeMarketProducts(dedupedProducts, params?.locale, market);
+    const localizedProducts = localizeMarketProducts(dedupedProducts, params?.locale);
     return {
       products: localizedProducts,
       total: total - (products.length - dedupedProducts.length),
@@ -609,7 +674,7 @@ export async function getProducts(params?: {
 
         return {
           ...fallback,
-          products: localizeMarketProducts(fallback.products, params.locale, market),
+          products: localizeMarketProducts(fallback.products, params.locale),
         };
       } catch (fallbackError) {
         console.warn(`Failed to fetch fallback products: ${formatFetchError(fallbackError)}`);
@@ -690,10 +755,10 @@ export const getProductBySlug = cache(async function getProductBySlug(
   const hydrateWithLegacyCopy = async (current: WCProduct | null, targetSlug = slug): Promise<WCProduct | null> => {
     if (!current) {
       const currentUnscoped = await fetchCurrentUnscopedProduct(targetSlug, locale);
-      return currentUnscoped ? localizeMarketProduct(currentUnscoped, locale, market) : null;
+      return currentUnscoped ? localizeArabicProduct(currentUnscoped, locale) : null;
     }
 
-    const localizedProduct = localizeMarketProduct(current, locale, market);
+    const localizedProduct = localizeArabicProduct(current, locale);
     if (hasMeaningfulText(localizedProduct.short_description) && hasMeaningfulText(localizedProduct.description)) {
       return localizedProduct;
     }
@@ -855,8 +920,7 @@ export async function getProductById(
       frontendHost,
     });
 
-    const market = await requestMarketForLocale(locale, frontendHost);
-    return localizeMarketProduct(product, locale, market);
+    return localizeArabicProduct(product, locale);
   } catch {
     return null;
   }
@@ -883,8 +947,7 @@ export async function getProductsByIds(
       }
     );
 
-    const market = await requestMarketForLocale(locale, frontendHost);
-    return localizeMarketProducts(products, locale, market);
+    return localizeMarketProducts(products, locale);
   } catch {
     return [];
   }
@@ -911,7 +974,7 @@ export async function searchProductByName(
     );
 
     if (products.length > 0) {
-      return products[0];
+      return localizeArabicProduct(products[0], locale);
     }
     return null;
   } catch {
@@ -1767,11 +1830,16 @@ export async function getNewProducts(params?: {
   currency?: Currency;
   frontendHost?: string;
 }): Promise<WCProductsResponse> {
-  return getProducts({
+  const result = await getProducts({
     ...params,
     orderby: "date",
     order: "desc",
   });
+
+  return {
+    ...result,
+    products: result.products.map((product) => addBadgeTag(product, "new", params?.locale)),
+  };
 }
 
 export async function getBestsellerProducts(params?: {
@@ -1931,7 +1999,7 @@ export async function getFeaturedProducts(params?: {
       return getFeaturedProducts({ ...params, locale: "en" });
     }
 
-    const localizedFeatured = localizeMarketProducts(visibleFeatured, params?.locale, market);
+    const localizedFeatured = localizeMarketProducts(visibleFeatured, params?.locale);
 
     return {
       products: localizedFeatured,
