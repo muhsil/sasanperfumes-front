@@ -135,6 +135,7 @@ export function ProductCard({ product, locale, className, wcProduct }: ProductCa
                   src={product.image.sourceUrl}
                   alt={product.image.altText || product.name}
                   fill
+                  quality={60}
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                   className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                   loading="lazy"
