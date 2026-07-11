@@ -44,6 +44,7 @@ class sasanperfumes_Frontend_Urls {
         // Google Listings & Ads (Merchant Center) - rewrite product URLs in feeds
         add_filter('woocommerce_gla_product_attribute_value_link', array($this, 'rewrite_gla_product_link'), 10, 2);
         add_filter('woocommerce_gla_product_attribute_value_canonical_link', array($this, 'rewrite_gla_product_link'), 10, 2);
+        add_filter('woocommerce_gla_product_attribute_value_title', array($this, 'rewrite_gla_product_title'), 10, 2);
 
         // WooCommerce product feed / REST API - always rewrite product permalinks
         add_filter('woocommerce_product_get_permalink', array($this, 'rewrite_wc_product_permalink_global'), 20, 2);
@@ -514,6 +515,27 @@ class sasanperfumes_Frontend_Urls {
         if ($slug) {
             return trailingslashit($this->frontend_url) . 'en/product/' . $slug;
         }
+        return $value;
+    }
+
+    /**
+     * Keep storefront names concise while sending enriched titles to Merchant Center.
+     */
+    public function rewrite_gla_product_title($value, $product) {
+        $product_id = 0;
+        if (is_a($product, 'WC_Product')) {
+            $product_id = $product->get_id();
+        } elseif (is_a($product, 'WP_Post')) {
+            $product_id = $product->ID;
+        }
+
+        if ($product_id > 0) {
+            $merchant_title = trim((string) get_post_meta($product_id, '_sasanperfumes_merchant_title', true));
+            if ($merchant_title !== '') {
+                return $merchant_title;
+            }
+        }
+
         return $value;
     }
 }
