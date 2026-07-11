@@ -237,9 +237,15 @@ export async function generateMetadata({
 
   return {
     ...metadata,
+    title: { absolute: productSeoTitle },
     openGraph: {
       ...metadata.openGraph,
+      title: productSeoTitle,
       type: "website",
+    },
+    twitter: {
+      ...metadata.twitter,
+      title: productSeoTitle,
     },
     ...(ogPrice ? {
       other: {
