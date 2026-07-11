@@ -153,6 +153,7 @@ export function ProductCard({ product, locale, className, wcProduct }: ProductCa
           <div className={cn("absolute top-3 flex max-w-[60%] flex-col gap-1", isAr ? "right-3 items-end" : "left-3 items-start")}>
             <ProductBadges
               tags={product.tags ?? wcProduct?.tags}
+              productId={product.databaseId}
               locale={locale}
               onSale={product.onSale}
               outOfStock={isOutOfStock}

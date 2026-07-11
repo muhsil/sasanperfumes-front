@@ -182,7 +182,7 @@ function SlideContent({ slide, index, locale }: { slide: HeroSliderSettings["sli
   ) : null;
 
   const mediaContent = (
-    <div className="home-view-section--media home-hero-media relative h-[400px] w-full overflow-hidden bg-[#1a1714] sm:h-[500px] md:h-[600px] lg:h-[800px]">
+    <div className="home-view-section--media home-hero-media relative h-[240px] w-full overflow-hidden bg-[#1a1714] sm:h-[320px] md:h-[420px] lg:h-[520px]">
       {isVideo ? (
         <>
           {renderVideo(true)}

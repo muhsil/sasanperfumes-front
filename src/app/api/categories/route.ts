@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { disableRuntimeCache } from "@/config/site";
-import { isLegacyBrandCategory } from "@/config/categoryVisibility";
-import { API_BASE, backendHeaders, extractMarketCode, noCacheUrl, safeJsonResponse, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
+import { isHiddenStorefrontCategory } from "@/config/categoryVisibility";
+import { API_BASE, backendHeaders, extractMarketCode, safeJsonResponse, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
 import type { Locale } from "@/config/site";
 
 export async function GET(request: NextRequest) {
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
   try {
     const apiBase = market ? wpJsonBaseForMarket(market) : `${API_BASE}/wp-json`;
     const url = `${apiBase}/wc/store/v1/products/categories?per_page=100${langQuery}`;
-    const response = await fetch(noCacheUrl(url), {
+    const response = await fetch(url, {
       method: "GET",
       headers: backendHeaders(
         market
@@ -26,6 +26,9 @@ export async function GET(request: NextRequest) {
             }
           : undefined
       ),
+      ...(disableRuntimeCache
+        ? { cache: "no-store" as const }
+        : { next: { revalidate: 600, tags: ["categories", `categories-${market || "intl"}-${locale || "default"}`] } }),
     });
 
     if (!response.ok) {
@@ -34,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     const data = await safeJsonResponse(response);
     const categories = Array.isArray(data)
-      ? data.filter((category) => !isLegacyBrandCategory(category))
+      ? data.filter((category) => !isHiddenStorefrontCategory(category))
       : [];
 
     return NextResponse.json(categories, {

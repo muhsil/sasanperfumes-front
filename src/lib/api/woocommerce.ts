@@ -22,6 +22,7 @@ import type {
   WCProductsResponse,
 } from "@/types/woocommerce";
 import type { BundlePricing } from "@/types/bundle";
+import { isHiddenStorefrontCategory } from "@/config/categoryVisibility";
 
 function rebrandText(value: string): string {
   return value;
@@ -997,7 +998,7 @@ export const getCategories = cache(async function getCategories(
       revalidate: 600, // Cache categories longer as they change less frequently
     });
 
-    return categories;
+    return categories.filter((category) => !isHiddenStorefrontCategory(category));
   } catch (error) {
     console.warn(`Failed to fetch categories: ${formatFetchError(error)}`);
     return [];

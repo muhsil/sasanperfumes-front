@@ -15,7 +15,7 @@ import type { WPMenuItem } from "@/types/wordpress";
 import type { BrandItem } from "@/lib/api/wordpress";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { triggerHaptic } from "@/lib/utils/haptics";
-import { isLegacyBrandCategory } from "@/config/categoryVisibility";
+import { isHiddenStorefrontCategory } from "@/config/categoryVisibility";
 import { translateToArabic } from "@/config/menu";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
@@ -35,9 +35,8 @@ function CategorySkeleton() {
   );
 }
 
-// DEV MODE: Cache disabled for faster development - uncomment when done
-// const categoriesCache: Record<string, { data: WCCategory[]; timestamp: number }> = {};
-// const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache TTL
+const categoriesCache: Record<string, { data: WCCategory[]; timestamp: number }> = {};
+const CACHE_TTL = 5 * 60 * 1000;
 const fetchPromise: Record<string, Promise<WCCategory[]> | null> = {};
 
 /**
@@ -121,12 +120,12 @@ export function CategoriesDrawer({
   // Falls back to parent categories if no menu items are provided
   const allCategories = categories;
   const getChildCategories = (parentId: number) =>
-    allCategories.filter(cat => cat.parent === parentId && !isLegacyBrandCategory(cat));
+    allCategories.filter(cat => cat.parent === parentId && !isHiddenStorefrontCategory(cat));
 
   const displayCategories = (() => {
     if (!menuItems || menuItems.length === 0) {
       // Fallback: show parent categories as before
-      return allCategories.filter(cat => cat.parent === 0 && !isLegacyBrandCategory(cat));
+      return allCategories.filter(cat => cat.parent === 0 && !isHiddenStorefrontCategory(cat));
     }
 
     // Use WordPress menu items (excluding "Shop All" type items) to determine order
@@ -141,7 +140,7 @@ export function CategoriesDrawer({
       const slug = extractSlugFromMenuUrl(menuItem.url);
       if (!slug) continue;
       const matched = slugMap.get(slug);
-      if (matched && !isLegacyBrandCategory(matched)) {
+      if (matched && !isHiddenStorefrontCategory(matched)) {
         // Use menu item title for display name (supports Arabic via translateToArabic)
         const displayName = locale === "ar"
           ? translateToArabic(menuItem.title)
@@ -150,11 +149,16 @@ export function CategoriesDrawer({
       }
     }
 
-    return ordered.length > 0 ? ordered : allCategories.filter(cat => cat.parent === 0 && !isLegacyBrandCategory(cat));
+    return ordered.length > 0 ? ordered : allCategories.filter(cat => cat.parent === 0 && !isHiddenStorefrontCategory(cat));
   })();
 
   const fetchCategoriesData = useCallback(async () => {
-    // DEV MODE: Cache disabled for faster development
+    const cached = categoriesCache[locale];
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      setCategories(cached.data);
+      return;
+    }
+
     // If already fetching, wait for the existing promise
     if (fetchPromise[locale]) {
       try {
@@ -174,7 +178,8 @@ export function CategoriesDrawer({
       fetchPromise[locale] = fetch(`/api/categories?locale=${encodeURIComponent(locale)}`)
         .then((response) => response.ok ? response.json() : [])
         .then((cats: WCCategory[]) => {
-        const filtered = cats.filter((cat) => cat.count > 0 && !isLegacyBrandCategory(cat));
+        const filtered = cats.filter((cat) => cat.count > 0 && !isHiddenStorefrontCategory(cat));
+        categoriesCache[locale] = { data: filtered, timestamp: Date.now() };
         return filtered;
       });
 

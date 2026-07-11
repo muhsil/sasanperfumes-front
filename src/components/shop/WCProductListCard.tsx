@@ -120,6 +120,7 @@ export function WCProductListCard({
           <div className={cn("absolute top-2 flex flex-col gap-1", isRTL ? "right-2 items-end" : "left-2 items-start")}>
             <ProductBadges
               tags={product.tags}
+              productId={product.id}
               locale={locale}
               onSale={product.on_sale}
               outOfStock={isOutOfStock}

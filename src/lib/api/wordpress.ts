@@ -2,7 +2,7 @@
 import { getMarketByHost } from "@/config/market";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { translateToArabic } from "@/config/menu";
-import { isLegacyBrandCategory } from "@/config/categoryVisibility";
+import { isHiddenStorefrontCategory } from "@/config/categoryVisibility";
 import { getActiveDiscountRules } from "@/lib/discountRules";
 import { getMarketSeoDescription } from "@/lib/utils/seo";
 import type { DiscountRule } from "@/types/discount";
@@ -1437,7 +1437,7 @@ function filterLegacyBrandCategoryMenuItems(items: WPMenuItem[]): WPMenuItem[] {
 
   for (const item of items) {
     const slug = menuItemCategorySlug(item);
-    if (isLegacyBrandCategory({ name: item.title, slug })) {
+    if (isHiddenStorefrontCategory({ name: item.title, slug })) {
       blockedIds.add(item.id);
     }
   }

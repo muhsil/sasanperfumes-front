@@ -5,10 +5,12 @@ import { Badge } from "@/components/common/Badge";
 import { cn } from "@/lib/utils";
 import { getProductBadgeItems, type ProductTagLike } from "@/lib/productBadges";
 import { useProductBadgeSettings } from "@/hooks/useProductBadgeSettings";
+import { useNewProductIds } from "@/hooks/useNewProductIds";
 import type { Locale } from "@/config/site";
 
 interface ProductBadgesProps {
   tags?: ProductTagLike[];
+  productId?: number;
   locale: Locale;
   onSale?: boolean;
   outOfStock?: boolean;
@@ -19,6 +21,7 @@ interface ProductBadgesProps {
 
 export function ProductBadges({
   tags,
+  productId,
   locale,
   onSale = false,
   outOfStock = false,
@@ -27,10 +30,16 @@ export function ProductBadges({
   className,
 }: ProductBadgesProps) {
   const badgeSettings = useProductBadgeSettings();
+  const newProductIds = useNewProductIds(locale);
   const isAr = locale === "ar";
   const mappedBadges = useMemo(
-    () => getProductBadgeItems(tags, badgeSettings, locale, extraTagSlugs),
-    [badgeSettings, extraTagSlugs, locale, tags]
+    () => getProductBadgeItems(
+      tags,
+      badgeSettings,
+      locale,
+      productId && newProductIds.has(productId) ? [...extraTagSlugs, "new"] : extraTagSlugs
+    ),
+    [badgeSettings, extraTagSlugs, locale, newProductIds, productId, tags]
   );
 
   if (mappedBadges.length === 0 && !onSale && !outOfStock) return null;

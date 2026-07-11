@@ -1724,6 +1724,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
             <div className="mt-4 flex flex-wrap items-center gap-2">
               <ProductBadges
                 tags={productTags}
+                productId={product.id}
                 locale={locale as Locale}
                 extraTagSlugs={extraBadgeSlugs}
                 variant="detail"

@@ -1,6 +1,7 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { useEffect, useTransition } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { Globe } from "lucide-react";
 import { type Locale } from "@/config/site";
 import { getLocalizedPath, cn } from "@/lib/utils";
@@ -18,18 +19,22 @@ const locales: { code: Locale; name: string; nativeName: string }[] = [
 
 export function LanguageSwitcher({ locale, className, alternateUrl }: LanguageSwitcherProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
   // Get the target locale (opposite of current)
   const targetLocale = locale === "en" ? "ar" : "en";
   const targetLocaleData = locales.find((l) => l.code === targetLocale);
+  const newHref = alternateUrl || getLocalizedPath(pathname, targetLocale);
+
+  useEffect(() => {
+    router.prefetch(newHref);
+  }, [newHref, router]);
 
   const handleSwitch = () => {
-    const currentPathname = window.location.pathname || pathname;
-    const newHref = alternateUrl || getLocalizedPath(currentPathname, targetLocale);
-    // Full page reload to ensure all server/client state (dictionary, layout)
-    // is refreshed for the new locale. router.push() does a soft navigation
-    // which can leave stale Arabic/English dictionary text in client components.
-    window.location.href = newHref;
+    startTransition(() => {
+      router.push(newHref);
+    });
   };
 
   const translations = {
@@ -47,8 +52,10 @@ export function LanguageSwitcher({ locale, className, alternateUrl }: LanguageSw
     <button
       type="button"
       onClick={handleSwitch}
+      disabled={isPending}
       className={cn(
         "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-medium transition-all hover:bg-gray-100",
+        isPending && "cursor-wait opacity-70",
         className
       )}
       aria-label={t.switchLanguage}

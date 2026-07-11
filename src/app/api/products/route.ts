@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 export const revalidate = 0;
 
-const PRODUCTS_CACHE_TTL = 120 * 1000;
+const PRODUCTS_CACHE_TTL = 5 * 60 * 1000;
 interface CachedProducts {
   data: { products: WCProduct[]; total: number; totalPages: number };
   timestamp: number;
@@ -208,7 +208,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response, {
       headers: {
-        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
         "Vary": "Host, X-Frontend-Host, X-Market",
       },
     });
