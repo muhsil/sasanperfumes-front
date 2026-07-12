@@ -1,6 +1,11 @@
 import { Suspense } from "react";
 import { getDictionary } from "@/i18n";
-import { generateMetadata as generateSeoMetadata, getMarketSeoDescription } from "@/lib/utils/seo";
+import {
+  buildMarketSeoKeywords,
+  generateMetadata as generateSeoMetadata,
+  getMarketHomeSeoContent,
+  getMarketSeoDescription,
+} from "@/lib/utils/seo";
 import {
   getNewProducts,
   getFreeGiftProductInfo,
@@ -26,6 +31,7 @@ import { ProductSectionSkeleton } from "@/components/sections/ProductSection";
 import { siteConfig, type Currency, type Locale } from "@/config/site";
 import type { Metadata } from "next";
 import type { HomeSectionFAQ, HomeSectionWhyChooseUs } from "@/types/wordpress";
+import { decodeHtmlEntities } from "@/lib/utils";
 
 function hasText(value?: string | null): boolean {
   return Boolean(value?.trim());
@@ -166,65 +172,38 @@ export async function generateMetadata({
     locale: validLocale,
     pathname: "",
     marketCode: market.code,
-    keywords: isArabic
-      ? [
-          "Luxury perfumes",
-          "Arabian fragrances",
-          "aromatic oils",
-          "body care",
-          "home fragrance",
-          "Oud perfume",
-          "Aromatic scents",
-          "Buy perfume online",
-          "Perfume gift sets",
-          "Sasan Perfumes",
-          "UAE perfume store",
-          "Saudi Arabia perfume",
-          "Natural fragrance",
-          "Long lasting perfume",
-          "Premium perfume shop",
-        ]
-      : [
-          "premium perfumes",
-          "Arabian fragrances",
-          "aromatic oils",
-          "body care",
-          "home fragrances",
-          "Sasan Perfumes",
-          "UAE perfume",
-          "buy perfume online",
-          "Arabian oud",
-          "luxury perfume Dubai",
-          "natural fragrance",
-          "perfume gift sets",
-          "oud perfume",
-          "women perfume UAE",
-          "men cologne Dubai",
-          "bakhoor incense",
-          "best perfume UAE",
-          "handcrafted perfume",
-          "niche perfume Dubai",
-          "oriental fragrance",
-          "musk perfume",
-          "amber perfume",
-          "online perfume store UAE",
-          "luxury scent collection",
-          "perfume delivery UAE",
-          "aromatic perfume",
-          "aromatic UAE",
-          "aromatic Dubai",
-          "aromatic oils",
-          "aromatic body lotion",
-          "aromatic hand and body lotion",
-          "aromatic perfumes and fragrances",
-          "aromatic gift boxes",
-          "good perfume",
-          "affordable perfume UAE",
-          "perfume for men and women",
-          "best smelling perfume",
-          "long lasting scent UAE",
-          "aromatic scent collection",
-        ],
+    keywords: buildMarketSeoKeywords(
+      isArabic
+        ? [
+            "عطور فاخرة",
+            "شراء عطور أونلاين",
+            "عطور ثابتة",
+            "عود عربي",
+            "عطور نسائية",
+            "عطور رجالية",
+            "مسك وعنبر",
+            "معطر شعر",
+            "معطر جسم",
+            "أطقم هدايا عطور",
+            "ساسان للعطور",
+          ]
+        : [
+            "premium perfumes",
+            "buy perfume online",
+            "long lasting perfume",
+            "Arabian oud",
+            "women's perfume",
+            "men's perfume",
+            "musk perfume",
+            "amber perfume",
+            "hair mist",
+            "body fragrance",
+            "perfume gift sets",
+            "Sasan Perfumes",
+          ],
+      market.code,
+      validLocale
+    ),
   });
 
   return {
@@ -422,18 +401,40 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
     getRequestFrontendHost(marketHint),
   ]);
 
-  const [dictionary, homeSettings, homeSections, siteSettings, categories, adsSettings] = await Promise.all([
+  const [dictionary, homeSettings, homeSections, siteSettings, categories, adsSettings, mainSiteCategories] = await Promise.all([
     getDictionary(validLocale),
     getHomePageSettings(validLocale, frontendHost),
     getHomeSections(frontendHost),
     getSiteSettings(validLocale, frontendHost),
     getCategories(validLocale, market.defaultCurrency, frontendHost),
     getAdSettings(validLocale, frontendHost),
+    market.code === "intl"
+      ? Promise.resolve([])
+      : getCategories("en", siteConfig.defaultCurrency, "sasanperfumes.com"),
   ]);
 
   const t = (bi: { en: string; ar: string }) => isRTL ? bi.ar : bi.en;
   const h1Text = siteSettings.site_name || siteConfig.name;
   const marketPrefix = getMarketPathPrefix(market.code);
+  const marketSeoContent = getMarketHomeSeoContent(market.code, validLocale);
+  const cmsSeoParagraphs = homeSections.seoContent?.paragraphs?.map((p) => t(p)).filter(hasText) || [];
+  const mainCategoryBySlug = new Map(mainSiteCategories.map((category) => [category.slug, category]));
+  const mainCategorySlugAliases: Record<string, string> = {
+    "hair-mist": "sasan-hair-mist",
+    "womens-perfumes": "woman-perfumes",
+  };
+  const categoryFallbackImages = Object.fromEntries(
+    categories.map((category) => {
+      const sourceSlug = mainCategorySlugAliases[category.slug] || category.slug;
+      const sourceCategory = mainCategoryBySlug.get(sourceSlug);
+      return [
+        category.id,
+        sourceCategory?.image?.src
+          ? { src: sourceCategory.image.src, alt: decodeHtmlEntities(category.name) }
+          : undefined,
+      ];
+    })
+  );
 
   return (
     <>
@@ -455,6 +456,14 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
           />
         </Suspense>
 
+        <CategorySection
+          settings={homeSettings.shop_by_category}
+          categories={categories}
+          locale={validLocale}
+          isRTL={isRTL}
+          fallbackImages={categoryFallbackImages}
+        />
+
         <Suspense fallback={<ProductSectionSkeleton fullView />}>
           <BestsellerProductsSection
             locale={validLocale}
@@ -465,13 +474,6 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
             frontendHost={frontendHost}
           />
         </Suspense>
-
-        <CategorySection
-          settings={homeSettings.shop_by_category}
-          categories={categories}
-          locale={validLocale}
-          isRTL={isRTL}
-        />
 
         <Suspense fallback={<ProductSectionSkeleton fullView />}>
           <FeaturedProductsSection
@@ -503,10 +505,12 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
 
         <FAQSection section={homeSections.faq} locale={validLocale} isRTL={isRTL} />
 
-        {homeSections.seoContent?.enabled !== false && (homeSections.seoContent?.paragraphs?.length ?? 0) > 0 && (
+        {homeSections.seoContent?.enabled !== false && (
           <SeoContentSection
-            title={homeSections.seoContent.title ? t(homeSections.seoContent.title) : undefined}
-            paragraphs={homeSections.seoContent.paragraphs.map((p) => t(p))}
+            title={homeSections.seoContent?.title && hasText(t(homeSections.seoContent.title))
+              ? t(homeSections.seoContent.title)
+              : marketSeoContent.heading}
+            paragraphs={cmsSeoParagraphs.length > 0 ? cmsSeoParagraphs : marketSeoContent.paragraphs}
             backgroundImage={homeSections.seoContent.backgroundImage}
             isRTL={isRTL}
           />

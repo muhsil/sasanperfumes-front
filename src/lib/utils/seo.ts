@@ -376,6 +376,78 @@ interface MarketSeoCopy {
   keywords: string[];
 }
 
+interface MarketHomeSeoContent {
+  heading: string;
+  paragraphs: string[];
+}
+
+const MARKET_HOME_SEO_CONTENT: Record<MarketCode, { en: MarketHomeSeoContent; ar: MarketHomeSeoContent }> = {
+  intl: {
+    en: {
+      heading: "Shop premium perfumes online in the UAE",
+      paragraphs: [
+        "Discover Sasan Perfumes' collection of long-lasting perfumes, Arabian oud, musk, amber, hair mists, body fragrances, and perfume gift sets for women and men. Shop online in AED for fragrance delivery across the UAE.",
+        "From everyday signature scents to elegant gifts, our fragrance house brings more than 60 years of perfume heritage to customers in Dubai, Abu Dhabi, Sharjah, and across the Emirates.",
+      ],
+    },
+    ar: {
+      heading: "تسوق العطور الفاخرة أونلاين في الإمارات",
+      paragraphs: [
+        "اكتشف مجموعة ساسان للعطور التي تضم عطورًا ثابتة، والعود العربي، والمسك، والعنبر، ومعطرات الشعر والجسم، وأطقم هدايا العطور للنساء والرجال. تسوق أونلاين بالدرهم الإماراتي مع التوصيل داخل الإمارات.",
+        "من العطور اليومية المميزة إلى الهدايا الأنيقة، نقدم خبرة تتجاوز 60 عامًا لعشاق العطور في دبي وأبوظبي والشارقة وجميع أنحاء الإمارات.",
+      ],
+    },
+  },
+  qa: {
+    en: {
+      heading: "Shop premium perfumes online in Qatar",
+      paragraphs: [
+        "Explore long-lasting perfumes, Arabian oud, musk, amber, hair mists, body fragrances, and perfume gift sets for women and men from Sasan Perfumes Qatar. Shop online in QAR with delivery across Qatar.",
+        "Find an everyday signature scent or a memorable fragrance gift backed by more than 60 years of perfume heritage, available to shoppers in Doha and throughout Qatar.",
+      ],
+    },
+    ar: {
+      heading: "تسوق العطور الفاخرة أونلاين في قطر",
+      paragraphs: [
+        "اكتشف العطور الثابتة والعود العربي والمسك والعنبر ومعطرات الشعر والجسم وأطقم هدايا العطور للنساء والرجال من ساسان للعطور قطر. تسوق أونلاين بالريال القطري مع التوصيل داخل قطر.",
+        "اختر عطرك اليومي المميز أو هدية عطرية لا تُنسى من دار عطور بخبرة تتجاوز 60 عامًا، متاحة للمتسوقين في الدوحة وجميع أنحاء قطر.",
+      ],
+    },
+  },
+  om: {
+    en: {
+      heading: "Shop premium perfumes online in Oman",
+      paragraphs: [
+        "Explore long-lasting perfumes, Arabian oud, musk, amber, hair mists, body fragrances, and perfume gift sets for women and men from Sasan Perfumes Oman. Shop online in OMR with delivery across Oman.",
+        "Choose an everyday signature scent or an elegant perfume gift from a fragrance house with more than 60 years of heritage, available to shoppers in Muscat and throughout Oman.",
+      ],
+    },
+    ar: {
+      heading: "تسوق العطور الفاخرة أونلاين في عُمان",
+      paragraphs: [
+        "اكتشف العطور الثابتة والعود العربي والمسك والعنبر ومعطرات الشعر والجسم وأطقم هدايا العطور للنساء والرجال من ساسان للعطور عُمان. تسوق أونلاين بالريال العُماني مع التوصيل داخل عُمان.",
+        "اختر عطرك اليومي المميز أو هدية عطرية أنيقة من دار عطور بخبرة تتجاوز 60 عامًا، متاحة للمتسوقين في مسقط وجميع أنحاء عُمان.",
+      ],
+    },
+  },
+  sa: {
+    en: {
+      heading: "Shop premium perfumes online in Saudi Arabia",
+      paragraphs: [
+        "Explore long-lasting perfumes, Arabian oud, musk, amber, hair mists, body fragrances, and perfume gift sets for women and men from Sasan Perfumes Saudi Arabia. Shop online in SAR with delivery across the Kingdom.",
+        "Find an everyday signature scent or a memorable fragrance gift backed by more than 60 years of perfume heritage, available to shoppers in Riyadh, Jeddah, and across Saudi Arabia.",
+      ],
+    },
+    ar: {
+      heading: "تسوق العطور الفاخرة أونلاين في السعودية",
+      paragraphs: [
+        "اكتشف العطور الثابتة والعود العربي والمسك والعنبر ومعطرات الشعر والجسم وأطقم هدايا العطور للنساء والرجال من ساسان للعطور السعودية. تسوق أونلاين بالريال السعودي مع التوصيل داخل المملكة.",
+        "اختر عطرك اليومي المميز أو هدية عطرية لا تُنسى من دار عطور بخبرة تتجاوز 60 عامًا، متاحة للمتسوقين في الرياض وجدة وجميع أنحاء السعودية.",
+      ],
+    },
+  },
+};
+
 const MARKET_SEO_COPY: Record<MarketCode, { en: MarketSeoCopy; ar: MarketSeoCopy }> = {
   intl: {
     en: {
@@ -552,6 +624,10 @@ export function getMarketSeoDescription(marketCode: MarketCode, locale: Locale):
   return locale === "ar"
     ? getMarketSeoCopy(marketCode, locale).descriptionAr
     : getMarketSeoCopy(marketCode, locale).description;
+}
+
+export function getMarketHomeSeoContent(marketCode: MarketCode, locale: Locale): MarketHomeSeoContent {
+  return MARKET_HOME_SEO_CONTENT[marketCode]?.[locale] || MARKET_HOME_SEO_CONTENT.intl[locale];
 }
 
 export function getMarketSeoImageFallback(): string {

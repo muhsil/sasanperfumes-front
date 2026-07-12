@@ -383,12 +383,22 @@ function shapehive_market_sync_target(array $source, array $market, int $targetS
     }
 
     $termMap = array();
+    $categorySlugAliases = array(
+        'sasan-hair-mist' => array('hair-mist'),
+        'woman-perfumes' => array('womens-perfumes'),
+    );
     foreach ($source['terms'] as $term) {
         if (!taxonomy_exists($term['taxonomy'])) {
             continue;
         }
 
         $targetTerm = get_term_by('slug', $term['slug'], $term['taxonomy']);
+        if (!$targetTerm && $term['taxonomy'] === 'product_cat' && isset($categorySlugAliases[$term['slug']])) {
+            foreach ($categorySlugAliases[$term['slug']] as $alias) {
+                $targetTerm = get_term_by('slug', $alias, $term['taxonomy']);
+                if ($targetTerm) break;
+            }
+        }
         if (!$targetTerm && !$dryRun) {
             $inserted = wp_insert_term($term['name'], $term['taxonomy'], array(
                 'slug' => $term['slug'],
@@ -409,6 +419,11 @@ function shapehive_market_sync_target(array $source, array $market, int $targetS
                 ));
             }
             foreach ($term['meta'] as $metaKey => $values) {
+                // Category thumbnails reference attachment IDs. Attachments are
+                // copied later, so defer this meta until the post ID map exists.
+                if ($term['taxonomy'] === 'product_cat' && $metaKey === 'thumbnail_id') {
+                    continue;
+                }
                 if (!$overwrite && metadata_exists('term', $targetId, $metaKey)) {
                     continue;
                 }
@@ -470,6 +485,32 @@ function shapehive_market_sync_target(array $source, array $market, int $targetS
         }
 
         $stats['posts']++;
+    }
+
+    // Apply product-category thumbnails after source attachment IDs have been
+    // mapped to their corresponding market-site attachment IDs.
+    foreach ($source['terms'] as $term) {
+        if ($term['taxonomy'] !== 'product_cat' || empty($term['meta']['thumbnail_id'])) {
+            continue;
+        }
+        $targetId = $termMap['product_cat:' . $term['slug']] ?? 0;
+        if ($targetId <= 0 && isset($categorySlugAliases[$term['slug']])) {
+            foreach ($categorySlugAliases[$term['slug']] as $alias) {
+                $aliasTerm = get_term_by('slug', $alias, 'product_cat');
+                if ($aliasTerm && !is_wp_error($aliasTerm)) {
+                    $targetId = (int) $aliasTerm->term_id;
+                    break;
+                }
+            }
+        }
+        if ($targetId <= 0 || (!$overwrite && metadata_exists('term', $targetId, 'thumbnail_id'))) {
+            continue;
+        }
+        $sourceAttachmentId = absint(reset($term['meta']['thumbnail_id']));
+        $targetAttachmentId = $postMap[$sourceAttachmentId] ?? 0;
+        if ($targetAttachmentId > 0 && !$dryRun) {
+            update_term_meta($targetId, 'thumbnail_id', $targetAttachmentId);
+        }
     }
 
     if (!$dryRun) {

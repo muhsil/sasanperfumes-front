@@ -228,7 +228,7 @@ export function CategorySection({
                         )}
                       </div>
                       <div className="mt-3">
-                        <h3 className={`text-sm font-semibold lowercase ${nameClassName}`}>
+                        <h3 className={`text-sm font-semibold capitalize ${nameClassName}`}>
                           {decodeHtmlEntities(category.name)}
                         </h3>
                       </div>
@@ -262,7 +262,7 @@ export function CategorySection({
                       )}
                     </div>
                     <div className="mt-3">
-                        <h3 className={`text-sm font-semibold lowercase ${nameClassName}`}>
+                        <h3 className={`text-sm font-semibold capitalize ${nameClassName}`}>
                         {extra.name[locale]}
                       </h3>
                     </div>

@@ -11,7 +11,7 @@ import { getMarketHintFromSearchParams, getRequestFrontendHost, getRequestMarket
 import type { Metadata } from "next";
 import { CategoryClient } from "./CategoryClient";
 import { decodeHtmlEntities } from "@/lib/utils";
-import { categorySeoContent } from "@/data/category-seo-content";
+import { categorySeoContent, getCategorySeoFallback } from "@/data/category-seo-content";
 import { getCategorySeoContent } from "@/lib/api/wordpress";
 import { getMarketPathPrefix } from "@/config/market";
 
@@ -63,7 +63,7 @@ export async function generateMetadata({
   ]);
   const [category, categorySeo] = await Promise.all([
     getCategoryBySlug(slug, locale as Locale, market.defaultCurrency, frontendHost),
-    getCategorySeoContent(slug),
+    getCategorySeoContent(slug, frontendHost),
   ]);
   const categoryName = decodeHtmlEntities(category?.name || slug.charAt(0).toUpperCase() + slug.slice(1));
   const categorySeoTitle = categorySeo
@@ -103,15 +103,7 @@ export async function generateMetadata({
 }
 
 // Async component: fetches SEO content from WP, falls back to hardcoded
-async function CategorySeoSection({ slug, locale }: { slug: string; locale: Locale }) {
-  const wpContent = await getCategorySeoContent(slug);
-  const title = wpContent
-    ? (locale === "ar" ? wpContent.title.ar : wpContent.title.en)
-    : categorySeoContent[slug]?.title?.[locale === "ar" ? "ar" : "en"];
-  const description = wpContent
-    ? (locale === "ar" ? wpContent.description.ar : wpContent.description.en)
-    : categorySeoContent[slug]?.description?.[locale === "ar" ? "ar" : "en"];
-
+function CategorySeoSection({ title, description }: { title: string; description: string }) {
   if (!title && !description) return null;
 
   return (
@@ -141,7 +133,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     getRequestFrontendHost(marketHint),
   ]);
   const pathPrefix = getMarketPathPrefix(market.code);
-  const categorySeo = await getCategorySeoContent(slug);
+  const categorySeo = await getCategorySeoContent(slug, frontendHost);
   const categorySeoDescription = categorySeo
     ? decodeHtmlEntities(locale === "ar" ? categorySeo.description.ar : categorySeo.description.en)
     : "";
@@ -223,6 +215,17 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
 
   const categoryUrl = `${siteConfig.url}${pathPrefix}/${locale}/category/${slug}`;
   const categoryName = decodeHtmlEntities(category.name);
+  const fallbackSeo = getCategorySeoFallback(slug, categoryName, market.code, locale as Locale);
+  const contentLocale = locale === "ar" ? "ar" : "en";
+  const topDescription = category.description
+    ? decodeHtmlEntities(category.description.replace(/<[^>]*>/g, "").trim())
+    : fallbackSeo.intro;
+  const bottomSeoTitle = decodeHtmlEntities(
+    categorySeo?.title?.[contentLocale] || categorySeoContent[slug]?.title?.[contentLocale] || fallbackSeo.title
+  );
+  const bottomSeoDescription = decodeHtmlEntities(
+    categorySeo?.description?.[contentLocale] || categorySeoContent[slug]?.description?.[contentLocale] || fallbackSeo.description
+  );
 
   const collectionJsonLd = generateCollectionPageJsonLd({
     name: categoryName,
@@ -250,6 +253,15 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
       <JsonLd data={itemListJsonLd} />
       <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} className="sr-only" />
 
+      <section className="border-b border-brand-border/60 pb-6 pt-5 md:pb-8 md:pt-7" aria-label={`${categoryName} description`}>
+        <h1 className="font-title text-3xl leading-tight text-brand-primary md:text-4xl">
+          {categoryName}
+        </h1>
+        <p className="mt-3 max-w-4xl text-sm leading-7 text-brand-muted md:text-base md:leading-8">
+          {topDescription}
+        </p>
+      </section>
+
       <Suspense fallback={<ProductGridSkeleton count={12} columns={6} />}>
         <CategoryClient
           products={products}
@@ -260,7 +272,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
       </Suspense>
 
       {/* SEO content — fetched from WP backend, falls back to hardcoded */}
-      <CategorySeoSection slug={slug} locale={locale as Locale} />
+      <CategorySeoSection title={bottomSeoTitle} description={bottomSeoDescription} />
     </div>
   );
 }

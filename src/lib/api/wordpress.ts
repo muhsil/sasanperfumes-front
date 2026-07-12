@@ -2194,10 +2194,10 @@ export async function getProductPageBySlug(slug: string, locale?: Locale): Promi
 
 // ─── Category SEO Content ─────────────────────────────────────────
 
-export async function getCategorySeoContent(slug: string): Promise<CategorySeoContent | null> {
+export async function getCategorySeoContent(slug: string, frontendHost?: string): Promise<CategorySeoContent | null> {
   const data = await fetchWPAPI<CategorySeoContent>(
     `/sasanperfumes/v1/category-seo/${encodeURIComponent(slug)}`,
-    { tags: ["category-seo", `category-seo-${slug}`], revalidate: 300 }
+    { tags: ["category-seo", `category-seo-${slug}`], revalidate: 300, frontendHost }
   );
   return data ? rebrandApiContent(data) : null;
 }
