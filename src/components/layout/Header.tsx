@@ -530,39 +530,15 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
             </Box>
 
             <Box sx={{ flex: 1, overflow: "auto", px: 2, py: 2 }}>
-              <div className="rounded-2xl border border-brand-border/70 bg-[linear-gradient(180deg,rgba(243,232,214,0.85)_0%,rgba(255,255,255,0.88)_100%)] p-4 shadow-[0_14px_30px_rgba(20,15,10,0.06)]">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-brand-muted">
-                  {isRTL ? "تسوّق بسرعة" : "Quick shop"}
-                </p>
-                <h3 className="mt-1 font-title text-2xl leading-tight text-brand-primary">
-                  {siteSettings?.site_name || "Sasan Perfumes"}
-                </h3>
-                <p className="mt-2 max-w-[18rem] text-sm leading-6 text-brand-muted">
-                  {isRTL
-                    ? "تصفّح العطور، البخاخات، والهدايا في قائمة جانبية سهلة ومريحة."
-                    : "Browse perfumes, sprays, and gift sets in a simple side panel."}
-                </p>
-              </div>
-
-              <nav className="mt-4 space-y-2">
+              <nav className="space-y-2">
                 {mobileNavigation.map((item) => (
                   <Link
                     key={item.name}
                     href={item.href}
                     onClick={closeMobileMenu}
-                    className="group flex items-center gap-3 rounded-2xl border border-brand-border/70 bg-white/75 px-4 py-3 text-brand-primary shadow-[0_10px_24px_rgba(20,15,10,0.05)] transition-all hover:border-brand-primary/30 hover:bg-brand-beige active:scale-[0.99]"
+                    className="group flex items-center gap-2 rounded-2xl border border-brand-border/70 bg-white/75 px-4 py-3 text-brand-primary shadow-[0_10px_24px_rgba(20,15,10,0.05)] transition-all hover:border-brand-primary/30 hover:bg-brand-beige active:scale-[0.99]"
                   >
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-beige text-brand-primary transition-colors group-hover:bg-brand-primary group-hover:text-white">
-                      <span className="h-2 w-2 rounded-full bg-current" />
-                    </span>
-                    <span className="min-w-0 flex-1 text-start">
-                      <span className="block text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-muted/70">
-                        {item.hasMegaMenu || item.hasBrandsMegaMenu
-                          ? (isRTL ? "مجموعة" : "Collection")
-                          : (isRTL ? "قسم" : "Category")}
-                      </span>
-                      <span className="block truncate text-sm font-bold">{item.name}</span>
-                    </span>
+                    <span className="min-w-0 flex-1 truncate text-start text-sm font-bold">{item.name}</span>
                     <ChevronRight
                       className={cn(
                         "h-4 w-4 text-brand-muted transition-transform",

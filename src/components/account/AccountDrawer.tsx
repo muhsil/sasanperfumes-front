@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { User, Package, MapPin, Heart, Settings, LogOut, X, ChevronRight, Sparkles, ShieldCheck, Mail, Chrome } from "lucide-react";
+import { User, Package, MapPin, Heart, Settings, LogOut, X, ChevronRight, Sparkles, ShieldCheck, Mail } from "lucide-react";
 import Link from "next/link";
 import MuiDrawer from "@mui/material/Drawer";
 import Box from "@mui/material/Box";
@@ -186,10 +186,6 @@ export function AccountDrawer({ locale, dictionary }: AccountDrawerProps) {
         </div>
 
         <div className="mt-5 rounded-2xl border border-brand-border/70 bg-white p-3 shadow-[0_10px_24px_rgba(20,15,10,0.05)]">
-          <div className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-muted">
-            <Chrome className="h-3.5 w-3.5" />
-            <span>{isRTL ? "الأسرع" : "Fastest sign-in"}</span>
-          </div>
           <GoogleSignInButton
             onSuccess={handleGoogleSuccess}
             onError={() => setGoogleError(isRTL ? "فشل تسجيل الدخول بحساب جوجل" : "Google sign-in failed")}
