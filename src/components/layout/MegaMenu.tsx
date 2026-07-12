@@ -325,7 +325,7 @@ export function MegaMenu({
       dir={isRTL ? "rtl" : "ltr"}
       onMouseLeave={onClose}
     >
-      <div className="mx-auto max-w-[96rem] px-6 py-8">
+      <div className="container mx-auto px-4 py-8">
         {menuLoading && displayColumns.length === 0 ? (
           <CategoriesGridSkeleton count={8} />
         ) : displayColumns.length === 0 ? (

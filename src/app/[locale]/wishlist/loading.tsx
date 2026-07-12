@@ -2,12 +2,12 @@ import { Skeleton } from "@/components/common/Skeleton";
 
 export default function WishlistLoading() {
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-transparent py-8">
       <div className="container mx-auto px-4">
         <Skeleton className="mb-4 h-4 w-32" />
         <Skeleton className="mb-8 h-8 w-48" />
 
-        <div className="rounded-lg bg-white shadow-sm">
+        <div className="rounded-lg bg-transparent">
           {/* Table header */}
           <div className="hidden border-b p-4 md:grid md:grid-cols-12 md:gap-4">
             <Skeleton className="col-span-5 h-4 w-16" />

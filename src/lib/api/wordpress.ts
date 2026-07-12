@@ -590,7 +590,7 @@ const SASAN_DISCOVER_COLLECTIONS = [
 
 function getSasanDiscoverCollections(locale?: Locale): Collection[] {
   const isArabic = locale === "ar";
-  return SASAN_DISCOVER_COLLECTIONS.map((item, index) => {
+  return SASAN_DISCOVER_COLLECTIONS.map((item) => {
     const title = isArabic ? item.title.ar : item.title.en;
     return {
       title,
@@ -599,6 +599,18 @@ function getSasanDiscoverCollections(locale?: Locale): Collection[] {
       link: createWPLink(item.link, title) as WPLink,
     };
   });
+}
+
+type CollectionLayout = NonNullable<CollectionsSettings["layout"]>;
+
+function normalizeCollectionLayout(layout?: string): CollectionLayout {
+  const normalized = layout?.trim().toLowerCase();
+
+  if (normalized === "grid" || normalized === "slider" || normalized === "masonry") {
+    return normalized;
+  }
+
+  return "grid";
 }
 
 function normalizeDelay(value: number | string | undefined, fallback: number): number {
@@ -838,7 +850,7 @@ function transformCollectionsSettings(pluginCollections: WPPluginCollectionsSett
     section_title: locale === "ar" ? (pluginCollections.titleAr || "اكتشف المزيد") : (pluginCollections.title || "Discover More"),
     section_subtitle: locale === "ar" ? (pluginCollections.subtitleAr || "") : pluginCollections.subtitle,
     collections: collections.length > 0 ? collections : fallbackCollections,
-    layout: 'grid',
+    layout: normalizeCollectionLayout(pluginCollections.layout),
     responsive_columns: pluginCollections.responsive ?? { desktop: 4, tablet: 2, mobile: 1 },
     hide_on_mobile: pluginCollections.hideOnMobile,
     hide_on_desktop: pluginCollections.hideOnDesktop,
@@ -1063,6 +1075,8 @@ const defaultCollections: CollectionsSettings = {
   section_title: "Our Collections",
   section_subtitle: "Explore our curated collections",
   collections: [],
+  layout: "grid",
+  responsive_columns: { desktop: 3, tablet: 2, mobile: 1 },
 };
 
 const defaultBanners: BannersSettings = {

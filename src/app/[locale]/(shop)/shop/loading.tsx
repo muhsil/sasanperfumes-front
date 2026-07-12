@@ -3,7 +3,7 @@ import { PillRowSkeleton, ProductGridSkeleton, Skeleton } from "@/components/com
 function CollectionHeaderLoading() {
   return (
     <section className="section-band text-brand-primary">
-      <div className="mb-0 border-b border-brand-border/70 bg-brand-beige/45 px-4 py-6">
+      <div className="mb-0 border-b border-brand-border/70 bg-transparent px-4 py-6">
         <PillRowSkeleton count={8} />
       </div>
 

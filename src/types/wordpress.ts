@@ -104,7 +104,7 @@ export interface CollectionsSettings {
   section_title: string;
   section_subtitle?: string;
   collections: Collection[];
-  layout?: 'grid';
+  layout?: "grid" | "slider" | "masonry";
   responsive_columns?: { desktop: number; tablet: number; mobile: number };
   hide_on_mobile?: boolean;
   hide_on_desktop?: boolean;

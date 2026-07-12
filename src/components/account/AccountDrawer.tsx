@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback } from "react";
-import { User, Package, MapPin, Heart, Settings, LogOut, X, ChevronRight, Sparkles, ShieldCheck } from "lucide-react";
+import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
+import { User, Package, MapPin, Heart, Settings, LogOut, X, ChevronRight, Sparkles, ShieldCheck, Mail, Chrome } from "lucide-react";
 import Link from "next/link";
 import MuiDrawer from "@mui/material/Drawer";
 import Box from "@mui/material/Box";
@@ -10,6 +11,7 @@ import Typography from "@mui/material/Typography";
 import { Button } from "@/components/common/Button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 
 interface AccountDrawerProps {
   locale: string;
@@ -41,9 +43,12 @@ function getUserInitial(name?: string, email?: string) {
 }
 
 export function AccountDrawer({ locale, dictionary }: AccountDrawerProps) {
+  const router = useRouter();
   const marketPrefix = useMarketPrefix();
-  const { user, isAuthenticated, logout, isAccountDrawerOpen, setIsAccountDrawerOpen } = useAuth();
+  const { user, isAuthenticated, logout, googleLogin, isAccountDrawerOpen, setIsAccountDrawerOpen } = useAuth();
   const isRTL = locale === "ar";
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [googleError, setGoogleError] = useState<string | null>(null);
 
   const onClose = useCallback(() => {
     if (document.activeElement instanceof HTMLElement) {
@@ -51,6 +56,26 @@ export function AccountDrawer({ locale, dictionary }: AccountDrawerProps) {
     }
     setIsAccountDrawerOpen(false);
   }, [setIsAccountDrawerOpen]);
+
+  const handleGoogleSuccess = useCallback(async (credential: string) => {
+    setIsGoogleLoading(true);
+    setGoogleError(null);
+
+    try {
+      const response = await googleLogin(credential);
+      if (response.success) {
+        onClose();
+        router.push(`${marketPrefix}/${locale}/account`);
+        return;
+      }
+
+      setGoogleError(response.error?.message || (isRTL ? "فشل تسجيل الدخول بحساب جوجل" : "Google sign-in failed"));
+    } catch {
+      setGoogleError(isRTL ? "فشل تسجيل الدخول بحساب جوجل" : "Google sign-in failed");
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  }, [googleLogin, isRTL, locale, marketPrefix, onClose, router]);
 
   const handleLogout = () => {
     logout();
@@ -146,17 +171,58 @@ export function AccountDrawer({ locale, dictionary }: AccountDrawerProps) {
   };
 
   const renderGuestContent = () => (
-    <div className="flex min-h-full flex-col justify-center p-4">
-      <section className="rounded-lg border border-brand-border/70 bg-brand-ivory p-5 text-center shadow-[0_18px_44px_rgba(20,15,10,0.08)]">
-        <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-brand-primary text-white shadow-[0_16px_36px_rgba(20,15,10,0.18)]">
-          <User className="h-9 w-9" />
+    <div className="flex min-h-full flex-col p-4">
+      <section className="rounded-2xl border border-brand-border/70 bg-brand-ivory p-5 shadow-[0_18px_44px_rgba(20,15,10,0.08)]">
+        <div className="text-center">
+          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-brand-primary text-white shadow-[0_16px_36px_rgba(20,15,10,0.18)]">
+            <User className="h-9 w-9" />
+          </div>
+          <h3 className="font-title text-2xl text-brand-primary">{dictionary.myAccount}</h3>
+          <p className="mx-auto mt-2 max-w-[17rem] text-sm leading-6 text-brand-muted">
+            {isRTL
+              ? "سجّل الدخول بسرعة عبر جوجل أو استخدم البريد الإلكتروني"
+              : "Sign in quickly with Google or continue with email"}
+          </p>
         </div>
-        <h3 className="font-title text-2xl text-brand-primary">{dictionary.myAccount}</h3>
-        <p className="mx-auto mt-2 max-w-[15rem] text-sm leading-6 text-brand-muted">{dictionary.notLoggedIn}</p>
-        <div className="mt-6 flex w-full flex-col gap-2.5">
+
+        <div className="mt-5 rounded-2xl border border-brand-border/70 bg-white p-3 shadow-[0_10px_24px_rgba(20,15,10,0.05)]">
+          <div className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-muted">
+            <Chrome className="h-3.5 w-3.5" />
+            <span>{isRTL ? "الأسرع" : "Fastest sign-in"}</span>
+          </div>
+          <GoogleSignInButton
+            onSuccess={handleGoogleSuccess}
+            onError={() => setGoogleError(isRTL ? "فشل تسجيل الدخول بحساب جوجل" : "Google sign-in failed")}
+            text="signin_with"
+            locale={locale}
+          />
+          {isGoogleLoading && (
+            <p className="mt-3 text-center text-sm text-brand-muted">
+              {isRTL ? "جاري تسجيل الدخول..." : "Signing you in..."}
+            </p>
+          )}
+          {googleError && (
+            <p className="mt-3 text-center text-sm font-medium text-red-600">
+              {googleError}
+            </p>
+          )}
+        </div>
+
+        <div className="my-5 flex items-center gap-3">
+          <div className="h-px flex-1 bg-brand-border/70" />
+          <span className="text-xs font-medium uppercase tracking-[0.16em] text-brand-muted">
+            {isRTL ? "أو" : "or"}
+          </span>
+          <div className="h-px flex-1 bg-brand-border/70" />
+        </div>
+
+        <div className="flex w-full flex-col gap-2.5">
           <Button asChild variant="primary" size="lg" className="w-full">
             <Link href={`${marketPrefix}/${locale}/login`} onClick={onClose}>
-              {dictionary.login}
+              <span className="inline-flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                {dictionary.login}
+              </span>
             </Link>
           </Button>
           <Button asChild variant="outline" size="lg" className="w-full">

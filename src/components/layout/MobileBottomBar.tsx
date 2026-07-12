@@ -263,6 +263,7 @@ export function MobileBottomBar({
         locale={locale}
         dictionary={dictionary}
         menuItems={categoriesDrawerMenuItems || mobileMenuItems || menuItems}
+        showBrandsTab={false}
       />
 
       <SearchDrawer

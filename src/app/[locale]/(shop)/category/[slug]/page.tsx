@@ -107,7 +107,7 @@ function CategorySeoSection({ title, description }: { title: string; description
   if (!title && !description) return null;
 
   return (
-    <div className="bg-gradient-to-r from-[#e0d9cf] to-[#ebe6df] py-12 md:py-16">
+    <div className="bg-transparent py-12 md:py-16">
       <div className="mx-auto w-full">
         {title && (
           <h2 className="mb-6 text-3xl font-normal leading-tight tracking-normal text-brand-primary md:text-4xl">

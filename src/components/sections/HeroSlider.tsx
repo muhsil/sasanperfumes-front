@@ -1,10 +1,8 @@
 "use client";
 
 import { useState, useEffect, type CSSProperties } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { shouldUseUnoptimizedImage } from "@/lib/utils/image";
 import type { HeroSliderSettings } from "@/types/wordpress";
 import { decodeHtmlEntities, getLocalizedMarketPath } from "@/lib/utils";
 
@@ -22,52 +20,49 @@ interface HeroSliderProps {
   settings: HeroSliderSettings;
 }
 
-interface HeroImageBaseProps {
-  src: string;
-  alt: string;
+interface HeroMediaProps {
+  desktopSrc: string;
+  desktopAlt: string;
+  mobileSrc?: string;
+  mobileAlt?: string;
   priority: boolean;
-  loading: "eager" | "lazy";
-  fetchPriority: "high" | "low";
-  sizes: string;
   className: string;
 }
 
-type HeroImageProps =
-  | (HeroImageBaseProps & { fill: true })
-  | (HeroImageBaseProps & { fill?: false; width: number; height: number });
-
-function HeroImage(props: HeroImageProps) {
-  const { src, alt, priority, loading, fetchPriority, sizes, className } = props;
-  const [prevSrc, setPrevSrc] = useState(src);
-  const [currentSrc, setCurrentSrc] = useState(src);
+function HeroMedia({
+  desktopSrc,
+  desktopAlt,
+  mobileSrc,
+  mobileAlt,
+  priority,
+  className,
+}: HeroMediaProps) {
   const [isBroken, setIsBroken] = useState(false);
 
-  if (src !== prevSrc) {
-    setPrevSrc(src);
-    setCurrentSrc(src);
+  useEffect(() => {
     setIsBroken(false);
-  }
+  }, [desktopSrc, mobileSrc]);
 
   if (isBroken) return null;
-
-  const sizeProps = props.fill ? { fill: true as const } : { width: props.width, height: props.height };
+  const hasDistinctMobileSrc = Boolean(mobileSrc && mobileSrc !== desktopSrc);
+  const loading = priority ? "eager" : "lazy";
+  const fetchPriority = priority ? "high" : "low";
+  const alt = mobileAlt || desktopAlt;
 
   return (
-    <Image
-      src={currentSrc}
-      alt={alt}
-      {...sizeProps}
-      quality={85}
-      unoptimized={shouldUseUnoptimizedImage(currentSrc)}
-      priority={priority}
-      loading={loading}
-      fetchPriority={fetchPriority}
-      sizes={sizes}
-      className={className}
-      placeholder="blur"
-      blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAICAIAAABPmPnhAAAAEUlEQVR4nGN4+vAWHsQwXKUBwlPSAflguX8AAAAASUVORK5CYII="
-      onError={() => setIsBroken(true)}
-    />
+    <picture className="absolute inset-0 block h-full w-full">
+      {hasDistinctMobileSrc && <source media="(max-width: 767px)" srcSet={mobileSrc} />}
+      <source media="(min-width: 768px)" srcSet={desktopSrc} />
+      <img
+        src={desktopSrc}
+        alt={alt}
+        className={`block h-full w-full ${className}`}
+        loading={loading}
+        fetchPriority={fetchPriority}
+        decoding="async"
+        onError={() => setIsBroken(true)}
+      />
+    </picture>
   );
 }
 
@@ -189,28 +184,14 @@ function SlideContent({ slide, index, locale }: { slide: HeroSliderSettings["sli
           {renderVideo(false)}
         </>
       ) : slide.image?.url ? (
-        <>
-          <HeroImage
-            src={slide.image.url}
-            alt={slide.image.alt || `Slide ${index + 1}`}
-            fill={true}
-            priority={index === 0}
-            loading={index === 0 ? "eager" : "lazy"}
-            fetchPriority={index === 0 ? "high" : "low"}
-            sizes="100vw"
-            className="hidden object-cover md:block"
-          />
-          <HeroImage
-            src={slide.mobile_image?.url || slide.image.url}
-            alt={slide.mobile_image?.alt || slide.image.alt || `Slide ${index + 1}`}
-            fill={true}
-            priority={index === 0}
-            loading={index === 0 ? "eager" : "lazy"}
-            fetchPriority={index === 0 ? "high" : "low"}
-            sizes="100vw"
-            className="object-cover md:hidden"
-          />
-        </>
+        <HeroMedia
+          desktopSrc={slide.image.url}
+          desktopAlt={slide.image.alt || `Slide ${index + 1}`}
+          mobileSrc={slide.mobile_image?.url}
+          mobileAlt={slide.mobile_image?.alt || slide.image.alt || `Slide ${index + 1}`}
+          priority={index === 0}
+          className="object-cover"
+        />
       ) : (
         null
       )}

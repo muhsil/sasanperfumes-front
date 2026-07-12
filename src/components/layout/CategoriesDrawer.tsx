@@ -75,6 +75,7 @@ interface CategoriesDrawerProps {
   locale: Locale;
   dictionary: Dictionary;
   menuItems?: WPMenuItem[] | null;
+  showBrandsTab?: boolean;
 }
 
 export function CategoriesDrawer({
@@ -83,6 +84,7 @@ export function CategoriesDrawer({
   locale,
   dictionary,
   menuItems,
+  showBrandsTab = true,
 }: CategoriesDrawerProps) {
   // DEV MODE: Cache disabled for faster development
   const marketPrefix = useMarketPrefix();
@@ -188,15 +190,17 @@ export function CategoriesDrawer({
         setCategories(cats);
       }
 
-      // Fetch brands
-      try {
-        const res = await fetch("/api/brands");
-        if (res.ok) {
-          const brandsData = await res.json();
-          setBrands(brandsData);
+      if (showBrandsTab) {
+        // Fetch brands only when the tab is visible.
+        try {
+          const res = await fetch("/api/brands");
+          if (res.ok) {
+            const brandsData = await res.json();
+            setBrands(brandsData);
+          }
+        } catch (e) {
+          console.error("Failed to fetch brands", e);
         }
-      } catch (e) {
-        console.error("Failed to fetch brands", e);
       }
     } catch (error) {
       console.error(error);
@@ -204,7 +208,7 @@ export function CategoriesDrawer({
       setLoading(false);
       fetchPromise[locale] = null;
     }
-  }, [locale]);
+  }, [locale, showBrandsTab]);
 
   useEffect(() => {
     // DEV MODE: Cache disabled for faster development - always fetch fresh data
@@ -260,7 +264,9 @@ export function CategoriesDrawer({
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Grid3X3 className="h-5 w-5" />
             <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
-              {activeTab === "categories" ? (dictionary.common.categories || "Categories") : (isRTL ? "العلامات التجارية" : "Brands")}
+              {showBrandsTab && activeTab === "brands"
+                ? (isRTL ? "العلامات التجارية" : "Brands")
+                : (dictionary.common.categories || "Categories")}
             </Typography>
           </Box>
                     <IconButton
@@ -272,38 +278,44 @@ export function CategoriesDrawer({
                     </IconButton>
         </Box>
 
-        {/* Tab switcher for Categories / Brands */}
-        <div className="flex border-b border-gray-200">
-          <button
-            type="button"
-            onClick={() => { setActiveTab("categories"); triggerHaptic(); }}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-colors ${
-              activeTab === "categories"
-                ? "border-b-2 border-black text-black"
-                : "text-gray-400 hover:text-gray-600"
-            }`}
-          >
-            <Grid3X3 className="h-4 w-4" />
+        {showBrandsTab ? (
+          /* Tab switcher for Categories / Brands */
+          <div className="flex border-b border-gray-200">
+            <button
+              type="button"
+              onClick={() => { setActiveTab("categories"); triggerHaptic(); }}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-colors ${
+                activeTab === "categories"
+                  ? "border-b-2 border-black text-black"
+                  : "text-gray-400 hover:text-gray-600"
+              }`}
+            >
+              <Grid3X3 className="h-4 w-4" />
+              {dictionary.common.categories || "Categories"}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setActiveTab("brands"); triggerHaptic(); }}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-colors ${
+                activeTab === "brands"
+                  ? "border-b-2 border-black text-black"
+                  : "text-gray-400 hover:text-gray-600"
+              }`}
+            >
+              <Tag className="h-4 w-4" />
+              {isRTL ? "العلامات التجارية" : "Brands"}
+            </button>
+          </div>
+        ) : (
+          <div className="border-b border-gray-200 px-4 py-3 text-sm font-semibold text-black">
             {dictionary.common.categories || "Categories"}
-          </button>
-          <button
-            type="button"
-            onClick={() => { setActiveTab("brands"); triggerHaptic(); }}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-colors ${
-              activeTab === "brands"
-                ? "border-b-2 border-black text-black"
-                : "text-gray-400 hover:text-gray-600"
-            }`}
-          >
-            <Tag className="h-4 w-4" />
-            {isRTL ? "العلامات التجارية" : "Brands"}
-          </button>
-        </div>
+          </div>
+        )}
 
         <Box sx={{ flex: 1, overflow: "auto" }}>
           {loading ? (
             <CategorySkeleton />
-          ) : activeTab === "brands" ? (
+          ) : showBrandsTab && activeTab === "brands" ? (
             brands.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <Tag className="mb-4 h-12 w-12 text-gray-300" />

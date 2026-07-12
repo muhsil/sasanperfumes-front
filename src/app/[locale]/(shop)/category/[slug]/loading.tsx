@@ -2,8 +2,8 @@ import { PillRowSkeleton, ProductGridSkeleton, SectionHeaderSkeleton } from "@/c
 
 export default function CategoryLoading() {
   return (
-    <div className="bg-[#f8f3ef] text-brand-primary">
-      <section className="bg-[#f8f3ef] px-4 pb-6 pt-8 md:pb-8 md:pt-10">
+    <div className="bg-transparent text-brand-primary">
+      <section className="bg-transparent px-4 pb-6 pt-8 md:pb-8 md:pt-10">
         <div className="max-w-[760px]">
           <SectionHeaderSkeleton />
         </div>

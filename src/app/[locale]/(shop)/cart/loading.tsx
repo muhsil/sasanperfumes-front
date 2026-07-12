@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/common/Skeleton";
 
 export default function CartLoading() {
   return (
-    <div className="min-h-screen pb-44 md:pb-8" style={{ backgroundColor: "var(--color-beige)" }}>
+    <div className="min-h-screen bg-transparent pb-44 md:pb-8">
       <div className="container mx-auto px-4 py-2 md:py-3">
         {/* Breadcrumb skeleton */}
         <Skeleton className="mb-4 h-4 w-32" />
@@ -13,7 +13,7 @@ export default function CartLoading() {
         <div className="grid gap-8 lg:grid-cols-3 lg:items-start">
           {/* Cart items skeleton */}
           <div className="lg:col-span-2">
-            <div className="bg-white border border-gray-100">
+            <div className="border border-gray-100 bg-transparent">
               {/* Header row */}
               <div className="hidden border-b p-4 md:grid md:grid-cols-12 md:gap-4">
                 <Skeleton className="col-span-6 h-4 w-16" />
@@ -49,7 +49,7 @@ export default function CartLoading() {
 
           {/* Order summary skeleton */}
           <div className="lg:col-span-1">
-            <div className="border border-gray-100 bg-white p-6">
+            <div className="border border-gray-100 bg-transparent p-6">
               <Skeleton className="mb-4 h-6 w-32" />
               <div className="space-y-3 border-b border-gray-100 pb-4">
                 <div className="flex justify-between">

@@ -139,7 +139,7 @@ export function CategorySection({
     <section className={`${sectionClassName} lazy-section ${className} ${getVisibilityClass()}`}>
       <div className="mb-5 section-shell flex items-end justify-between gap-4 md:mb-6">
         <div className={`${isRTL ? "text-right" : "text-left"}`}>
-            <h2 className={`font-title text-2xl md:text-3xl ${titleClassName}`}>
+            <h2 className={`font-title text-xl md:text-2xl ${titleClassName}`}>
             {settings.section_title}
           </h2>
           {settings.section_subtitle && (

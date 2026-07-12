@@ -2,19 +2,19 @@ import { Skeleton } from "@/components/common/Skeleton";
 
 export default function CheckoutLoading() {
   return (
-    <div className="min-h-screen overflow-x-clip pb-44 md:pb-8" style={{ backgroundColor: "var(--color-beige)" }}>
+    <div className="min-h-screen overflow-x-clip bg-transparent pb-44 md:pb-8">
       <div className="container mx-auto px-4 py-4 md:py-8">
         <div className="grid gap-8 lg:grid-cols-3 lg:items-start">
           {/* Checkout form skeleton */}
           <div className="lg:col-span-2 space-y-6">
             {/* Contact section */}
-            <div className="border border-gray-100 bg-white p-6">
+            <div className="border border-gray-100 bg-transparent p-6">
               <Skeleton className="mb-4 h-6 w-40" />
               <Skeleton className="h-12 w-full" />
             </div>
 
             {/* Shipping section */}
-            <div className="border border-gray-100 bg-white p-6">
+            <div className="border border-gray-100 bg-transparent p-6">
               <Skeleton className="mb-4 h-6 w-48" />
               <div className="grid gap-4 sm:grid-cols-2">
                 <Skeleton className="h-12 w-full" />
@@ -25,7 +25,7 @@ export default function CheckoutLoading() {
             </div>
 
             {/* Payment section */}
-            <div className="border border-gray-100 bg-white p-6">
+            <div className="border border-gray-100 bg-transparent p-6">
               <Skeleton className="mb-4 h-6 w-32" />
               <div className="space-y-3">
                 {Array.from({ length: 3 }).map((_, i) => (
@@ -37,7 +37,7 @@ export default function CheckoutLoading() {
 
           {/* Order summary skeleton */}
           <div className="lg:col-span-1 lg:sticky lg:top-24 lg:self-start">
-            <div className="border border-gray-100 bg-white p-6">
+            <div className="border border-gray-100 bg-transparent p-6">
               <Skeleton className="mb-4 h-6 w-32" />
               <div className="space-y-3 border-b border-gray-100 pb-4">
                 {Array.from({ length: 3 }).map((_, i) => (

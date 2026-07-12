@@ -56,7 +56,7 @@ export default function ProductLoading() {
 
       <div className="w-full px-4">
         <div className="grid w-full gap-x-8 gap-y-7 lg:grid-cols-[minmax(0,1.08fr)_minmax(380px,0.92fr)] lg:gap-x-10 xl:grid-cols-[minmax(0,1.12fr)_minmax(420px,0.88fr)]">
-          <div className="min-w-0 bg-[#f8f3ef]">
+          <div className="min-w-0 bg-transparent">
             <ProductGalleryLoading />
           </div>
 

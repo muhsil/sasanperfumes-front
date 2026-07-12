@@ -6,7 +6,7 @@ export default function OrdersLoading() {
       <Skeleton className="mb-2 h-8 w-32" />
       <Skeleton className="mb-8 h-4 w-48" />
 
-      <div className="rounded-lg bg-white shadow-sm">
+      <div className="rounded-lg bg-transparent">
         {/* Table header */}
         <div className="hidden border-b p-4 md:grid md:grid-cols-12 md:gap-4">
           <Skeleton className="col-span-3 h-4 w-16" />

@@ -11,9 +11,9 @@ export function ProductCardSkeleton({ placeholderLogo: _placeholderLogo }: { pla
 
   return (
     <article className="flex h-full flex-col">
-      <div className="flex h-full flex-col overflow-hidden rounded-lg border border-brand-border/70 bg-brand-ivory shadow-[0_16px_34px_rgba(20,15,10,0.08)]">
+      <div className="flex h-full flex-col overflow-hidden rounded-lg border border-brand-border/70 bg-transparent">
         <div className="relative">
-          <div className="relative aspect-square overflow-hidden bg-brand-beige">
+          <div className="relative aspect-square overflow-hidden bg-transparent">
             <Skeleton className="absolute inset-0 rounded-none" />
           </div>
           <div className="absolute left-3 top-3 flex max-w-[60%] flex-col gap-1">

@@ -3,9 +3,9 @@ import { AuthBackground } from "@/components/common/AuthBackground";
 
 export default function LoginLoading() {
   return (
-    <AuthBackground showImage={false} className="flex min-h-[calc(100vh-180px)] items-center justify-center bg-brand-beige/25 px-4 py-6 md:py-10">
+    <AuthBackground showImage={false} className="flex min-h-[calc(100vh-180px)] items-center justify-center bg-transparent px-4 py-6 md:py-10">
       <div className="w-full max-w-md">
-        <div className="rounded-lg border border-brand-border/70 bg-brand-ivory p-5 shadow-[0_18px_48px_rgba(20,15,10,0.08)] md:p-7">
+        <div className="rounded-lg border border-brand-border/70 bg-transparent p-5 md:p-7">
           <Skeleton className="mb-4 h-9 w-9 rounded-md" />
           <Skeleton className="mb-2 h-4 w-32" />
           <Skeleton className="mb-6 h-8 w-64" />

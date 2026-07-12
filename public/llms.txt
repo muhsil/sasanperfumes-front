@@ -1,40 +1,37 @@
 # Sasan Perfumes
 
-Sasan Perfumes is a UAE fragrance store offering perfumes, hair mist, all over sprays, and gift-ready scent collections online.
+> Sasan Perfumes is a UAE fragrance store selling perfumes, hair mist, all over spray, and gift sets. Start here for the main shopping, support, and policy pages.
 
-## Website
+## Start here
 
-- Homepage: https://sasanperfumes.com
-- English: https://sasanperfumes.com/en
-- Arabic: https://sasanperfumes.com/ar
-- Shop: https://sasanperfumes.com/en/shop
-- Contact: https://sasanperfumes.com/en/contact
+- [Home](https://sasanperfumes.com/en)
+- [Shop all products](https://sasanperfumes.com/en/shop)
+- [Contact us](https://sasanperfumes.com/en/contact)
 
-## Product Categories
+## Product categories
 
-- Perfumes: https://sasanperfumes.com/en/category/perfumes
-- All Over Spray: https://sasanperfumes.com/en/category/all-over-spray
-- Hair Mist: https://sasanperfumes.com/en/category/sasan-hair-mist
-- Gift Sets: https://sasanperfumes.com/en/category/gift-set
+- [Perfumes](https://sasanperfumes.com/en/category/perfumes)
+- [All Over Spray](https://sasanperfumes.com/en/category/all-over-spray)
+- [Hair Mist](https://sasanperfumes.com/en/category/sasan-hair-mist)
+- [Gift Sets](https://sasanperfumes.com/en/category/gift-set)
 
 ## Services
 
-- Private labeling: https://sasanperfumes.com/en/private-labeling
-- Services: https://sasanperfumes.com/en/services
+- [Private labeling](https://sasanperfumes.com/en/private-labeling)
+- [Services](https://sasanperfumes.com/en/services)
 
-## Customer Support
+## Customer support
 
 - WhatsApp: 0567394314
 - Complaints & Calls: 0563982953
-- Shipping: https://sasanperfumes.com/en/shipping
-- Returns: https://sasanperfumes.com/en/returns
-- Privacy: https://sasanperfumes.com/en/privacy
-- Terms: https://sasanperfumes.com/en/terms-and-conditions
+- [Shipping](https://sasanperfumes.com/en/shipping)
+- [Returns](https://sasanperfumes.com/en/returns)
+- [Privacy Policy](https://sasanperfumes.com/en/privacy)
+- [Terms and Conditions](https://sasanperfumes.com/en/terms-and-conditions)
 
-## Arabic
+## Arabic pages
 
-ساسان للعطور متجر عطور في الإمارات يقدم العطور، معطرات الشعر، بخاخات الجسم، ومجموعات الهدايا العطرية عبر الإنترنت.
-
-- المتجر: https://sasanperfumes.com/ar/shop
-- تواصل معنا: https://sasanperfumes.com/ar/contact
-- التصنيع الخاص: https://sasanperfumes.com/ar/private-labeling
+- [Arabic home](https://sasanperfumes.com/ar)
+- [Arabic shop](https://sasanperfumes.com/ar/shop)
+- [Arabic contact](https://sasanperfumes.com/ar/contact)
+- [Arabic private labeling](https://sasanperfumes.com/ar/private-labeling)

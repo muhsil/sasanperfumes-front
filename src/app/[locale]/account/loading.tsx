@@ -2,14 +2,14 @@ import { Skeleton } from "@/components/common/Skeleton";
 
 export default function AccountLoading() {
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-transparent py-8">
       <div className="container mx-auto px-4">
         <Skeleton className="mb-8 h-8 w-48 md:h-10" />
 
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Profile card skeleton */}
           <div className="lg:col-span-1">
-            <div className="rounded-lg bg-white p-6 shadow-sm">
+            <div className="rounded-lg bg-transparent p-6">
               <div className="flex flex-col items-center text-center">
                 <Skeleton className="mb-4 h-24 w-24 rounded-full" />
                 <Skeleton className="h-6 w-32" />
@@ -21,7 +21,7 @@ export default function AccountLoading() {
 
           {/* Menu items skeleton */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="rounded-lg bg-white shadow-sm">
+            <div className="rounded-lg bg-transparent">
               <ul className="divide-y">
                 {Array.from({ length: 4 }).map((_, i) => (
                   <li key={i} className="p-4">

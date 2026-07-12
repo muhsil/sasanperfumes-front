@@ -1,9 +1,7 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Navigation } from "swiper/modules";
 import { WCProductCard } from "@/components/shop/WCProductCard";
 import { ProductGridSkeleton, SectionHeaderSkeleton } from "@/components/common/Skeleton";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
@@ -11,9 +9,11 @@ import { getLocalizedMarketPath } from "@/lib/utils";
 import type { WCProduct } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
 import type { ProductSectionSettings } from "@/types/wordpress";
+import type { ProductSectionSliderProps } from "./ProductSectionSlider";
 
-import "swiper/css";
-import "swiper/css/navigation";
+const ProductSectionSlider = dynamic<ProductSectionSliderProps>(
+  () => import("./ProductSectionSlider").then((mod) => mod.ProductSectionSlider)
+);
 
 // Static class maps — Tailwind must see these strings to include them in the bundle
 const MOBILE_COLS: Record<number, string> = {
@@ -110,13 +110,13 @@ export function ProductSection({
 
   const cols = settings.responsive_columns ?? { desktop: 5, tablet: 3, mobile: 2 };
   const isGrid = settings.display === 'grid';
-  const sliderNavPrefix = settings.section_title?.replace(/\s+/g, '-').toLowerCase() || 'default';
+  const sliderNavPrefix = settings.section_title?.replace(/\s+/g, "-").toLowerCase() || "default";
 
   const sectionClass = fullView
     ? `bg-transparent py-7 md:py-9 lg:py-10 ${className} ${getVisibilityClass()}`
     : `bg-transparent pb-0 pt-8 md:pt-9 lg:pt-10 ${className} ${getVisibilityClass()}`;
 
-    return (
+  return (
     <section className={`${sectionClass} lazy-section`}>
       <div className="section-shell">
         <div className="mb-4 flex flex-col gap-3 md:mb-5 md:flex-row md:items-end md:justify-between">
@@ -149,62 +149,17 @@ export function ProductSection({
           ))}
         </div>
       ) : (
-        /* Slider layout */
-        <div className="relative product-section-slider section-shell">
-          <Swiper
-            modules={[Autoplay, Navigation]}
-            spaceBetween={16}
-            slidesPerView={cols.mobile}
-            loop={settings.autoplay && displayProducts.length > cols.desktop}
-            autoplay={
-              settings.autoplay
-                ? {
-                    delay: settings.autoplay_delay || 4000,
-                    disableOnInteraction: false,
-                  }
-                : false
-            }
-            navigation={{
-              prevEl: `.product-slider-prev-${sliderNavPrefix}`,
-              nextEl: `.product-slider-next-${sliderNavPrefix}`,
-            }}
-
-            breakpoints={{
-              640:  { slidesPerView: cols.tablet,  spaceBetween: 16 },
-              768:  { slidesPerView: cols.tablet,  spaceBetween: 16 },
-              1024: { slidesPerView: cols.desktop, spaceBetween: 16 },
-              1280: { slidesPerView: cols.desktop, spaceBetween: 16 },
-            }}
-            className=""
-            dir={isRTL ? "rtl" : "ltr"}
-          >
-            {displayProducts.map((product) => (
-              <SwiperSlide key={product.id}>
-                <WCProductCard product={product} locale={locale} bundleProductSlugs={bundleProductSlugs} englishSlug={englishProductSlugs[product.id]} />
-              </SwiperSlide>
-            ))}
-          </Swiper>
-
-          {/* Navigation Arrows */}
-          {products.length > cols.mobile && (
-            <>
-              <button
-                type="button"
-                className={`product-slider-prev-${sliderNavPrefix} absolute ${isRTL ? "right-0" : "left-0"} top-[32%] z-10 hidden h-10 w-10 -translate-x-2 -translate-y-1/2 items-center justify-center rounded-full border border-brand-border/70 bg-brand-ivory text-brand-primary shadow-[0_8px_20px_rgba(20,15,10,0.12)] transition-colors hover:border-brand-primary/45 hover:bg-brand-primary hover:text-white disabled:opacity-50 md:flex`}
-                aria-label="Previous"
-              >
-                <ChevronLeft className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />
-              </button>
-              <button
-                type="button"
-                className={`product-slider-next-${sliderNavPrefix} absolute ${isRTL ? "left-0" : "right-0"} top-[32%] z-10 hidden h-10 w-10 translate-x-2 -translate-y-1/2 items-center justify-center rounded-full border border-brand-border/70 bg-brand-ivory text-brand-primary shadow-[0_8px_20px_rgba(20,15,10,0.12)] transition-colors hover:border-brand-primary/45 hover:bg-brand-primary hover:text-white disabled:opacity-50 md:flex`}
-                aria-label="Next"
-              >
-                <ChevronRight className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />
-              </button>
-            </>
-          )}
-        </div>
+        <ProductSectionSlider
+          products={displayProducts}
+          locale={locale}
+          isRTL={isRTL}
+          cols={cols}
+          autoplay={Boolean(settings.autoplay)}
+          autoplayDelay={settings.autoplay_delay || 4000}
+          sliderNavPrefix={sliderNavPrefix}
+          bundleProductSlugs={bundleProductSlugs}
+          englishProductSlugs={englishProductSlugs}
+        />
       )}
     </section>
   );

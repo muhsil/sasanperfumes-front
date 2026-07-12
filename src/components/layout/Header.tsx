@@ -4,7 +4,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Menu, X, ShoppingBag, User, Heart, Search } from "lucide-react";
+import { Menu, X, ShoppingBag, User, Heart, Search, ChevronRight } from "lucide-react";
+import MuiDrawer from "@mui/material/Drawer";
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import Typography from "@mui/material/Typography";
 import { LanguageSwitcher } from "@/components/common/LanguageSwitcher";
 import { CurrencySwitcher } from "@/components/common/CurrencySwitcher";
 import { useCart } from "@/contexts/CartContext";
@@ -161,11 +165,13 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
     .replace(/\{\{currency\}\}/g, currency));
   const hideTopbarOnMobile = topbarSettings?.hideOnMobile !== false;
   const topbarVisible = Boolean(topbarText && !topbarDismissed && !isScrolled);
-  const mobileDrawerOffsetClass = topbarVisible
-    ? hideTopbarOnMobile
-      ? "top-16 h-[calc(100vh-4rem)] md:top-[6.5rem] md:h-[calc(100vh-6.5rem)]"
-      : "top-24 h-[calc(100vh-6rem)] md:top-[6.5rem] md:h-[calc(100vh-6.5rem)]"
-    : "top-16 h-[calc(100vh-4rem)] md:top-20 md:h-[calc(100vh-5rem)]";
+  const closeMobileMenu = useCallback(() => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    setIsMobileMenuOpen(false);
+  }, []);
+  const mobileDrawerAnchor: "left" | "right" = isRTL ? "right" : "left";
 
   return (
     <>
@@ -427,39 +433,206 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
           />
         </div>
 
-        {/* Mobile menu drawer overlay and sidebar */}
-        {isMobileMenuOpen && (
-          <>
-            {/* Overlay */}
-            <div
-              className={cn("fixed inset-x-0 bottom-0 z-40 bg-black/40 backdrop-blur-[2px] xl:hidden", mobileDrawerOffsetClass)}
-              onClick={() => setIsMobileMenuOpen(false)}
-            />
-            {/* Drawer sidebar */}
-            <div className={cn("fixed left-1/2 z-40 w-[min(22rem,calc(100vw-2rem))] -translate-x-1/2 overflow-y-auto rounded-2xl border border-brand-border/55 bg-brand-ivory/97 px-4 py-6 text-center shadow-[0_28px_60px_rgba(20,15,10,0.28)] xl:hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", mobileDrawerOffsetClass)}>
-              <div>
-                {/* Mobile nav links */}
-                <div className="space-y-1.5">
-                  {mobileNavigation.map((item) => (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className="block rounded-full border border-transparent px-4 py-2.5 text-center text-[12px] font-semibold uppercase tracking-[0.14em] text-brand-primary/80 transition-colors hover:border-brand-border/55 hover:bg-brand-beige hover:text-brand-primary"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
-                </div>
-                {/* Mobile utilities */}
-                <div className="mt-7 flex items-center justify-center gap-4 border-t border-brand-border/45 pt-5">
+        {/* Mobile menu drawer */}
+        <MuiDrawer
+          anchor={mobileDrawerAnchor}
+          open={isMobileMenuOpen}
+          onClose={closeMobileMenu}
+          BackdropProps={{
+            sx: {
+              backgroundColor: "rgba(20,15,10,0.36)",
+              backdropFilter: "blur(2px)",
+            },
+          }}
+          ModalProps={{ keepMounted: true }}
+          PaperProps={{
+            sx: {
+              width: { xs: "min(100vw, 22rem)", sm: 360 },
+              maxWidth: "100%",
+              backgroundColor: "color-mix(in srgb, var(--color-ivory) 97%, white 3%)",
+              color: "var(--color-primary)",
+              borderLeft: isRTL ? "none" : "1px solid var(--color-border)",
+              borderRight: isRTL ? "1px solid var(--color-border)" : "none",
+              boxShadow: "0 28px 70px rgba(20,15,10,0.22)",
+              overflow: "hidden",
+            },
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              height: "100%",
+            }}
+            dir={isRTL ? "rtl" : "ltr"}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                borderBottom: "1px solid",
+                borderColor: "var(--color-border)",
+                backgroundColor: "color-mix(in srgb, var(--color-beige) 55%, white 45%)",
+                px: 2,
+                py: 1.5,
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, minWidth: 0 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 34,
+                    height: 34,
+                    borderRadius: "999px",
+                    backgroundColor: "var(--color-primary)",
+                    color: "white",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Menu className="h-4 w-4" />
+                </Box>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography
+                    component="h2"
+                    sx={{
+                      fontSize: 16,
+                      fontWeight: 700,
+                      lineHeight: 1.2,
+                      color: "var(--color-primary)",
+                    }}
+                  >
+                    {dictionary.navigation.menu}
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontSize: 11,
+                      fontWeight: 600,
+                      letterSpacing: "0.12em",
+                      textTransform: "uppercase",
+                      color: "var(--color-muted)",
+                    }}
+                  >
+                    {isRTL ? "استكشف الأقسام" : "Explore categories"}
+                  </Typography>
+                </Box>
+              </Box>
+
+              <IconButton
+                onClick={closeMobileMenu}
+                aria-label="Close drawer"
+                sx={{ color: "var(--color-muted)" }}
+              >
+                <X className="h-5 w-5" />
+              </IconButton>
+            </Box>
+
+            <Box sx={{ flex: 1, overflow: "auto", px: 2, py: 2 }}>
+              <div className="rounded-2xl border border-brand-border/70 bg-[linear-gradient(180deg,rgba(243,232,214,0.85)_0%,rgba(255,255,255,0.88)_100%)] p-4 shadow-[0_14px_30px_rgba(20,15,10,0.06)]">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-brand-muted">
+                  {isRTL ? "تسوّق بسرعة" : "Quick shop"}
+                </p>
+                <h3 className="mt-1 font-title text-2xl leading-tight text-brand-primary">
+                  {siteSettings?.site_name || "Sasan Perfumes"}
+                </h3>
+                <p className="mt-2 max-w-[18rem] text-sm leading-6 text-brand-muted">
+                  {isRTL
+                    ? "تصفّح العطور، البخاخات، والهدايا في قائمة جانبية سهلة ومريحة."
+                    : "Browse perfumes, sprays, and gift sets in a simple side panel."}
+                </p>
+              </div>
+
+              <nav className="mt-4 space-y-2">
+                {mobileNavigation.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    onClick={closeMobileMenu}
+                    className="group flex items-center gap-3 rounded-2xl border border-brand-border/70 bg-white/75 px-4 py-3 text-brand-primary shadow-[0_10px_24px_rgba(20,15,10,0.05)] transition-all hover:border-brand-primary/30 hover:bg-brand-beige active:scale-[0.99]"
+                  >
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-beige text-brand-primary transition-colors group-hover:bg-brand-primary group-hover:text-white">
+                      <span className="h-2 w-2 rounded-full bg-current" />
+                    </span>
+                    <span className="min-w-0 flex-1 text-start">
+                      <span className="block text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-muted/70">
+                        {item.hasMegaMenu || item.hasBrandsMegaMenu
+                          ? (isRTL ? "مجموعة" : "Collection")
+                          : (isRTL ? "قسم" : "Category")}
+                      </span>
+                      <span className="block truncate text-sm font-bold">{item.name}</span>
+                    </span>
+                    <ChevronRight
+                      className={cn(
+                        "h-4 w-4 text-brand-muted transition-transform",
+                        isRTL ? "rotate-180 group-hover:-translate-x-1" : "group-hover:translate-x-1"
+                      )}
+                    />
+                  </Link>
+                ))}
+              </nav>
+            </Box>
+
+            <Box
+              sx={{
+                borderTop: "1px solid",
+                borderColor: "var(--color-border)",
+                backgroundColor: "color-mix(in srgb, var(--color-ivory) 94%, white 6%)",
+                px: 2,
+                py: 2,
+              }}
+            >
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-2xl border border-brand-border/70 bg-white/80 p-3">
+                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-muted">
+                    {isRTL ? "اللغة" : "Language"}
+                  </p>
                   <LanguageSwitcher locale={locale} />
+                </div>
+                <div className="rounded-2xl border border-brand-border/70 bg-white/80 p-3">
+                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-muted">
+                    {isRTL ? "العملة" : "Currency"}
+                  </p>
                   <CurrencySwitcher locale={locale} />
                 </div>
               </div>
-            </div>
-          </>
-        )}
+
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    closeMobileMenu();
+                    setIsAccountDrawerOpen(true);
+                  }}
+                  className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-brand-border/70 bg-white/80 px-2 py-3 text-[11px] font-semibold text-brand-primary transition-colors hover:border-brand-primary/30 hover:bg-brand-beige"
+                >
+                  <User className="h-4 w-4" />
+                  <span>{dictionary.account.myAccount}</span>
+                </button>
+                <Link
+                  href={`${marketPrefix}/${locale}/wishlist`}
+                  onClick={closeMobileMenu}
+                  className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-brand-border/70 bg-white/80 px-2 py-3 text-[11px] font-semibold text-brand-primary transition-colors hover:border-brand-primary/30 hover:bg-brand-beige"
+                >
+                  <Heart className="h-4 w-4" />
+                  <span>{dictionary.account.wishlist}</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    closeMobileMenu();
+                    setIsCartOpen(true);
+                  }}
+                  className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-brand-border/70 bg-white/80 px-2 py-3 text-[11px] font-semibold text-brand-primary transition-colors hover:border-brand-primary/30 hover:bg-brand-beige"
+                >
+                  <ShoppingBag className="h-4 w-4" />
+                  <span>{dictionary.common.cart}</span>
+                </button>
+              </div>
+            </Box>
+          </Box>
+        </MuiDrawer>
       </header>
 
       {/* Drawers */}

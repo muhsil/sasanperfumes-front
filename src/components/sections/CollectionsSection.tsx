@@ -5,6 +5,7 @@ import { BLUR_DATA_URL, decodeHtmlEntities, getLocalizedMarketPath } from "@/lib
 import { shouldUseUnoptimizedImage } from "@/lib/utils/image";
 import type { Locale } from "@/config/site";
 import type { CollectionsSettings } from "@/types/wordpress";
+import { CollectionsSliderSection } from "./CollectionsSliderSection";
 
 // Static class maps — Tailwind must see these strings to include them in the bundle
 const MOBILE_COLS: Record<number, string> = {
@@ -67,6 +68,17 @@ export function CollectionsSection({
     return "";
   };
 
+  if ((settings.layout ?? "grid") === "slider") {
+    return (
+      <CollectionsSliderSection
+        settings={settings}
+        locale={locale}
+        marketPrefix={marketPrefix}
+        className={className}
+      />
+    );
+  }
+
   const cols = settings.responsive_columns ?? { desktop: 3, tablet: 2, mobile: 1 };
   const gridClass = [
     "grid gap-4 section-shell",
@@ -125,7 +137,7 @@ export function CollectionsSection({
                 </h3>
                 <div className="translate-y-0 transition-transform duration-700 ease-out group-hover:translate-y-0">
                   {collection.description && (
-                    <p className="line-clamp-3 max-w-md text-sm leading-relaxed text-white/90 opacity-100 transition-all duration-700 ease-out group-hover:opacity-100 md:text-base">
+                    <p className="line-clamp-3 max-w-md text-sm leading-relaxed text-white/90 opacity-100 transition-all duration-700 ease-out md:translate-y-2 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100 md:text-base">
                       {decodeHtmlEntities(collection.description)}
                     </p>
                   )}
