@@ -17,9 +17,9 @@ export function ProductCardSkeleton({
 
   return (
     <article className="flex h-full flex-col">
-      <div className="flex h-full flex-col overflow-hidden border-r border-b border-brand-border/70 bg-white">
+      <div className="flex h-full flex-col">
         <div className="relative">
-          <div className={cn("relative overflow-hidden bg-transparent", imageAspectClassName)}>
+          <div className={cn("relative overflow-hidden border border-brand-border/70 bg-transparent", imageAspectClassName)}>
             <Skeleton className="absolute inset-0 rounded-none" />
           </div>
           <div className="absolute left-3 top-3 flex max-w-[60%] flex-col gap-1">
@@ -32,17 +32,15 @@ export function ProductCardSkeleton({
           <Skeleton className="absolute inset-x-3 bottom-3 hidden h-9 rounded-md sm:block" />
         </div>
 
-        <div className="relative flex min-h-[68px] flex-1 items-center justify-center overflow-hidden border-t border-brand-border/70 px-3 py-3 text-center sm:min-h-[82px] sm:px-4 sm:py-4">
+        <div className="relative flex min-h-[68px] flex-1 items-center justify-center px-3 py-3 text-center sm:min-h-[82px] sm:px-4 sm:py-4">
           <div className="flex w-full flex-col items-center gap-2">
             <div className="flex justify-center gap-1">
               <Skeleton className="h-4 w-12 rounded-full" />
               <Skeleton className="h-4 w-10 rounded-full" />
             </div>
-            <div className="w-full border border-brand-border/60 bg-white px-3 py-3">
-              <Skeleton className="mx-auto h-3.5 w-3/4" />
-              <Skeleton className="mx-auto mt-2 h-3.5 w-1/2" />
-              <Skeleton className="mx-auto mt-2 h-4 w-20" />
-            </div>
+            <Skeleton className="mx-auto h-3.5 w-3/4" />
+            <Skeleton className="mx-auto h-3.5 w-1/2" />
+            <Skeleton className="mx-auto h-4 w-20" />
           </div>
         </div>
       </div>

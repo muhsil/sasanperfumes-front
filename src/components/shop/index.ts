@@ -6,5 +6,4 @@ export * from "./QuantitySelector";
 export * from "./ProductFilters";
 export * from "./WCProductCard";
 export * from "./WCProductGrid";
-export * from "./QuickViewModal";
 export * from "./ProductAddToCartButton";

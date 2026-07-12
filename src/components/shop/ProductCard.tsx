@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Plus, Heart, GitCompare, Search, Check } from "lucide-react";
+import { Plus, Heart, GitCompare, Check } from "lucide-react";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { CountdownTimer } from "@/components/common/CountdownTimer";
 import { ProductBadges } from "@/components/shop/ProductBadges";
@@ -45,7 +45,6 @@ export function ProductCard({ product, locale, className, wcProduct }: ProductCa
     addWishlist: isAr ? "\u0645\u0641\u0636\u0644\u0629" : "Wishlist",
     removeCompare: isAr ? "\u0625\u0632\u0627\u0644\u0629" : "Remove",
     addCompare: isAr ? "\u0645\u0642\u0627\u0631\u0646\u0629" : "Compare",
-    quickView: isAr ? "\u0646\u0638\u0631\u0629 \u0633\u0631\u064a\u0639\u0629" : "Quick view",
   };
 
   const productHref = `${marketPrefix}/${locale}/product/${product.slug}`;
@@ -128,9 +127,9 @@ export function ProductCard({ product, locale, className, wcProduct }: ProductCa
   };
   return (
     <article className={cn("group flex h-full flex-col", className)}>
-      <div className="flex h-full flex-col overflow-hidden border-r border-b border-[#e7ded7] bg-white shadow-[0_4px_20px_rgba(74,22,51,0.06)]">
+      <div className="flex h-full flex-col">
         {/* Image */}
-        <div className="relative">
+        <div className="relative border border-[#e7ded7] bg-white shadow-[0_4px_20px_rgba(74,22,51,0.06)]">
           <Link href={productHref} className="block" aria-label={productName}>
             <div className="relative aspect-[2/3] overflow-hidden bg-[#F8F5F0]">
               {product.image ? (
@@ -188,13 +187,6 @@ export function ProductCard({ product, locale, className, wcProduct }: ProductCa
 
           {/* Hover icons — top right */}
           <div className={cn("absolute top-3 flex flex-col gap-2 opacity-0 transition-all duration-300 group-hover:opacity-100", isAr ? "left-3" : "right-3")}>
-            <Link
-              href={productHref}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-brand-primary shadow-md backdrop-blur-sm transition-all hover:bg-brand-primary hover:text-white hover:scale-110"
-              aria-label={labels.quickView}
-            >
-              <Search className="h-3.5 w-3.5" />
-            </Link>
             <button
               type="button"
               onClick={handleWishlistToggle}
@@ -252,7 +244,7 @@ export function ProductCard({ product, locale, className, wcProduct }: ProductCa
         </div>
 
         {/* Info */}
-        <div className="relative flex min-h-20 flex-1 items-center justify-center overflow-hidden border-t border-[#e7ded7] px-3 py-3 text-center">
+        <div className="relative mt-3 flex min-h-20 flex-1 items-center justify-center px-3 py-3 text-center">
           <div className="flex w-full flex-col items-center">
             {/* Variation terms */}
             <div className="mb-2 w-full">
@@ -272,7 +264,7 @@ export function ProductCard({ product, locale, className, wcProduct }: ProductCa
               )}
             </div>
 
-            <div className="flex w-full flex-col items-center border border-brand-border/60 bg-white px-3 py-3 text-center">
+            <div className="flex w-full flex-col items-center text-center">
               <Link href={productHref} className="block w-full">
                 <h3 className="line-clamp-2 text-[12px] font-bold leading-tight text-brand-primary-dark">
                   {productName}

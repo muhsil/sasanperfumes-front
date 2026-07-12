@@ -1,11 +1,10 @@
-"use client";
+﻿"use client";
 
 import { useState, useCallback, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { Plus, Heart, Search, Check, Star } from "lucide-react";
+import { Plus, Heart, Check, Star } from "lucide-react";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { ProductBadges } from "@/components/shop/ProductBadges";
 import { cn, decodeHtmlEntities, getProductSlugFromPermalink, BLUR_DATA_URL } from "@/lib/utils";
@@ -18,9 +17,6 @@ import type { Locale } from "@/config/site";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
 const RATING_STARS = [1, 2, 3, 4, 5];
-const QuickViewModal = dynamic(() => import("./QuickViewModal").then((mod) => mod.QuickViewModal), {
-  ssr: false,
-});
 
 interface WCProductCardProps {
   product: WCProduct;
@@ -44,7 +40,6 @@ export function WCProductCard({
   const [isAddedToCart, setIsAddedToCart] = useState(false);
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const [quickViewOpen, setQuickViewOpen] = useState(false);
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist, getWishlistItemId } = useWishlist();
   const { isAuthenticated } = useAuth();
@@ -53,16 +48,15 @@ export function WCProductCard({
   const isRTL = locale === "ar";
 
   const labels = {
-    outOfStock: isRTL ? "غير متوفر" : "Out of Stock",
-    removeWishlist: isRTL ? "إزالة من المفضلة" : "Remove from wishlist",
-    addWishlist: isRTL ? "أضف إلى المفضلة" : "Add to wishlist",
-    customize: isRTL ? "تخصيص" : "Customize",
-    chooseOptions: isRTL ? "اختر الخيارات" : "Choose options",
-    addToCart: isRTL ? "أضف للسلة" : "Add to cart",
-    added: isRTL ? "تم!" : "Added!",
+    outOfStock: isRTL ? "ØºÙŠØ± Ù…ØªÙˆÙØ±" : "Out of Stock",
+    removeWishlist: isRTL ? "Ø¥Ø²Ø§Ù„Ø© Ù…Ù† Ø§Ù„Ù…ÙØ¶Ù„Ø©" : "Remove from wishlist",
+    addWishlist: isRTL ? "Ø£Ø¶Ù Ø¥Ù„Ù‰ Ø§Ù„Ù…ÙØ¶Ù„Ø©" : "Add to wishlist",
+    customize: isRTL ? "ØªØ®ØµÙŠØµ" : "Customize",
+    chooseOptions: isRTL ? "Ø§Ø®ØªØ± Ø§Ù„Ø®ÙŠØ§Ø±Ø§Øª" : "Choose options",
+    addToCart: isRTL ? "Ø£Ø¶Ù Ù„Ù„Ø³Ù„Ø©" : "Add to cart",
+    added: isRTL ? "ØªÙ…!" : "Added!",
     adding: isRTL ? "..." : "...",
-    quickView: isRTL ? "نظرة سريعة" : "Quick view",
-    from: isRTL ? "من " : "From ",
+    from: isRTL ? "Ù…Ù† " : "From ",
   };
 
   const handleAddToCart = useCallback(async (e: React.MouseEvent) => {
@@ -175,7 +169,7 @@ export function WCProductCard({
         ) : isOutOfStock ? (
           <span className="!text-[11px]">{labels.outOfStock}</span>
         ) : !canPurchase ? (
-          <span className="!text-[11px]">{isRTL ? "غير متاح" : "Unavailable"}</span>
+          <span className="!text-[11px]">{isRTL ? "ØºÙŠØ± Ù…ØªØ§Ø­" : "Unavailable"}</span>
         ) : (
           <>
             <Plus className={cn("h-3.5 w-3.5", isAddingToCart && "animate-pulse")} />
@@ -190,11 +184,10 @@ export function WCProductCard({
     "absolute inset-x-2 bottom-2 z-10 hidden h-9 items-center justify-center gap-1.5 rounded-md bg-brand-primary px-2 text-center text-[10px] font-bold uppercase text-white shadow-[0_12px_24px_rgba(20,15,10,0.22)] transition-all duration-300 hover:bg-brand-primary-dark disabled:cursor-not-allowed disabled:bg-brand-primary/70 sm:inset-x-3 sm:bottom-3 sm:flex sm:translate-y-2 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100";
 
   return (
-    <>
-      <article className={cn("group flex h-full flex-col", className)}>
-        <div className="flex h-full flex-col overflow-hidden rounded-md border border-brand-border/70 bg-white shadow-[0_8px_24px_rgba(20,15,10,0.05)] transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-gold/45 hover:shadow-[0_16px_34px_rgba(20,15,10,0.1)]">
-          {/* Image */}
-          <div className="relative">
+    <article className={cn("group flex h-full flex-col transition-transform duration-300 hover:-translate-y-0.5", className)}>
+      <div className="flex h-full flex-col">
+        {/* Image */}
+        <div className="relative">
             <Link
               href={productHref}
               className="block"
@@ -203,7 +196,7 @@ export function WCProductCard({
               onMouseEnter={prefetchProduct}
               onTouchStart={prefetchProduct}
             >
-              <div className="relative aspect-square overflow-hidden bg-[#fbf8f4]">
+              <div className="relative aspect-square overflow-hidden border border-brand-border/70 bg-[#fbf8f4] shadow-[0_8px_24px_rgba(20,15,10,0.05)] transition-all duration-300 hover:border-brand-gold/45 hover:shadow-[0_16px_34px_rgba(20,15,10,0.1)]">
                 {mainImage && !imageError ? (
                   <>
                     <Image
@@ -254,16 +247,8 @@ export function WCProductCard({
               />
             </div>
 
-            {/* Hover icons — top right */}
+            {/* Hover icons â€” top right */}
             <div className={cn("absolute top-2 flex flex-col gap-2 opacity-100 transition-all duration-300 sm:top-3 sm:opacity-0 sm:group-hover:opacity-100", isRTL ? "left-2 sm:left-3" : "right-2 sm:right-3")}>
-              <button
-                type="button"
-                onClick={() => setQuickViewOpen(true)}
-                className="hidden h-8 w-8 items-center justify-center rounded-full border border-brand-border/60 bg-white/95 text-brand-primary shadow-md backdrop-blur-sm transition-all hover:scale-110 hover:bg-brand-primary hover:text-white sm:flex"
-                aria-label={labels.quickView}
-              >
-                <Search className="h-3.5 w-3.5" />
-              </button>
               <button
                 type="button"
                 onClick={handleWishlistToggle}
@@ -279,7 +264,7 @@ export function WCProductCard({
               </button>
             </div>
 
-            {/* Add button — bottom corner */}
+            {/* Add button â€” bottom corner */}
             {showAsVariable ? (
               <Link
                 href={productHref}
@@ -308,7 +293,7 @@ export function WCProductCard({
                 ) : isOutOfStock ? (
                   <span className="truncate">{labels.outOfStock}</span>
                 ) : !canPurchase ? (
-                  <span className="truncate">{isRTL ? "غير متاح" : "Unavailable"}</span>
+                  <span className="truncate">{isRTL ? "ØºÙŠØ± Ù…ØªØ§Ø­" : "Unavailable"}</span>
                 ) : (
                   <>
                     <Plus className={cn("h-3.5 w-3.5 shrink-0", isAddingToCart && "animate-pulse")} />
@@ -321,7 +306,7 @@ export function WCProductCard({
           </div>
 
           {/* Info */}
-          <div className="relative flex min-h-[68px] flex-1 items-center justify-center overflow-hidden px-2 py-1.5 text-center sm:min-h-[82px] sm:px-3 sm:py-2">
+        <div className="relative mt-3 flex min-h-[68px] flex-1 items-center justify-center px-2 py-1.5 text-center sm:min-h-[82px] sm:px-3 sm:py-2">
             <div className="flex w-full flex-col items-center gap-0">
             {/* Variation terms */}
             {hasVariations && visibleVariationTerms.length > 0 && (
@@ -368,11 +353,11 @@ export function WCProductCard({
             {/* Price */}
             <div className={cn(reviewCount > 0 ? "mt-0.5" : "mt-0")}>
               {!hasPrice && !hasPriceRange ? (
-                <span className="text-[11px] font-bold text-brand-primary/45 sm:text-xs">{isRTL ? "غير متاح" : "Unavailable"}</span>
+                <span className="text-[11px] font-bold text-brand-primary/45 sm:text-xs">{isRTL ? "ØºÙŠØ± Ù…ØªØ§Ø­" : "Unavailable"}</span>
               ) : showAsVariable && hasPriceRange && minPrice !== maxPrice ? (
                 <div className="flex items-center justify-center gap-1">
                   <FormattedPrice price={minPrice} sourceCurrency={priceSourceCurrency} className="text-[11px] font-bold text-brand-primary sm:text-xs" iconSize="xs" />
-                  <span className="text-xs text-brand-primary/40">–</span>
+                  <span className="text-xs text-brand-primary/40">â€“</span>
                   <FormattedPrice price={maxPrice} sourceCurrency={priceSourceCurrency} className="text-[11px] font-bold text-brand-primary sm:text-xs" iconSize="xs" />
                 </div>
               ) : product.on_sale ? (
@@ -415,7 +400,7 @@ export function WCProductCard({
                   ) : isOutOfStock ? (
                     <span className="truncate">{labels.outOfStock}</span>
                   ) : !canPurchase ? (
-                    <span className="truncate">{isRTL ? "غير متاح" : "Unavailable"}</span>
+                    <span className="truncate">{isRTL ? "ØºÙŠØ± Ù…ØªØ§Ø­" : "Unavailable"}</span>
                   ) : (
                     <>
                       <Plus className={cn("h-3 w-3 shrink-0", isAddingToCart && "animate-pulse")} />
@@ -429,16 +414,5 @@ export function WCProductCard({
           </div>
         </div>
       </article>
-
-      {quickViewOpen && (
-        <QuickViewModal
-          product={product}
-          locale={locale}
-          isOpen={quickViewOpen}
-          onClose={() => setQuickViewOpen(false)}
-          englishSlug={englishSlug}
-        />
-      )}
-    </>
   );
 }
