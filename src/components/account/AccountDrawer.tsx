@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { User, Package, MapPin, Heart, Settings, LogOut, X, ChevronRight, Sparkles, ShieldCheck, Mail } from "lucide-react";
 import Link from "next/link";
@@ -42,6 +42,38 @@ function getUserInitial(name?: string, email?: string) {
   return source.charAt(0).toUpperCase();
 }
 
+function GoogleSignInLoader({ isRTL }: { isRTL: boolean }) {
+  return (
+    <div
+      className="absolute inset-0 z-20 flex items-center justify-center bg-brand-ivory/95 px-6 backdrop-blur-[2px]"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      <div className="w-full max-w-[17rem] rounded-2xl border border-brand-border/70 bg-white px-6 py-7 text-center shadow-[0_18px_44px_rgba(20,15,10,0.12)]">
+        <div className="relative mx-auto mb-5 flex h-16 w-16 items-center justify-center">
+          <div className="absolute inset-0 rounded-full bg-brand-beige shadow-[0_10px_24px_rgba(20,15,10,0.10)]" />
+          <div
+            className="absolute inset-[5px] rounded-full border-[3px] border-brand-border/70 border-r-brand-gold border-t-brand-primary motion-safe:animate-spin motion-reduce:animate-none"
+            aria-hidden="true"
+          />
+          <div className="relative flex h-9 w-9 items-center justify-center rounded-full bg-brand-primary text-white shadow-sm">
+            <ShieldCheck className="h-[18px] w-[18px]" aria-hidden="true" />
+          </div>
+        </div>
+        <p className="font-title text-xl text-brand-primary">
+          {isRTL ? "جارٍ تسجيل الدخول" : "Signing you in"}
+        </p>
+        <p className="mx-auto mt-2 max-w-[14rem] text-sm leading-6 text-brand-muted">
+          {isRTL
+            ? "نجهّز حسابك بأمان. لحظة من فضلك."
+            : "Securely preparing your account. Just a moment."}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export function AccountDrawer({ locale, dictionary }: AccountDrawerProps) {
   const router = useRouter();
   const marketPrefix = useMarketPrefix();
@@ -49,6 +81,7 @@ export function AccountDrawer({ locale, dictionary }: AccountDrawerProps) {
   const isRTL = locale === "ar";
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [googleError, setGoogleError] = useState<string | null>(null);
+  const googleLoginInFlightRef = useRef(false);
 
   const onClose = useCallback(() => {
     if (document.activeElement instanceof HTMLElement) {
@@ -58,6 +91,8 @@ export function AccountDrawer({ locale, dictionary }: AccountDrawerProps) {
   }, [setIsAccountDrawerOpen]);
 
   const handleGoogleSuccess = useCallback(async (credential: string) => {
+    if (googleLoginInFlightRef.current) return;
+    googleLoginInFlightRef.current = true;
     setIsGoogleLoading(true);
     setGoogleError(null);
 
@@ -73,6 +108,7 @@ export function AccountDrawer({ locale, dictionary }: AccountDrawerProps) {
     } catch {
       setGoogleError(isRTL ? "فشل تسجيل الدخول بحساب جوجل" : "Google sign-in failed");
     } finally {
+      googleLoginInFlightRef.current = false;
       setIsGoogleLoading(false);
     }
   }, [googleLogin, isRTL, locale, marketPrefix, onClose, router]);
@@ -172,60 +208,65 @@ export function AccountDrawer({ locale, dictionary }: AccountDrawerProps) {
 
   const renderGuestContent = () => (
     <div className="flex min-h-full flex-col p-4">
-      <section className="rounded-2xl border border-brand-border/70 bg-brand-ivory p-5 shadow-[0_18px_44px_rgba(20,15,10,0.08)]">
-        <div className="text-center">
-          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-brand-primary text-white shadow-[0_16px_36px_rgba(20,15,10,0.18)]">
-            <User className="h-9 w-9" />
+      <section
+        className="relative overflow-hidden rounded-2xl border border-brand-border/70 bg-brand-ivory p-5 shadow-[0_18px_44px_rgba(20,15,10,0.08)]"
+        aria-busy={isGoogleLoading}
+      >
+        {isGoogleLoading && <GoogleSignInLoader isRTL={isRTL} />}
+
+        <div
+          aria-hidden={isGoogleLoading || undefined}
+          inert={isGoogleLoading ? true : undefined}
+        >
+          <div className="text-center">
+            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-brand-primary text-white shadow-[0_16px_36px_rgba(20,15,10,0.18)]">
+              <User className="h-9 w-9" />
+            </div>
+            <h3 className="font-title text-2xl text-brand-primary">{dictionary.myAccount}</h3>
+            <p className="mx-auto mt-2 max-w-[17rem] text-sm leading-6 text-brand-muted">
+              {isRTL
+                ? "سجّل الدخول بسرعة عبر جوجل أو استخدم البريد الإلكتروني"
+                : "Sign in quickly with Google or continue with email"}
+            </p>
           </div>
-          <h3 className="font-title text-2xl text-brand-primary">{dictionary.myAccount}</h3>
-          <p className="mx-auto mt-2 max-w-[17rem] text-sm leading-6 text-brand-muted">
-            {isRTL
-              ? "سجّل الدخول بسرعة عبر جوجل أو استخدم البريد الإلكتروني"
-              : "Sign in quickly with Google or continue with email"}
-          </p>
-        </div>
 
-        <div className="mt-5 rounded-2xl border border-brand-border/70 bg-white p-3 shadow-[0_10px_24px_rgba(20,15,10,0.05)]">
-          <GoogleSignInButton
-            onSuccess={handleGoogleSuccess}
-            onError={() => setGoogleError(isRTL ? "فشل تسجيل الدخول بحساب جوجل" : "Google sign-in failed")}
-            text="signin_with"
-            locale={locale}
-          />
-          {isGoogleLoading && (
-            <p className="mt-3 text-center text-sm text-brand-muted">
-              {isRTL ? "جاري تسجيل الدخول..." : "Signing you in..."}
-            </p>
-          )}
-          {googleError && (
-            <p className="mt-3 text-center text-sm font-medium text-red-600">
-              {googleError}
-            </p>
-          )}
-        </div>
+          <div className="mt-5 rounded-2xl border border-brand-border/70 bg-white p-3 shadow-[0_10px_24px_rgba(20,15,10,0.05)]">
+            <GoogleSignInButton
+              onSuccess={handleGoogleSuccess}
+              onError={() => setGoogleError(isRTL ? "فشل تسجيل الدخول بحساب جوجل" : "Google sign-in failed")}
+              text="signin_with"
+              locale={locale}
+            />
+            {googleError && (
+              <p className="mt-3 text-center text-sm font-medium text-red-600">
+                {googleError}
+              </p>
+            )}
+          </div>
 
-        <div className="my-5 flex items-center gap-3">
-          <div className="h-px flex-1 bg-brand-border/70" />
-          <span className="text-xs font-medium uppercase tracking-[0.16em] text-brand-muted">
-            {isRTL ? "أو" : "or"}
-          </span>
-          <div className="h-px flex-1 bg-brand-border/70" />
-        </div>
+          <div className="my-5 flex items-center gap-3">
+            <div className="h-px flex-1 bg-brand-border/70" />
+            <span className="text-xs font-medium uppercase tracking-[0.16em] text-brand-muted">
+              {isRTL ? "أو" : "or"}
+            </span>
+            <div className="h-px flex-1 bg-brand-border/70" />
+          </div>
 
-        <div className="flex w-full flex-col gap-2.5">
-          <Button asChild variant="primary" size="lg" className="w-full">
-            <Link href={`${marketPrefix}/${locale}/login`} onClick={onClose}>
-              <span className="inline-flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                {dictionary.login}
-              </span>
-            </Link>
-          </Button>
-          <Button asChild variant="outline" size="lg" className="w-full">
-            <Link href={`${marketPrefix}/${locale}/register`} onClick={onClose}>
-              {dictionary.register}
-            </Link>
-          </Button>
+          <div className="flex w-full flex-col gap-2.5">
+            <Button asChild variant="primary" size="lg" className="w-full">
+              <Link href={`${marketPrefix}/${locale}/login`} onClick={onClose}>
+                <span className="inline-flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  {dictionary.login}
+                </span>
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="w-full">
+              <Link href={`${marketPrefix}/${locale}/register`} onClick={onClose}>
+                {dictionary.register}
+              </Link>
+            </Button>
+          </div>
         </div>
       </section>
     </div>
