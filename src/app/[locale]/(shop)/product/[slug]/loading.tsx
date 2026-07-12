@@ -40,7 +40,7 @@ function RelatedProductsLoading() {
 export default function ProductLoading() {
   return (
     <div className="page-flush bg-transparent text-brand-primary">
-      <div className="mx-auto w-full max-w-[80rem]">
+      <div className="mx-auto w-full max-w-[88rem]">
       <div className="w-full px-4 pb-3 pt-4 md:pb-4 md:pt-6">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">

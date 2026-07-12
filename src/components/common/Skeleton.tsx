@@ -6,14 +6,20 @@ export function Skeleton({ className, ...props }: SkeletonProps) {
   return <div className={cn("skeleton-shimmer rounded-lg", className)} {...props} />;
 }
 
-export function ProductCardSkeleton({ placeholderLogo: _placeholderLogo }: { placeholderLogo?: string }) {
+export function ProductCardSkeleton({
+  placeholderLogo: _placeholderLogo,
+  imageAspectClassName = "aspect-square",
+}: {
+  placeholderLogo?: string;
+  imageAspectClassName?: string;
+}) {
   void _placeholderLogo;
 
   return (
     <article className="flex h-full flex-col">
-      <div className="flex h-full flex-col overflow-hidden rounded-lg border border-brand-border/70 bg-transparent">
+      <div className="flex h-full flex-col overflow-hidden border-r border-b border-brand-border/70 bg-white">
         <div className="relative">
-          <div className="relative aspect-square overflow-hidden bg-transparent">
+          <div className={cn("relative overflow-hidden bg-transparent", imageAspectClassName)}>
             <Skeleton className="absolute inset-0 rounded-none" />
           </div>
           <div className="absolute left-3 top-3 flex max-w-[60%] flex-col gap-1">
@@ -26,15 +32,17 @@ export function ProductCardSkeleton({ placeholderLogo: _placeholderLogo }: { pla
           <Skeleton className="absolute inset-x-3 bottom-3 hidden h-9 rounded-md sm:block" />
         </div>
 
-        <div className="relative flex min-h-[68px] flex-1 items-center justify-center overflow-hidden px-2 py-1.5 text-center sm:min-h-[82px] sm:px-3 sm:py-2">
-          <div className="flex w-full flex-col items-center">
-            <div className="mb-1 flex justify-center gap-1">
+        <div className="relative flex min-h-[68px] flex-1 items-center justify-center overflow-hidden border-t border-brand-border/70 px-3 py-3 text-center sm:min-h-[82px] sm:px-4 sm:py-4">
+          <div className="flex w-full flex-col items-center gap-2">
+            <div className="flex justify-center gap-1">
               <Skeleton className="h-4 w-12 rounded-full" />
               <Skeleton className="h-4 w-10 rounded-full" />
             </div>
-            <Skeleton className="h-3.5 w-3/4" />
-            <Skeleton className="mt-1 h-3.5 w-1/2" />
-            <Skeleton className="mt-1.5 h-4 w-20" />
+            <div className="w-full border border-brand-border/60 bg-white px-3 py-3">
+              <Skeleton className="mx-auto h-3.5 w-3/4" />
+              <Skeleton className="mx-auto mt-2 h-3.5 w-1/2" />
+              <Skeleton className="mx-auto mt-2 h-4 w-20" />
+            </div>
           </div>
         </div>
       </div>
@@ -46,11 +54,13 @@ export function ProductGridSkeleton({
   count = 8,
   placeholderLogo,
   columns = 4,
+  imageAspectClassName = "aspect-square",
   className,
 }: {
   count?: number;
   placeholderLogo?: string;
   columns?: 2 | 3 | 4 | 5 | 6;
+  imageAspectClassName?: string;
   className?: string;
 }) {
   const gridCols = {
@@ -64,7 +74,7 @@ export function ProductGridSkeleton({
   return (
     <div className={cn("grid gap-x-2 gap-y-3 sm:gap-x-3 sm:gap-y-4", gridCols[columns], className)}>
       {Array.from({ length: count }).map((_, i) => (
-        <ProductCardSkeleton key={i} placeholderLogo={placeholderLogo} />
+        <ProductCardSkeleton key={i} placeholderLogo={placeholderLogo} imageAspectClassName={imageAspectClassName} />
       ))}
     </div>
   );

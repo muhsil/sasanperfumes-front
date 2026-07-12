@@ -38,6 +38,7 @@ interface ProductSectionProps {
   className?: string;
   isLoading?: boolean;
   fullView?: boolean;
+  hideSubtitleOnMobile?: boolean;
   bundleProductSlugs?: string[];
   englishProductSlugs?: Record<number, string>;
 }
@@ -64,6 +65,7 @@ export function ProductSection({
   className = "",
   isLoading = false,
   fullView = false,
+  hideSubtitleOnMobile = false,
   bundleProductSlugs = [],
   englishProductSlugs = {},
 }: ProductSectionProps) {
@@ -125,7 +127,7 @@ export function ProductSection({
               {settings.section_title}
             </h2>
             {settings.section_subtitle && (
-              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-brand-muted">
+              <p className={`mt-2 max-w-2xl text-sm leading-relaxed text-brand-muted ${hideSubtitleOnMobile ? "hidden md:block" : ""}`}>
                 {settings.section_subtitle}
               </p>
             )}

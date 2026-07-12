@@ -307,9 +307,7 @@ export function CategoriesDrawer({
             </button>
           </div>
         ) : (
-          <div className="border-b border-gray-200 px-4 py-3 text-sm font-semibold text-black">
-            {dictionary.common.categories || "Categories"}
-          </div>
+          <div className="border-b border-gray-200" />
         )}
 
         <Box sx={{ flex: 1, overflow: "auto" }}>

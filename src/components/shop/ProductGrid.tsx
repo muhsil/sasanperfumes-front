@@ -20,7 +20,7 @@ export function ProductGrid({
   columns = 4,
 }: ProductGridProps) {
   if (isLoading) {
-    return <ProductGridSkeleton count={columns * 2} />;
+    return <ProductGridSkeleton count={columns * 2} imageAspectClassName="aspect-[2/3]" />;
   }
 
   if (products.length === 0) {

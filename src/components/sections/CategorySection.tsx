@@ -43,7 +43,7 @@ interface CategorySectionProps {
 function CategoryCardSkeleton() {
   return (
     <div className="flex flex-col">
-      <Skeleton className="aspect-[5/4] w-full rounded-lg" />
+      <Skeleton className="aspect-square w-full rounded-none" />
       <div className="mt-3 space-y-2 p-1">
         <Skeleton className="h-4 w-3/4" />
       </div>
@@ -124,8 +124,8 @@ export function CategorySection({
     ? "flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/10 text-brand-ivory shadow-[0_8px_20px_rgba(0,0,0,0.16)] transition-colors hover:border-white/45 hover:bg-white hover:text-brand-primary md:h-10 md:w-10"
     : "flex h-9 w-9 items-center justify-center rounded-full border border-brand-border/70 bg-brand-ivory text-brand-primary shadow-[0_8px_20px_rgba(20,15,10,0.1)] transition-colors hover:border-brand-primary/45 hover:bg-brand-primary hover:text-white md:h-10 md:w-10";
   const cardClassName = isDark
-    ? "relative aspect-[5/4] overflow-hidden rounded-lg border border-white/10 bg-white/10 shadow-[0_16px_34px_rgba(0,0,0,0.16)]"
-    : "relative aspect-[5/4] overflow-hidden rounded-lg border border-brand-border/70 bg-brand-ivory shadow-[0_16px_34px_rgba(20,15,10,0.08)]";
+    ? "relative aspect-square overflow-hidden rounded-none border border-white/10 bg-white/10 shadow-[0_16px_34px_rgba(0,0,0,0.16)]"
+    : "relative aspect-square overflow-hidden rounded-none border border-brand-border/70 bg-brand-ivory shadow-[0_16px_34px_rgba(20,15,10,0.08)]";
   const nameClassName = isDark ? "text-brand-ivory" : "text-brand-primary";
 
   const getVisibilityClass = () => {

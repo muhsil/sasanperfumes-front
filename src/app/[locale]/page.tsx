@@ -325,6 +325,7 @@ async function BestsellerProductsSection({ locale, isRTL, dictionary, homeSettin
       isRTL={isRTL}
       viewAllText={dictionary.common.viewAll}
       fullView
+      hideSubtitleOnMobile
       bundleProductSlugs={bundleProductSlugs}
       englishProductSlugs={bestsellerEnglishSlugs}
     />

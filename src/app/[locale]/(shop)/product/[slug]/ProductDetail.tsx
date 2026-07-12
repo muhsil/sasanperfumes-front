@@ -1612,7 +1612,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
 
   return (
     <div className="page-flush bg-transparent pb-24 text-brand-primary md:pb-0">
-      <div className="mx-auto w-full max-w-[80rem]">
+      <div className="mx-auto w-full max-w-[88rem]">
         <div className="w-full px-4 pb-3 pt-4 md:pb-4 md:pt-6">
           <div className="flex items-center justify-between gap-3">
             <Breadcrumbs items={breadcrumbItems} locale={locale} contained={false} skipJsonLd />

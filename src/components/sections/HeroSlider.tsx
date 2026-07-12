@@ -39,10 +39,6 @@ function HeroMedia({
 }: HeroMediaProps) {
   const [isBroken, setIsBroken] = useState(false);
 
-  useEffect(() => {
-    setIsBroken(false);
-  }, [desktopSrc, mobileSrc]);
-
   if (isBroken) return null;
   const hasDistinctMobileSrc = Boolean(mobileSrc && mobileSrc !== desktopSrc);
   const loading = priority ? "eager" : "lazy";
@@ -185,6 +181,7 @@ function SlideContent({ slide, index, locale }: { slide: HeroSliderSettings["sli
         </>
       ) : slide.image?.url ? (
         <HeroMedia
+          key={`${slide.image.url}-${slide.mobile_image?.url || ""}`}
           desktopSrc={slide.image.url}
           desktopAlt={slide.image.alt || `Slide ${index + 1}`}
           mobileSrc={slide.mobile_image?.url}
@@ -375,7 +372,7 @@ export function HeroSlider({ settings }: HeroSliderProps) {
           width: 30px;
           height: 30px;
           background: rgba(251, 246, 239, 0.95);
-          border-radius: 50%;
+          border-radius: 0;
           color: #1a1714;
           box-shadow: 0 7px 18px rgba(0, 0, 0, 0.2);
           transition: all 0.25s ease;

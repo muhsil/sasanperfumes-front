@@ -108,6 +108,9 @@ export function WCProductCard({
 
   const isOutOfStock = !product.is_in_stock;
   const mainImage = product.images[0];
+  const hoverImage = product.images.find(
+    (image, index) => index > 0 && image.src && image.src !== mainImage?.src
+  ) ?? null;
   const rating = Number(product.average_rating || 0);
   const reviewCount = Number(product.review_count || 0);
 
@@ -202,18 +205,36 @@ export function WCProductCard({
             >
               <div className="relative aspect-square overflow-hidden bg-[#fbf8f4]">
                 {mainImage && !imageError ? (
-                  <Image
-                    src={mainImage.src}
-                    alt={mainImage.alt || product.name}
-                    fill
-                    quality={60}
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
-                    loading="lazy"
-                    placeholder="blur"
-                    blurDataURL={BLUR_DATA_URL}
-                    onError={() => setImageError(true)}
-                  />
+                  <>
+                    <Image
+                      src={mainImage.src}
+                      alt={mainImage.alt || product.name}
+                      fill
+                      quality={60}
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                      className={cn(
+                        "object-contain p-3 transition-all duration-700 ease-out",
+                        hoverImage && "group-hover:opacity-0 group-hover:scale-[1.04]"
+                      )}
+                      loading="lazy"
+                      placeholder="blur"
+                      blurDataURL={BLUR_DATA_URL}
+                      onError={() => setImageError(true)}
+                    />
+                    {hoverImage && (
+                      <Image
+                        src={hoverImage.src}
+                        alt={hoverImage.alt || product.name}
+                        fill
+                        quality={60}
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                        className="pointer-events-none absolute inset-0 object-contain p-3 opacity-0 transition-all duration-700 ease-out group-hover:opacity-100 group-hover:scale-[1.04]"
+                        loading="lazy"
+                        placeholder="blur"
+                        blurDataURL={BLUR_DATA_URL}
+                      />
+                    )}
+                  </>
                 ) : (
                   <div className="h-full bg-brand-beige" aria-hidden="true" />
                 )}

@@ -59,6 +59,9 @@ export function ProductCard({ product, locale, className, wcProduct }: ProductCa
   const hasVariations = Boolean(product.variations?.nodes.length) || variationAttributes.length > 0;
 
   const saleEnd = product.sale_end ?? wcProduct?.sale_end ?? null;
+  const hoverImage = product.galleryImages.nodes.find(
+    (image) => image.sourceUrl && image.sourceUrl !== product.image?.sourceUrl
+  ) ?? null;
 
   const comparisonProduct = {
     id: product.databaseId,
@@ -125,21 +128,37 @@ export function ProductCard({ product, locale, className, wcProduct }: ProductCa
   };
   return (
     <article className={cn("group flex h-full flex-col", className)}>
-      <div className="flex h-full flex-col overflow-hidden border-r border-b border-[#e7ded7] bg-transparent shadow-[0_4px_20px_rgba(74,22,51,0.06)]">
+      <div className="flex h-full flex-col overflow-hidden border-r border-b border-[#e7ded7] bg-white shadow-[0_4px_20px_rgba(74,22,51,0.06)]">
         {/* Image */}
         <div className="relative">
           <Link href={productHref} className="block" aria-label={productName}>
-            <div className="relative aspect-[4/5] overflow-hidden bg-[#F8F5F0]">
+            <div className="relative aspect-[2/3] overflow-hidden bg-[#F8F5F0]">
               {product.image ? (
-                <Image
-                  src={product.image.sourceUrl}
-                  alt={product.image.altText || product.name}
-                  fill
-                  quality={60}
-                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                  className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                  loading="lazy"
-                />
+                <>
+                  <Image
+                    src={product.image.sourceUrl}
+                    alt={product.image.altText || product.name}
+                    fill
+                    quality={60}
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    className={cn(
+                      "object-contain p-4 transition-all duration-700 ease-out",
+                      hoverImage && "group-hover:opacity-0 group-hover:scale-105"
+                    )}
+                    loading="lazy"
+                  />
+                  {hoverImage && (
+                    <Image
+                      src={hoverImage.sourceUrl}
+                      alt={hoverImage.altText || product.name}
+                      fill
+                      quality={60}
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      className="pointer-events-none absolute inset-0 object-contain p-4 opacity-0 transition-all duration-700 ease-out group-hover:opacity-100 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                  )}
+                </>
               ) : (
                 <div className="flex h-full items-center justify-center bg-brand-beige">
                   <span className="!text-xs font-medium uppercase tracking-[0.16em] text-brand-primary/40">
@@ -233,50 +252,52 @@ export function ProductCard({ product, locale, className, wcProduct }: ProductCa
         </div>
 
         {/* Info */}
-        <div className="relative flex min-h-20 flex-1 items-center justify-center overflow-hidden p-2 text-center">
+        <div className="relative flex min-h-20 flex-1 items-center justify-center overflow-hidden border-t border-[#e7ded7] px-3 py-3 text-center">
           <div className="flex w-full flex-col items-center">
-          {/* Variation terms */}
-          <div className="w-full mb-0">
-            {hasVariations && visibleVariationTerms.length > 0 && (
-              <div className="flex flex-wrap justify-center gap-1">
-                {visibleVariationTerms.map((term) => (
-                  <span key={term} className="max-w-20 truncate rounded-sm bg-brand-beige px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-brand-primary/60">
-                    {term}
-                  </span>
-                ))}
-                {extraVariationCount > 0 && (
-                  <span className="rounded-sm bg-brand-primary px-1.5 py-0.5 text-[9px] font-semibold text-white">
-                    +{extraVariationCount}
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-
-          <Link href={productHref} className="block w-full">
-            <h3 className="line-clamp-2 text-[12px] font-bold leading-tight text-brand-primary-dark">
-              {productName}
-            </h3>
-          </Link>
-
-          {product.onSale && saleEnd && (
-            <div className="mt-1">
-              <CountdownTimer endDate={saleEnd} locale={locale} compact />
-            </div>
-          )}
-
-          <div className="mt-0.5 w-full">
-            <div className="flex flex-wrap items-center justify-center gap-1">
-              {product.onSale && product.salePrice ? (
-                <>
-                  <FormattedPrice price={product.salePrice} className="text-xs font-bold text-brand-primary" iconSize="xs" />
-                  <FormattedPrice price={product.regularPrice} className="text-[11px] font-medium text-brand-primary/35" iconSize="xs" strikethrough />
-                </>
-              ) : (
-                <FormattedPrice price={product.price} className="text-xs font-bold text-brand-primary" iconSize="xs" />
+            {/* Variation terms */}
+            <div className="mb-2 w-full">
+              {hasVariations && visibleVariationTerms.length > 0 && (
+                <div className="flex flex-wrap justify-center gap-1">
+                  {visibleVariationTerms.map((term) => (
+                    <span key={term} className="max-w-20 truncate rounded-sm bg-brand-beige px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-brand-primary/60">
+                      {term}
+                    </span>
+                  ))}
+                  {extraVariationCount > 0 && (
+                    <span className="rounded-sm bg-brand-primary px-1.5 py-0.5 text-[9px] font-semibold text-white">
+                      +{extraVariationCount}
+                    </span>
+                  )}
+                </div>
               )}
             </div>
-          </div>
+
+            <div className="flex w-full flex-col items-center border border-brand-border/60 bg-white px-3 py-3 text-center">
+              <Link href={productHref} className="block w-full">
+                <h3 className="line-clamp-2 text-[12px] font-bold leading-tight text-brand-primary-dark">
+                  {productName}
+                </h3>
+              </Link>
+
+              {product.onSale && saleEnd && (
+                <div className="mt-1">
+                  <CountdownTimer endDate={saleEnd} locale={locale} compact />
+                </div>
+              )}
+
+              <div className="mt-1 w-full">
+                <div className="flex flex-wrap items-center justify-center gap-1">
+                  {product.onSale && product.salePrice ? (
+                    <>
+                      <FormattedPrice price={product.salePrice} className="text-xs font-bold text-brand-primary" iconSize="xs" />
+                      <FormattedPrice price={product.regularPrice} className="text-[11px] font-medium text-brand-primary/35" iconSize="xs" strikethrough />
+                    </>
+                  ) : (
+                    <FormattedPrice price={product.price} className="text-xs font-bold text-brand-primary" iconSize="xs" />
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Add to Cart button hidden on hover */}
