@@ -29,7 +29,7 @@ interface CollectionsSectionProps {
 function CollectionCardSkeleton() {
   return (
     <div className="flex flex-col">
-      <Skeleton className="aspect-[3/4] w-full" />
+      <Skeleton className="aspect-square w-full md:aspect-[2/3]" />
     </div>
   );
 }
@@ -113,7 +113,7 @@ export function CollectionsSection({
             target={collection.link?.target || "_self"}
             className="group relative flex flex-col overflow-hidden"
           >
-            <div className="relative min-h-[52svh] overflow-hidden rounded-lg bg-brand-beige md:min-h-[50svh] lg:min-h-[54svh]">
+            <div className="relative aspect-square overflow-hidden rounded-lg bg-brand-beige md:aspect-auto md:min-h-[50svh] lg:min-h-[54svh]">
               {collection.image?.url ? (
                 <Image
                   src={collection.image.url}
@@ -137,7 +137,7 @@ export function CollectionsSection({
                 </h3>
                 <div className="translate-y-0 transition-transform duration-700 ease-out group-hover:translate-y-0">
                   {collection.description && (
-                    <p className="line-clamp-3 max-w-md text-sm leading-relaxed text-white/90 opacity-100 transition-all duration-700 ease-out md:translate-y-2 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100 md:text-base">
+                    <p className="hidden max-w-md text-sm leading-relaxed text-white/90 md:block md:text-base">
                       {decodeHtmlEntities(collection.description)}
                     </p>
                   )}

@@ -55,7 +55,7 @@ export function CategorySectionSkeleton({ count = 6, variant = "light" }: { coun
   const isDark = variant === "dark";
 
   return (
-    <section className={isDark ? "bg-brand-primary py-8 md:py-9 lg:py-10" : "bg-transparent pb-0 pt-10 md:pt-12 lg:pt-14"}>
+    <section className={isDark ? "bg-brand-primary py-8 md:py-9 lg:py-10" : "bg-[#fff4f0] pb-0 pt-10 md:pt-12 lg:pt-14"}>
       <div className="mb-8 section-shell md:mb-10">
         <SectionHeaderSkeleton />
       </div>
@@ -117,7 +117,7 @@ export function CategorySection({
   const isDark = variant === "dark";
   const sectionClassName = isDark
     ? "bg-brand-primary py-8 text-brand-ivory md:py-9 lg:py-10"
-    : "bg-transparent pb-0 pt-10 md:pt-12 lg:pt-14";
+    : "bg-[#fff4f0] pb-0 pt-10 md:pt-12 lg:pt-14";
   const titleClassName = isDark ? "text-brand-ivory" : "text-brand-primary";
   const subtitleClassName = isDark ? "text-brand-ivory/68" : "text-brand-muted";
   const arrowClassName = isDark
