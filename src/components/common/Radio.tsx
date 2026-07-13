@@ -2,13 +2,13 @@ import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
 
 export interface RadioProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> {
-  label?: string;
-  description?: string;
+  label?: React.ReactNode;
+  description?: React.ReactNode;
 }
 
 const Radio = forwardRef<HTMLInputElement, RadioProps>(
   ({ className, label, description, id, checked, ...props }, ref) => {
-    const inputId = id || label?.toLowerCase().replace(/\s+/g, "-");
+    const inputId = id || (typeof label === "string" ? label.toLowerCase().replace(/\s+/g, "-") : undefined);
 
     return (
       <label

@@ -3,6 +3,8 @@
 import { useState, useCallback } from "react";
 import { Plus, Save, HelpCircle } from "lucide-react";
 import { BundleItem } from "../bundle-item";
+import { Checkbox } from "@/components/common/Checkbox";
+import { Radio } from "@/components/common/Radio";
 import { 
   BUNDLE_TYPES, 
   SHIPPING_FEE_OPTIONS,
@@ -169,21 +171,14 @@ export function BundleManager({
             </select>
           </div>
 
-          <div className="flex items-center gap-3 rounded-lg border border-brand-primary bg-brand-beige p-4">
-            <input
-              type="checkbox"
-              id="enableBundle"
-              checked={config.isEnabled}
-              onChange={(e) => updateConfig("isEnabled", e.target.checked)}
-              className="h-5 w-5 rounded border-gray-300 text-brand-gold focus:ring-brand-primary"
-            />
-            <div>
-              <label htmlFor="enableBundle" className="font-medium text-gray-900">
-                {t.enableBundle}
-              </label>
-              <p className="text-sm text-gray-600">{t.enableBundleDesc}</p>
-            </div>
-          </div>
+          <Checkbox
+            id="enableBundle"
+            checked={config.isEnabled}
+            onChange={(e) => updateConfig("isEnabled", e.target.checked)}
+            label={t.enableBundle}
+            description={t.enableBundleDesc}
+            className="rounded-lg border border-brand-primary bg-brand-beige p-4"
+          />
         </div>
       </div>
 
@@ -198,31 +193,21 @@ export function BundleManager({
             </div>
             <div className="space-y-3">
               {PRICING_MODE_OPTIONS.map((option) => (
-                <label
+                <Radio
                   key={option.value}
-                  className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors ${
+                  id={`pricingMode-${option.value}`}
+                  name="pricingMode"
+                  value={option.value}
+                  checked={config.pricing.mode === option.value}
+                  onChange={(e) => updatePricing("mode", e.target.value as PricingMode)}
+                  label={isRTL ? option.labelAr : option.label}
+                  description={isRTL ? option.descriptionAr : option.description}
+                  className={`rounded-lg border p-4 transition-colors ${
                     config.pricing.mode === option.value
                       ? "border-brand-gold bg-brand-beige"
                       : "border-gray-200 hover:border-gray-300"
                   }`}
-                >
-                  <input
-                    type="radio"
-                    name="pricingMode"
-                    value={option.value}
-                    checked={config.pricing.mode === option.value}
-                    onChange={(e) => updatePricing("mode", e.target.value as PricingMode)}
-                    className="mt-1 h-4 w-4 border-gray-300 text-brand-gold focus:ring-brand-primary"
-                  />
-                  <div className="flex-1">
-                    <span className="font-medium text-gray-900">
-                      {isRTL ? option.labelAr : option.label}
-                    </span>
-                    <p className="mt-1 text-sm text-gray-500">
-                      {isRTL ? option.descriptionAr : option.description}
-                    </p>
-                  </div>
-                </label>
+                />
               ))}
             </div>
           </div>
@@ -310,21 +295,14 @@ export function BundleManager({
             </>
           )}
 
-          <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
-            <input
-              type="checkbox"
-              id="showProductPrices"
-              checked={config.pricing.showProductPrices}
-              onChange={(e) => updatePricing("showProductPrices", e.target.checked)}
-              className="h-5 w-5 rounded border-gray-300 text-brand-gold focus:ring-brand-primary"
-            />
-            <div>
-              <label htmlFor="showProductPrices" className="font-medium text-gray-900">
-                {t.showProductPrices}
-              </label>
-              <p className="text-sm text-gray-600">{t.showProductPricesDesc}</p>
-            </div>
-          </div>
+          <Checkbox
+            id="showProductPrices"
+            checked={config.pricing.showProductPrices}
+            onChange={(e) => updatePricing("showProductPrices", e.target.checked)}
+            label={t.showProductPrices}
+            description={t.showProductPricesDesc}
+            className="rounded-lg border border-gray-200 bg-gray-50 p-4"
+          />
         </div>
       </div>
 

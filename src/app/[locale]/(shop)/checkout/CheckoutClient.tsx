@@ -2507,7 +2507,7 @@ export default function CheckoutClient() {
                               ))}
                             </div>
 
-              <div className="hidden py-4 text-lg font-bold text-brand-primary lg:flex lg:justify-between">
+              <div className="flex justify-between py-4 text-base font-bold text-brand-primary lg:text-lg">
                 <span>{isRTL ? "الإجمالي" : "Total"}</span>
                 <FormattedPrice
                   price={checkoutTotal}

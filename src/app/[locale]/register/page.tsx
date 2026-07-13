@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/common/Input";
 import { Button } from "@/components/common/Button";
+import { Checkbox } from "@/components/common/Checkbox";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { PhoneInput } from "@/components/common/PhoneInput";
 import { register } from "@/lib/api/auth";
@@ -322,39 +323,33 @@ export default function RegisterPage({ params }: RegisterPageProps) {
           className="rounded-md bg-white"
         />
 
-        <div className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
-          <input
-            type="checkbox"
-            id="newsletter"
-            checked={newsletter}
-            onChange={(e) => setNewsletter(e.target.checked)}
-            className="h-4 w-4 rounded border-brand-border accent-brand-primary"
-          />
-          <label htmlFor="newsletter" className="text-sm text-brand-primary">
-            {texts.newsletterLabel}
-          </label>
-        </div>
+        <Checkbox
+          id="newsletter"
+          checked={newsletter}
+          onChange={(e) => setNewsletter(e.target.checked)}
+          label={texts.newsletterLabel}
+          className={`items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
+        />
 
-        <div className={`flex items-start gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
-          <input
-            type="checkbox"
-            id="terms"
-            checked={termsAccepted}
-            onChange={(e) => {
-              setTermsAccepted(e.target.checked);
-              if (errors.terms) {
-                setErrors((prev) => ({ ...prev, terms: undefined }));
-              }
-            }}
-            className="mt-0.5 h-4 w-4 rounded border-brand-border accent-brand-primary"
-          />
-          <label htmlFor="terms" className="text-sm leading-6 text-brand-primary">
-            {texts.termsLabel}{" "}
-            <Link href={`${marketPrefix}/${locale}/terms-and-conditions`} className="font-medium text-brand-primary hover:underline">
-              {texts.termsLink}
-            </Link>
-          </label>
-        </div>
+        <Checkbox
+          id="terms"
+          checked={termsAccepted}
+          onChange={(e) => {
+            setTermsAccepted(e.target.checked);
+            if (errors.terms) {
+              setErrors((prev) => ({ ...prev, terms: undefined }));
+            }
+          }}
+          label={
+            <span className="text-sm leading-6 text-brand-primary">
+              {texts.termsLabel}{" "}
+              <Link href={`${marketPrefix}/${locale}/terms-and-conditions`} className="font-medium text-brand-primary hover:underline">
+                {texts.termsLink}
+              </Link>
+            </span>
+          }
+          className={`items-start gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
+        />
         {errors.terms && <p className="text-sm text-red-600">{errors.terms}</p>}
 
         <Button

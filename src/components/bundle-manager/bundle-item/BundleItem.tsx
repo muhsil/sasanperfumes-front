@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronDown, ChevronUp, Copy, Trash2, HelpCircle } from "lucide-react";
+import { Checkbox } from "@/components/common/Checkbox";
 import { 
   SORT_OPTIONS, 
   SORT_ORDER_OPTIONS, 
@@ -210,16 +211,13 @@ export function BundleItem({
 
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
+                <Checkbox
                   id={`default-${item.id}`}
                   checked={item.display.isDefault}
                   onChange={(e) => updateDisplay("isDefault", e.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  label={t.default}
+                  className="items-center gap-2"
                 />
-                <label htmlFor={`default-${item.id}`} className="text-sm font-medium text-gray-700">
-                  {t.default}
-                </label>
                 <HelpCircle className="h-4 w-4 text-gray-400" />
               </div>
               <select
@@ -294,42 +292,33 @@ export function BundleItem({
 
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
+                <Checkbox
                   id={`optional-${item.id}`}
                   checked={item.display.isOptional}
                   onChange={(e) => updateDisplay("isOptional", e.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  label={t.optionalItem}
+                  className="items-center gap-2"
                 />
-                <label htmlFor={`optional-${item.id}`} className="text-sm font-medium text-gray-700">
-                  {t.optionalItem}
-                </label>
                 <HelpCircle className="h-4 w-4 text-gray-400" />
               </div>
               <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
+                <Checkbox
                   id={`free-${item.id}`}
                   checked={item.display.isFree}
                   onChange={(e) => updateDisplay("isFree", e.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                  label={t.freeItem}
+                  className="items-center gap-2"
                 />
-                <label htmlFor={`free-${item.id}`} className="text-sm font-medium text-gray-700">
-                  {t.freeItem}
-                </label>
                 <HelpCircle className="h-4 w-4 text-gray-400" />
               </div>
               <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
+                <Checkbox
                   id={`showPrice-${item.id}`}
                   checked={item.display.showPrice}
                   onChange={(e) => updateDisplay("showPrice", e.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  label={t.showPrice}
+                  className="items-center gap-2"
                 />
-                <label htmlFor={`showPrice-${item.id}`} className="text-sm font-medium text-gray-700">
-                  {t.showPrice}
-                </label>
                 <HelpCircle className="h-4 w-4 text-gray-400" />
               </div>
             </div>

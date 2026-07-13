@@ -3,13 +3,13 @@ import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> {
-  label?: string;
-  description?: string;
+  label?: React.ReactNode;
+  description?: React.ReactNode;
 }
 
 const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
   ({ className, label, description, id, checked, ...props }, ref) => {
-    const inputId = id || label?.toLowerCase().replace(/\s+/g, "-");
+    const inputId = id || (typeof label === "string" ? label.toLowerCase().replace(/\s+/g, "-") : undefined);
 
     return (
       <label
@@ -31,7 +31,7 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
           />
           <div
             className={cn(
-              "flex h-5 w-5 items-center justify-center rounded-sm border transition-all duration-200",
+              "flex h-5 w-5 items-center justify-center rounded-full border transition-all duration-200",
               "border-brand-border bg-brand-ivory",
               "peer-checked:bg-brand-primary peer-checked:border-brand-primary",
               "peer-focus-visible:ring-2 peer-focus-visible:ring-brand-primary/30 peer-focus-visible:ring-offset-2",

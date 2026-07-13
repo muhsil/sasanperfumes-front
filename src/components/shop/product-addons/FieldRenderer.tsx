@@ -5,6 +5,8 @@ import type {
   WCPAField,
   WCPAFieldOption,
 } from "@/types/wcpa";
+import { Checkbox } from "@/components/common/Checkbox";
+import { Radio } from "@/components/common/Radio";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import type { FieldRendererProps } from "./types";
 
@@ -142,25 +144,23 @@ export function FieldRenderer({ field, value, error, onChange, locale, t }: Fiel
     case "checkbox":
       return (
         <div>
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              id={field.id}
-              name={field.name}
-              checked={Boolean(value)}
-              onChange={(e) => onChange(e.target.checked)}
-              className="h-5 w-5 rounded border-gray-300 text-brand-gold focus:ring-brand-primary"
-            />
-            <span className="text-sm text-gray-700">
-              {field.label}
-              {field.required && <span className="text-red-500 ml-1">*</span>}
-              {field.price && field.price > 0 && (
-                <span className="ml-2 text-xs text-brand-gold">
-                  (+<FormattedPrice price={field.price} iconSize="xs" />)
-                </span>
-              )}
-            </span>
-          </label>
+          <Checkbox
+            id={field.id}
+            name={field.name}
+            checked={Boolean(value)}
+            onChange={(e) => onChange(e.target.checked)}
+            label={
+              <>
+                {field.label}
+                {field.required && <span className="ml-1 text-red-500">*</span>}
+                {field.price && field.price > 0 && (
+                  <span className="ml-2 text-xs text-brand-gold">
+                    (+<FormattedPrice price={field.price} iconSize="xs" />)
+                  </span>
+                )}
+              </>
+            }
+          />
           {descriptionElement}
           {errorElement}
         </div>
@@ -175,31 +175,29 @@ export function FieldRenderer({ field, value, error, onChange, locale, t }: Fiel
           {labelElement}
           <div className="space-y-2 mt-2">
             {checkboxGroupField.options?.map((option) => (
-              <label
+              <Checkbox
                 key={option.value}
-                className="flex items-center gap-3 cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedValues.includes(option.value)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      onChange([...selectedValues, option.value]);
-                    } else {
-                      onChange(selectedValues.filter((v) => v !== option.value));
-                    }
-                  }}
-                  className="h-5 w-5 rounded border-gray-300 text-brand-gold focus:ring-brand-primary"
-                />
-                <span className="text-sm text-gray-700">
-                  {option.label}
-                  {option.price && option.price > 0 && (
-                    <span className="ml-2 text-xs text-brand-gold">
-                      (+<FormattedPrice price={option.price} iconSize="xs" />)
-                    </span>
-                  )}
-                </span>
-              </label>
+                id={`${field.id}-${option.value}`}
+                name={field.name || field.id}
+                checked={selectedValues.includes(option.value)}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    onChange([...selectedValues, option.value]);
+                  } else {
+                    onChange(selectedValues.filter((v) => v !== option.value));
+                  }
+                }}
+                label={
+                  <>
+                    {option.label}
+                    {option.price && option.price > 0 && (
+                      <span className="ml-2 text-xs text-brand-gold">
+                        (+<FormattedPrice price={option.price} iconSize="xs" />)
+                      </span>
+                    )}
+                  </>
+                }
+              />
             ))}
           </div>
           {descriptionElement}
@@ -215,27 +213,25 @@ export function FieldRenderer({ field, value, error, onChange, locale, t }: Fiel
           {labelElement}
           <div className="space-y-2 mt-2">
             {radioGroupField.options?.map((option) => (
-              <label
+              <Radio
                 key={option.value}
-                className="flex items-center gap-3 cursor-pointer"
-              >
-                <input
-                  type="radio"
-                  name={field.id}
-                  value={option.value}
-                  checked={value === option.value}
-                  onChange={(e) => onChange(e.target.value)}
-                  className="h-5 w-5 border-gray-300 text-brand-gold focus:ring-brand-primary"
-                />
-                <span className="text-sm text-gray-700">
-                  {option.label}
-                  {option.price && option.price > 0 && (
-                    <span className="ml-2 text-xs text-brand-gold">
-                      (+<FormattedPrice price={option.price} iconSize="xs" />)
-                    </span>
-                  )}
-                </span>
-              </label>
+                id={`${field.id}-${option.value}`}
+                name={field.id}
+                value={option.value}
+                checked={value === option.value}
+                onChange={(e) => onChange(e.target.value)}
+                label={
+                  <>
+                    {option.label}
+                    {option.price && option.price > 0 && (
+                      <span className="ml-2 text-xs text-brand-gold">
+                        (+<FormattedPrice price={option.price} iconSize="xs" />)
+                      </span>
+                    )}
+                  </>
+                }
+                className="items-center"
+              />
             ))}
           </div>
           {descriptionElement}
