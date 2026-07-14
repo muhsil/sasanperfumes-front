@@ -169,10 +169,11 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
   // Fetch products, gift product info (IDs and slugs), and bundle product slugs in parallel
   const [{ products: allProducts }, giftProductInfo, bundleProductSlugs] = await Promise.all([
     getProductsByCategory(slug, {
-      per_page: 50,
+      per_page: 100,
       locale: locale as Locale,
       currency: market.defaultCurrency,
       frontendHost,
+      fetchAllPages: true,
     }),
     getFreeGiftProductInfo(market.defaultCurrency, frontendHost),
     getBundleEnabledProductSlugs(frontendHost),

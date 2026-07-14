@@ -1255,6 +1255,7 @@ export async function getProductsByCategory(
     locale?: Locale;
     currency?: Currency;
     frontendHost?: string;
+    fetchAllPages?: boolean;
   }
 ): Promise<WCProductsResponse> {
   const category = await getCategoryBySlug(
@@ -1288,6 +1289,55 @@ export async function getProductsByCategory(
   }
 
   categoryIdsToTry.push(category.id);
+
+  const mergeProducts = (target: WCProduct[], source: WCProduct[]) => {
+    const seen = new Set(target.map((product) => product.id));
+    for (const product of source) {
+      if (!seen.has(product.id)) {
+        seen.add(product.id);
+        target.push(product);
+      }
+    }
+  };
+
+  if (params?.fetchAllPages) {
+    const pageSize = Math.min(Math.max(params.per_page || 100, 1), 100);
+    const mergedProducts: WCProduct[] = [];
+    let mergedTotal = 0;
+
+    for (const categoryId of categoryIdsToTry) {
+      const firstPage = await getProducts({
+        ...params,
+        category: categoryId.toString(),
+        page: 1,
+        per_page: pageSize,
+      });
+
+      if (firstPage.products.length === 0) {
+        continue;
+      }
+
+      mergeProducts(mergedProducts, firstPage.products);
+      mergedTotal = Math.max(mergedTotal, firstPage.total);
+
+      for (let page = 2; page <= firstPage.totalPages; page += 1) {
+        const pageResult = await getProducts({
+          ...params,
+          category: categoryId.toString(),
+          page,
+          per_page: pageSize,
+        });
+        mergeProducts(mergedProducts, pageResult.products);
+        mergedTotal = Math.max(mergedTotal, pageResult.total);
+      }
+    }
+
+    return {
+      products: mergedProducts,
+      total: mergedProducts.length || mergedTotal,
+      totalPages: 1,
+    };
+  }
 
   let lastResult: WCProductsResponse = { products: [], total: 0, totalPages: 0 };
   for (const categoryId of categoryIdsToTry) {
