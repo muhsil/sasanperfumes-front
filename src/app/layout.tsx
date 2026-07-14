@@ -30,8 +30,8 @@ export async function generateMetadata(): Promise<Metadata> {
     : "intl";
   const titleSuffix = marketCode === "intl"
     ? locale === "ar"
-      ? "عطور الإمارات الفاخرة"
-      : "Premium UAE Fragrances"
+      ? "عطور دبي الفاخرة"
+      : "Premium Dubai Fragrances"
     : marketCode === "qa"
       ? locale === "ar"
         ? "عطور قطر الفاخرة"

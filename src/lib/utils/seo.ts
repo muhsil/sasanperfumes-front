@@ -384,16 +384,16 @@ interface MarketHomeSeoContent {
 const MARKET_HOME_SEO_CONTENT: Record<MarketCode, { en: MarketHomeSeoContent; ar: MarketHomeSeoContent }> = {
   intl: {
     en: {
-      heading: "Shop premium perfumes online in the UAE",
+      heading: "Shop premium perfumes online in Dubai",
       paragraphs: [
-        "Discover Sasan Perfumes' collection of long-lasting perfumes, Arabian oud, musk, amber, hair mists, body fragrances, and perfume gift sets for women and men. Shop online in AED for fragrance delivery across the UAE.",
+        "Discover Sasan Perfumes' collection of long-lasting perfumes, Arabian oud, musk, amber, hair mists, body fragrances, and perfume gift sets for women and men. Shop online in AED for fragrance delivery across Dubai and the UAE.",
         "From everyday signature scents to elegant gifts, our fragrance house brings more than 60 years of perfume heritage to customers in Dubai, Abu Dhabi, Sharjah, and across the Emirates.",
       ],
     },
     ar: {
-      heading: "تسوق العطور الفاخرة أونلاين في الإمارات",
+      heading: "تسوق العطور الفاخرة أونلاين في دبي",
       paragraphs: [
-        "اكتشف مجموعة ساسان للعطور التي تضم عطورًا ثابتة، والعود العربي، والمسك، والعنبر، ومعطرات الشعر والجسم، وأطقم هدايا العطور للنساء والرجال. تسوق أونلاين بالدرهم الإماراتي مع التوصيل داخل الإمارات.",
+        "اكتشف مجموعة ساسان للعطور التي تضم عطورًا ثابتة، والعود العربي، والمسك، والعنبر، ومعطرات الشعر والجسم، وأطقم هدايا العطور للنساء والرجال. تسوق أونلاين بالدرهم الإماراتي مع التوصيل داخل دبي والإمارات.",
         "من العطور اليومية المميزة إلى الهدايا الأنيقة، نقدم خبرة تتجاوز 60 عامًا لعشاق العطور في دبي وأبوظبي والشارقة وجميع أنحاء الإمارات.",
       ],
     },
@@ -451,28 +451,29 @@ const MARKET_HOME_SEO_CONTENT: Record<MarketCode, { en: MarketHomeSeoContent; ar
 const MARKET_SEO_COPY: Record<MarketCode, { en: MarketSeoCopy; ar: MarketSeoCopy }> = {
   intl: {
     en: {
-      titleSuffix: "Premium UAE Fragrances",
+      titleSuffix: "Premium Dubai Fragrances",
       audience: "UAE, GCC, and international shoppers",
       description:
-        "Premium perfumes, oud, hair mist, and gift sets from Sasan Perfumes. Shop in AED with fast delivery across the UAE and international markets. With over 60 years of fragrance heritage, we blend tradition with modern elegance.",
+        "Premium perfumes, oud, hair mist, and gift sets from Sasan Perfumes Dubai. Shop in AED with fast delivery across Dubai, the UAE, and international markets. With over 60 years of fragrance heritage, we blend tradition with modern elegance.",
       descriptionAr:
-        "عطور فاخرة، عود، معطر شعر، وطقم هدايا من Sasan Perfumes. تسوق بالدرهم الإماراتي مع توصيل سريع داخل الإمارات والأسواق الدولية. بخبرة عطرية تتجاوز 60 عامًا، نمزج التراث بالأناقة العصرية.",
+        "عطور فاخرة، عود، معطر شعر، وطقم هدايا من Sasan Perfumes دبي. تسوق بالدرهم الإماراتي مع توصيل سريع داخل دبي والإمارات والأسواق الدولية. بخبرة عطرية تتجاوز 60 عامًا، نمزج التراث بالأناقة العصرية.",
       keywords: [
-        "UAE perfume",
         "Dubai perfume",
-        "UAE fragrance store",
+        "Dubai fragrance store",
+        "Dubai luxury perfume",
+        "UAE perfume",
         "GCC perfume",
         "international perfume",
-        "luxury perfume UAE",
+        "luxury perfume Dubai",
       ],
     },
     ar: {
-      titleSuffix: "عطور الإمارات الفاخرة",
-      audience: "المتسوقون في الإمارات ودول الخليج والأسواق الدولية",
+      titleSuffix: "عطور دبي الفاخرة",
+      audience: "المتسوقون في دبي والإمارات ودول الخليج والأسواق الدولية",
       description:
-        "عطور فاخرة، عود، معطر شعر، وطقم هدايا من Sasan Perfumes. تسوق بالدرهم الإماراتي مع توصيل سريع داخل الإمارات والأسواق الدولية. بخبرة عطرية تتجاوز 60 عامًا، نمزج التراث بالأناقة العصرية.",
+        "عطور فاخرة، عود، معطر شعر، وطقم هدايا من Sasan Perfumes دبي. تسوق بالدرهم الإماراتي مع توصيل سريع داخل دبي والإمارات والأسواق الدولية. بخبرة عطرية تتجاوز 60 عامًا، نمزج التراث بالأناقة العصرية.",
       descriptionAr:
-        "عطور فاخرة، عود، معطر شعر، وطقم هدايا من Sasan Perfumes. تسوق بالدرهم الإماراتي مع توصيل سريع داخل الإمارات والأسواق الدولية. بخبرة عطرية تتجاوز 60 عامًا، نمزج التراث بالأناقة العصرية.",
+        "عطور فاخرة، عود، معطر شعر، وطقم هدايا من Sasan Perfumes دبي. تسوق بالدرهم الإماراتي مع توصيل سريع داخل دبي والإمارات والأسواق الدولية. بخبرة عطرية تتجاوز 60 عامًا، نمزج التراث بالأناقة العصرية.",
       keywords: [
         "عطور الإمارات",
         "عطور دبي",
@@ -618,6 +619,17 @@ export function getMarketSeoTitleSuffix(marketCode: MarketCode, locale: Locale):
 
 export function getMarketSeoAudience(marketCode: MarketCode, locale: Locale): string {
   return getMarketSeoCopy(marketCode, locale).audience;
+}
+
+const MARKET_SEO_LOCATION_COPY: Record<MarketCode, { en: string; ar: string }> = {
+  intl: { en: "Dubai", ar: "دبي" },
+  qa: { en: "Qatar", ar: "قطر" },
+  om: { en: "Oman", ar: "عُمان" },
+  sa: { en: "Saudi Arabia", ar: "السعودية" },
+};
+
+export function getMarketSeoLocation(marketCode: MarketCode, locale: Locale): string {
+  return MARKET_SEO_LOCATION_COPY[marketCode]?.[locale] || MARKET_SEO_LOCATION_COPY.intl[locale];
 }
 
 export function getMarketSeoDescription(marketCode: MarketCode, locale: Locale): string {

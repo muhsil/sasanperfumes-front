@@ -2656,7 +2656,7 @@ function buildStaticPageSeoFallback(slug: string, locale?: Locale): PageSeoData 
   };
 
   const seo = seoMap[canonical] || {
-    title: bi(`${siteConfig.name} | Premium UAE Fragrances`, `${siteConfig.name} | عطور إماراتية فاخرة`),
+    title: bi(`${siteConfig.name} | Premium Dubai Fragrances`, `${siteConfig.name} | عطور دبي الفاخرة`),
     description: bi(siteConfig.description, siteConfig.description),
   };
 

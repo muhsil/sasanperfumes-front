@@ -2,7 +2,7 @@
 import { ProductGridSkeleton } from "@/components/common/Skeleton";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { getDictionary } from "@/i18n";
-import { generateMetadata as generateSeoMetadata, buildMarketSeoKeywords, getMarketSeoAudience } from "@/lib/utils/seo";
+import { generateMetadata as generateSeoMetadata, buildMarketSeoKeywords, getMarketSeoAudience, getMarketSeoLocation } from "@/lib/utils/seo";
 import { getFeaturedProducts, getFreeGiftProductIds, getBundleEnabledProductSlugs } from "@/lib/api/woocommerce";
 import { getPageSeo } from "@/lib/api/wordpress";
 import { getMarketHintFromSearchParams, getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
@@ -21,14 +21,13 @@ interface FeaturedProductsPageProps {
 
 // Default SEO values (fallback when WordPress page doesn't exist)
 const defaultSeo = {
-  title: { en: "Best Sellers | Top Rated Luxury Perfumes & Oud Fragrances", ar: "الأكثر مبيعاً | أفضل العطور الفاخرة والمميزة" },
   description: {
     en: "Shop our best-selling luxury perfumes, Arabian oud & aromatic oils from Sasan Perfumes. Handcrafted in the UAE with fast delivery across our markets.",
     ar: "تسوق أفضل العطور المميزة والأكثر مبيعاً من Sasan Perfumes. عطور فاخرة وعود عربي وزيوت عطرية مصنوعة يدوياً في الإمارات مع توصيل سريع عبر أسواقنا.",
   },
   keywords: {
-    en: ["featured perfumes", "best sellers", "top fragrances", "luxury perfume", "Arabian perfume", "fragrance gifts", "popular Dubai perfume", "best UAE perfume", "top rated oud", "luxury gift sets", "bestselling cologne", "best musk perfume", "best amber perfume", "top Arabian fragrance", "luxury perfume online", "trending perfume", "premium Dubai fragrance", "aromatic bestsellers", "top aromatic perfumes UAE", "most popular aromatic scents", "best aromatic fragrance"],
-    ar: ["عطور مميزة", "الأكثر مبيعاً", "أفضل العطور", "عطور فاخرة", "عطور عربية", "هدايا عطرية", "عطور دبي المميزة", "أفضل عطور الإمارات", "عطور شعبية", "عود فاخر", "مجموعات هدايا", "عطور مسك مميزة", "عطور عنبر فاخرة", "أفضل عطور عربية", "عطور فاخرة أون لاين", "عطور رائجة", "عطور فخمة دبي", "أفضل عطور أروماتيك", "عطور أروماتيك الأكثر مبيعاً", "أشهر روائح أروماتيك", "عطور أروماتيك المميزة"],
+    en: ["featured perfumes", "best sellers", "top fragrances", "viral perfume", "top perfumes", "gen z perfume", "luxury perfume", "Arabian perfume", "fragrance gifts", "popular Dubai perfume", "best UAE perfume", "top rated oud", "luxury gift sets", "bestselling cologne", "best musk perfume", "best amber perfume", "top Arabian fragrance", "luxury perfume online", "trending perfume", "premium Dubai fragrance", "aromatic bestsellers", "top aromatic perfumes UAE", "most popular aromatic scents", "best aromatic fragrance"],
+    ar: ["عطور مميزة", "الأكثر مبيعاً", "أفضل العطور", "عطور فيرال", "عطور ترند", "عطور جيل زد", "عطور فاخرة", "عطور عربية", "هدايا عطرية", "عطور دبي المميزة", "أفضل عطور الإمارات", "عطور شعبية", "عود فاخر", "مجموعات هدايا", "عطور مسك مميزة", "عطور عنبر فاخرة", "أفضل عطور عربية", "عطور فاخرة أون لاين", "عطور رائجة", "عطور فخمة دبي", "أفضل عطور أروماتيك", "عطور أروماتيك الأكثر مبيعاً", "أشهر روائح أروماتيك", "عطور أروماتيك المميزة"],
   },
 };
 
@@ -40,15 +39,18 @@ export async function generateMetadata({
   const isAr = lang === "ar";
 
   const market = await getRequestMarket();
-  const currencyCode = market.defaultCurrency;
+  const marketLocation = getMarketSeoLocation(market.code, lang);
   const marketAudience = getMarketSeoAudience(market.code, lang);
+  const defaultTitle = isAr
+    ? `الأكثر مبيعاً في ${marketLocation} | أفضل العطور الفاخرة والمميزة`
+    : `Best Sellers in ${marketLocation} | Top Rated Luxury Perfumes & Oud Fragrances`;
   const fallbackDescription = isAr
-    ? `تسوق أفضل العطور المميزة والأكثر مبيعاً من Sasan Perfumes. عطور فاخرة وعود عربي وزيوت عطرية مصنوعة يدوياً في الإمارات مع توصيل سريع عبر أسواقنا.`
-    : `Shop our best-selling luxury perfumes, Arabian oud & aromatic oils from Sasan Perfumes. Built for ${marketAudience} with fast delivery across our markets.`;
+    ? `تسوق أفضل العطور المميزة والأكثر مبيعاً من Sasan Perfumes ${marketLocation}. عطور فاخرة وعود عربي وزيوت عطرية مع توصيل سريع عبر أسواقنا.`
+    : `Shop our best-selling luxury perfumes, Arabian oud & aromatic oils from Sasan Perfumes ${marketLocation}. Built for ${marketAudience} with fast delivery across our markets.`;
   const wpSeo = await getPageSeo("featured-products", lang);
   return generateSeoMetadata({
-    title: wpSeo?.title || (isAr ? defaultSeo.title.ar : defaultSeo.title.en),
-    description: wpSeo?.description || fallbackDescription,
+    title: defaultTitle,
+    description: fallbackDescription,
     image: wpSeo?.ogImage || undefined,
     locale: lang,
     pathname: "/featured-products",
@@ -67,6 +69,7 @@ export default async function FeaturedProductsPage({ params, searchParams }: Fea
     getRequestFrontendHost(marketHint),
   ]);
   const pathPrefix = getMarketPathPrefix(market.code);
+  const marketLocation = getMarketSeoLocation(market.code, locale as Locale);
 
   const breadcrumbItems = [
     { name: dictionary.common.shop, href: `${pathPrefix}/${locale}/shop` },
@@ -100,8 +103,8 @@ export default async function FeaturedProductsPage({ params, searchParams }: Fea
         </h1>
         <p className="mt-2 text-sm text-brand-muted md:mt-3 md:text-base">
           {isRTL
-            ? "اكتشف منتجاتنا المميزة"
-            : "Discover our best sellers"}
+            ? `اكتشف أفضل العطور مبيعاً في ${marketLocation}`
+            : `Discover our best sellers in ${marketLocation}`}
         </p>
       </div>
 
