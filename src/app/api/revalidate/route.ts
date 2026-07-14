@@ -180,12 +180,23 @@ export async function POST(request: NextRequest) {
         break;
 
       case "menus": {
-        // Revalidate all menu caches (primary, mobile-header, mobile-bottom, categories-drawer)
+        // Revalidate all menu caches (primary, mobile-header, mobile-bottom, categories-drawer, footer)
         revalidateTag(CACHE_TAGS.menus, revalidateOptions);
         revalidatedTags.push(CACHE_TAGS.menus);
 
         // Also revalidate specific menu tags
-        const menuSlugs = ["primary", "mobile-header", "mobile-bottom", "categories-drawer", "categories-drawer-ar"];
+        const menuSlugs = [
+          "primary",
+          "primary-ar",
+          "mobile-header",
+          "mobile-header-ar",
+          "mobile-bottom",
+          "mobile-bottom-ar",
+          "categories-drawer",
+          "categories-drawer-ar",
+          "footer",
+          "footer-ar",
+        ];
         menuSlugs.forEach((menuSlug) => {
           revalidateTag(`menu-${menuSlug}`, revalidateOptions);
           revalidateTag(`menu-slug-${menuSlug}`, revalidateOptions);

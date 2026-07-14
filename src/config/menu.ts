@@ -74,11 +74,11 @@ function getLiveHeaderMenuKey(item: MenuItemLike): string | null {
   if (title.includes("all over spray") || url.includes("all-over-spray")) {
     return "all-over-spray";
   }
-  if (title.includes("fragrance") || title === "shop" || title === "shop all" || url === "/shop" || url.includes("/shop?") || title.includes("العطور")) {
-    return "fragrance";
-  }
-  if (title === "shop all" || title === "shopall" || title === "all shop" || url.includes("/shop-all") || url.includes("/shopall")) {
+  if (title === "shop all" || title === "shopall" || title === "all shop" || title === "تسوق" || title === "تسوق الكل" || url.includes("/shop-all") || url.includes("/shopall")) {
     return "shop-all";
+  }
+  if (title.includes("fragrance") || title === "shop" || url === "/shop" || url.includes("/shop?") || title.includes("العطور")) {
+    return "fragrance";
   }
   if (title.includes("hair mist") || url.includes("sasan-hair-mist")) {
     return "hair-mist";
@@ -128,6 +128,10 @@ const menuArabicTranslations: Record<string, string> = {
   "shop all": "تسوق الكل",
   "shop": "تسوق",
   "categories": "الفئات",
+  "featured": "مميزة",
+  "best sellers": "الأكثر مبيعًا",
+  "new arrivals": "وصل حديثًا",
+  "collections": "المجموعات",
   "home fragrances": "عطور المنزل",
   "perfume": "العطور",
   "perfumes": "العطور",
@@ -214,20 +218,11 @@ const REMOVED_ROUTE_PREFIXES = [
 
 /**
  * Check if a menu item should have a mega menu
- * Only "Shop All" / "Shop" / live perfume-category headings should have mega menu
+ * Only "Shop All" / "Shop" should open the desktop mega menu.
  */
 function shouldHaveMegaMenu(title: string): boolean {
-  const megaMenuTitles = [
-    "shop all",
-    "shop",
-    "perfume",
-    "fragrance",
-    "perfumes",
-    "العطور",
-    "تسوق",
-    "تسوق الكل",
-  ];
-  return megaMenuTitles.includes(title.toLowerCase().trim());
+  const normalizedTitle = decodeHtmlEntities(title).toLowerCase().trim();
+  return ["shop all", "shop", "تسوق", "تسوق الكل"].includes(normalizedTitle);
 }
 
 export function shouldHaveBrandsMegaMenu(title: string): boolean {

@@ -156,16 +156,6 @@ function normalizeColumns(columns: MegaMenuColumn[], locale: Locale, marketPrefi
     });
 }
 
-function mergeColumns(...groups: MegaMenuColumn[][]): MegaMenuColumn[] {
-  const seen = new Set<string>();
-  return groups.flat().filter((column) => {
-    const key = column.slug || column.url || column.name;
-    if (!key || seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
-
 export function MegaMenu({
   isOpen,
   onClose,
@@ -307,10 +297,11 @@ export function MegaMenu({
     : menuData?.columns?.length
       ? normalizeColumns(menuData.columns, locale, marketPrefix)
       : [];
-  const displayColumns = mergeColumns(
-    backendColumns,
-    wcCategories.length > 0 ? wcCategories : staticColumns
-  );
+  const displayColumns = backendColumns.length > 0
+    ? backendColumns
+    : wcCategories.length > 0
+      ? wcCategories
+      : staticColumns;
 
   if (!isOpen) return null;
 

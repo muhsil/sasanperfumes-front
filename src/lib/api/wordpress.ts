@@ -1503,17 +1503,17 @@ export async function getMenu(location: string, locale?: Locale, frontendHost?: 
 
 // Fetch primary navigation menu
 export async function getPrimaryMenu(locale?: Locale, frontendHost?: string): Promise<WPMenu | null> {
-  return getMenu("primary", locale, frontendHost);
+  return (await getMenuBySlug("primary", locale, frontendHost)) || getMenu("primary", locale, frontendHost);
 }
 
 // Fetch mobile header menu (used for Categories drawer - separate from primary/desktop menu)
 export async function getMobileHeaderMenu(locale?: Locale, frontendHost?: string): Promise<WPMenu | null> {
-  return getMenu("mobile-header", locale, frontendHost);
+  return (await getMenuBySlug("mobile-header", locale, frontendHost)) || getMenu("mobile-header", locale, frontendHost);
 }
 
 // Fetch mobile bottom bar menu (used for bottom navigation icons - separate from other menus)
 export async function getMobileBottomBarMenu(locale?: Locale, frontendHost?: string): Promise<WPMenu | null> {
-  return getMenu("mobile-bottom", locale, frontendHost);
+  return (await getMenuBySlug("mobile-bottom", locale, frontendHost)) || getMenu("mobile-bottom", locale, frontendHost);
 }
 
 // Fetch WordPress menu by slug (uses /menus/v1/menus/{slug} endpoint)
@@ -1548,8 +1548,8 @@ export async function getCategoriesDrawerMenu(locale?: Locale, frontendHost?: st
 }
 
 // Fetch footer menu
-export async function getFooterMenu(locale?: Locale): Promise<WPMenu | null> {
-  return getMenu("footer", locale);
+export async function getFooterMenu(locale?: Locale, frontendHost?: string): Promise<WPMenu | null> {
+  return (await getMenuBySlug("footer", locale, frontendHost)) || getMenu("footer", locale, frontendHost);
 }
 
 // Default mobile bar items when WordPress settings are empty

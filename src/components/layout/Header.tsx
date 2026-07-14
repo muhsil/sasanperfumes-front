@@ -429,7 +429,6 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
             onClose={handlePerfumesMegaMenuClose}
             locale={locale}
             dictionary={dictionary}
-            menuItems={categoriesDrawerMenuItems}
           />
         </div>
 
