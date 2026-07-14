@@ -16,6 +16,8 @@ import {
   backendHeaders,
   extractMarketCode,
 } from "@/lib/utils/backendFetch";
+import { getCachedPromise } from "@/lib/utils/promiseCache";
+import type { ExpiringPromiseCacheEntry } from "@/lib/utils/promiseCache";
 import type {
   WCProduct,
   WCCategory,
@@ -66,7 +68,11 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
 
 // Default currency for Store API requests - ensures prices are returned in the base currency
 const DEFAULT_API_CURRENCY = API_BASE_CURRENCY;
-const BACKEND_FETCH_TIMEOUT_MS = 8000;
+const BACKEND_FETCH_TIMEOUT_MS = 12000;
+const PRODUCTS_CACHE_TTL_MS = 5 * 60 * 1000;
+const CATEGORIES_CACHE_TTL_MS = 5 * 60 * 1000;
+const productsRequestCache = new Map<string, ExpiringPromiseCacheEntry<WCProductsResponse>>();
+const categoriesRequestCache = new Map<string, ExpiringPromiseCacheEntry<WCCategory[]>>();
 function cmsApiHostName(): string {
   try {
     return new URL(siteConfig.apiUrl).hostname;
@@ -602,6 +608,21 @@ export async function getProducts(params?: {
   currency?: Currency;
   frontendHost?: string;
 }): Promise<WCProductsResponse> {
+  const cacheKey = JSON.stringify({
+    page: params?.page ?? "",
+    per_page: params?.per_page ?? "",
+    category: params?.category ?? "",
+    brand: params?.brand ?? "",
+    search: params?.search ?? "",
+    orderby: params?.orderby ?? "",
+    order: params?.order ?? "",
+    include: params?.include?.join(",") ?? "",
+    locale: params?.locale ?? "",
+    currency: params?.currency ?? "",
+    frontendHost: params?.frontendHost ?? "",
+  });
+
+  return getCachedPromise(productsRequestCache, cacheKey, PRODUCTS_CACHE_TTL_MS, async () => {
   try {
     const searchParams = new URLSearchParams();
 
@@ -696,6 +717,7 @@ export async function getProducts(params?: {
       totalPages: 0,
     };
   }
+  });
 }
 
 
@@ -989,20 +1011,28 @@ export const getCategories = cache(async function getCategories(
   currency?: Currency,
   frontendHost?: string
 ): Promise<WCCategory[]> {
-  try {
-    const categories = await fetchAPI<WCCategory[]>("/products/categories?per_page=100", {
-      tags: ["categories"],
-      locale,
-      currency,
-      frontendHost,
-      revalidate: 600, // Cache categories longer as they change less frequently
-    });
+  const cacheKey = JSON.stringify({
+    locale: locale ?? "",
+    currency: currency ?? "",
+    frontendHost: frontendHost ?? "",
+  });
 
-    return categories.filter((category) => !isHiddenStorefrontCategory(category));
-  } catch (error) {
-    console.warn(`Failed to fetch categories: ${formatFetchError(error)}`);
-    return [];
-  }
+  return getCachedPromise(categoriesRequestCache, cacheKey, CATEGORIES_CACHE_TTL_MS, async () => {
+    try {
+      const categories = await fetchAPI<WCCategory[]>("/products/categories?per_page=100", {
+        tags: ["categories"],
+        locale,
+        currency,
+        frontendHost,
+        revalidate: 600, // Cache categories longer as they change less frequently
+      });
+
+      return categories.filter((category) => !isHiddenStorefrontCategory(category));
+    } catch (error) {
+      console.warn(`Failed to fetch categories: ${formatFetchError(error)}`);
+      return [];
+    }
+  });
 });
 
 // Mapping of English category slugs to Arabic category slugs

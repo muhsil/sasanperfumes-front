@@ -1,6 +1,8 @@
 ﻿import { disableRuntimeCache, siteConfig, type Locale } from "@/config/site";
 import { getMarketByHost } from "@/config/market";
 import { decodeHtmlEntities } from "@/lib/utils";
+import { getCachedPromise } from "@/lib/utils/promiseCache";
+import type { ExpiringPromiseCacheEntry } from "@/lib/utils/promiseCache";
 import { translateToArabic } from "@/config/menu";
 import { isHiddenStorefrontCategory } from "@/config/categoryVisibility";
 import { getActiveDiscountRules } from "@/lib/discountRules";
@@ -37,10 +39,13 @@ import type {
 } from "@/types/wordpress";
 
 const WP_API_BASE = `${siteConfig.apiUrl}/wp-json`;
+// Shared in-process cache to avoid repeated CMS fetches during static generation.
+const WP_API_CACHE_TTL_MS = 5 * 60 * 1000;
+const wpApiRequestCache = new Map<string, ExpiringPromiseCacheEntry<unknown | null>>();
 const WP_API_HEADERS = backendHeaders();
 const WP_NAMESPACE_FALLBACKS = ["sasanperfumes/v1"];
 const CMS_FORCE_DYNAMIC_CACHE = process.env.NEXT_PUBLIC_DISABLE_CMS_CACHE === "true" || process.env.DISABLE_CMS_CACHE === "true";
-const WP_API_FETCH_TIMEOUT_MS = 6000;
+const WP_API_FETCH_TIMEOUT_MS = 12000;
 
 function isCmsContentEndpoint(endpoint: string): boolean {
   return (
@@ -968,6 +973,12 @@ async function fetchWPAPI<T>(
   const market = extractWPMarketFromHost(frontendHost) || await detectMarketFromRequest();
   const cmsFrontendHost = cmsFrontendHostForMarket(market, frontendHost);
   const rootApiBase = apiBase || WP_API_BASE;
+  const cacheKey = JSON.stringify({
+    endpoint,
+    locale: locale || "",
+    frontendHost: cmsFrontendHost || "",
+    apiBase: rootApiBase,
+  });
   const urls = uniqueUrls(
     buildWPAPIUrls(endpoint, locale, rootApiBase).map((url) =>
       cmsFrontendHost ? appendQueryParam(url, "frontend_host", cmsFrontendHost) : url
@@ -978,53 +989,62 @@ async function fetchWPAPI<T>(
     ? backendHeaders({ "X-Frontend-Host": cmsFrontendHost, "X-Market": market })
     : backendHeaders(WP_API_HEADERS);
 
-  try {
-      const shouldBypassCache = disableRuntimeCache || noCache || CMS_FORCE_DYNAMIC_CACHE;
-      const fetchOptions: RequestInit = shouldBypassCache
-        ? { headers: apiHeaders, cache: "no-store" }
-        : {
-          headers: apiHeaders,
-          next: {
-            revalidate: isCmsContentEndpoint(endpoint) ? Math.min(revalidate, 60) : revalidate,
-            tags,
-          },
-        };
+  const shouldBypassCache = disableRuntimeCache || noCache || CMS_FORCE_DYNAMIC_CACHE;
+  const fetchOptions: RequestInit = shouldBypassCache
+    ? { headers: apiHeaders, cache: "no-store" }
+    : {
+      headers: apiHeaders,
+      next: {
+        revalidate: isCmsContentEndpoint(endpoint) ? Math.min(revalidate, 60) : revalidate,
+        tags,
+      },
+    };
 
-    for (const url of urls) {
-      let response = await fetchWPUrl(url, fetchOptions);
+  const executeFetch = async (): Promise<T | null> => {
+    try {
+      for (const url of urls) {
+        let response = await fetchWPUrl(url, fetchOptions);
 
-      if (response.status === 403) {
-        response = await fetchWPUrl(url, { headers: apiHeaders });
-      }
+        if (response.status === 403) {
+          response = await fetchWPUrl(url, { headers: apiHeaders });
+        }
 
-      if (!response.ok) {
-        if (response.status === 404 || response.status === 403) {
+        if (!response.ok) {
+          if (response.status === 404 || response.status === 403) {
+            continue;
+          }
+          console.warn(`WordPress API Error: ${response.status} ${response.statusText} (${url})`);
+          return null;
+        }
+
+        const text = await response.text();
+        if (!text.trim()) {
+          return null;
+        }
+
+        try {
+          return parseBackendJson<T>(text);
+        } catch {
+          console.warn(`WordPress API returned invalid JSON (${url})`);
           continue;
         }
-        console.warn(`WordPress API Error: ${response.status} ${response.statusText} (${url})`);
-        return null;
       }
 
-      const text = await response.text();
-      if (!text.trim()) {
-        return null;
+      return null;
+    } catch (error) {
+      if (!isExpectedNextDynamicServerError(error)) {
+        console.warn(`WordPress API fetch failed (${urls[0]}): ${formatFetchError(error)}`);
       }
-
-      try {
-        return parseBackendJson<T>(text);
-      } catch {
-        console.warn(`WordPress API returned invalid JSON (${url})`);
-        continue;
-      }
+      return null;
     }
+  };
 
-    return null;
-  } catch (error) {
-    if (!isExpectedNextDynamicServerError(error)) {
-      console.warn(`WordPress API fetch failed (${urls[0]}): ${formatFetchError(error)}`);
-    }
-    return null;
+  if (shouldBypassCache) {
+    return executeFetch();
   }
+
+  const cacheTtlMs = Math.max(30_000, Math.min(revalidate * 1000, WP_API_CACHE_TTL_MS));
+  return getCachedPromise(wpApiRequestCache, cacheKey, cacheTtlMs, executeFetch) as Promise<T | null>;
 }
 
 // Default values for when API is not available
