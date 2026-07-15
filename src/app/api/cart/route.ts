@@ -3,6 +3,9 @@ import { cookies } from "next/headers";
 import { API_BASE, backendHeaders, backendPostHeaders, backendAuthHeaders, noCacheUrl, safeJsonResponse, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
 import { type MarketConfig } from "@/config/market";
 import { getRequestMarket } from "@/lib/market/server";
+import { getProducts } from "@/lib/api/woocommerce";
+import type { Locale } from "@/config/site";
+import { decodeHtmlEntities } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -260,6 +263,91 @@ function createResponseWithCartKey(
   return response;
 }
 
+type CartLineItem = {
+  id: number;
+  name?: string;
+  title?: string;
+  meta?: {
+    variation?: Record<string, string>;
+  };
+  [key: string]: unknown;
+};
+
+function getCartItemLookupId(item: CartLineItem): number | null {
+  const variation = item.meta?.variation || {};
+  const parentId = variation.Parent_id || variation.parent_id || variation.parentId;
+  const rawId = parentId ?? item.id;
+  const parsedId = typeof rawId === "string" ? Number.parseInt(rawId, 10) : Number(rawId);
+  return Number.isFinite(parsedId) && parsedId > 0 ? parsedId : null;
+}
+
+async function localizeCartItems(
+  payload: Record<string, unknown>,
+  locale: Locale | null,
+  request: NextRequest
+): Promise<Record<string, unknown>> {
+  if (!locale) return payload;
+
+  const items = Array.isArray(payload.items) ? payload.items as CartLineItem[] : [];
+  if (items.length === 0) return payload;
+
+  const ids = Array.from(
+    new Set(
+      items
+        .map((item) => getCartItemLookupId(item))
+        .filter((id): id is number => Boolean(id))
+    )
+  );
+
+  if (ids.length === 0) return payload;
+
+  try {
+    const frontendHost =
+      request.headers.get("x-frontend-host")
+      || request.headers.get("x-forwarded-host")
+      || request.headers.get("host")
+      || "";
+
+    const { products } = await getProducts({
+      include: ids,
+      per_page: ids.length,
+      locale,
+      frontendHost,
+    });
+
+    const localizedNames = new Map<number, string>();
+    for (const product of products) {
+      const name = decodeHtmlEntities(product.name || "");
+      if (name) {
+        localizedNames.set(product.id, name);
+      }
+    }
+
+    if (localizedNames.size === 0) return payload;
+
+    const localizeItem = (item: CartLineItem) => {
+      const lookupId = getCartItemLookupId(item);
+      const localizedName = lookupId ? localizedNames.get(lookupId) : undefined;
+      if (!localizedName) return item;
+      return {
+        ...item,
+        name: localizedName,
+        title: localizedName,
+      };
+    };
+
+    return {
+      ...payload,
+      items: items.map(localizeItem),
+      removed_items: Array.isArray(payload.removed_items)
+        ? (payload.removed_items as CartLineItem[]).map(localizeItem)
+        : payload.removed_items,
+    };
+  } catch {
+    return payload;
+  }
+}
+
 function shouldRetryProductLookup(errorCode: string, errorMessage: string): boolean {
   const code = errorCode.toLowerCase();
   const message = errorMessage.toLowerCase();
@@ -353,7 +441,8 @@ export async function GET(request: NextRequest) {
     }
 
     const newCartKey = data.cart_key ? (data.cart_key as string) : null;
-    return createResponseWithCartKey({ success: true, cart: data }, newCartKey, refreshedToken, 200, market.code);
+    const localizedCart = await localizeCartItems(data as Record<string, unknown>, locale as Locale | null, request);
+    return createResponseWithCartKey({ success: true, cart: localizedCart }, newCartKey, refreshedToken, 200, market.code);
   } catch (error) {
     return NextResponse.json(
       {
@@ -485,15 +574,17 @@ export async function POST(request: NextRequest) {
         }
         
         if (!coCartResponse.ok) {
+          const localizedStoreApiCart = await localizeCartItems(storeApiData as Record<string, unknown>, locale as Locale | null, request);
           return NextResponse.json({ 
             success: true, 
-            cart: storeApiData,
+            cart: localizedStoreApiCart,
             warning: "Cart data may not be in expected format"
           });
         }
         
         const newCartKey = coCartData.cart_key ? (coCartData.cart_key as string) : null;
-        return createResponseWithCartKey({ success: true, cart: coCartData }, newCartKey, null, 200, market.code);
+        const localizedCart = await localizeCartItems(coCartData as Record<string, unknown>, locale as Locale | null, request);
+        return createResponseWithCartKey({ success: true, cart: localizedCart }, newCartKey, null, 200, market.code);
       }
       default:
         return NextResponse.json(
@@ -635,7 +726,8 @@ export async function POST(request: NextRequest) {
     }
 
     const newCartKey = data.cart_key ? (data.cart_key as string) : null;
-    return createResponseWithCartKey({ success: true, cart: data }, newCartKey, refreshedToken, 200, market.code);
+    const localizedCart = await localizeCartItems(data as Record<string, unknown>, locale as Locale | null, request);
+    return createResponseWithCartKey({ success: true, cart: localizedCart }, newCartKey, refreshedToken, 200, market.code);
   } catch (error) {
     return NextResponse.json(
       {
