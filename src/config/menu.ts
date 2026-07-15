@@ -437,7 +437,6 @@ export function getDynamicNavigationItems(
     const isFragrance =
       normalizedTitle.includes("fragrance") ||
       normalizedTitle.includes("fragrance &") ||
-      normalizedTitle.includes("العطور") ||
       hrefPath.includes("/fragrance");
     const isShop =
       normalizedTitle === "shop" ||
