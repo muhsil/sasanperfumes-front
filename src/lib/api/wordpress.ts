@@ -3,7 +3,7 @@ import { getMarketByHost } from "@/config/market";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { getCachedPromise } from "@/lib/utils/promiseCache";
 import type { ExpiringPromiseCacheEntry } from "@/lib/utils/promiseCache";
-import { translateToArabic } from "@/config/menu";
+import { getSpecialMenuRoute, translateToArabic } from "@/config/menu";
 import { isHiddenStorefrontCategory } from "@/config/categoryVisibility";
 import { getActiveDiscountRules } from "@/lib/discountRules";
 import { getMarketSeoDescription } from "@/lib/utils/seo";
@@ -2111,7 +2111,11 @@ function getMegaMenuItemSlug(id: number, url: string, fallbackSlug: string): str
   return fallbackSlug;
 }
 
-function getMegaMenuItemHref(url: string, slug: string, locale?: Locale): string {
+function getMegaMenuItemHref(url: string, slug: string, locale?: Locale, title?: string): string {
+  const specialRoute = title ? getSpecialMenuRoute(title) : null;
+  if (specialRoute && (isGenericMegaMenuUrl(url) || !slug)) {
+    return `/${locale || "en"}${specialRoute}`;
+  }
   if (isGenericMegaMenuUrl(url) || !slug || slug.toLowerCase() === "shop") {
     return `/${locale || "en"}/shop`;
   }
@@ -2190,7 +2194,7 @@ export async function getMegaMenuData(locale?: Locale, frontendHost?: string): P
       id: child.id,
       name: locale === "ar" ? translateToArabic(child.title) : decodeHtmlEntities(child.title),
       slug: getMegaMenuItemSlug(child.id, child.url, childSlug),
-      url: getMegaMenuItemHref(child.url, childSlug, locale),
+      url: getMegaMenuItemHref(child.url, childSlug, locale, child.title),
       image: null,
       children: [],
     };
@@ -2208,7 +2212,7 @@ export async function getMegaMenuData(locale?: Locale, frontendHost?: string): P
           id: subChild.id,
           name: locale === "ar" ? translateToArabic(subChild.title) : decodeHtmlEntities(subChild.title),
           slug: getMegaMenuItemSlug(subChild.id, subChild.url, subChildSlug),
-          url: getMegaMenuItemHref(subChild.url, subChildSlug, locale),
+          url: getMegaMenuItemHref(subChild.url, subChildSlug, locale, subChild.title),
         });
       }
     }

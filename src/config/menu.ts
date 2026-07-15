@@ -199,6 +199,32 @@ export function translateToArabic(englishTitle: string): string {
 }
 
 /**
+ * Menu items that map to dedicated product listing routes instead of categories.
+ * Used for CMS menu entries (often added with "#" URLs) like Featured,
+ * Best Sellers, and New Arrivals.
+ */
+const specialMenuRoutes: Record<string, string> = {
+  "featured": "/featured-products",
+  "featured products": "/featured-products",
+  "best seller": "/featured-products",
+  "best sellers": "/featured-products",
+  "bestsellers": "/featured-products",
+  "مميزة": "/featured-products",
+  "الأكثر مبيعا": "/featured-products",
+  "الأكثر مبيعًا": "/featured-products",
+  "new arrival": "/new-products",
+  "new arrivals": "/new-products",
+  "وصل حديثا": "/new-products",
+  "وصل حديثًا": "/new-products",
+  "وصل حديثاً": "/new-products",
+};
+
+export function getSpecialMenuRoute(title: string): string | null {
+  const key = decodeHtmlEntities(title).replace(/\u200b/g, "").trim().toLowerCase();
+  return specialMenuRoutes[key] || null;
+}
+
+/**
  * Navigation item type for dynamic WordPress menu
  */
 export interface DynamicNavigationItem {
@@ -319,6 +345,10 @@ export function normalizeMenuUrl(url: string, locale: Locale, pathPrefix = ""): 
     ["/fragrance", "/shop"],
     ["/shop-all", "/shop"],
     ["/shopall", "/shop"],
+    ["/featured", "/featured-products"],
+    ["/best-sellers", "/featured-products"],
+    ["/new-arrivals", "/new-products"],
+    ["/category/new-arrivals", "/category/new-arrival"],
   ]);
 
   if (aliasMap.has(lowerPath)) {
@@ -397,7 +427,10 @@ export function getDynamicNavigationItems(
   const normalizedItems = visibleTopLevelItems
     .map((item, index) => {
       const title = locale === "ar" ? translateToArabic(item.title) : decodeHtmlEntities(item.title);
-    const href = normalizeMenuUrl(item.url, locale, pathPrefix);
+    const specialRoute = getSpecialMenuRoute(item.title);
+    const href = specialRoute
+      ? `${pathPrefix}/${locale}${specialRoute}`
+      : normalizeMenuUrl(item.url, locale, pathPrefix);
     const normalizedTitle = title.toLowerCase().trim();
     const normalizedHref = href.toLowerCase();
     const [hrefPath, hrefQuery = ""] = normalizedHref.split("?");

@@ -20,6 +20,16 @@ function isNonAsciiSlug(slug: string): boolean {
   return /[^\x00-\x7F]/.test(slug);
 }
 
+// Slugs that don't exist as WooCommerce categories but map to known destinations
+const CATEGORY_SLUG_REDIRECTS: Record<string, string> = {
+  "new-arrivals": "new-arrival",
+};
+
+const CATEGORY_ROUTE_REDIRECTS: Record<string, string> = {
+  "featured": "/featured-products",
+  "best-sellers": "/featured-products",
+};
+
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -133,6 +143,16 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     getRequestFrontendHost(marketHint),
   ]);
   const pathPrefix = getMarketPathPrefix(market.code);
+
+  const routeRedirect = CATEGORY_ROUTE_REDIRECTS[slug.toLowerCase()];
+  if (routeRedirect) {
+    redirect(`${pathPrefix}/${locale}${routeRedirect}`);
+  }
+  const slugRedirect = CATEGORY_SLUG_REDIRECTS[slug.toLowerCase()];
+  if (slugRedirect) {
+    redirect(`${pathPrefix}/${locale}/category/${slugRedirect}`);
+  }
+
   const categorySeo = await getCategorySeoContent(slug, frontendHost);
   const categorySeoDescription = categorySeo
     ? decodeHtmlEntities(locale === "ar" ? categorySeo.description.ar : categorySeo.description.en)
