@@ -48,15 +48,15 @@ export function WCProductCard({
   const isRTL = locale === "ar";
 
   const labels = {
-    outOfStock: isRTL ? "ØºÙŠØ± Ù…ØªÙˆÙØ±" : "Out of Stock",
-    removeWishlist: isRTL ? "Ø¥Ø²Ø§Ù„Ø© Ù…Ù† Ø§Ù„Ù…ÙØ¶Ù„Ø©" : "Remove from wishlist",
-    addWishlist: isRTL ? "Ø£Ø¶Ù Ø¥Ù„Ù‰ Ø§Ù„Ù…ÙØ¶Ù„Ø©" : "Add to wishlist",
-    customize: isRTL ? "ØªØ®ØµÙŠØµ" : "Customize",
-    chooseOptions: isRTL ? "Ø§Ø®ØªØ± Ø§Ù„Ø®ÙŠØ§Ø±Ø§Øª" : "Choose options",
-    addToCart: isRTL ? "Ø£Ø¶Ù Ù„Ù„Ø³Ù„Ø©" : "Add to cart",
-    added: isRTL ? "ØªÙ…!" : "Added!",
+    outOfStock: isRTL ? "غير متوفر" : "Out of Stock",
+    removeWishlist: isRTL ? "إزالة من المفضلة" : "Remove from wishlist",
+    addWishlist: isRTL ? "أضف إلى المفضلة" : "Add to wishlist",
+    customize: isRTL ? "تخصيص" : "Customize",
+    chooseOptions: isRTL ? "اختر الخيارات" : "Choose options",
+    addToCart: isRTL ? "أضف إلى السلة" : "Add to cart",
+    added: isRTL ? "تم!" : "Added!",
     adding: isRTL ? "..." : "...",
-    from: isRTL ? "Ù…Ù† " : "From ",
+    from: isRTL ? "من " : "From ",
   };
 
   const handleAddToCart = useCallback(async (e: React.MouseEvent) => {
@@ -169,7 +169,7 @@ export function WCProductCard({
         ) : isOutOfStock ? (
           <span className="!text-[11px]">{labels.outOfStock}</span>
         ) : !canPurchase ? (
-          <span className="!text-[11px]">{isRTL ? "ØºÙŠØ± Ù…ØªØ§Ø­" : "Unavailable"}</span>
+          <span className="!text-[11px]">{isRTL ? "غير متاح" : "Unavailable"}</span>
         ) : (
           <>
             <Plus className={cn("h-3.5 w-3.5", isAddingToCart && "animate-pulse")} />
@@ -244,7 +244,7 @@ export function WCProductCard({
                 outOfStock={isOutOfStock}
                 extraTagSlugs={extraBadgeSlugs}
                 className={cn("flex-col flex-nowrap", isRTL ? "items-end" : "items-start")}
-              />
+            {/* Hover icons - top right */}
             </div>
 
             {/* Hover icons â€” top right */}
@@ -261,7 +261,7 @@ export function WCProductCard({
                 aria-label={isWishlisted ? labels.removeWishlist : labels.addWishlist}
               >
                 <Heart className={cn("h-3.5 w-3.5", isWishlisted && "fill-current")} />
-              </button>
+            {/* Add button - bottom corner */}
             </div>
 
             {/* Add button â€” bottom corner */}
@@ -293,7 +293,7 @@ export function WCProductCard({
                 ) : isOutOfStock ? (
                   <span className="truncate">{labels.outOfStock}</span>
                 ) : !canPurchase ? (
-                  <span className="truncate">{isRTL ? "ØºÙŠØ± Ù…ØªØ§Ø­" : "Unavailable"}</span>
+                  <span className="truncate">{isRTL ? "غير متاح" : "Unavailable"}</span>
                 ) : (
                   <>
                     <Plus className={cn("h-3.5 w-3.5 shrink-0", isAddingToCart && "animate-pulse")} />
@@ -353,7 +353,7 @@ export function WCProductCard({
             {/* Price */}
             <div className={cn(reviewCount > 0 ? "mt-0.5" : "mt-0")}>
               {!hasPrice && !hasPriceRange ? (
-                <span className="text-[11px] font-bold text-brand-primary/45 sm:text-xs">{isRTL ? "ØºÙŠØ± Ù…ØªØ§Ø­" : "Unavailable"}</span>
+                <span className="text-[11px] font-bold text-brand-primary/45 sm:text-xs">{isRTL ? "غير متاح" : "Unavailable"}</span>
               ) : showAsVariable && hasPriceRange && minPrice !== maxPrice ? (
                 <div className="flex items-center justify-center gap-1">
                   <FormattedPrice price={minPrice} sourceCurrency={priceSourceCurrency} className="text-[11px] font-bold text-brand-primary sm:text-xs" iconSize="xs" />
@@ -400,7 +400,7 @@ export function WCProductCard({
                   ) : isOutOfStock ? (
                     <span className="truncate">{labels.outOfStock}</span>
                   ) : !canPurchase ? (
-                    <span className="truncate">{isRTL ? "ØºÙŠØ± Ù…ØªØ§Ø­" : "Unavailable"}</span>
+                    <span className="truncate">{isRTL ? "غير متاح" : "Unavailable"}</span>
                   ) : (
                     <>
                       <Plus className={cn("h-3 w-3 shrink-0", isAddingToCart && "animate-pulse")} />
