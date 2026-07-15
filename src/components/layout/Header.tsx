@@ -151,7 +151,18 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
   const mobileBottomNavigation = mobileBottomBarMenuItems && mobileBottomBarMenuItems.length > 0
     ? getDynamicNavigationItems(mobileBottomBarMenuItems, locale, marketPrefix)
     : [];
-  const mobileNavigation = mergeMobileNavigation(baseMobileNavigation, mobileBottomNavigation);
+  const shopAllMobileNavigation: DynamicNavigationItem[] = [
+    {
+      id: 0,
+      name: isRTL ? "تسوق الكل" : "Shop All",
+      href: `${marketPrefix}/${locale}/shop`,
+      hasMegaMenu: false,
+    },
+  ];
+  const mobileNavigation = mergeMobileNavigation(
+    shopAllMobileNavigation,
+    mergeMobileNavigation(baseMobileNavigation, mobileBottomNavigation)
+  );
 
   const { currency, convertPrice } = useCurrency();
 
