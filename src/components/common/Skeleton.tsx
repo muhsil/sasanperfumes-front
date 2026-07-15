@@ -8,7 +8,7 @@ export function Skeleton({ className, ...props }: SkeletonProps) {
 
 export function ProductCardSkeleton({
   placeholderLogo: _placeholderLogo,
-  imageAspectClassName = "aspect-square",
+  imageAspectClassName = "aspect-[3/4]",
 }: {
   placeholderLogo?: string;
   imageAspectClassName?: string;
@@ -52,7 +52,7 @@ export function ProductGridSkeleton({
   count = 8,
   placeholderLogo,
   columns = 4,
-  imageAspectClassName = "aspect-square",
+  imageAspectClassName = "aspect-[3/4]",
   className,
 }: {
   count?: number;

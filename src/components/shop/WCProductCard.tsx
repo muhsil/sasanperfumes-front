@@ -196,7 +196,7 @@ export function WCProductCard({
               onMouseEnter={prefetchProduct}
               onTouchStart={prefetchProduct}
             >
-              <div className="relative aspect-square overflow-hidden border border-brand-border/70 bg-[#fbf8f4] shadow-[0_8px_24px_rgba(20,15,10,0.05)] transition-all duration-300 hover:border-brand-gold/45 hover:shadow-[0_16px_34px_rgba(20,15,10,0.1)]">
+              <div className="relative aspect-[3/4] overflow-hidden border border-brand-border/70 bg-[#fbf8f4] shadow-[0_8px_24px_rgba(20,15,10,0.05)] transition-all duration-300 hover:border-brand-gold/45 hover:shadow-[0_16px_34px_rgba(20,15,10,0.1)]">
                 {mainImage && !imageError ? (
                   <>
                     <Image
@@ -206,7 +206,7 @@ export function WCProductCard({
                       quality={60}
                       sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                       className={cn(
-                        "object-contain p-3 transition-all duration-700 ease-out",
+                        "object-cover transition-all duration-700 ease-out",
                         hoverImage && "group-hover:opacity-0 group-hover:scale-[1.04]"
                       )}
                       loading="lazy"
@@ -221,7 +221,7 @@ export function WCProductCard({
                         fill
                         quality={60}
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-                        className="pointer-events-none absolute inset-0 object-contain p-3 opacity-0 transition-all duration-700 ease-out group-hover:opacity-100 group-hover:scale-[1.04]"
+                        className="pointer-events-none absolute inset-0 object-cover opacity-0 transition-all duration-700 ease-out group-hover:opacity-100 group-hover:scale-[1.04]"
                         loading="lazy"
                         placeholder="blur"
                         blurDataURL={BLUR_DATA_URL}
@@ -244,10 +244,10 @@ export function WCProductCard({
                 outOfStock={isOutOfStock}
                 extraTagSlugs={extraBadgeSlugs}
                 className={cn("flex-col flex-nowrap", isRTL ? "items-end" : "items-start")}
-            {/* Hover icons - top right */}
+              />
             </div>
 
-            {/* Hover icons â€” top right */}
+            {/* Hover icons - top right */}
             <div className={cn("absolute top-2 flex flex-col gap-2 opacity-100 transition-all duration-300 sm:top-3 sm:opacity-0 sm:group-hover:opacity-100", isRTL ? "left-2 sm:left-3" : "right-2 sm:right-3")}>
               <button
                 type="button"
@@ -261,10 +261,10 @@ export function WCProductCard({
                 aria-label={isWishlisted ? labels.removeWishlist : labels.addWishlist}
               >
                 <Heart className={cn("h-3.5 w-3.5", isWishlisted && "fill-current")} />
-            {/* Add button - bottom corner */}
+              </button>
             </div>
 
-            {/* Add button â€” bottom corner */}
+            {/* Add button - bottom corner */}
             {showAsVariable ? (
               <Link
                 href={productHref}

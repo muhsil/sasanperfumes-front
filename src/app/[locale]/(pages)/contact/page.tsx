@@ -122,7 +122,7 @@ export default async function ContactPage({ params }: ContactPageProps) {
 
       {/* Contact Form & Info Section */}
       <section className="bg-transparent py-16 md:py-24">
-        <div className="px-4 max-w-6xl mx-auto">
+        <div className="px-4 max-w-[var(--page-container-max-width)] mx-auto">
           <div className="grid lg:grid-cols-3 gap-16">
             {/* Form Column */}
             <div className="lg:col-span-2">
@@ -156,7 +156,7 @@ export default async function ContactPage({ params }: ContactPageProps) {
       {/* Benefits Section */}
       {trustIndicators.length > 0 && (
       <section className="section-band py-16 md:py-20">
-        <div className="px-4 max-w-6xl mx-auto">
+        <div className="px-4 max-w-[var(--page-container-max-width)] mx-auto">
           <div className="grid gap-8 md:grid-cols-3">
             {trustIndicators.map((item, index) => (
               <div key={index} className="luxury-panel p-5">

@@ -40,7 +40,7 @@ export function CompareClient({ locale, productIds }: CompareClientProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8" dir={isAr ? "rtl" : "ltr"}>
-      <div className="mx-auto max-w-7xl px-4">
+      <div className="mx-auto max-w-[var(--page-container-max-width)] px-4">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">{isAr ? "مقارنة المنتجات" : "Compare Products"}</h1>
           <Link href={`${marketPrefix}/${locale}/shop`} className="text-sm text-brand-primary hover:underline">

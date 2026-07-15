@@ -11,7 +11,6 @@ import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { CountdownTimer } from "@/components/common/CountdownTimer";
 import { SocialShareModal } from "@/components/common/SocialShareModal";
 import { BackInStockAlert } from "@/components/common/BackInStockAlert";
-import { RelatedProducts } from "@/components/shop/RelatedProducts";
 import { RecentlyViewed } from "@/components/shop/RecentlyViewed";
 import { ProductAddons } from "@/components/shop/ProductAddons";
 import { ProductAddToCartButton } from "@/components/shop/ProductAddToCartButton";
@@ -667,17 +666,14 @@ function FullscreenGallery({ images, selectedIndex, onClose, onSelectImage, prod
 interface ProductDetailProps {
   product: WCProduct;
   locale: Locale;
-  relatedProducts?: WCProduct[];
-  upsellProducts?: WCProduct[];
   addonForms?: WCPAForm[];
   englishCategorySlug?: string | null;
-  localizedCategoryName?: string | null;
   hiddenGiftProductIds?: number[];
   freeShippingThreshold?: number | null;
   reviewsEnabled?: boolean;
 }
 
-export function ProductDetail({ product, locale, relatedProducts = [], upsellProducts = [], addonForms = [], englishCategorySlug, localizedCategoryName, hiddenGiftProductIds = [], freeShippingThreshold, reviewsEnabled = true }: ProductDetailProps) {
+export function ProductDetail({ product, locale, addonForms = [], englishCategorySlug, hiddenGiftProductIds = [], freeShippingThreshold, reviewsEnabled = true }: ProductDetailProps) {
   const marketPrefix = useMarketPrefix();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -941,8 +937,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
   const primaryCategory = product.categories?.[0];
   // Use English category slug for URLs (falls back to localized slug if English slug not available)
   const categorySlugForUrl = englishCategorySlug || primaryCategory?.slug;
-  // Use the localized category name from the API (properly localized) or fall back to the embedded category name
-  const categoryNameForBreadcrumb = localizedCategoryName || primaryCategory?.name;
+  const categoryNameForBreadcrumb = primaryCategory?.name;
   const breadcrumbItems = [
     { name: isRTL ? "المتجر" : "Shop", href: `${marketPrefix}/${locale}/shop` },
     ...(primaryCategory && categorySlugForUrl && categoryNameForBreadcrumb ? [{ name: decodeHtmlEntities(categoryNameForBreadcrumb), href: `${marketPrefix}/${locale}/category/${categorySlugForUrl}` }] : []),
@@ -1612,7 +1607,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
 
   return (
     <div className="page-flush bg-transparent pb-24 text-brand-primary md:pb-0">
-      <div className="mx-auto w-full max-w-[88rem]">
+      <div className="mx-auto w-full max-w-[var(--page-container-max-width)]">
         <div className="w-full px-4 pb-3 pt-4 md:pb-4 md:pt-6">
           <div className="flex items-center justify-between gap-3">
             <Breadcrumbs items={breadcrumbItems} locale={locale} contained={false} skipJsonLd />
@@ -2049,28 +2044,6 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           <ProductReviews productId={product.id} locale={locale} />
         </div>
       )}
-
-      {/* Upsell Products (from WooCommerce Linked Products) */}
-      {upsellProducts.length > 0 && (
-        <RelatedProducts
-          products={upsellProducts}
-          currentProductId={product.id}
-          locale={locale}
-          className="mt-10 pt-2"
-          title={isRTL ? "منتجات موصى بها" : "Recommended Products"}
-          subtitle={isRTL ? "منتجات مختارة لك" : "Hand-picked for you"}
-        />
-      )}
-
-      {/* Related Products (category-based) */}
-      <div className="mt-10 pb-6 md:pb-8">
-        <RelatedProducts
-          products={relatedProducts}
-          currentProductId={product.id}
-          locale={locale}
-          className="pt-2"
-        />
-      </div>
 
       {/* Recently Viewed Products */}
       <RecentlyViewed

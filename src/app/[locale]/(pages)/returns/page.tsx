@@ -140,7 +140,7 @@ export default async function ReturnsPage({ params }: ReturnsPageProps) {
       />
 
       <main className="px-4 pb-24 pt-8 md:pb-20 md:pt-10">
-        <div className="mx-auto max-w-6xl space-y-14 md:space-y-16">
+        <div className="mx-auto max-w-[var(--page-container-max-width)] space-y-14 md:space-y-16">
           {features.length > 0 && (
             <section className="grid gap-4 md:grid-cols-3">
               {features.map((feature, index) => {

@@ -355,7 +355,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
       {(hasHeroContent || hasHeroMedia) && (
         <section className="relative overflow-hidden bg-[linear-gradient(180deg,#f7f1eb_0%,#ffffff_100%)]">
           <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-brand-gold/10 to-transparent" />
-          <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 md:py-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-12 lg:py-20">
+          <div className="mx-auto grid max-w-[var(--page-container-max-width)] gap-10 px-4 py-12 md:py-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-12 lg:py-20">
             {hasHeroContent && (
               <div className={`relative z-10 flex flex-col justify-center gap-8 ${isRTL ? "lg:order-2" : ""}`}>
                 <div className="max-w-3xl">
@@ -433,7 +433,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
 
       {(hasStoryContent || aboutImages.story) && (
         <section id="brand-story" className="bg-white">
-          <div className="mx-auto grid max-w-7xl gap-8 px-4 py-16 md:py-20 lg:grid-cols-[0.95fr_1.05fr] lg:items-stretch lg:gap-10 lg:py-28">
+          <div className="mx-auto grid max-w-[var(--page-container-max-width)] gap-8 px-4 py-16 md:py-20 lg:grid-cols-[0.95fr_1.05fr] lg:items-stretch lg:gap-10 lg:py-28">
             {hasStoryContent && (
               <div className={`flex flex-col justify-center ${isRTL ? "lg:order-2" : ""}`}>
                 <SectionHeading title={mainTitle || pageHeading} />
@@ -469,7 +469,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
 
       {(hasUniqueContent || aboutImages.detail) && (
         <section id="sourcing" className="bg-[#f8f3ef]">
-          <div className="mx-auto grid max-w-7xl gap-8 px-4 py-16 md:py-20 lg:grid-cols-[1fr_0.95fr] lg:items-stretch lg:gap-10 lg:py-28">
+          <div className="mx-auto grid max-w-[var(--page-container-max-width)] gap-8 px-4 py-16 md:py-20 lg:grid-cols-[1fr_0.95fr] lg:items-stretch lg:gap-10 lg:py-28">
             {hasUniqueContent && (
               <div className={`relative overflow-hidden rounded-[32px] bg-brand-primary px-6 py-10 text-white shadow-[0_24px_80px_rgba(29,24,20,0.12)] md:px-10 md:py-12 lg:px-12 lg:py-14 ${isRTL ? "lg:order-2" : ""}`}>
                 <div className="absolute -right-20 top-0 h-52 w-52 rounded-full bg-brand-gold/15 blur-3xl" />
@@ -511,7 +511,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
 
       {hasJourneyContent && (
         <section className="bg-white px-4 py-16 md:py-20 lg:py-28">
-          <div className="mx-auto max-w-7xl">
+          <div className="mx-auto max-w-[var(--page-container-max-width)]">
             <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-end">
                 <SectionHeading title={journeyTitle} />
               {journeyContent && (
@@ -574,7 +574,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
 
       {(hasMissionContent || aboutImages.mission) && (
         <section className="bg-[#f8f3ef]">
-          <div className="mx-auto grid max-w-7xl gap-8 px-4 py-16 md:py-20 lg:grid-cols-[1fr_0.95fr] lg:items-stretch lg:gap-10 lg:py-28">
+          <div className="mx-auto grid max-w-[var(--page-container-max-width)] gap-8 px-4 py-16 md:py-20 lg:grid-cols-[1fr_0.95fr] lg:items-stretch lg:gap-10 lg:py-28">
             {hasMissionContent && (
               <div className={`relative rounded-[32px] bg-brand-primary px-6 py-10 text-white shadow-[0_24px_80px_rgba(29,24,20,0.12)] md:px-10 md:py-12 lg:px-12 lg:py-14 ${isRTL ? "lg:order-2" : ""}`}>
                 <div className="absolute inset-x-0 top-0 h-px bg-white/10" />
@@ -628,7 +628,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
 
       {hasIngredientsContent && (
         <section className="bg-white px-4 py-16 md:py-20 lg:py-28">
-          <div className="mx-auto max-w-7xl">
+          <div className="mx-auto max-w-[var(--page-container-max-width)]">
             {(ingredientsTitle || ingredientsSubtitle || ingredientsDesc) && (
               <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-end">
                 <SectionHeading title={ingredientsTitle} description={ingredientsSubtitle} />
@@ -675,7 +675,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
 
       {brandFaqItems.length > 0 && (
         <section className="bg-[#f8f3ef] px-4 py-16 md:py-20 lg:py-28">
-          <div className="mx-auto max-w-7xl">
+          <div className="mx-auto max-w-[var(--page-container-max-width)]">
             <SectionHeading title={isRTL ? "الأسئلة الشائعة" : "Frequently Asked Questions"} />
             <div className="mx-auto mt-10 max-w-4xl overflow-hidden rounded-[28px] border border-brand-primary/10 bg-white shadow-[0_10px_30px_rgba(29,24,20,0.04)]">
               {brandFaqItems.map((item, idx) => (
@@ -698,7 +698,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
 
       {hasCtaContent && (
         <section className="bg-white px-4 pb-16 md:pb-20 lg:pb-28">
-          <div className="mx-auto max-w-7xl">
+          <div className="mx-auto max-w-[var(--page-container-max-width)]">
             <div className="relative overflow-hidden rounded-[32px] bg-brand-primary px-6 py-12 text-white shadow-[0_24px_80px_rgba(29,24,20,0.12)] md:px-10 md:py-14 lg:px-14">
               <div className="absolute -left-20 top-0 h-64 w-64 rounded-full bg-brand-gold/15 blur-3xl" />
               <div className="relative">

@@ -43,10 +43,14 @@ interface ProductSectionProps {
   englishProductSlugs?: Record<number, string>;
 }
 
+const FULL_VIEW_SHELL_CLASS = "section-shell";
+
 export function ProductSectionSkeleton({ count = 5, fullView = false }: { count?: number; fullView?: boolean }) {
+  const shellClassName = fullView ? FULL_VIEW_SHELL_CLASS : "section-shell";
+
   return (
     <section className={fullView ? "bg-transparent py-7 md:py-9 lg:py-10" : "bg-transparent pb-0 pt-8 md:pt-9 lg:pt-10"}>
-      <div className="section-shell">
+      <div className={shellClassName}>
         <div className="mb-4 md:mb-5">
           <SectionHeaderSkeleton />
         </div>
@@ -113,6 +117,7 @@ export function ProductSection({
   const cols = settings.responsive_columns ?? { desktop: 5, tablet: 3, mobile: 2 };
   const isGrid = settings.display === 'grid';
   const sliderNavPrefix = settings.section_title?.replace(/\s+/g, "-").toLowerCase() || "default";
+  const shellClassName = fullView ? FULL_VIEW_SHELL_CLASS : "section-shell";
 
   const sectionClass = fullView
     ? `bg-transparent py-7 md:py-9 lg:py-10 ${className} ${getVisibilityClass()}`
@@ -120,7 +125,7 @@ export function ProductSection({
 
   return (
     <section className={`${sectionClass} lazy-section`}>
-      <div className="section-shell">
+      <div className={shellClassName}>
         <div className="mb-4 flex flex-col gap-3 md:mb-5 md:flex-row md:items-end md:justify-between">
           <div className={isRTL ? "text-right" : "text-left"}>
             <h2 className="font-title text-xl text-brand-primary md:text-2xl">
@@ -145,7 +150,7 @@ export function ProductSection({
 
       {isGrid ? (
         /* Grid layout */
-        <div className={`grid gap-4 section-shell pb-1 ${MOBILE_COLS[cols.mobile] ?? "grid-cols-2"} ${TABLET_COLS[cols.tablet] ?? "sm:grid-cols-3"} ${DESKTOP_COLS[cols.desktop] ?? "lg:grid-cols-5"}`}>
+        <div className={`grid gap-4 ${shellClassName} pb-1 ${MOBILE_COLS[cols.mobile] ?? "grid-cols-2"} ${TABLET_COLS[cols.tablet] ?? "sm:grid-cols-3"} ${DESKTOP_COLS[cols.desktop] ?? "lg:grid-cols-5"}`}>
           {displayProducts.map((product) => (
             <WCProductCard key={product.id} product={product} locale={locale} bundleProductSlugs={bundleProductSlugs} englishSlug={englishProductSlugs[product.id]} />
           ))}
@@ -161,6 +166,7 @@ export function ProductSection({
           sliderNavPrefix={sliderNavPrefix}
           bundleProductSlugs={bundleProductSlugs}
           englishProductSlugs={englishProductSlugs}
+          fullView={fullView}
         />
       )}
     </section>

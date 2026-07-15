@@ -20,6 +20,7 @@ export interface ProductSectionSliderProps {
   sliderNavPrefix: string;
   bundleProductSlugs?: string[];
   englishProductSlugs?: Record<number, string>;
+  fullView?: boolean;
 }
 
 export function ProductSectionSlider({
@@ -32,11 +33,13 @@ export function ProductSectionSlider({
   sliderNavPrefix,
   bundleProductSlugs = [],
   englishProductSlugs = {},
+  fullView = false,
 }: ProductSectionSliderProps) {
   const showNavigation = products.length > cols.mobile;
+  const shellClassName = "section-shell";
 
   return (
-    <div className="relative product-section-slider section-shell">
+    <div className={`relative product-section-slider ${shellClassName}`}>
       <Swiper
         modules={[Autoplay, Navigation]}
         spaceBetween={16}

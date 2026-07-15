@@ -204,7 +204,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
               color: topbarSettings?.textColor || "#f8f4ec",
             }}
           >
-            <div className="mx-auto flex h-8 max-w-[88rem] items-center justify-center gap-2 px-4">
+            <div className="mx-auto flex h-8 max-w-[var(--page-container-max-width)] items-center justify-center gap-2 px-4">
               {topbarSettings?.link ? (
                 <a
                   href={topbarSettings.link}

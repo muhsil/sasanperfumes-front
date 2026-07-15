@@ -13,6 +13,9 @@ import { decodeHtmlEntities } from "@/lib/utils";
 import type { Metadata } from "next";
 import type { WCProduct } from "@/types/woocommerce";
 import { getMarketByHost, getMarketPathPrefix } from "@/config/market";
+import { Suspense } from "react";
+import { ProductRecommendations } from "./ProductRecommendations";
+import { RelatedProductsLoading } from "./loading";
 
 const MARKET_CODES = new Set(["qa", "om", "sa"]);
 
@@ -347,57 +350,22 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
     );
   }
 
-  // Fetch ALL remaining data in a single parallel batch:
-  // related products, addon forms, English product, upsell IDs, and category slug
-  // This replaces 3 sequential stages with 1 parallel stage
+  // Fetch addon forms and the English category slug in parallel.
+  // Recommendations are streamed separately so the core product UI can paint sooner.
   const primaryCategory = product.categories?.[0];
-  const [relatedProductsRaw, productAddons, englishProduct, linkedIds, categorySlugFromId] = await Promise.all([
-    getRelatedProducts(product, {
-      per_page: 12,
-      locale: locale as Locale,
-      currency: market.defaultCurrency,
-      frontendHost,
-    }),
+  const [productAddons, englishCategorySlug] = await Promise.all([
     getProductAddons(product.id, { locale: locale as Locale }),
-    getProductBySlug(slug, "en", market.defaultCurrency, frontendHost),
-    getProductUpsellIds(product.id, locale as Locale, frontendHost),
-    // Pre-fetch the English category slug in parallel (saves a sequential call later)
     primaryCategory?.id
-      ? getEnglishSlugForCategory(primaryCategory.id, locale as Locale, market.defaultCurrency, frontendHost)
+      ? locale === "en"
+        ? Promise.resolve(primaryCategory.slug || null)
+        : getEnglishSlugForCategory(primaryCategory.id, locale as Locale, market.defaultCurrency, frontendHost)
       : Promise.resolve(null),
   ]);
-
-  // Filter out hidden products from related products (free gifts and products with catalog_visibility=hidden)
-  const hiddenProductIdsSet = new Set([...hiddenGiftProductIds, ...hiddenCatalogProductIds]);
-  const relatedProducts = relatedProductsRaw.filter(
-    (p) => !hiddenProductIdsSet.has(p.id)
-  );
-
-  // Fetch upsell products if any are configured in WooCommerce Linked Products
-  // Get the English category slug from the English product or pre-fetched value
-  const englishCategorySlugFromProduct = englishProduct?.categories?.[0]?.slug || null;
-  const englishCategorySlug = englishCategorySlugFromProduct || categorySlugFromId;
-
-  // Fetch upsell products and localized category in parallel
-  const [upsellProductsRaw, localizedCategory] = await Promise.all([
-    linkedIds.upsell_ids.length > 0
-      ? getProductsByIds(linkedIds.upsell_ids, locale as Locale, market.defaultCurrency, frontendHost)
-      : Promise.resolve([]),
-    englishCategorySlug
-      ? getCategoryBySlug(englishCategorySlug, locale as Locale, market.defaultCurrency, frontendHost)
-      : Promise.resolve(null),
-  ]);
-
-  const upsellProducts = upsellProductsRaw.filter(
-    (p) => !hiddenProductIdsSet.has(p.id)
-  );
-
-  const localizedCategoryName = localizedCategory?.name || primaryCategory?.name || null;
 
   const breadcrumbJsonLd = generateBreadcrumbJsonLd([
     { name: locale === "ar" ? "الرئيسية" : "Home", url: `${frontendBaseUrl}/${locale}` },
     { name: locale === "ar" ? "المتجر" : "Shop", url: `${frontendBaseUrl}/${locale}/shop` },
-    ...(localizedCategoryName && englishCategorySlug ? [{ name: decodeHtmlEntities(localizedCategoryName), url: `${frontendBaseUrl}/${locale}/category/${englishCategorySlug}` }] : []),
+    ...(primaryCategory?.name && englishCategorySlug ? [{ name: decodeHtmlEntities(primaryCategory.name), url: `${frontendBaseUrl}/${locale}/category/${englishCategorySlug}` }] : []),
     { name: decodeHtmlEntities(product.name), url: `${frontendBaseUrl}/${locale}/product/${slug}` },
   ]);
 
@@ -408,15 +376,21 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
       <ProductDetail
         product={product}
         locale={locale as Locale}
-        relatedProducts={relatedProducts}
-        upsellProducts={upsellProducts}
         addonForms={productAddons?.forms}
         englishCategorySlug={englishCategorySlug}
-        localizedCategoryName={localizedCategoryName}
         hiddenGiftProductIds={hiddenGiftProductIds}
         freeShippingThreshold={freeShippingThreshold}
         reviewsEnabled={featureToggles.sasanperfumes_reviews_enabled}
       />
+      <Suspense fallback={<RelatedProductsLoading />}>
+        <ProductRecommendations
+          product={product}
+          locale={locale as Locale}
+          currency={market.defaultCurrency}
+          frontendHost={frontendHost}
+          hiddenProductIds={[...hiddenGiftProductIds, ...hiddenCatalogProductIds]}
+        />
+      </Suspense>
     </>
   );
 }

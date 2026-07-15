@@ -159,11 +159,11 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
 
   return (
     <>
-    <SocialIconLinks className="mx-auto max-w-[88rem]" links={socialLinks} variant="dark" />
+    <SocialIconLinks className="mx-auto max-w-[var(--page-container-max-width)]" links={socialLinks} variant="dark" />
     <footer className="main-footer relative overflow-hidden border-t border-white/10 bg-brand-primary pb-20 text-brand-ivory md:pb-0">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.035)_0_1px,transparent_1px_20px)]" />
 
-        <div className="relative mx-auto w-full max-w-[88rem] px-4 py-10 md:py-14">
+        <div className="relative mx-auto w-full max-w-[var(--page-container-max-width)] px-4 py-10 md:py-14">
           <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-12">
           <div className="border-b border-white/10 pb-8 lg:border-b-0 lg:border-e lg:pe-12">
             {siteSettings?.logo?.url ? (
