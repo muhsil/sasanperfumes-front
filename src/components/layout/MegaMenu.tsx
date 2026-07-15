@@ -6,7 +6,7 @@ import type { Dictionary } from "@/i18n";
 import type { Locale } from "@/config/site";
 import { cn, decodeHtmlEntities } from "@/lib/utils";
 import { CategoriesGridSkeleton } from "@/components/common/Skeleton";
-import { getMegaMenuCategories, normalizeMenuUrl, translateToArabic } from "@/config/menu";
+import { getMegaMenuCategories, getSpecialMenuRoute, normalizeMenuUrl, translateToArabic } from "@/config/menu";
 import { isLegacyBrandCategory } from "@/config/categoryVisibility";
 import { getMegaMenuData, type MegaMenuColumn, type MegaMenuData, type MegaMenuSettings } from "@/lib/api/wordpress";
 import type { WPMenuItem } from "@/types/wordpress";
@@ -37,11 +37,9 @@ function extractSlugFromUrl(value: string): string {
 function shouldHideCategory(title: string, slug: string): boolean {
   const cleanTitle = decodeHtmlEntities(title).trim().toLowerCase();
   const cleanSlug = slug.trim().toLowerCase();
-  return (
-    hiddenCategorySlugs.has(cleanSlug) ||
-    hiddenCategoryTitles.has(cleanTitle) ||
-    isLegacyBrandCategory({ name: title, slug })
-  );
+  if (hiddenCategorySlugs.has(cleanSlug)) return true;
+  if (hiddenCategoryTitles.has(cleanTitle) && !getSpecialMenuRoute(title)) return true;
+  return isLegacyBrandCategory({ name: title, slug });
 }
 
 function displayCategoryName(title: string, locale: Locale): string {
@@ -59,6 +57,11 @@ function displayCategoryName(title: string, locale: Locale): string {
 function isCategoryItem(item: WPMenuItem): boolean {
   const url = item.url.trim().toLowerCase();
   return url.includes("/category/") || url.includes("/product-category/");
+}
+
+function specialMenuHref(title: string, locale: Locale, marketPrefix: string): string | null {
+  const route = getSpecialMenuRoute(title);
+  return route ? `${marketPrefix}/${locale}${route}` : null;
 }
 
 function isShopAllItem(item: WPMenuItem): boolean {
@@ -89,16 +92,17 @@ function menuItemsToColumns(items: WPMenuItem[] | null | undefined, locale: Loca
 
   return sourceItems
     .filter((item) => !isShopAllItem(item))
-    .filter((item) => isCategoryItem(item))
+    .filter((item) => isCategoryItem(item) || specialMenuHref(item.title, locale, marketPrefix))
     .map((item) => {
-      const href = normalizeMenuUrl(item.url, locale, marketPrefix);
+      const specialHref = specialMenuHref(item.title, locale, marketPrefix);
+      const href = specialHref || normalizeMenuUrl(item.url, locale, marketPrefix);
       const slug = extractSlugFromUrl(href || item.url);
       const title = displayCategoryName(item.title, locale);
       const children = childItemsFor(item, childrenByParent)
         .filter((child) => !isShopAllItem(child))
-        .filter((child) => isCategoryItem(child))
+        .filter((child) => isCategoryItem(child) || specialMenuHref(child.title, locale, marketPrefix))
         .map((child) => {
-          const childHref = normalizeMenuUrl(child.url, locale, marketPrefix);
+          const childHref = specialMenuHref(child.title, locale, marketPrefix) || normalizeMenuUrl(child.url, locale, marketPrefix);
           const childSlug = extractSlugFromUrl(childHref || child.url);
           return {
             id: child.id,
