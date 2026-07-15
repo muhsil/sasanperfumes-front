@@ -220,6 +220,112 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // Product listing pages should always reflect the latest catalog/menu state.
+      // These routes are frequently used as landing pages, so avoid CDN HTML caching.
+      {
+        source: "/:locale(en|ar)/category/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-store, max-age=0, must-revalidate",
+          },
+          {
+            key: "CDN-Cache-Control",
+            value: "no-store",
+          },
+        ],
+      },
+      {
+        source: "/:locale(en|ar)/shop",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-store, max-age=0, must-revalidate",
+          },
+          {
+            key: "CDN-Cache-Control",
+            value: "no-store",
+          },
+        ],
+      },
+      {
+        source: "/:locale(en|ar)/featured-products",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-store, max-age=0, must-revalidate",
+          },
+          {
+            key: "CDN-Cache-Control",
+            value: "no-store",
+          },
+        ],
+      },
+      {
+        source: "/:locale(en|ar)/new-products",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-store, max-age=0, must-revalidate",
+          },
+          {
+            key: "CDN-Cache-Control",
+            value: "no-store",
+          },
+        ],
+      },
+      {
+        source: "/:market(qa|om|sa)/:locale(en|ar)/category/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-store, max-age=0, must-revalidate",
+          },
+          {
+            key: "CDN-Cache-Control",
+            value: "no-store",
+          },
+        ],
+      },
+      {
+        source: "/:market(qa|om|sa)/:locale(en|ar)/shop",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-store, max-age=0, must-revalidate",
+          },
+          {
+            key: "CDN-Cache-Control",
+            value: "no-store",
+          },
+        ],
+      },
+      {
+        source: "/:market(qa|om|sa)/:locale(en|ar)/featured-products",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-store, max-age=0, must-revalidate",
+          },
+          {
+            key: "CDN-Cache-Control",
+            value: "no-store",
+          },
+        ],
+      },
+      {
+        source: "/:market(qa|om|sa)/:locale(en|ar)/new-products",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-store, max-age=0, must-revalidate",
+          },
+          {
+            key: "CDN-Cache-Control",
+            value: "no-store",
+          },
+        ],
+      },
       {
         source: "/wp-content/uploads/:path*",
         headers: [
