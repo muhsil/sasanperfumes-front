@@ -46,7 +46,14 @@ function shouldHideCategory(title: string, slug: string): boolean {
 
 function displayCategoryName(title: string, locale: Locale): string {
   const decoded = decodeHtmlEntities(title);
-  return locale === "ar" ? translateToArabic(decoded) : decoded;
+  const localized = locale === "ar" ? translateToArabic(decoded) : decoded;
+  const normalized = localized.replace(/\u200b/g, "").trim().toLowerCase();
+
+  if (normalized === "categories" || normalized === "الفئات") {
+    return `${localized}\u200b`;
+  }
+
+  return localized;
 }
 
 function isCategoryItem(item: WPMenuItem): boolean {

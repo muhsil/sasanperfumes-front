@@ -1387,6 +1387,7 @@ interface RawWPMenuItem {
   menu_item_parent: string;
   menu_order: number;
   child_items?: RawWPMenuItem[];
+  children?: RawWPMenuItem[];
 }
 
 // Raw WordPress menu type from API
@@ -1405,6 +1406,7 @@ interface SasanMenuItem {
   parent: string | number;
   order: number;
   children?: SasanMenuItem[];
+  child_items?: SasanMenuItem[];
 }
 
 interface SasanMenu {
@@ -1416,6 +1418,7 @@ interface SasanMenu {
 
 // Transform raw WordPress menu item to normalized format
 function transformMenuItem(rawItem: RawWPMenuItem): WPMenuItem {
+  const rawChildren = rawItem.child_items || rawItem.children || [];
   return {
     id: rawItem.ID,
     title: rebrandText(rawItem.title),
@@ -1423,11 +1426,12 @@ function transformMenuItem(rawItem: RawWPMenuItem): WPMenuItem {
     target: rawItem.target || "",
     parent: parseInt(rawItem.menu_item_parent, 10) || 0,
     order: rawItem.menu_order,
-    children: rawItem.child_items?.map(transformMenuItem),
+    children: rawChildren.map(transformMenuItem),
   };
 }
 
 function transformSasanMenuItem(rawItem: SasanMenuItem): WPMenuItem {
+  const rawChildren = rawItem.child_items || rawItem.children || [];
   return {
     id: rawItem.id,
     title: rebrandText(rawItem.title),
@@ -1435,7 +1439,7 @@ function transformSasanMenuItem(rawItem: SasanMenuItem): WPMenuItem {
     target: rawItem.target || "",
     parent: Number(rawItem.parent) || 0,
     order: rawItem.order,
-    children: rawItem.children?.map(transformSasanMenuItem),
+    children: rawChildren.map(transformSasanMenuItem),
   };
 }
 
@@ -2089,6 +2093,31 @@ function extractCategorySlugFromUrl(url: string): string {
   return "";
 }
 
+function isGenericMegaMenuUrl(url: string): boolean {
+  const normalizedUrl = url.trim().toLowerCase();
+  return (
+    normalizedUrl === "" ||
+    normalizedUrl === "#" ||
+    normalizedUrl === "/" ||
+    normalizedUrl.endsWith("/shop") ||
+    normalizedUrl.endsWith("/shop/")
+  );
+}
+
+function getMegaMenuItemSlug(id: number, url: string, fallbackSlug: string): string {
+  if (!fallbackSlug || isGenericMegaMenuUrl(url) || fallbackSlug.toLowerCase() === "shop") {
+    return `menu-${id}`;
+  }
+  return fallbackSlug;
+}
+
+function getMegaMenuItemHref(url: string, slug: string, locale?: Locale): string {
+  if (isGenericMegaMenuUrl(url) || !slug || slug.toLowerCase() === "shop") {
+    return `/${locale || "en"}/shop`;
+  }
+  return transformToFrontendCategoryUrl(url, slug, locale);
+}
+
 /**
  * Transform a WordPress URL to a frontend category URL
  * WordPress URLs like https://cms.sasanperfumes.com/product-category/perfumes-oils/
@@ -2160,8 +2189,8 @@ export async function getMegaMenuData(locale?: Locale, frontendHost?: string): P
     const column: MegaMenuColumn = {
       id: child.id,
       name: locale === "ar" ? translateToArabic(child.title) : decodeHtmlEntities(child.title),
-      slug: childSlug,
-      url: transformToFrontendCategoryUrl(child.url, childSlug, locale),
+      slug: getMegaMenuItemSlug(child.id, child.url, childSlug),
+      url: getMegaMenuItemHref(child.url, childSlug, locale),
       image: null,
       children: [],
     };
@@ -2178,8 +2207,8 @@ export async function getMegaMenuData(locale?: Locale, frontendHost?: string): P
         column.children.push({
           id: subChild.id,
           name: locale === "ar" ? translateToArabic(subChild.title) : decodeHtmlEntities(subChild.title),
-          slug: subChildSlug,
-          url: transformToFrontendCategoryUrl(subChild.url, subChildSlug, locale),
+          slug: getMegaMenuItemSlug(subChild.id, subChild.url, subChildSlug),
+          url: getMegaMenuItemHref(subChild.url, subChildSlug, locale),
         });
       }
     }
