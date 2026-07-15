@@ -1203,6 +1203,40 @@ export const TAG_SLUG_MAPPINGS = {
   arabicToEnglish: ARABIC_TO_ENGLISH_TAG_SLUGS,
 };
 
+function containsArabicCharacters(value: string): boolean {
+  return /[\u0600-\u06FF]/.test(value);
+}
+
+function sortCategoryMatches(categories: WCCategory[], locale?: Locale): WCCategory[] {
+  return [...categories].sort((a, b) => {
+    const aArabic = containsArabicCharacters(a.name);
+    const bArabic = containsArabicCharacters(b.name);
+
+    if (locale === "ar" && aArabic !== bArabic) {
+      return aArabic ? -1 : 1;
+    }
+
+    if (locale === "en" && aArabic !== bArabic) {
+      return aArabic ? 1 : -1;
+    }
+
+    if (b.count !== a.count) {
+      return b.count - a.count;
+    }
+
+    return a.id - b.id;
+  });
+}
+
+function pickBestCategoryMatch(categories: WCCategory[], slug: string, locale?: Locale): WCCategory | null {
+  const exactMatches = sortCategoryMatches(
+    categories.filter((category) => category.slug === slug),
+    locale
+  );
+
+  return exactMatches[0] || null;
+}
+
 // Memoized version for request deduplication
 // Handles the case where URLs use English slugs but the locale is non-English (e.g., Arabic)
 // WPML assigns different slugs for each language, so we need to map English slugs to localized categories
@@ -1216,8 +1250,9 @@ export const getCategoryBySlug = cache(async function getCategoryBySlug(
     const market = extractMarketFromHost(frontendHost) || await detectMarketFromRequest();
     const categories = await getCategories(locale, currency, frontendHost);
     
-    // First, try to find by exact slug match
-    const exactMatch = categories.find((cat) => cat.slug === slug);
+    // First, try to find by exact slug match, preferring the locale-appropriate row
+    // when WordPress returns both English and translated categories with the same slug.
+    const exactMatch = pickBestCategoryMatch(categories, slug, locale);
     if (exactMatch) {
       return exactMatch;
     }
@@ -1300,6 +1335,17 @@ export async function getProductsByCategory(
   }
 
   const categoryIdsToTry: number[] = [];
+  const categories = await getCategories(params?.locale, params?.currency, params?.frontendHost);
+  const exactMatches = sortCategoryMatches(
+    categories.filter((item) => item.slug === categorySlug),
+    params?.locale
+  );
+
+  for (const match of exactMatches) {
+    if (!categoryIdsToTry.includes(match.id)) {
+      categoryIdsToTry.push(match.id);
+    }
+  }
 
   // WPML stores Arabic-localized category rows separately, but the WooCommerce
   // Store API still attaches many translated products to the English category
@@ -1314,11 +1360,15 @@ export async function getProductsByCategory(
     );
 
     if (englishCategory) {
-      categoryIdsToTry.push(englishCategory.id);
+      if (!categoryIdsToTry.includes(englishCategory.id)) {
+        categoryIdsToTry.push(englishCategory.id);
+      }
     }
   }
 
-  categoryIdsToTry.push(category.id);
+  if (!categoryIdsToTry.includes(category.id)) {
+    categoryIdsToTry.push(category.id);
+  }
 
   const mergeProducts = (target: WCProduct[], source: WCProduct[]) => {
     const seen = new Set(target.map((product) => product.id));
