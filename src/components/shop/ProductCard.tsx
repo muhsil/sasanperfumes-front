@@ -131,7 +131,7 @@ export function ProductCard({ product, locale, className, wcProduct }: ProductCa
         {/* Image */}
         <div className="relative border border-[#e7ded7] bg-white shadow-[0_4px_20px_rgba(74,22,51,0.06)]">
           <Link href={productHref} className="block" aria-label={productName}>
-            <div className="relative aspect-[2/3] overflow-hidden bg-[#F8F5F0]">
+            <div className="relative aspect-[3/5] overflow-hidden bg-[#F8F5F0]">
               {product.image ? (
                 <>
                   <Image

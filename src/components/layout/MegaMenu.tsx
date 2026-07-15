@@ -308,11 +308,15 @@ export function MegaMenu({
     : menuData?.columns?.length
       ? normalizeColumns(menuData.columns, locale, marketPrefix)
       : [];
+  const hasBackendMenuAttempted = hasMenuFetchedRef.current || menuLoading;
   const displayColumns = backendColumns.length > 0
     ? backendColumns
-    : wcCategories.length > 0
-      ? wcCategories
-      : staticColumns;
+    : hasBackendMenuAttempted
+      ? wcCategories.length > 0
+        ? wcCategories
+        : staticColumns
+      : [];
+  const showLoadingState = isOpen && backendColumns.length === 0 && !hasBackendMenuAttempted;
 
   if (!isOpen) return null;
 
@@ -328,7 +332,7 @@ export function MegaMenu({
       onMouseLeave={onClose}
     >
       <div className="container mx-auto px-4 py-8">
-        {menuLoading && displayColumns.length === 0 ? (
+        {showLoadingState || (menuLoading && backendColumns.length === 0) ? (
           <CategoriesGridSkeleton count={8} />
         ) : displayColumns.length === 0 ? (
           <div className="py-12 text-center text-sm font-medium text-brand-muted">
