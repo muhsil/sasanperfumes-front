@@ -216,8 +216,6 @@ export function MegaMenu({
   );
 
   const fetchMenuData = useCallback(async () => {
-    if (providedColumns.length > 0) return;
-
     if (menuDataFetchPromise[cacheKey]) {
       try {
         setMenuData(await menuDataFetchPromise[cacheKey]);
@@ -283,11 +281,11 @@ export function MegaMenu({
   }, [cacheKey, locale, marketPrefix]);
 
   useEffect(() => {
-    if (isOpen && !hasMenuFetchedRef.current && providedColumns.length === 0) {
+    if (isOpen && !hasMenuFetchedRef.current) {
       hasMenuFetchedRef.current = true;
       fetchMenuData();
     }
-  }, [isOpen, fetchMenuData, providedColumns.length]);
+  }, [isOpen, fetchMenuData]);
 
   useEffect(() => {
     if (isOpen && !menuLoading && !hasWcCategoriesFetchedRef.current) {
@@ -303,12 +301,12 @@ export function MegaMenu({
     setWcCategories([]);
   }, [cacheKey]);
 
-  const backendColumns = providedColumns.length > 0
-    ? providedColumns
-    : menuData?.columns?.length
-      ? normalizeColumns(menuData.columns, locale, marketPrefix)
-      : [];
   const hasBackendMenuAttempted = hasMenuFetchedRef.current || menuLoading;
+  const backendColumns = menuData?.columns?.length
+    ? normalizeColumns(menuData.columns, locale, marketPrefix)
+    : hasBackendMenuAttempted && providedColumns.length > 0
+      ? providedColumns
+      : [];
   const displayColumns = backendColumns.length > 0
     ? backendColumns
     : hasBackendMenuAttempted
