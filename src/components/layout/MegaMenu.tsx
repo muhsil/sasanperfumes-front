@@ -340,14 +340,6 @@ export function MegaMenu({
           </div>
         ) : (
           <>
-            <Link
-              href={`${marketPrefix}/${locale}/shop`}
-              onClick={onClose}
-              className="mb-6 inline-flex rounded-full border border-brand-gold/35 px-5 py-2 text-sm font-bold uppercase tracking-wide text-brand-primary transition-colors hover:border-brand-gold hover:bg-brand-beige"
-            >
-              {isRTL ? "تسوق الكل" : "Shop All"}
-            </Link>
-
             <div
               className="grid gap-x-10 gap-y-7"
               style={{ gridTemplateColumns: "repeat(auto-fit, minmax(165px, 1fr))" }}
