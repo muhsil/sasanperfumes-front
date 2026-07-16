@@ -275,19 +275,51 @@ class sasanperfumes_Email_Templates {
 		}
 
 		$recipients = $this->normalize_mail_recipients( $atts['to'] ?? '' );
-		if ( empty( array_intersect( $recipients, array( 'orders@sasanperfumes.com', 'sasanperfumesuae@gmail.com' ) ) ) ) {
+		if ( empty( $recipients ) ) {
 			return false;
 		}
 
 		$subject = strtolower( (string) ( $atts['subject'] ?? '' ) );
 		$message = strtolower( (string) ( $atts['message'] ?? '' ) );
 
-		if ( false !== strpos( $subject, 'new order' ) || false !== strpos( $subject, 'order #' ) || false !== strpos( $subject, 'test email' ) ) {
-			return true;
+		$subject_markers = array(
+			'new order',
+			'order #',
+			'your order',
+			'order received',
+			'order complete',
+			'order cancelled',
+			'order refunded',
+			'order failed',
+			'customer note',
+			'invoice for order',
+			'password reset',
+			'reset your password',
+			'new account',
+			'account created',
+			'test email',
+		);
+
+		foreach ( $subject_markers as $marker ) {
+			if ( false !== strpos( $subject, $marker ) ) {
+				return true;
+			}
 		}
 
-		if ( false !== strpos( $message, 'order details' ) || false !== strpos( $message, 'customer details' ) || false !== strpos( $message, 'new order' ) ) {
-			return true;
+		$message_markers = array(
+			'email-order-details',
+			'order details',
+			'customer details',
+			'new order',
+			'reset your password',
+			'set a new password',
+			'welcome to sasan perfumes',
+		);
+
+		foreach ( $message_markers as $marker ) {
+			if ( false !== strpos( $message, $marker ) ) {
+				return true;
+			}
 		}
 
 		return false;

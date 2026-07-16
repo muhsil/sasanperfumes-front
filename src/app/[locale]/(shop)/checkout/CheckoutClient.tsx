@@ -709,15 +709,15 @@ export default function CheckoutClient() {
           const feesMajor = (cartFeeTotal || 0) / divisor;
           return subtotalMajor + shippingMajor + feesMajor;
         }
-        const baseTotal = parseFloat(cartTotal) || 0;
+        const baseTotalMinor = parseFloat(cartTotal) || 0;
         const serverCustomsFeeTotal = (Array.isArray(cart?.fees) ? cart.fees : [])
           .filter(fee => fee?.name?.toLowerCase() === "customs fees")
           .reduce((sum, fee) => sum + (parseFloat(fee?.fee) || 0), 0);
         const clientCustomsFee = customsFee ? (parseFloat(customsFee.fee) || 0) : 0;
-        return Math.max(baseTotal - promotionalDiscountTotal - serverCustomsFeeTotal + clientCustomsFee, 0);
+        return Math.max(baseTotalMinor - promotionalDiscountTotal - serverCustomsFeeTotal + clientCustomsFee, 0) / divisor;
       } catch (err) {
         console.error("[Checkout] Failed to calculate checkout total:", err);
-        return Math.max(parseFloat(cartTotal) || 0, 0);
+        return Math.max(parseFloat(cartTotal) || 0, 0) / divisor;
       }
     }, [discountedCartSubtotal, shippingTotal, shippingPackages, cartTotal, cartFeeTotal, customsFee, cart?.fees, promotionalDiscountTotal, divisor, shippingDivisor]);
 
