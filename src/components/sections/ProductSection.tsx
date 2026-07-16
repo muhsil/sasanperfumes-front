@@ -123,6 +123,9 @@ export function ProductSection({
   const shellClassName = fullView ? FULL_VIEW_SHELL_CLASS : "section-shell";
   const showInlineNavigation = showHeaderNavigation && !isGrid && displayProducts.length > cols.mobile;
   const headerArrowClassName = "flex h-9 w-9 items-center justify-center rounded-full border border-brand-border/70 bg-brand-ivory text-brand-primary shadow-[0_8px_20px_rgba(20,15,10,0.1)] transition-colors hover:border-brand-primary/45 hover:bg-brand-primary hover:text-white md:h-10 md:w-10";
+  const headerClassName = showHeaderNavigation
+    ? "mb-4 flex items-start justify-between gap-4 md:mb-5 md:items-end"
+    : "mb-4 flex flex-col gap-3 md:mb-5 md:flex-row md:items-end md:justify-between";
 
   const sectionClass = fullView
     ? `bg-transparent py-7 md:py-9 lg:py-10 ${className} ${getVisibilityClass()}`
@@ -131,7 +134,7 @@ export function ProductSection({
   return (
     <section className={`${sectionClass} lazy-section`}>
       <div className={shellClassName}>
-        <div className="mb-4 flex flex-col gap-3 md:mb-5 md:flex-row md:items-end md:justify-between">
+        <div className={headerClassName}>
           <div className={isRTL ? "text-right" : "text-left"}>
             <h2 className="font-title text-xl text-brand-primary md:text-2xl">
               {settings.section_title}
