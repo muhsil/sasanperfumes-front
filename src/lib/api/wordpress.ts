@@ -924,6 +924,7 @@ interface FetchOptions {
   noCache?: boolean;
   frontendHost?: string;
   apiBase?: string;
+  ignoreMarket?: boolean;
 }
 
 const WP_KNOWN_MARKETS = new Set(["qa", "om", "sa"]);
@@ -969,9 +970,9 @@ async function fetchWPAPI<T>(
   endpoint: string,
   options: FetchOptions = {}
 ): Promise<T | null> {
-  const { revalidate = 300, tags, locale, noCache = false, frontendHost, apiBase } = options;
-  const market = extractWPMarketFromHost(frontendHost) || await detectMarketFromRequest();
-  const cmsFrontendHost = cmsFrontendHostForMarket(market, frontendHost);
+  const { revalidate = 300, tags, locale, noCache = false, frontendHost, apiBase, ignoreMarket = false } = options;
+  const market = ignoreMarket ? undefined : (extractWPMarketFromHost(frontendHost) || await detectMarketFromRequest());
+  const cmsFrontendHost = ignoreMarket ? undefined : cmsFrontendHostForMarket(market, frontendHost);
   const rootApiBase = apiBase || WP_API_BASE;
   const cacheKey = JSON.stringify({
     endpoint,
@@ -985,7 +986,7 @@ async function fetchWPAPI<T>(
     )
   );
 
-  const apiHeaders = market && cmsFrontendHost
+  const apiHeaders = !ignoreMarket && market && cmsFrontendHost
     ? backendHeaders({ "X-Frontend-Host": cmsFrontendHost, "X-Market": market })
     : backendHeaders(WP_API_HEADERS);
 
@@ -1500,6 +1501,7 @@ export async function getMenu(location: string, locale?: Locale, frontendHost?: 
         locale,
         frontendHost,
         revalidate: 600,
+        ignoreMarket: true,
       }
     );
 
@@ -1515,6 +1517,7 @@ export async function getMenu(location: string, locale?: Locale, frontendHost?: 
       locale,
       frontendHost,
       revalidate: 600,
+      ignoreMarket: location === "primary",
     }
   );
 
@@ -1527,12 +1530,14 @@ export async function getMenu(location: string, locale?: Locale, frontendHost?: 
 
 // Fetch primary navigation menu
 export async function getPrimaryMenu(locale?: Locale, frontendHost?: string): Promise<WPMenu | null> {
-  return (await getMenuBySlug("primary", locale, frontendHost)) || getMenu("primary", locale, frontendHost);
+  // Use the canonical primary menu for every locale and market.
+  // Labels are localized in the frontend, but the structure stays shared.
+  return (await getMenuBySlug("primary", undefined, frontendHost, true)) || getMenu("primary", undefined, frontendHost);
 }
 
 // Fetch mobile header menu (used for Categories drawer - separate from primary/desktop menu)
 export async function getMobileHeaderMenu(locale?: Locale, frontendHost?: string): Promise<WPMenu | null> {
-  return (await getMenuBySlug("mobile-header", locale, frontendHost)) || getMenu("mobile-header", locale, frontendHost);
+  return getPrimaryMenu(undefined, frontendHost);
 }
 
 // Fetch mobile bottom bar menu (used for bottom navigation icons - separate from other menus)
@@ -1542,7 +1547,7 @@ export async function getMobileBottomBarMenu(locale?: Locale, frontendHost?: str
 
 // Fetch WordPress menu by slug (uses /menus/v1/menus/{slug} endpoint)
 // For Arabic locale, appends "-ar" suffix to fetch the translated menu
-export async function getMenuBySlug(slug: string, locale?: Locale, frontendHost?: string): Promise<WPMenu | null> {
+export async function getMenuBySlug(slug: string, locale?: Locale, frontendHost?: string, forceGlobal = false): Promise<WPMenu | null> {
   const menuSlug = locale === "ar" ? `${slug}-ar` : slug;
   const data = await fetchWPAPI<RawWPMenu>(
     `/menus/v1/menus/${menuSlug}`,
@@ -1550,6 +1555,7 @@ export async function getMenuBySlug(slug: string, locale?: Locale, frontendHost?
       tags: ["menus", `menu-slug-${menuSlug}`],
       frontendHost,
       revalidate: 600,
+      ignoreMarket: forceGlobal,
     }
   );
 
@@ -1562,7 +1568,7 @@ export async function getMenuBySlug(slug: string, locale?: Locale, frontendHost?
 
 // Fetch categories drawer menu (independent from mobile hamburger and desktop header)
 export async function getCategoriesDrawerMenu(locale?: Locale, frontendHost?: string): Promise<WPMenu | null> {
-  const menu = await getMenuBySlug("categories-drawer", locale, frontendHost);
+  const menu = await getPrimaryMenu(undefined, frontendHost);
   if (!menu) return null;
 
   return {

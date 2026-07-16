@@ -245,13 +245,19 @@ async function NewProductsSection({ locale, isRTL, dictionary, homeSettings, cur
       !giftProductInfo.slugs.includes(product.slug)
   );
 
+  const newProductsCount = homeSettings.new_products.products_count || HOME_PRODUCT_COUNT;
+
   const settings = {
     ...homeSettings.new_products,
+    // New Products should always reflect the backend's newest-first order.
+    // Clear any manually selected slugs so curated ordering does not override recency.
+    selected_product_slugs: [],
     section_title: homeSettings.new_products.section_title || dictionary.sections.newProducts.title,
     section_subtitle: homeSettings.new_products.section_subtitle || dictionary.sections.newProducts.subtitle,
-    products_count: HOME_PRODUCT_COUNT,
+    products_count: newProductsCount,
+    show_view_all: false,
     responsive_columns: {
-      desktop: HOME_PRODUCT_COUNT,
+      desktop: homeSettings.new_products.responsive_columns?.desktop ?? 4,
       tablet: homeSettings.new_products.responsive_columns?.tablet ?? 3,
       mobile: homeSettings.new_products.responsive_columns?.mobile ?? 2,
     },
@@ -263,8 +269,8 @@ async function NewProductsSection({ locale, isRTL, dictionary, homeSettings, cur
       products={newProducts}
       locale={locale}
       isRTL={isRTL}
-      viewAllText={dictionary.common.viewAll}
       fullView
+      showHeaderNavigation
       bundleProductSlugs={bundleProductSlugs}
       englishProductSlugs={newProductEnglishSlugs}
     />
@@ -423,6 +429,10 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
   const mainCategorySlugAliases: Record<string, string> = {
     "hair-mist": "sasan-hair-mist",
     "womens-perfumes": "woman-perfumes",
+    "perfumes-ar": "perfumes",
+    "extrait-de-parfum-ar": "extrait-de-parfum",
+    "perfume-ar": "perfume",
+    "new-products-ar": "new-products",
   };
   const categoryFallbackImages = Object.fromEntries(
     categories.map((category) => {

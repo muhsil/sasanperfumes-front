@@ -18,9 +18,9 @@ export interface ProductSectionSliderProps {
   autoplay?: boolean;
   autoplayDelay?: number;
   sliderNavPrefix: string;
+  showNavigationButtons?: boolean;
   bundleProductSlugs?: string[];
   englishProductSlugs?: Record<number, string>;
-  fullView?: boolean;
 }
 
 export function ProductSectionSlider({
@@ -31,11 +31,11 @@ export function ProductSectionSlider({
   autoplay = false,
   autoplayDelay = 4000,
   sliderNavPrefix,
+  showNavigationButtons = true,
   bundleProductSlugs = [],
   englishProductSlugs = {},
-  fullView = false,
 }: ProductSectionSliderProps) {
-  const showNavigation = products.length > cols.mobile;
+  const showNavigation = showNavigationButtons && products.length > cols.mobile;
   const shellClassName = "section-shell";
 
   return (

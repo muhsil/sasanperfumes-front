@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { WCProductCard } from "@/components/shop/WCProductCard";
 import { ProductGridSkeleton, SectionHeaderSkeleton } from "@/components/common/Skeleton";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
@@ -38,6 +39,7 @@ interface ProductSectionProps {
   className?: string;
   isLoading?: boolean;
   fullView?: boolean;
+  showHeaderNavigation?: boolean;
   hideSubtitleOnMobile?: boolean;
   bundleProductSlugs?: string[];
   englishProductSlugs?: Record<number, string>;
@@ -69,6 +71,7 @@ export function ProductSection({
   className = "",
   isLoading = false,
   fullView = false,
+  showHeaderNavigation = false,
   hideSubtitleOnMobile = false,
   bundleProductSlugs = [],
   englishProductSlugs = {},
@@ -118,6 +121,8 @@ export function ProductSection({
   const isGrid = settings.display === 'grid';
   const sliderNavPrefix = settings.section_title?.replace(/\s+/g, "-").toLowerCase() || "default";
   const shellClassName = fullView ? FULL_VIEW_SHELL_CLASS : "section-shell";
+  const showInlineNavigation = showHeaderNavigation && !isGrid && displayProducts.length > cols.mobile;
+  const headerArrowClassName = "flex h-9 w-9 items-center justify-center rounded-full border border-brand-border/70 bg-brand-ivory text-brand-primary shadow-[0_8px_20px_rgba(20,15,10,0.1)] transition-colors hover:border-brand-primary/45 hover:bg-brand-primary hover:text-white md:h-10 md:w-10";
 
   const sectionClass = fullView
     ? `bg-transparent py-7 md:py-9 lg:py-10 ${className} ${getVisibilityClass()}`
@@ -137,13 +142,32 @@ export function ProductSection({
               </p>
             )}
           </div>
-          {settings.show_view_all && (
-            <Link
-              href={viewAllLink}
-              className="hidden rounded-full border border-brand-border/70 bg-brand-ivory px-4 py-2 text-[11px] font-semibold uppercase text-brand-primary transition-colors hover:border-brand-primary/45 hover:bg-brand-beige md:inline-flex"
-            >
-              {viewAllText}
-            </Link>
+          {showInlineNavigation ? (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className={`${headerArrowClassName} product-slider-prev-${sliderNavPrefix}`}
+                aria-label="Previous products"
+              >
+                <ChevronLeft className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />
+              </button>
+              <button
+                type="button"
+                className={`${headerArrowClassName} product-slider-next-${sliderNavPrefix}`}
+                aria-label="Next products"
+              >
+                <ChevronRight className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />
+              </button>
+            </div>
+          ) : (
+            settings.show_view_all && (
+              <Link
+                href={viewAllLink}
+                className="hidden rounded-full border border-brand-border/70 bg-brand-ivory px-4 py-2 text-[11px] font-semibold uppercase text-brand-primary transition-colors hover:border-brand-primary/45 hover:bg-brand-beige md:inline-flex"
+              >
+                {viewAllText}
+              </Link>
+            )
           )}
         </div>
       </div>
@@ -164,9 +188,9 @@ export function ProductSection({
           autoplay={Boolean(settings.autoplay)}
           autoplayDelay={settings.autoplay_delay || 4000}
           sliderNavPrefix={sliderNavPrefix}
+          showNavigationButtons={!showInlineNavigation}
           bundleProductSlugs={bundleProductSlugs}
           englishProductSlugs={englishProductSlugs}
-          fullView={fullView}
         />
       )}
     </section>

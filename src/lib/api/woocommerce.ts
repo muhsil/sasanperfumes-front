@@ -1039,7 +1039,10 @@ export const getCategories = cache(async function getCategories(
 // This is needed because WPML assigns different slugs for each language
 // and the API returns categories in different orders, making position-based matching unreliable
 const ENGLISH_TO_ARABIC_CATEGORY_SLUGS: Record<string, string> = {
-  "perfumes": "%d8%a7%d9%84%d8%b9%d8%b7%d9%88%d8%b1",
+  "perfumes": "perfumes-ar",
+  "extrait-de-parfum": "extrait-de-parfum-ar",
+  "new-products": "new-products-ar",
+  "perfume": "perfume-ar",
   "perfumes-oils": "%d8%a7%d9%84%d8%b9%d8%b7%d9%88%d8%b1-%d9%88%d8%a7%d9%84%d8%b2%d9%8a%d9%88%d8%aa",
   "home-fragrances": "%d9%85%d8%b9%d8%b7%d8%b1%d8%a7%d8%aa-%d8%a7%d9%84%d9%85%d9%86%d8%b2%d9%84",
   "personal-care": "%d8%a7%d9%84%d8%b9%d9%86%d8%a7%d9%8a%d8%a9-%d8%a7%d9%84%d8%b4%d8%ae%d8%b5%d9%8a%d8%a9",
