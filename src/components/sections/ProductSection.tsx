@@ -174,7 +174,7 @@ export function ProductSection({
 
       {isGrid ? (
         /* Grid layout */
-        <div className={`grid gap-4 ${shellClassName} pb-1 ${MOBILE_COLS[cols.mobile] ?? "grid-cols-2"} ${TABLET_COLS[cols.tablet] ?? "sm:grid-cols-3"} ${DESKTOP_COLS[cols.desktop] ?? "lg:grid-cols-5"}`}>
+        <div className={`grid gap-x-2 gap-y-3 sm:gap-x-3 sm:gap-y-4 ${shellClassName} pb-1 ${MOBILE_COLS[cols.mobile] ?? "grid-cols-2"} ${TABLET_COLS[cols.tablet] ?? "sm:grid-cols-3"} ${DESKTOP_COLS[cols.desktop] ?? "lg:grid-cols-5"}`}>
           {displayProducts.map((product) => (
             <WCProductCard key={product.id} product={product} locale={locale} bundleProductSlugs={bundleProductSlugs} englishSlug={englishProductSlugs[product.id]} />
           ))}

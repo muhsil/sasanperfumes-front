@@ -42,7 +42,7 @@ export function ProductSectionSlider({
     <div className={`relative product-section-slider ${shellClassName}`}>
       <Swiper
         modules={[Autoplay, Navigation]}
-        spaceBetween={16}
+        spaceBetween={8}
         slidesPerView={cols.mobile}
         loop={autoplay && products.length > cols.desktop}
         autoplay={
@@ -58,7 +58,7 @@ export function ProductSectionSlider({
           nextEl: `.product-slider-next-${sliderNavPrefix}`,
         }}
         breakpoints={{
-          640: { slidesPerView: cols.tablet, spaceBetween: 16 },
+          640: { slidesPerView: cols.tablet, spaceBetween: 12 },
           768: { slidesPerView: cols.tablet, spaceBetween: 16 },
           1024: { slidesPerView: cols.desktop, spaceBetween: 16 },
           1280: { slidesPerView: cols.desktop, spaceBetween: 16 },
