@@ -945,6 +945,7 @@ export function ProductDetail({ product, locale, addonForms = [], englishCategor
   ];
   const productDisplayName = formatProductDisplayName(product.name);
   const sanitizedShortDescription = product.short_description ? sanitizeProductDescription(product.short_description) : "";
+  const shortDescriptionDisplay = stripHtmlToText(sanitizedShortDescription);
   const sanitizedDescription = product.description ? sanitizeProductDescription(product.description) : "";
   const descriptionStoryText = useMemo(
     () => stripHtmlToText(sanitizedDescription || sanitizedShortDescription),
@@ -1657,6 +1658,12 @@ export function ProductDetail({ product, locale, addonForms = [], englishCategor
             <h1 className="font-title w-full text-lg leading-tight text-brand-primary sm:text-xl md:text-2xl lg:text-3xl">
               {productDisplayName}
             </h1>
+
+          {shortDescriptionDisplay && (
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-brand-primary/65 sm:text-[15px]">
+              {shortDescriptionDisplay}
+            </p>
+          )}
 
           {showReviews && (
             <a

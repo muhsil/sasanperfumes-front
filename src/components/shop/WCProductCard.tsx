@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { Plus, Heart, Check, Star } from "lucide-react";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { ProductBadges } from "@/components/shop/ProductBadges";
-import { cn, decodeHtmlEntities, getProductSlugFromPermalink, BLUR_DATA_URL } from "@/lib/utils";
+import { cn, decodeHtmlEntities, getProductSlugFromPermalink, htmlToPlainText, BLUR_DATA_URL } from "@/lib/utils";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -118,6 +118,7 @@ export function WCProductCard({
     router.prefetch(productHref);
   }, [productHref, router]);
   const productName = decodeHtmlEntities(product.name);
+  const shortDescription = htmlToPlainText(product.short_description || "");
   const extraBadgeSlugs: string[] = [];
 
   const priceDivider = Math.pow(10, product.prices.currency_minor_unit);
@@ -306,7 +307,7 @@ export function WCProductCard({
           </div>
 
           {/* Info */}
-        <div className="relative mt-3 flex min-h-[68px] flex-1 items-center justify-center px-2 py-1.5 text-center sm:min-h-[82px] sm:px-3 sm:py-2">
+        <div className="relative mt-3 flex min-h-[96px] flex-1 items-center justify-center px-2 py-1.5 text-center sm:min-h-[108px] sm:px-3 sm:py-2">
             <div className="flex w-full flex-col items-center gap-0">
             {/* Variation terms */}
             {hasVariations && visibleVariationTerms.length > 0 && (
@@ -339,6 +340,10 @@ export function WCProductCard({
               </h3>
             </Link>
 
+            <p className="mt-1 min-h-8 line-clamp-2 text-[10px] leading-4 text-brand-muted sm:text-[11px]">
+              {shortDescription}
+            </p>
+
             {reviewCount > 0 && (
               <div className={cn("mt-0.5 flex items-center gap-1.5", isRTL && "flex-row-reverse")}>
                 <div className="flex items-center gap-0.5">
@@ -351,7 +356,7 @@ export function WCProductCard({
             )}
 
             {/* Price */}
-            <div className={cn(reviewCount > 0 ? "mt-0.5" : "mt-0")}>
+            <div className={cn(reviewCount > 0 ? "mt-0.5" : "mt-1")}>
               {!hasPrice && !hasPriceRange ? (
                 <span className="text-[11px] font-bold text-brand-primary/45 sm:text-xs">{isRTL ? "غير متاح" : "Unavailable"}</span>
               ) : showAsVariable && hasPriceRange && minPrice !== maxPrice ? (

@@ -235,6 +235,12 @@ export function decodeHtmlEntities(text: string): string {
     .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => { const n = parseInt(hex, 16); return n >= 0 && n <= 0x10FFFF ? String.fromCodePoint(n) : `&#x${hex};`; });
 }
 
+export function htmlToPlainText(html: string): string {
+  return decodeHtmlEntities(html.replace(/<[^>]*>/g, " "))
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function formatProductDisplayName(name: string): string {
   const decoded = decodeHtmlEntities(name).trim();
   const letters = decoded.match(/[A-Za-z]/g);

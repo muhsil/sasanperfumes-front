@@ -11,7 +11,7 @@ import { DiscountBadge } from "@/components/shop/DiscountBadge";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useComparison } from "@/contexts/ComparisonContext";
-import { cn, decodeHtmlEntities } from "@/lib/utils";
+import { cn, decodeHtmlEntities, htmlToPlainText } from "@/lib/utils";
 import type { Product } from "@/types";
 import type { Locale } from "@/config/site";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
@@ -49,6 +49,7 @@ export function ProductCard({ product, locale, className, wcProduct }: ProductCa
 
   const productHref = `${marketPrefix}/${locale}/product/${product.slug}`;
   const productName = decodeHtmlEntities(product.name);
+  const shortDescription = htmlToPlainText(product.shortDescription || "");
   const variationAttributes = product.attributes.nodes.filter((attribute) => attribute.variation && attribute.options.length > 0);
   const variationTerms = variationAttributes.flatMap((attribute) =>
     attribute.options.map((option) => decodeHtmlEntities(option))
@@ -244,7 +245,7 @@ export function ProductCard({ product, locale, className, wcProduct }: ProductCa
         </div>
 
         {/* Info */}
-        <div className="relative mt-3 flex min-h-20 flex-1 items-center justify-center px-3 py-3 text-center">
+        <div className="relative mt-3 flex min-h-[108px] flex-1 items-center justify-center px-3 py-3 text-center">
           <div className="flex w-full flex-col items-center">
             {/* Variation terms */}
             <div className="mb-2 w-full">
@@ -270,6 +271,10 @@ export function ProductCard({ product, locale, className, wcProduct }: ProductCa
                   {productName}
                 </h3>
               </Link>
+
+              <p className="mt-1 min-h-8 line-clamp-2 text-[10px] leading-4 text-brand-muted sm:text-[11px]">
+                {shortDescription}
+              </p>
 
               {product.onSale && saleEnd && (
                 <div className="mt-1">
