@@ -749,7 +749,7 @@ export interface CancelOrderResponse {
 
 export async function cancelOrder(
   orderId: number,
-  reason?: string
+  reason: string
 ): Promise<CancelOrderResponse> {
   try {
     const response = await fetch("/api/orders/cancel", {

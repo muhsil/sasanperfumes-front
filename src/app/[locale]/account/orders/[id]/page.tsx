@@ -57,8 +57,9 @@ const translations = {
     conversionNote: "Prices shown in order currency",
     cancelOrder: "Cancel Order",
     cancelOrderConfirm: "Are you sure you want to cancel this order?",
-    cancelReason: "Reason for cancellation (optional)",
+    cancelReason: "Reason for cancellation",
     cancelReasonPlaceholder: "Please tell us why you want to cancel...",
+    cancelReasonRequired: "Please enter a reason for cancelling this order.",
     cancelling: "Cancelling...",
     cancelSuccess: "Order cancelled successfully",
     cancelError: "Failed to cancel order",
@@ -98,8 +99,9 @@ const translations = {
     conversionNote: "الأسعار معروضة بعملة الطلب",
     cancelOrder: "إلغاء الطلب",
     cancelOrderConfirm: "هل أنت متأكد من رغبتك في إلغاء هذا الطلب؟",
-    cancelReason: "سبب الإلغاء (اختياري)",
+    cancelReason: "سبب الإلغاء",
     cancelReasonPlaceholder: "يرجى إخبارنا لماذا تريد الإلغاء...",
+    cancelReasonRequired: "يرجى إدخال سبب إلغاء هذا الطلب.",
     cancelling: "جاري الإلغاء...",
     cancelSuccess: "تم إلغاء الطلب بنجاح",
     cancelError: "فشل في إلغاء الطلب",
@@ -315,12 +317,18 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
 
   const handleCancelOrder = async () => {
     if (!order) return;
+
+    const reason = cancelReason.trim();
+    if (!reason) {
+      setCancelError(t.cancelReasonRequired);
+      return;
+    }
     
     setIsCancelling(true);
     setCancelError(null);
     
     try {
-      const response = await cancelOrder(order.id, cancelReason || undefined);
+      const response = await cancelOrder(order.id, reason);
       
       if (response.success) {
         setOrder({ ...order, status: "cancelled" });
@@ -563,15 +571,22 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
               <p className="text-gray-600 mb-4">{t.cancelOrderConfirm}</p>
               
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="customer-cancellation-reason" className="block text-sm font-medium text-gray-700 mb-2">
                   {t.cancelReason}
                 </label>
                 <textarea
+                  id="customer-cancellation-reason"
                   value={cancelReason}
-                  onChange={(e) => setCancelReason(e.target.value)}
+                  onChange={(e) => {
+                    setCancelReason(e.target.value);
+                    if (cancelError) setCancelError(null);
+                  }}
                   placeholder={t.cancelReasonPlaceholder}
                   className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
                   rows={3}
+                  maxLength={500}
+                  required
+                  aria-required="true"
                 />
               </div>
 
@@ -598,7 +613,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
                   variant="primary"
                   size="sm"
                   onClick={handleCancelOrder}
-                  disabled={isCancelling}
+                  disabled={isCancelling || !cancelReason.trim()}
                   className="bg-red-600 hover:bg-red-700"
                 >
                   {isCancelling ? t.cancelling : t.confirm}

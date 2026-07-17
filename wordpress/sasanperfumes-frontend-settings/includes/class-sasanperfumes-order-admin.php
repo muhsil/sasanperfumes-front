@@ -12,6 +12,7 @@ function sasanperfumes_order_admin_init() {
     add_action('add_meta_boxes', 'sasanperfumes_order_admin_add_meta_box');
     add_action('add_meta_boxes_woocommerce_page_wc-orders', 'sasanperfumes_order_admin_add_meta_box');
     add_action('admin_enqueue_scripts', 'sasanperfumes_order_admin_styles');
+    add_action('woocommerce_order_status_changed', 'sasanperfumes_order_admin_record_cancellation', 10, 4);
 }
 
 function sasanperfumes_order_admin_add_meta_box() {
@@ -28,6 +29,15 @@ function sasanperfumes_order_admin_add_meta_box() {
         'high'
     );
 
+    add_meta_box(
+        'sasanperfumes-cancellation-details',
+        'Cancellation Note',
+        'sasanperfumes_order_admin_render_cancellation_box',
+        'shop_order',
+        'side',
+        'high'
+    );
+
     if ($screen && $screen !== 'shop_order') {
         add_meta_box(
             'sasanperfumes-payment-gateway-details',
@@ -35,6 +45,15 @@ function sasanperfumes_order_admin_add_meta_box() {
             'sasanperfumes_order_admin_render_payment_box',
             $screen,
             'normal',
+            'high'
+        );
+
+        add_meta_box(
+            'sasanperfumes-cancellation-details',
+            'Cancellation Note',
+            'sasanperfumes_order_admin_render_cancellation_box',
+            $screen,
+            'side',
             'high'
         );
     }
@@ -50,6 +69,66 @@ function sasanperfumes_order_admin_get_order($post_or_order) {
     }
 
     return null;
+}
+
+function sasanperfumes_order_admin_render_cancellation_box($post_or_order) {
+    $order = sasanperfumes_order_admin_get_order($post_or_order);
+    if (!$order) {
+        echo '<p>Order information is unavailable.</p>';
+        return;
+    }
+
+    $saved_reason = trim((string) $order->get_meta('_sasan_cancellation_reason', true));
+    wp_nonce_field('sasanperfumes_admin_cancellation', 'sasanperfumes_cancellation_nonce');
+
+    echo '<p class="sasanperfumes-cancellation-help">Enter a reason before changing the order status to <strong>Cancelled</strong>. It will be saved as a private order note.</p>';
+    echo '<textarea id="sasanperfumes_cancellation_reason" name="sasanperfumes_cancellation_reason" rows="4" maxlength="500" class="widefat" placeholder="Reason for cancellation...">' . esc_textarea($saved_reason) . '</textarea>';
+    echo '<p class="sasanperfumes-cancellation-error" role="alert" hidden>A cancellation reason is required.</p>';
+
+    if ($saved_reason !== '') {
+        echo '<p class="description"><strong>Recorded reason:</strong> ' . esc_html($saved_reason) . '</p>';
+    }
+}
+
+function sasanperfumes_order_admin_record_cancellation($order_id, $from_status, $to_status, $order) {
+    if ($to_status !== 'cancelled' || $from_status === 'cancelled') {
+        return;
+    }
+
+    if (!$order || !is_a($order, 'WC_Order')) {
+        $order = wc_get_order($order_id);
+    }
+    if (!$order) {
+        return;
+    }
+
+    $is_admin_cancellation = is_admin() && current_user_can('edit_shop_orders');
+    if (!$is_admin_cancellation) {
+        return;
+    }
+
+    $reason = '';
+    if (
+        isset($_POST['sasanperfumes_cancellation_nonce']) &&
+        wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['sasanperfumes_cancellation_nonce'])), 'sasanperfumes_admin_cancellation') &&
+        isset($_POST['sasanperfumes_cancellation_reason'])
+    ) {
+        $reason = sanitize_textarea_field(wp_unslash($_POST['sasanperfumes_cancellation_reason']));
+    }
+
+    $user = wp_get_current_user();
+    $actor = $user && $user->exists() ? $user->display_name : 'WooCommerce administrator';
+    $note = sprintf('Order cancelled from WooCommerce Admin by %s.', $actor);
+    if ($reason !== '') {
+        $note .= ' Reason: ' . $reason;
+        $order->update_meta_data('_sasan_cancellation_reason', $reason);
+        $order->update_meta_data('_sasan_cancellation_source', 'admin');
+        $order->save_meta_data();
+    } else {
+        $note .= ' No cancellation reason was supplied (for example, a bulk or automated admin action).';
+    }
+
+    $order->add_order_note($note, false, true);
 }
 
 function sasanperfumes_order_admin_format_date($date) {
@@ -580,6 +659,18 @@ function sasanperfumes_order_admin_styles($hook) {
     }
 
     wp_add_inline_style('woocommerce_admin_styles', '
+        .sasanperfumes-cancellation-help {
+            margin-top: 0;
+        }
+        .sasanperfumes-cancellation-error {
+            margin: 8px 0 0;
+            color: #b32d2e;
+            font-weight: 600;
+        }
+        #sasanperfumes_cancellation_reason.sasanperfumes-field-error {
+            border-color: #d63638;
+            box-shadow: 0 0 0 1px #d63638;
+        }
         .sasanperfumes-payment-details h4 {
             margin: 18px 0 8px;
             font-size: 13px;
@@ -620,6 +711,47 @@ function sasanperfumes_order_admin_styles($hook) {
             color: #646970;
             font-style: italic;
         }
+    ');
+
+    wp_enqueue_script('jquery');
+    wp_add_inline_script('jquery', '
+        jQuery(function($) {
+            var $status = $("#order_status");
+            var $reason = $("#sasanperfumes_cancellation_reason");
+            var $error = $(".sasanperfumes-cancellation-error");
+            if (!$status.length || !$reason.length) return;
+
+            function isCancelled() {
+                var value = String($status.val() || "").replace(/^wc-/, "");
+                return value === "cancelled";
+            }
+
+            function validateCancellationReason() {
+                var valid = !isCancelled() || $.trim($reason.val()).length > 0;
+                $reason.toggleClass("sasanperfumes-field-error", !valid);
+                $error.prop("hidden", valid);
+                if (!valid) {
+                    $reason.trigger("focus");
+                    $("html, body").animate({ scrollTop: Math.max($reason.offset().top - 120, 0) }, 180);
+                }
+                return valid;
+            }
+
+            $status.on("change", function() {
+                if (isCancelled()) $reason.attr("required", "required");
+                else $reason.removeAttr("required");
+                validateCancellationReason();
+            });
+            $reason.on("input", validateCancellationReason);
+            $("form#post, form#order").on("submit.sasanperfumesCancellation", function(event) {
+                if (!validateCancellationReason()) {
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                    window.alert("Please enter a cancellation reason before cancelling this order.");
+                    return false;
+                }
+            });
+        });
     ');
 }
 

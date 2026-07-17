@@ -14,7 +14,7 @@ const CANCELLABLE_STATUSES = ["pending", "processing", "on-hold"];
 
 interface CancelOrderRequest {
   order_id: number;
-  reason?: string;
+  reason: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -29,6 +29,21 @@ export async function POST(request: NextRequest) {
     if (!body.order_id) {
       return NextResponse.json(
         { success: false, error: { code: "missing_params", message: "Order ID is required" } },
+        { status: 400 }
+      );
+    }
+
+    const cancellationReason = typeof body.reason === "string" ? body.reason.trim() : "";
+    if (!cancellationReason) {
+      return NextResponse.json(
+        { success: false, error: { code: "reason_required", message: "Cancellation reason is required" } },
+        { status: 400 }
+      );
+    }
+
+    if (cancellationReason.length > 500) {
+      return NextResponse.json(
+        { success: false, error: { code: "reason_too_long", message: "Cancellation reason must be 500 characters or fewer" } },
         { status: 400 }
       );
     }
@@ -74,9 +89,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const noteText = body.reason
-      ? `Customer requested order cancellation. Reason: ${body.reason}`
-      : "Customer requested order cancellation.";
+    const noteText = `Customer requested order cancellation. Reason: ${cancellationReason}`;
 
     const noteUrl = `${API_BASE}/orders/${body.order_id}/notes?${getBasicAuthParams()}`;
     const noteResponse = await fetch(noteUrl, {
@@ -112,6 +125,10 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         status: "cancelled",
+        meta_data: [
+          { key: "_sasan_cancellation_reason", value: cancellationReason },
+          { key: "_sasan_cancellation_source", value: "customer" },
+        ],
       }),
     });
 
