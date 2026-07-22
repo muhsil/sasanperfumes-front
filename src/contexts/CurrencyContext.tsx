@@ -87,6 +87,8 @@ export function CurrencyProvider({ children, market = internationalMarket }: Cur
   useEffect(() => {
     const stored = getStoredCurrency();
     if (stored && stored !== defaultCurrency && isCurrencyAllowedForMarket(stored, market)) {
+      // Hydrate the browser preference after the server render.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCurrencyState(stored);
     }
   }, [defaultCurrency, market]);
@@ -129,6 +131,8 @@ export function CurrencyProvider({ children, market = internationalMarket }: Cur
       isCurrencyAllowedForMarket(savedCurrency, market) &&
       currencies.some((c) => c.code === savedCurrency)
     ) {
+      // Synchronize the state with the validated currency cookie.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCurrencyState(savedCurrency);
     } else if (!currencies.some((c) => c.code === currency)) {
       setCurrencyState(defaultCurrency);

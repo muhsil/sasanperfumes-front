@@ -8,6 +8,15 @@ import { getStripeSecretKey } from "@/lib/stripe/config";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+interface StripeCheckoutOrder {
+  code?: string;
+  message?: string;
+  order_key?: string;
+  total?: string;
+  currency?: string;
+  billing?: { email?: string };
+}
+
 function getBasicAuthParams(marketCode?: string): string {
   const { consumerKey, consumerSecret } = getWcCredentials(marketCode);
   return `consumer_key=${consumerKey}&consumer_secret=${consumerSecret}`;
@@ -65,7 +74,7 @@ export async function POST(request: NextRequest) {
       cache: "no-store",
     }, market.code);
 
-    let order: any = await orderResponse.json();
+    let order = (await orderResponse.json()) as StripeCheckoutOrder;
     const hasFallbackOrder = Number.isFinite(fallbackAmount) && fallbackAmount > 0;
 
     if (!orderResponse.ok) {

@@ -38,6 +38,7 @@ export function ShopClient({
 
   useEffect(() => {
     // Use initial products as-is — order is controlled by WP Admin menu_order
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setProducts(initialProducts);
     setTotal(initialTotal);
     setHasMore(initialProducts.length < initialTotal);

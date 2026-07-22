@@ -157,6 +157,8 @@ export default function SettingsPage({ params }: SettingsPageProps) {
     if (isAuthenticated && user) {
       fetchCustomer();
     } else {
+      // Authentication state determines whether a request is needed.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsLoading(false);
     }
   }, [isAuthenticated, user]);

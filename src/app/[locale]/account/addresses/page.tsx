@@ -516,6 +516,8 @@ export default function AddressesPage({ params }: AddressesPageProps) {
     if (isAuthenticated && user) {
       fetchCustomer();
     } else {
+      // Authentication state determines whether a request is needed.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsLoading(false);
     }
   }, [isAuthenticated, user]);

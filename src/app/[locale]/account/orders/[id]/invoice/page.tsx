@@ -103,6 +103,8 @@ export default function InvoicePage({ params }: InvoicePageProps) {
   }, [t.invoice]);
 
   useEffect(() => {
+    // Site configuration is loaded client-side for printable invoices.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLogoUrl(siteConfig.logoUrl || null);
   }, []);
 
@@ -128,6 +130,8 @@ export default function InvoicePage({ params }: InvoicePageProps) {
     if (isAuthenticated && orderId) {
       fetchOrder();
     } else {
+      // Authentication state determines whether a request is needed.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsLoading(false);
     }
   }, [isAuthenticated, orderId]);

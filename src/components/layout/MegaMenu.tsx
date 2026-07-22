@@ -184,6 +184,7 @@ export function MegaMenu({
   const [menuData, setMenuData] = useState<MegaMenuData | null>(null);
   const [menuLoading, setMenuLoading] = useState(false);
   const [wcCategories, setWcCategories] = useState<MegaMenuColumn[]>([]);
+  const [hasBackendMenuAttempted, setHasBackendMenuAttempted] = useState(false);
   const hasMenuFetchedRef = useRef(false);
   const hasWcCategoriesFetchedRef = useRef(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -283,6 +284,7 @@ export function MegaMenu({
   useEffect(() => {
     if (isOpen && !hasMenuFetchedRef.current) {
       hasMenuFetchedRef.current = true;
+      setHasBackendMenuAttempted(true);
       fetchMenuData();
     }
   }, [isOpen, fetchMenuData]);
@@ -297,11 +299,13 @@ export function MegaMenu({
   useEffect(() => {
     hasMenuFetchedRef.current = false;
     hasWcCategoriesFetchedRef.current = false;
+    // The cache identity changed, so discard data from the previous market/locale.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setHasBackendMenuAttempted(false);
     setMenuData(null);
     setWcCategories([]);
   }, [cacheKey]);
 
-  const hasBackendMenuAttempted = hasMenuFetchedRef.current || menuLoading;
   const backendColumns = menuData?.columns?.length
     ? normalizeColumns(menuData.columns, locale, marketPrefix)
     : hasBackendMenuAttempted && providedColumns.length > 0

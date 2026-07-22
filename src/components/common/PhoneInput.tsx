@@ -76,6 +76,8 @@ export function PhoneInput({
   useEffect(() => {
     const forcedCountry = marketCountryCode || externalCountryCode || initialParsed.country;
     if (forcedCountry !== selectedCountry) {
+      // Keep the input synchronized with a market-enforced country.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedCountry(forcedCountry);
       setLocalNumber("");
       setInternalError(null);

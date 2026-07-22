@@ -96,6 +96,8 @@ export function WishlistProvider({ children, locale = "en" }: WishlistProviderPr
   // Initialize cached count from localStorage on mount
   useEffect(() => {
     if (isAuthenticated && user) {
+      // Hydrate the cached count after authentication resolves.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCachedCount(getCachedWishlistCount());
     } else {
       setCachedCount(0);
@@ -136,6 +138,8 @@ export function WishlistProvider({ children, locale = "en" }: WishlistProviderPr
 
   useEffect(() => {
     if (!isAuthLoading) {
+      // Refreshing after auth resolution intentionally initializes provider state.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       refreshWishlist();
     }
   }, [refreshWishlist, isAuthLoading]);

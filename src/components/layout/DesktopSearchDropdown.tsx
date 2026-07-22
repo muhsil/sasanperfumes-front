@@ -58,6 +58,8 @@ export function DesktopSearchDropdown({
       requestAnimationFrame(() => setIsVisible(true));
     } else {
       document.body.style.overflow = "";
+      // Closing the portal also resets its transition state.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsVisible(false);
     }
     return () => {
@@ -154,6 +156,8 @@ export function DesktopSearchDropdown({
         handleSearch(query);
       }, 300);
     } else {
+      // An empty query clears results from the previous search.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setResults([]);
       setHasSearched(false);
       setDidYouMean(null);

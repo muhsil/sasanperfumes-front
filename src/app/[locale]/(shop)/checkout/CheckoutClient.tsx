@@ -447,6 +447,8 @@ export default function CheckoutClient() {
           if (!currency) return;
           const mappedCountry = CURRENCY_TO_COUNTRY[currency];
           if (mappedCountry && mappedCountry !== formData.shipping.country) {
+            // Synchronize checkout country when the active market currency changes.
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setFormData((prev) => ({
               ...prev,
               shipping: { ...prev.shipping, country: mappedCountry },
@@ -469,6 +471,8 @@ export default function CheckoutClient() {
               (gateway) => gateway.id === formData.paymentMethod
             );
             if (!currentMethodAvailable) {
+              // Keep the selected method valid for the newly selected country.
+              // eslint-disable-next-line react-hooks/set-state-in-effect
               setFormData((prev) => ({
                 ...prev,
                 paymentMethod: available[0].id,
@@ -531,6 +535,8 @@ export default function CheckoutClient() {
         const [cartInitReady, setCartInitReady] = useState(false);
         useEffect(() => {
           if (!isCartLoading && cartItems.length > 0) {
+            // Cart hydration completed; this state gates the empty-cart redirect.
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setCartInitReady(true);
             return;
           }
@@ -543,6 +549,8 @@ export default function CheckoutClient() {
         
         useEffect(() => {
           if (isEmptyCart) {
+            // Reset the countdown whenever the cart transitions to empty.
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setEmptyCartCountdown(10);
           } else {
             setEmptyCartCountdown(null);
@@ -594,6 +602,8 @@ export default function CheckoutClient() {
                 setSelectedShippingRate(selectedRate.rate_id);
               } else if (allRates.length > 0) {
                 setSelectedShippingRate(allRates[0].rate_id);
+                // Selection helper is declared below but invoked only after this async response.
+                // eslint-disable-next-line react-hooks/immutability
                 handleSelectShippingRate(allRates[0].rate_id, 0);
               }
             }
@@ -681,7 +691,7 @@ export default function CheckoutClient() {
 
 
     // Calculate total fees -- merge client-side customs fee with any existing cart.fees
-    const cartFeeTotal = useMemo(() => {
+    const cartFeeTotal = (() => {
       try {
         let total = 0;
         const fees = Array.isArray(cart?.fees) ? cart.fees : [];
@@ -699,9 +709,9 @@ export default function CheckoutClient() {
         console.error("[Checkout] Failed to calculate fees:", err);
         return 0;
       }
-    }, [customsFee, cart?.fees]);
+    })();
 
-    const checkoutTotal = useMemo(() => {
+    const checkoutTotal = (() => {
       try {
         if (shippingPackages.length > 0) {
           const subtotalMajor = (discountedCartSubtotal || 0) / divisor;
@@ -719,9 +729,9 @@ export default function CheckoutClient() {
         console.error("[Checkout] Failed to calculate checkout total:", err);
         return Math.max(parseFloat(cartTotal) || 0, 0) / divisor;
       }
-    }, [discountedCartSubtotal, shippingTotal, shippingPackages, cartTotal, cartFeeTotal, customsFee, cart?.fees, promotionalDiscountTotal, divisor, shippingDivisor]);
+    })();
 
-    const checkoutAnalyticsItems = useMemo(() => {
+    const checkoutAnalyticsItems = (() => {
       return cartItems
         .filter((item) => !item.item_key.startsWith("temp-"))
         .map((item) => ({
@@ -731,7 +741,7 @@ export default function CheckoutClient() {
           quantity: item.quantity?.value || 1,
           item_variant: item.variation_id ? String(item.variation_id) : undefined,
         }));
-    }, [cartItems, divisor, getItemLookupId]);
+    })();
 
     const breadcrumbItems = [
     { name: isRTL ? "السلة" : "Cart", href: `${marketPrefix}/${locale}/cart` },
@@ -1429,7 +1439,7 @@ export default function CheckoutClient() {
               const tabbyData = await tabbyResponse.json();
 
               if (tabbyData.success && tabbyData.payment_url) {
-                window.location.href = tabbyData.payment_url;
+                window.location.assign(tabbyData.payment_url);
               } else {
                 throw new Error(tabbyData.error?.message || "Failed to initiate Tabby payment");
               }
@@ -1482,7 +1492,7 @@ export default function CheckoutClient() {
               const tamaraData = await tamaraResponse.json();
 
               if (tamaraData.success && tamaraData.checkout_url) {
-                window.location.href = tamaraData.checkout_url;
+                window.location.assign(tamaraData.checkout_url);
               } else {
                 throw new Error(tamaraData.error?.message || "Failed to initiate Tamara payment");
               }
@@ -1504,7 +1514,7 @@ export default function CheckoutClient() {
               const stripeData = await stripeResponse.json();
 
               if (stripeData.success && stripeData.checkout_url) {
-                window.location.href = stripeData.checkout_url;
+                window.location.assign(stripeData.checkout_url);
                 return;
               }
 

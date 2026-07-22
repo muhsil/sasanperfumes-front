@@ -547,7 +547,7 @@ export function CartProvider({ children, locale }: CartProviderProps) {
         setIsOperationLoading(false);
       }
     },
-    [notify, cacheKey, locale, user, activeCurrency, activeCurrencyInfo.code, activeCurrencyInfo.decimals]
+    [notify, cacheKey, locale, marketCode, user, activeCurrency, activeCurrencyInfo.code, activeCurrencyInfo.decimals]
   );
 
   const updateCartItem = useCallback(
@@ -599,7 +599,7 @@ export function CartProvider({ children, locale }: CartProviderProps) {
         setIsOperationLoading(false);
       }
     },
-    [notify, cacheKey, locale]
+    [notify, cacheKey, locale, marketCode]
   );
 
   const removeCartItem = useCallback(
@@ -636,12 +636,22 @@ export function CartProvider({ children, locale }: CartProviderProps) {
         const data = await response.json();
 
         if (!data.success) {
-          await mutate(cacheKey);
           const errMsg = decodeHtmlEntities(data.error?.message || "Failed to remove item");
+          const itemWasAlreadyRemoved = /already (?:been )?removed from (?:the )?cart/i.test(errMsg);
+
+          // A repeated remove is already in the desired state. Keep the optimistic
+          // cart instead of refetching a stale backend snapshot that revives the row.
+          if (itemWasAlreadyRemoved) {
+            clearCachedCart();
+            notify("cart", "Item removed from cart");
+            return;
+          }
+
           notify("error", errMsg);
           throw new Error(errMsg);
         }
 
+        clearCachedCart();
         if (isValidCartResponse(data.cart)) {
           await mutate(cacheKey, data.cart, false);
         } else {
@@ -672,7 +682,7 @@ export function CartProvider({ children, locale }: CartProviderProps) {
         setIsOperationLoading(false);
       }
     },
-    [notify, cacheKey, locale, cart, activeCurrency]
+    [notify, cacheKey, locale, marketCode, cart, activeCurrency]
   );
 
   const clearCart = useCallback(async () => {
@@ -728,7 +738,7 @@ export function CartProvider({ children, locale }: CartProviderProps) {
     } finally {
       setIsOperationLoading(false);
     }
-  }, [cacheKey, cart?.cart_key, locale]);
+  }, [cacheKey, cart?.cart_key, locale, marketCode]);
 
   const selectedCoupons = useMemo<SelectedCoupon[]>(() => {
     return (cart?.coupons || []).map((coupon) => ({
@@ -776,7 +786,7 @@ export function CartProvider({ children, locale }: CartProviderProps) {
       notify("error", errorMsg);
       return { success: false, error: errorMsg };
     }
-  }, [cacheKey, locale, notify, selectedCoupons]);
+  }, [cacheKey, locale, marketCode, notify, selectedCoupons]);
 
   const removeCoupon = useCallback(async (code: string): Promise<boolean> => {
     try {
@@ -807,7 +817,7 @@ export function CartProvider({ children, locale }: CartProviderProps) {
       notify("error", "Failed to remove coupon");
       return false;
     }
-  }, [cacheKey, locale, notify]);
+  }, [cacheKey, locale, marketCode, notify]);
 
   const clearSelectedCoupons = useCallback(() => {
     void mutate(cacheKey);

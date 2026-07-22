@@ -115,6 +115,8 @@ export function SearchResultsClient({
 
   useEffect(() => {
     const nextQuery = searchParams.get("q") || "";
+    // URL search parameters are the canonical search state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setQuery(nextQuery);
     setInputValue(nextQuery);
     fetchProducts(nextQuery);

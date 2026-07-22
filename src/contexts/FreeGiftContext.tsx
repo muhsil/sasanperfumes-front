@@ -200,6 +200,8 @@ export function FreeGiftProvider({ children, locale }: FreeGiftProviderProps) {
   }, [locale]);
 
   useEffect(() => {
+    // Fetching rules intentionally initializes provider state on locale changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchRules();
   }, [fetchRules]);
 

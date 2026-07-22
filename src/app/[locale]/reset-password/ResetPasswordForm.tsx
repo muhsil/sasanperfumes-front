@@ -35,6 +35,8 @@ export default function ResetPasswordForm({ locale }: ResetPasswordFormProps) {
 
   useEffect(() => {
     if (!key || !login) {
+      // The reset URL itself determines link validity.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsInvalidLink(true);
     }
   }, [key, login]);

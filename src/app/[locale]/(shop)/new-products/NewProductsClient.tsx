@@ -32,6 +32,8 @@ export function NewProductsClient({
   const isInitialMount = useRef(true);
 
   useEffect(() => {
+    // Server props are the source of truth after locale/category navigation.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setProducts(initialProducts);
     setTotal(initialTotal);
     setHasMore(initialProducts.length < initialTotal);
