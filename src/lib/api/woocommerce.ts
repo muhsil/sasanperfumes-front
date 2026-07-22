@@ -14,7 +14,9 @@ import {
 } from "@/lib/productLocalization";
 import {
   backendHeaders,
+  backendMarketHeaders,
   extractMarketCode,
+  wpJsonBaseForMarket,
 } from "@/lib/utils/backendFetch";
 import { getCachedPromise } from "@/lib/utils/promiseCache";
 import type { ExpiringPromiseCacheEntry } from "@/lib/utils/promiseCache";
@@ -1268,6 +1270,55 @@ function pickBestCategoryMatch(categories: WCCategory[], slug: string, locale?: 
   return exactMatches[0] || null;
 }
 
+async function getCategoryIncludingEmpty(
+  slug: string,
+  market?: string
+): Promise<WCCategory | null> {
+  const { consumerKey, consumerSecret } = getWcCredentials(market);
+  if (!consumerKey || !consumerSecret) return null;
+
+  const query = new URLSearchParams({
+    slug,
+    hide_empty: "false",
+    per_page: "1",
+    consumer_key: consumerKey,
+    consumer_secret: consumerSecret,
+  });
+
+  try {
+    const response = await fetchWithTimeout(
+      `${wpJsonBaseForMarket(market)}/wc/v3/products/categories?${query.toString()}`,
+      {
+        cache: "no-store",
+        headers: backendMarketHeaders(market, {
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        }),
+      }
+    );
+
+    if (!response.ok) return null;
+
+    const categories = await parseJsonResponse<Array<Partial<WCCategory>>>(response);
+    const category = categories.find((item) => item.slug === slug);
+    if (!category || !category.id || !category.name || !category.slug) return null;
+
+    return {
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      description: category.description || "",
+      parent: category.parent || 0,
+      count: category.count || 0,
+      image: category.image || null,
+      review_count: category.review_count || 0,
+      permalink: category.permalink || "",
+    };
+  } catch {
+    return null;
+  }
+}
+
 // Memoized version for request deduplication
 // Handles the case where URLs use English slugs but the locale is non-English (e.g., Arabic)
 // WPML assigns different slugs for each language, so we need to map English slugs to localized categories
@@ -1337,9 +1388,13 @@ export const getCategoryBySlug = cache(async function getCategoryBySlug(
       }
     }
     
-    return null;
+    // WooCommerce omits empty categories from the public Store API when
+    // out-of-stock products are hidden. Resolve the real category through the
+    // authenticated API so an empty category remains a valid storefront page.
+    return getCategoryIncludingEmpty(slug, market);
   } catch {
-    return null;
+    const market = extractMarketFromHost(frontendHost);
+    return getCategoryIncludingEmpty(slug, market);
   }
 });
 
