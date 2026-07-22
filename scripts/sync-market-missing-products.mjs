@@ -1,16 +1,16 @@
 import fs from "fs";
 import path from "path";
 
+// Usage: node scripts/sync-market-missing-products.mjs [--dry-run] [--slugs=slug-one,slug-two]
+
 const SOURCE_BASE = "https://cms.sasanperfumes.com/wp-json/wc/v3";
 const MARKETS = ["qa", "om", "sa"];
-const SOURCE_PRODUCT_SLUGS = [
-  "dukhoon-12-extrait-de-parfum",
-  "sea-side-extrait-de-parfum",
-  "terra-sol-extrait-de-parfum",
-  "library-extrait-de-parfum",
-  "24-extrait-de-parfum",
-  "crystal-extrait-de-parfum",
-];
+const args = process.argv.slice(2);
+const dryRun = args.includes("--dry-run");
+const slugsArg = args.find((arg) => arg.startsWith("--slugs="));
+const requestedSlugs = slugsArg
+  ? slugsArg.slice("--slugs=".length).split(",").map((slug) => slug.trim()).filter(Boolean)
+  : [];
 const REQUIRED_CATEGORIES = [
   { slug: "extrait-de-parfum", name: "Extrait de Parfum" },
   { slug: "perfume", name: "Perfume" },
@@ -127,6 +127,20 @@ async function listAll(url, init = {}) {
   return Array.isArray(data) ? data : [];
 }
 
+async function listAllPages(baseUrl, pathName, authHeaders) {
+  const items = [];
+  for (let page = 1; ; page += 1) {
+    const separator = pathName.includes("?") ? "&" : "?";
+    const pageItems = await listAll(`${baseUrl}/${pathName}${separator}per_page=100&page=${page}`, {
+      headers: authHeaders,
+    });
+    items.push(...pageItems);
+    if (pageItems.length < 100) {
+      return items;
+    }
+  }
+}
+
 async function getProductBySlug(baseUrl, authHeaders, slug) {
   const url = `${baseUrl}/products?slug=${encodeURIComponent(slug)}&status=publish&per_page=1`;
   const products = await listAll(url, { headers: authHeaders });
@@ -225,20 +239,26 @@ function buildTagRefs(sourceProduct, tagMap) {
   return refs;
 }
 
-async function syncProductToMarket(env, market, sourceProduct) {
+async function syncProductToMarket(env, market, sourceProduct, existingProductsBySlug, categoryMap, tagMap) {
   const baseUrl = `https://cms.sasanperfumes.com/${market}/wp-json/wc/v3`;
   const authHeaders = headersFor(env, market);
 
-  const existing = await getProductBySlug(baseUrl, authHeaders, sourceProduct.slug);
+  const existing = existingProductsBySlug.get(sourceProduct.slug);
   if (existing) {
     return { market, slug: sourceProduct.slug, action: "exists", id: existing.id };
   }
 
-  const categoryMap = await getCategories(baseUrl, authHeaders);
-  const tagMap = await getTags(baseUrl, authHeaders);
+  if (dryRun) {
+    return { market, slug: sourceProduct.slug, type: sourceProduct.type, action: "missing", id: null };
+  }
 
   for (const category of REQUIRED_CATEGORIES) {
     await ensureCategory(baseUrl, authHeaders, categoryMap, category.slug, category.name);
+  }
+
+  for (const category of sourceProduct.categories || []) {
+    if (!category?.slug) continue;
+    await ensureCategory(baseUrl, authHeaders, categoryMap, category.slug, category.name || category.slug);
   }
 
   for (const tag of sourceProduct.tags || []) {
@@ -252,6 +272,7 @@ async function syncProductToMarket(env, market, sourceProduct) {
   const payload = {
     name: sourceProduct.name,
     slug: sourceProduct.slug,
+    sku: sourceProduct.sku || undefined,
     type: sourceProduct.type || "simple",
     status: "publish",
     catalog_visibility: sourceProduct.catalog_visibility || "visible",
@@ -263,6 +284,15 @@ async function syncProductToMarket(env, market, sourceProduct) {
     manage_stock: Boolean(sourceProduct.manage_stock),
     stock_quantity: Number.isFinite(Number(sourceProduct.stock_quantity)) ? Number(sourceProduct.stock_quantity) : 50,
     stock_status: sourceProduct.stock_status || "instock",
+    virtual: Boolean(sourceProduct.virtual),
+    tax_status: sourceProduct.tax_status || "taxable",
+    tax_class: sourceProduct.tax_class || "",
+    attributes: (sourceProduct.attributes || []).map((attribute) => ({
+      name: attribute.name,
+      visible: attribute.visible !== false,
+      variation: Boolean(attribute.variation),
+      options: Array.isArray(attribute.options) ? attribute.options : [],
+    })),
     images: (sourceProduct.images || []).map((image) => ({
       src: image.src,
       name: image.name || sourceProduct.name,
@@ -281,11 +311,26 @@ async function syncProductToMarket(env, market, sourceProduct) {
       })),
   };
 
-  const created = await fetchJson(`${baseUrl}/products`, {
-    method: "POST",
-    headers: authHeaders,
-    body: JSON.stringify(payload),
-  });
+  let created;
+  try {
+    created = await fetchJson(`${baseUrl}/products`, {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    if (!(error instanceof Error) || !error.message.includes("product_invalid_sku")) {
+      throw error;
+    }
+
+    const payloadWithoutSku = { ...payload };
+    delete payloadWithoutSku.sku;
+    created = await fetchJson(`${baseUrl}/products`, {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify(payloadWithoutSku),
+    });
+  }
 
   return { market, slug: sourceProduct.slug, action: "created", id: created.id };
 }
@@ -294,24 +339,42 @@ async function main() {
   const env = loadEnvSources();
   const sourceHeaders = headersFor(env, "intl");
 
-  const sourceProducts = [];
-  for (const slug of SOURCE_PRODUCT_SLUGS) {
-    const product = await getProductBySlug(SOURCE_BASE, sourceHeaders, slug);
-    if (!product) {
-      throw new Error(`Source product missing: ${slug}`);
-    }
-    sourceProducts.push(product);
-  }
+  const sourceProducts = requestedSlugs.length > 0
+    ? await Promise.all(requestedSlugs.map(async (slug) => {
+        const product = await getProductBySlug(SOURCE_BASE, sourceHeaders, slug);
+        if (!product) throw new Error(`Source product missing: ${slug}`);
+        return product;
+      }))
+    : await listAllPages(SOURCE_BASE, "products?status=publish", sourceHeaders);
 
   const results = [];
   for (const market of MARKETS) {
+    const marketBaseUrl = `https://cms.sasanperfumes.com/${market}/wp-json/wc/v3`;
+    const marketProducts = await listAllPages(
+      marketBaseUrl,
+      "products?status=any",
+      headersFor(env, market)
+    );
+    const existingProductsBySlug = new Map(marketProducts.map((product) => [product.slug, product]));
+    const categoryMap = dryRun ? new Map() : await getCategories(marketBaseUrl, headersFor(env, market));
+    const tagMap = dryRun ? new Map() : await getTags(marketBaseUrl, headersFor(env, market));
+
     for (const product of sourceProducts) {
-      const result = await syncProductToMarket(env, market, product);
+      const result = await syncProductToMarket(
+        env,
+        market,
+        product,
+        existingProductsBySlug,
+        categoryMap,
+        tagMap
+      );
       results.push(result);
       const label = `${market} ${product.slug}`;
       if (result.action === "created") {
         console.log(`[created] ${label} -> id ${result.id}`);
-      } else {
+      } else if (result.action === "missing") {
+        console.log(`[missing] ${label} (${result.type || "simple"})`);
+      } else if (requestedSlugs.length > 0) {
         console.log(`[exists]   ${label} -> id ${result.id}`);
       }
     }
@@ -319,8 +382,9 @@ async function main() {
 
   console.log("\nSummary:");
   for (const market of MARKETS) {
-    const count = results.filter((result) => result.market === market && result.action === "created").length;
-    console.log(`${market}: ${count} products created`);
+    const created = results.filter((result) => result.market === market && result.action === "created").length;
+    const missing = results.filter((result) => result.market === market && result.action === "missing").length;
+    console.log(`${market}: ${created} products created${dryRun ? `, ${missing} missing` : ""}`);
   }
 }
 
