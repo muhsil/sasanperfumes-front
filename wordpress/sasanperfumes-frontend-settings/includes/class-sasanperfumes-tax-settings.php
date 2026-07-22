@@ -144,6 +144,43 @@ add_action('woocommerce_store_api_checkout_order_processed', 'sasanperfumes_norm
 add_action('woocommerce_checkout_order_created', 'sasanperfumes_normalize_order_shipping_tax', 5, 1);
 
 /**
+ * Repair historical orders in small batches so large stores are never locked by
+ * a single request. Each multisite store keeps its own cursor and completion flag.
+ */
+function sasanperfumes_repair_historical_shipping_tax_batch() {
+    if (!function_exists('wc_get_orders')) {
+        return;
+    }
+
+    $migration_version = '2026-07-22-v1';
+    if (get_option('sasanperfumes_historical_shipping_tax_repair') === $migration_version) {
+        return;
+    }
+
+    $page = max(1, absint(get_option('sasanperfumes_historical_shipping_tax_page', 1)));
+    $orders = wc_get_orders(array(
+        'limit'   => 50,
+        'page'    => $page,
+        'orderby' => 'ID',
+        'order'   => 'ASC',
+        'status'  => array_keys(wc_get_order_statuses()),
+    ));
+
+    foreach ((array) $orders as $order) {
+        sasanperfumes_normalize_order_shipping_tax($order);
+    }
+
+    if (count((array) $orders) < 50) {
+        update_option('sasanperfumes_historical_shipping_tax_repair', $migration_version, false);
+        delete_option('sasanperfumes_historical_shipping_tax_page');
+        return;
+    }
+
+    update_option('sasanperfumes_historical_shipping_tax_page', $page + 1, false);
+}
+add_action('wp_loaded', 'sasanperfumes_repair_historical_shipping_tax_batch', 99);
+
+/**
  * Ensure admin new-order emails are sent to sasanperfumesuae@gmail.com.
  *
  * WooCommerce stores the recipient list in the woocommerce_new_order_settings
