@@ -6,25 +6,18 @@ import type { WCProduct } from "@/types/woocommerce";
 interface ProductRecommendationsProps {
   product: WCProduct;
   locale: Locale;
-  relatedProducts: WCProduct[];
-  upsellProducts: WCProduct[];
-}
-
-interface GetProductRecommendationsProps {
-  product: WCProduct;
-  locale: Locale;
   currency?: string;
   frontendHost?: string;
   hiddenProductIds?: number[];
 }
 
-export async function getProductRecommendations({
+export async function ProductRecommendations({
   product,
   locale,
   currency,
   frontendHost,
   hiddenProductIds = [],
-}: GetProductRecommendationsProps) {
+}: ProductRecommendationsProps) {
   const hiddenIdsSet = new Set(hiddenProductIds);
 
   const [relatedProductsRaw, linkedIds] = await Promise.all([
@@ -44,15 +37,6 @@ export async function getProductRecommendations({
   const relatedProducts = relatedProductsRaw.filter((item) => !hiddenIdsSet.has(item.id));
   const upsellProducts = upsellProductsRaw.filter((item) => !hiddenIdsSet.has(item.id));
 
-  return { relatedProducts, upsellProducts };
-}
-
-export function ProductRecommendations({
-  product,
-  locale,
-  relatedProducts,
-  upsellProducts,
-}: ProductRecommendationsProps) {
   const isRTL = locale === "ar";
 
   return (

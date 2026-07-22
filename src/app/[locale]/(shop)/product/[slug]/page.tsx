@@ -13,7 +13,9 @@ import { decodeHtmlEntities } from "@/lib/utils";
 import type { Metadata } from "next";
 import type { WCProduct } from "@/types/woocommerce";
 import { getMarketByHost, getMarketPathPrefix } from "@/config/market";
-import { getProductRecommendations, ProductRecommendations } from "./ProductRecommendations";
+import { Suspense } from "react";
+import { ProductRecommendations } from "./ProductRecommendations";
+import { RelatedProductsLoading } from "./loading";
 
 const MARKET_CODES = new Set(["qa", "om", "sa"]);
 
@@ -348,23 +350,16 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
     );
   }
 
-  // Resolve recommendations with the page instead of streaming them after navigation.
-  // A late product-page stream can otherwise escape its removed route boundary and render below the footer.
+  // Fetch addon forms and the English category slug in parallel.
+  // Recommendations stream separately; orphaned stream roots are contained by their data marker.
   const primaryCategory = product.categories?.[0];
-  const [productAddons, englishCategorySlug, recommendations] = await Promise.all([
+  const [productAddons, englishCategorySlug] = await Promise.all([
     getProductAddons(product.id, { locale: locale as Locale }),
     primaryCategory?.id
       ? locale === "en"
         ? Promise.resolve(primaryCategory.slug || null)
         : getEnglishSlugForCategory(primaryCategory.id, locale as Locale, market.defaultCurrency, frontendHost)
       : Promise.resolve(null),
-    getProductRecommendations({
-      product,
-      locale: locale as Locale,
-      currency: market.defaultCurrency,
-      frontendHost,
-      hiddenProductIds: [...hiddenGiftProductIds, ...hiddenCatalogProductIds],
-    }),
   ]);
 
   const breadcrumbJsonLd = generateBreadcrumbJsonLd([
@@ -387,12 +382,15 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
         freeShippingThreshold={freeShippingThreshold}
         reviewsEnabled={featureToggles.sasanperfumes_reviews_enabled}
       />
-      <ProductRecommendations
-        product={product}
-        locale={locale as Locale}
-        relatedProducts={recommendations.relatedProducts}
-        upsellProducts={recommendations.upsellProducts}
-      />
+      <Suspense fallback={<RelatedProductsLoading />}>
+        <ProductRecommendations
+          product={product}
+          locale={locale as Locale}
+          currency={market.defaultCurrency}
+          frontendHost={frontendHost}
+          hiddenProductIds={[...hiddenGiftProductIds, ...hiddenCatalogProductIds]}
+        />
+      </Suspense>
     </>
   );
 }
