@@ -1049,7 +1049,7 @@ export const getCategories = cache(async function getCategories(
 
   return getCachedPromise(categoriesRequestCache, cacheKey, CATEGORIES_CACHE_TTL_MS, async () => {
     try {
-      const categories = await fetchAPI<WCCategory[]>("/products/categories?per_page=100", {
+      const categories = await fetchAPI<WCCategory[]>("/products/categories?per_page=100&hide_empty=false", {
         tags: ["categories"],
         locale,
         currency,
