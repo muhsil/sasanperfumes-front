@@ -1,5 +1,5 @@
 ﻿import { notFound, redirect } from "next/navigation";
-import { getProductBySlug, getRelatedProducts, getProducts, getEnglishSlugForProduct, getBundleConfig, getFreeGiftProductIds, getHiddenProductIds, getCategoryBySlug, getEnglishSlugForCategory, getProductUpsellIds, getProductsByIds } from "@/lib/api/woocommerce";
+import { getProductBySlug, getProducts, getEnglishSlugForProduct, getBundleConfig, getFreeGiftProductIds, getHiddenProductIds, getEnglishSlugForCategory } from "@/lib/api/woocommerce";
 import { getProductAddons } from "@/lib/api/wcpa";
 import { generateMetadata as generateSeoMetadata, generateProductJsonLd, generateBreadcrumbJsonLd, buildMarketSeoKeywords } from "@/lib/utils/seo";
 import { getTopbarSettings, getProductSeo, getFeatureToggles, getSiteSettings } from "@/lib/api/wordpress";
@@ -13,9 +13,7 @@ import { decodeHtmlEntities } from "@/lib/utils";
 import type { Metadata } from "next";
 import type { WCProduct } from "@/types/woocommerce";
 import { getMarketByHost, getMarketPathPrefix } from "@/config/market";
-import { Suspense } from "react";
-import { ProductRecommendations } from "./ProductRecommendations";
-import { RelatedProductsLoading } from "./loading";
+import { getProductRecommendations, ProductRecommendations } from "./ProductRecommendations";
 
 const MARKET_CODES = new Set(["qa", "om", "sa"]);
 
@@ -350,16 +348,23 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
     );
   }
 
-  // Fetch addon forms and the English category slug in parallel.
-  // Recommendations are streamed separately so the core product UI can paint sooner.
+  // Resolve recommendations with the page instead of streaming them after navigation.
+  // A late product-page stream can otherwise escape its removed route boundary and render below the footer.
   const primaryCategory = product.categories?.[0];
-  const [productAddons, englishCategorySlug] = await Promise.all([
+  const [productAddons, englishCategorySlug, recommendations] = await Promise.all([
     getProductAddons(product.id, { locale: locale as Locale }),
     primaryCategory?.id
       ? locale === "en"
         ? Promise.resolve(primaryCategory.slug || null)
         : getEnglishSlugForCategory(primaryCategory.id, locale as Locale, market.defaultCurrency, frontendHost)
       : Promise.resolve(null),
+    getProductRecommendations({
+      product,
+      locale: locale as Locale,
+      currency: market.defaultCurrency,
+      frontendHost,
+      hiddenProductIds: [...hiddenGiftProductIds, ...hiddenCatalogProductIds],
+    }),
   ]);
 
   const breadcrumbJsonLd = generateBreadcrumbJsonLd([
@@ -382,15 +387,12 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
         freeShippingThreshold={freeShippingThreshold}
         reviewsEnabled={featureToggles.sasanperfumes_reviews_enabled}
       />
-      <Suspense fallback={<RelatedProductsLoading />}>
-        <ProductRecommendations
-          product={product}
-          locale={locale as Locale}
-          currency={market.defaultCurrency}
-          frontendHost={frontendHost}
-          hiddenProductIds={[...hiddenGiftProductIds, ...hiddenCatalogProductIds]}
-        />
-      </Suspense>
+      <ProductRecommendations
+        product={product}
+        locale={locale as Locale}
+        relatedProducts={recommendations.relatedProducts}
+        upsellProducts={recommendations.upsellProducts}
+      />
     </>
   );
 }
