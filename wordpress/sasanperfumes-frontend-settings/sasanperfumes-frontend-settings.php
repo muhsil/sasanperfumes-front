@@ -3,7 +3,7 @@
  * Plugin Name: sasanperfumes
  * Plugin URI: https://cms.sasanperfumes.com
  * Description: Admin dashboard and REST API endpoints for sasanperfumes with Media Library upload, dynamic slides, layout options, Bundles Creator, and Free Gift functionality.
- * Version: 6.6.12
+ * Version: 6.6.13
  * Author: ShapeHive
  * License: GPL v2 or later
  */
@@ -18,7 +18,7 @@ if (defined('sasanperfumes_FRONTEND_SETTINGS_LOADED')) {
     return;
 }
 define('sasanperfumes_FRONTEND_SETTINGS_LOADED', true);
-define('sasanperfumes_SETTINGS_VERSION', '6.6.12');
+define('sasanperfumes_SETTINGS_VERSION', '6.6.13');
 define('sasanperfumes_SETTINGS_PATH', plugin_dir_path(__FILE__));
 
 define('SASANPERFUMES_REST_NAMESPACE', 'sasanperfumes/v1');
@@ -687,6 +687,81 @@ require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-brand-p
 
 // WhatsApp Floating Button: CMS-managed number, message, toggles
 require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-whatsapp.php';
+
+// Retired admin features: remove unused screens without deleting stored data or runtime APIs.
+function sasanperfumes_unregister_retired_post_types() {
+    foreach (array('sasanperfumes_guide', 'sasanperfumes_note') as $post_type) {
+        if (post_type_exists($post_type)) {
+            unregister_post_type($post_type);
+        }
+    }
+}
+add_action('init', 'sasanperfumes_unregister_retired_post_types', PHP_INT_MAX);
+
+function sasanperfumes_disable_retired_admin_hooks() {
+    remove_action('init', 'sasanperfumes_register_guide_cpt');
+    remove_action('add_meta_boxes', 'sasanperfumes_guide_add_meta_boxes');
+    remove_action('save_post_sasanperfumes_guide', 'sasanperfumes_guide_save_meta', 10);
+    remove_action('rest_api_init', 'sasanperfumes_guide_register_routes');
+    remove_filter('post_row_actions', 'sasanperfumes_guide_row_actions', 10);
+    remove_action('edit_form_after_title', 'sasanperfumes_guide_view_links');
+
+    remove_action('admin_menu', 'sasanperfumes_promotions_register_menu', 99);
+    remove_action('admin_menu', 'sasanperfumes_adv_register_menu', 99);
+
+    remove_action('admin_post_sasanperfumes_save_popup', 'sasanperfumes_promotions_save_popup');
+    remove_action('admin_post_sasanperfumes_save_badge_tags', 'sasanperfumes_promotions_save_badge_tags');
+    remove_action('admin_post_sasanperfumes_save_ads', 'sasanperfumes_promotions_save_ads');
+    remove_action('admin_post_sasanperfumes_save_live_chat', 'sasanperfumes_adv_save_live_chat');
+    remove_action('admin_post_sasanperfumes_save_gift_wrap', 'sasanperfumes_adv_save_gift_wrap');
+    remove_action('admin_post_sasanperfumes_save_abandoned_popup', 'sasanperfumes_adv_save_abandoned_popup');
+    remove_action('admin_post_sasanperfumes_save_product_detail', 'sasanperfumes_adv_save_product_detail');
+}
+sasanperfumes_disable_retired_admin_hooks();
+
+function sasanperfumes_remove_retired_admin_menus() {
+    remove_menu_page('edit.php?post_type=sasanperfumes_guide');
+    remove_menu_page('edit.php?post_type=sasanperfumes_note');
+
+    foreach (array(
+        'sasanperfumes-promotions',
+        'sasanperfumes-advanced',
+        'sasanperfumes-settings-brands-page',
+    ) as $menu_slug) {
+        remove_submenu_page('sasanperfumes-settings', $menu_slug);
+    }
+}
+add_action('admin_menu', 'sasanperfumes_remove_retired_admin_menus', PHP_INT_MAX);
+add_action('network_admin_menu', 'sasanperfumes_remove_retired_admin_menus', PHP_INT_MAX);
+
+function sasanperfumes_redirect_retired_admin_screens() {
+    if (!is_admin() || wp_doing_ajax()) return;
+
+    $retired_pages = array(
+        'sasanperfumes-promotions',
+        'sasanperfumes-advanced',
+        'sasanperfumes-settings-brands-page',
+    );
+    $page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
+    if (in_array($page, $retired_pages, true)) {
+        wp_safe_redirect(admin_url('admin.php?page=sasanperfumes-settings'));
+        exit;
+    }
+
+    $retired_post_types = array('sasanperfumes_guide', 'sasanperfumes_note');
+    $post_type = isset($_GET['post_type']) ? sanitize_key(wp_unslash($_GET['post_type'])) : '';
+    if (in_array($post_type, $retired_post_types, true)) {
+        wp_safe_redirect(admin_url('admin.php?page=sasanperfumes-settings'));
+        exit;
+    }
+
+    $post_id = isset($_GET['post']) ? absint($_GET['post']) : 0;
+    if ($post_id && in_array(get_post_type($post_id), $retired_post_types, true)) {
+        wp_safe_redirect(admin_url('admin.php?page=sasanperfumes-settings'));
+        exit;
+    }
+}
+add_action('admin_init', 'sasanperfumes_redirect_retired_admin_screens', PHP_INT_MAX);
 
 // COD orders: auto-set status to "processing" instead of "pending"
 add_action('woocommerce_thankyou_cod', function ($order_id) {
