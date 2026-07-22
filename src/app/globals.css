@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Never allow an orphaned product-page stream to render outside the site shell. */
+body > [data-product-recommendations] {
+  display: none !important;
+}
+
 .container {
   max-width: var(--page-container-max-width);
 }

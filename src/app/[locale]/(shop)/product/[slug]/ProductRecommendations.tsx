@@ -56,7 +56,7 @@ export function ProductRecommendations({
   const isRTL = locale === "ar";
 
   return (
-    <>
+    <div data-product-recommendations>
       {upsellProducts.length > 0 && (
         <RelatedProducts
           products={upsellProducts}
@@ -76,6 +76,6 @@ export function ProductRecommendations({
           className="pt-2"
         />
       </div>
-    </>
+    </div>
   );
 }
