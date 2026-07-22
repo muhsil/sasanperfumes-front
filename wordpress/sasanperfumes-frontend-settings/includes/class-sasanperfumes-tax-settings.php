@@ -51,6 +51,99 @@ function sasanperfumes_zero_shipping_tax($taxes, $price, $rates) {
 add_filter('woocommerce_calc_shipping_tax', 'sasanperfumes_zero_shipping_tax', 10, 3);
 
 /**
+ * Prevent shipping taxes from being attached to calculated shipping rates.
+ *
+ * The tax calculation filter above covers WooCommerce's standard calculator,
+ * while these filters also cover rates supplied by Store API and extensions.
+ */
+function sasanperfumes_force_shipping_rate_no_tax($args) {
+    if (is_array($args)) {
+        $args['taxes'] = array();
+    }
+
+    return $args;
+}
+add_filter('woocommerce_shipping_method_add_rate_args', 'sasanperfumes_force_shipping_rate_no_tax', 999, 1);
+
+function sasanperfumes_zero_shipping_rate_taxes($taxes) {
+    return array();
+}
+add_filter('woocommerce_shipping_rate_taxes', 'sasanperfumes_zero_shipping_rate_taxes', 999, 1);
+
+/**
+ * Disable the "Shipping" flag on every tax rate once per site/version.
+ *
+ * REST-created orders can recalculate shipping tax directly from this database
+ * flag without consulting the shipping method's own tax status.
+ */
+function sasanperfumes_disable_shipping_tax_rates() {
+    global $wpdb;
+
+    $migration_version = '2026-07-22-v1';
+    if (get_option('sasanperfumes_shipping_tax_migration') === $migration_version) {
+        return;
+    }
+
+    $table = $wpdb->prefix . 'woocommerce_tax_rates';
+    $wpdb->query("UPDATE {$table} SET tax_rate_shipping = 0 WHERE tax_rate_shipping <> 0");
+
+    if (class_exists('WC_Cache_Helper')) {
+        WC_Cache_Helper::invalidate_cache_group('taxes');
+    }
+
+    update_option('sasanperfumes_shipping_tax_migration', $migration_version, false);
+}
+add_action('init', 'sasanperfumes_disable_shipping_tax_rates', 30);
+
+/**
+ * Remove shipping tax from newly-created orders as a final persistence guard.
+ */
+function sasanperfumes_normalize_order_shipping_tax($order) {
+    static $normalizing = false;
+
+    if ($normalizing || !($order instanceof WC_Order)) {
+        return;
+    }
+
+    $shipping_items = $order->get_items('shipping');
+    $has_shipping_tax = (float) $order->get_shipping_tax() > 0;
+
+    foreach ($shipping_items as $shipping_item) {
+        if ((float) $shipping_item->get_total_tax() > 0) {
+            $has_shipping_tax = true;
+            break;
+        }
+    }
+
+    if (!$has_shipping_tax) {
+        return;
+    }
+
+    $normalizing = true;
+
+    foreach ($shipping_items as $shipping_item) {
+        $shipping_item->set_taxes(array('total' => array()));
+        $shipping_item->save();
+    }
+
+    $order->set_shipping_tax(0);
+    $order->calculate_totals(false);
+    $order->update_meta_data('_sasan_shipping_tax_corrected', gmdate('c'));
+    $order->save();
+
+    $normalizing = false;
+}
+
+function sasanperfumes_normalize_rest_order_shipping_tax($order, $request = null, $creating = false) {
+    if ($creating) {
+        sasanperfumes_normalize_order_shipping_tax($order);
+    }
+}
+add_action('woocommerce_rest_insert_shop_order_object', 'sasanperfumes_normalize_rest_order_shipping_tax', 999, 3);
+add_action('woocommerce_store_api_checkout_order_processed', 'sasanperfumes_normalize_order_shipping_tax', 999, 1);
+add_action('woocommerce_checkout_order_created', 'sasanperfumes_normalize_order_shipping_tax', 5, 1);
+
+/**
  * Ensure admin new-order emails are sent to sasanperfumesuae@gmail.com.
  *
  * WooCommerce stores the recipient list in the woocommerce_new_order_settings
