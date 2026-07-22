@@ -123,6 +123,10 @@ export async function generateMetadata({
   ]);
   const siteName = siteSettings.site_name || siteConfig.name;
 
+  if (backendMetaDesc?.canonical_slug && backendMetaDesc.canonical_slug !== slug) {
+    permanentRedirect(`${getMarketPathPrefix(market.code)}/${locale}/product/${backendMetaDesc.canonical_slug}`);
+  }
+
   if (!product) {
     return generateSeoMetadata({
       title: "Product Not Found",
