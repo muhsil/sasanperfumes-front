@@ -171,12 +171,12 @@ function redirectToPath(request: NextRequest, pathname: string, status = 301): N
   return addSecurityHeaders(NextResponse.redirect(redirectUrl, { status }));
 }
 
-async function redirectWpmlDuplicateProduct(
+function redirectWpmlDuplicateProduct(
   request: NextRequest,
   segments: string[],
   market?: string,
   locale?: string
-): Promise<NextResponse | undefined> {
+): NextResponse | undefined {
   if (!locale) return;
 
   const productIndex = market ? 2 : 1;
@@ -185,31 +185,11 @@ async function redirectWpmlDuplicateProduct(
   const slug = segments[productIndex + 1];
   if (!slug || segments.length !== productIndex + 2 || !/-ar(?:-\d+)?$/i.test(slug)) return;
 
-  try {
-    const backendPath = market ? `/${market}` : "";
-    const endpoint = new URL(
-      `${backendPath}/wp-json/sasanperfumes/v1/product-meta/${encodeURIComponent(slug)}`,
-      CMS_BACKEND_ORIGIN
-    );
-    endpoint.searchParams.set("lang", locale);
+  const canonicalSlug = slug.replace(/-ar(?:-\d+)?$/i, "");
+  if (!canonicalSlug) return;
 
-    const response = await fetch(endpoint, {
-      headers: { Accept: "application/json" },
-      cache: "no-store",
-    });
-    if (!response.ok) return;
-
-    const payload = (await response.json()) as { canonical_slug?: unknown };
-    const canonicalSlug =
-      typeof payload.canonical_slug === "string" ? payload.canonical_slug.trim() : "";
-    if (!canonicalSlug || canonicalSlug === slug || canonicalSlug.includes("/")) return;
-
-    const prefix = market ? `/${market}/${locale}` : `/${locale}`;
-    return redirectToPath(request, `${prefix}/product/${canonicalSlug}`, 308);
-  } catch {
-    // If the canonical lookup is unavailable, keep the product page accessible.
-    return;
-  }
+  const prefix = market ? `/${market}/${locale}` : `/${locale}`;
+  return redirectToPath(request, `${prefix}/product/${canonicalSlug}`, 308);
 }
 
 function redirectLegacyBrandCategoryPaths(request: NextRequest, segments: string[]): NextResponse | undefined {
@@ -334,7 +314,7 @@ function rewriteMarketPathToLocaleRoute(
   return addSecurityHeaders(response);
 }
 
-export async function proxy(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const { market: routeMarket, locale: routeLocale } = getMarketAndLocale(pathname);
   const segments = pathname.split("/").filter(Boolean);
@@ -406,7 +386,7 @@ export async function proxy(request: NextRequest) {
     return legacyBrandCategoryRedirect;
   }
 
-  const duplicateProductRedirect = await redirectWpmlDuplicateProduct(
+  const duplicateProductRedirect = redirectWpmlDuplicateProduct(
     request,
     segments,
     routeMarket,
