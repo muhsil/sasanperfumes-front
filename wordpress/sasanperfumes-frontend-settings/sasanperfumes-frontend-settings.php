@@ -3,7 +3,7 @@
  * Plugin Name: sasanperfumes
  * Plugin URI: https://cms.sasanperfumes.com
  * Description: Admin dashboard and REST API endpoints for sasanperfumes with Media Library upload, dynamic slides, layout options, Bundles Creator, and Free Gift functionality.
- * Version: 6.6.13
+ * Version: 6.7.0
  * Author: ShapeHive
  * License: GPL v2 or later
  */
@@ -18,7 +18,7 @@ if (defined('sasanperfumes_FRONTEND_SETTINGS_LOADED')) {
     return;
 }
 define('sasanperfumes_FRONTEND_SETTINGS_LOADED', true);
-define('sasanperfumes_SETTINGS_VERSION', '6.6.13');
+define('sasanperfumes_SETTINGS_VERSION', '6.7.0');
 define('sasanperfumes_SETTINGS_PATH', plugin_dir_path(__FILE__));
 
 define('SASANPERFUMES_REST_NAMESPACE', 'sasanperfumes/v1');

@@ -1,5 +1,6 @@
 ﻿import { notFound, redirect } from "next/navigation";
 import { getProductBySlug, getProducts, getEnglishSlugForProduct, getBundleConfig, getFreeGiftProductIds, getHiddenProductIds, getEnglishSlugForCategory } from "@/lib/api/woocommerce";
+import { permanentRedirect } from "next/navigation";
 import { getProductAddons } from "@/lib/api/wcpa";
 import { generateMetadata as generateSeoMetadata, generateProductJsonLd, generateBreadcrumbJsonLd, buildMarketSeoKeywords } from "@/lib/utils/seo";
 import { getTopbarSettings, getProductSeo, getFeatureToggles, getSiteSettings } from "@/lib/api/wordpress";
@@ -12,7 +13,7 @@ import { siteConfig, type Locale } from "@/config/site";
 import { decodeHtmlEntities } from "@/lib/utils";
 import type { Metadata } from "next";
 import type { WCProduct } from "@/types/woocommerce";
-import { getMarketByHost, getMarketPathPrefix } from "@/config/market";
+import { getMarketByHost, getMarketCommerceSeoConfig, getMarketPathPrefix, type MarketCode } from "@/config/market";
 import { Suspense } from "react";
 import { ProductRecommendations } from "./ProductRecommendations";
 import { RelatedProductsLoading } from "./loading";
@@ -25,12 +26,13 @@ function isNonAsciiSlug(slug: string): boolean {
 }
 
 // Helper to generate product JSON-LD data from WCProduct
-function getProductJsonLdData(product: WCProduct, locale: string, slug: string, baseUrl: string, siteName: string, currency: string) {
+function getProductJsonLdData(product: WCProduct, locale: string, slug: string, baseUrl: string, siteName: string, currency: string, marketCode: MarketCode) {
   const minorUnit = product.prices.currency_minor_unit || 2;
   const divisor = Math.pow(10, minorUnit);
   const price = (parseInt(product.prices.price, 10) / divisor).toFixed(2);
   const primaryCategory = product.categories?.[0]?.name || undefined;
   const imageList = product.images.map((img) => img.src).filter(Boolean);
+  const commerceSeo = getMarketCommerceSeoConfig(marketCode);
   
   return generateProductJsonLd({
     name: decodeHtmlEntities(product.name),
@@ -49,7 +51,9 @@ function getProductJsonLdData(product: WCProduct, locale: string, slug: string, 
     sellerName: siteName,
     sellerUrl: baseUrl,
     returnPolicyUrl: `${baseUrl}/${locale}/returns`,
+    shippingCountry: commerceSeo.countryCode,
     shippingCurrency: currency,
+    shippingRate: commerceSeo.shippingRate,
   });
 }
 
@@ -114,7 +118,7 @@ export async function generateMetadata({
   // Fetch product and backend-generated meta description in parallel
   const [product, backendMetaDesc, siteSettings] = await Promise.all([
     getProductBySlug(slug, locale as Locale, market.defaultCurrency, frontendHost),
-    getProductSeo(slug, locale as Locale),
+    getProductSeo(slug, locale as Locale, frontendHost),
     getSiteSettings(locale as Locale, frontendHost),
   ]);
   const siteName = siteSettings.site_name || siteConfig.name;
@@ -129,6 +133,7 @@ export async function generateMetadata({
   }
 
   const productName = decodeHtmlEntities(product.name);
+  const canonicalProductSlug = backendMetaDesc?.canonical_slug || slug;
   const categoryNames = product.categories?.map((c) => c.name) || [];
   const tagNames = product.tags?.map((t) => t.name) || [];
 
@@ -232,7 +237,7 @@ export async function generateMetadata({
     title: productSeoTitle,
     description: trimmedDescription,
     locale: locale as Locale,
-    pathname: `/product/${slug}`,
+    pathname: `/product/${canonicalProductSlug}`,
     image: seoImage,
     marketCode: market.code,
     keywords: marketKeywords,
@@ -240,15 +245,9 @@ export async function generateMetadata({
 
   return {
     ...metadata,
-    title: { absolute: productSeoTitle },
     openGraph: {
       ...metadata.openGraph,
-      title: productSeoTitle,
       type: "website",
-    },
-    twitter: {
-      ...metadata.twitter,
-      title: productSeoTitle,
     },
     ...(ogPrice ? {
       other: {
@@ -287,7 +286,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   // For English slugs, fetch the product with the current locale for localized content
   // Also start fetching hidden IDs, bundle config, and topbar settings in parallel
   // This eliminates the waterfall of sequential API calls
-  const [product, hiddenGiftProductIds, hiddenCatalogProductIds, bundleConfig, topbarSettings, featureToggles, siteSettings] = await Promise.all([
+  const [product, hiddenGiftProductIds, hiddenCatalogProductIds, bundleConfig, topbarSettings, featureToggles, siteSettings, productSeo] = await Promise.all([
     getProductBySlug(slug, locale as Locale, market.defaultCurrency, frontendHost),
     getFreeGiftProductIds(market.defaultCurrency, frontendHost),
     getHiddenProductIds(frontendHost),
@@ -295,11 +294,16 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
     getTopbarSettings(undefined, frontendHost),
     getFeatureToggles(frontendHost),
     getSiteSettings(locale as Locale, frontendHost),
+    getProductSeo(slug, locale as Locale, frontendHost),
   ]);
   const siteName = siteSettings.site_name || siteConfig.name;
 
   if (!product) {
     notFound();
+  }
+
+  if (productSeo?.canonical_slug && productSeo.canonical_slug !== slug) {
+    permanentRedirect(`${pathPrefix}/${locale}/product/${productSeo.canonical_slug}`);
   }
 
   // Check if this product is a hidden gift product or has hidden catalog visibility
@@ -335,7 +339,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
     
     return (
       <>
-        <JsonLd data={getProductJsonLdData(product, locale, slug, frontendBaseUrl, siteName, market.defaultCurrency)} />
+        <JsonLd data={getProductJsonLdData(product, locale, slug, frontendBaseUrl, siteName, market.defaultCurrency, market.code)} />
         <div className="container mx-auto px-4 py-3">
           <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} contained={false} />
           <BuildYourOwnSetClient
@@ -371,7 +375,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
 
   return (
     <>
-      <JsonLd data={getProductJsonLdData(product, locale, slug, frontendBaseUrl, siteName, market.defaultCurrency)} />
+      <JsonLd data={getProductJsonLdData(product, locale, slug, frontendBaseUrl, siteName, market.defaultCurrency, market.code)} />
       <JsonLd data={breadcrumbJsonLd} />
       <ProductDetail
         product={product}

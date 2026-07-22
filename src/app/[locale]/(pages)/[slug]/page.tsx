@@ -56,6 +56,7 @@ export async function generateMetadata({
     locale: locale as Locale,
     pathname: `/${slug}`,
     marketCode: market.code,
+    noIndex: slug === "track-order",
   });
 }
 

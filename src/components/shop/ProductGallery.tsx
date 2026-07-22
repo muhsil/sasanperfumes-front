@@ -5,13 +5,16 @@ import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ProductImage } from "@/types";
+import { buildProductImageAlt } from "@/lib/utils/image-alt";
+import type { Locale } from "@/config/site";
 
 interface ProductGalleryProps {
   images: ProductImage[];
   productName: string;
+  locale?: Locale;
 }
 
-export function ProductGallery({ images, productName }: ProductGalleryProps) {
+export function ProductGallery({ images, productName, locale = "en" }: ProductGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   if (images.length === 0) {
@@ -38,7 +41,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
       <div className="relative aspect-square overflow-hidden bg-gray-100">
         <Image
           src={selectedImage.sourceUrl}
-          alt={selectedImage.altText || productName}
+          alt={selectedImage.altText || buildProductImageAlt({ productName, locale, imageIndex: selectedIndex, lifestyle: selectedIndex > 0 })}
           fill
           sizes="(max-width: 768px) 100vw, 50vw"
           className="object-cover"
@@ -89,7 +92,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
             >
               <Image
                 src={image.sourceUrl}
-                alt={image.altText || `${productName} - Image ${index + 1}`}
+                alt={image.altText || buildProductImageAlt({ productName, locale, imageIndex: index, lifestyle: index > 0 })}
                 fill
                 sizes="80px"
                 className="object-cover"

@@ -67,6 +67,19 @@ export function getMarketDefaultCurrency(market: MarketConfig | MarketCode | str
   return market.defaultCurrency || siteConfig.defaultCurrency;
 }
 
+export interface MarketCommerceSeoConfig {
+  countryCode: "AE" | "QA" | "OM" | "SA";
+  countryName: string;
+  shippingRate: number;
+}
+
+const marketCommerceSeoConfigs: Record<MarketCode, MarketCommerceSeoConfig> = {
+  intl: { countryCode: "AE", countryName: "United Arab Emirates", shippingRate: 30 },
+  qa: { countryCode: "QA", countryName: "Qatar", shippingRate: 30 },
+  om: { countryCode: "OM", countryName: "Oman", shippingRate: 3 },
+  sa: { countryCode: "SA", countryName: "Saudi Arabia", shippingRate: 30 },
+};
+
 export function normalizeMarketHost(value?: string | null): string {
   if (!value) return "";
 
@@ -132,4 +145,8 @@ export function isCurrencyAllowedForMarket(currency: Currency, market: MarketCon
 export function getMarketPathPrefix(marketCode: MarketCode): string {
   if (marketCode === "intl") return "";
   return `/${marketCode}`;
+}
+
+export function getMarketCommerceSeoConfig(marketCode: MarketCode): MarketCommerceSeoConfig {
+  return marketCommerceSeoConfigs[marketCode] || marketCommerceSeoConfigs.intl;
 }

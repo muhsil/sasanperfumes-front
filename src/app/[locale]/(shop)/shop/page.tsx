@@ -17,7 +17,7 @@ import { getMarketPathPrefix } from "@/config/market";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-const SHOP_PRODUCTS_PER_PAGE = 30;
+const SHOP_PRODUCTS_PER_PAGE = 18;
 
 interface ShopPageProps {
   params: Promise<{ locale: string }>;

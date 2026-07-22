@@ -78,7 +78,7 @@ export default async function FeaturedProductsPage({ params, searchParams }: Fea
 
   const [productsResult, giftProductIds, bundleProductSlugs] = await Promise.all([
     getFeaturedProducts({
-      per_page: 30,
+      per_page: 18,
       locale: locale as Locale,
       currency: market.defaultCurrency,
       frontendHost,

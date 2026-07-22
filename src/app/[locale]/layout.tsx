@@ -140,8 +140,8 @@ export default async function LocaleLayout({
                                           <FreeGiftProvider locale={validLocale}>
                       <WishlistProvider locale={validLocale}>
                         <DiscountRulesProvider initialRules={discountRules}>
-              <JsonLd data={generateOrganizationJsonLd()} />
-              <JsonLd data={generateWebSiteJsonLd()} />
+              <JsonLd data={generateOrganizationJsonLd(market.code)} />
+              <JsonLd data={generateWebSiteJsonLd(market.code, locale as Locale)} />
               {generateLocalBusinessJsonLd(market.code).map((schema, i) => (
                 <JsonLd key={`local-business-${i}`} data={schema} />
               ))}

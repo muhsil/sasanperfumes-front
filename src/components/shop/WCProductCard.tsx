@@ -15,6 +15,7 @@ import { triggerHaptic } from "@/lib/utils/haptics";
 import type { WCProduct } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
+import { buildProductImageAlt } from "@/lib/utils/image-alt";
 
 const RATING_STARS = [1, 2, 3, 4, 5];
 
@@ -118,7 +119,10 @@ export function WCProductCard({
     router.prefetch(productHref);
   }, [productHref, router]);
   const productName = decodeHtmlEntities(product.name);
-  const shortDescription = htmlToPlainText(product.short_description || "");
+  const categoryName = product.categories?.[0]?.name;
+  const shortDescription = htmlToPlainText(product.short_description || "") || (isRTL
+    ? `عطر مختار من ${categoryName ? decodeHtmlEntities(categoryName) : "Sasan Perfumes"}`
+    : `A distinctive ${categoryName ? decodeHtmlEntities(categoryName).toLowerCase() : "fragrance"} from Sasan Perfumes`);
   const extraBadgeSlugs: string[] = [];
 
   const priceDivider = Math.pow(10, product.prices.currency_minor_unit);
@@ -202,7 +206,7 @@ export function WCProductCard({
                   <>
                     <Image
                       src={mainImage.src}
-                      alt={mainImage.alt || product.name}
+                      alt={mainImage.alt || buildProductImageAlt({ productName, categoryName, locale })}
                       fill
                       quality={60}
                       sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
@@ -218,7 +222,7 @@ export function WCProductCard({
                     {hoverImage && (
                       <Image
                         src={hoverImage.src}
-                        alt={hoverImage.alt || product.name}
+                        alt={hoverImage.alt || buildProductImageAlt({ productName, categoryName, locale, imageIndex: 1, lifestyle: true })}
                         fill
                         quality={60}
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"

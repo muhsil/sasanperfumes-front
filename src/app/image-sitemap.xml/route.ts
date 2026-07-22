@@ -2,6 +2,7 @@ import { getProducts, getCategories } from "@/lib/api/woocommerce";
 import { siteConfig } from "@/config/site";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { marketConfigs, getMarketPathPrefix } from "@/config/market";
+import { dedupeProductsForSitemap } from "@/app/sitemap";
 
 function escapeXml(str: string): string {
   return str
@@ -41,7 +42,7 @@ export async function GET() {
         page += 1;
       } while (page <= totalPages);
 
-      for (const product of allProducts) {
+      for (const product of dedupeProductsForSitemap(allProducts)) {
         for (const locale of locales) {
           const pageUrl = `${baseUrl}${prefix}/${locale}/product/${product.slug}`;
           const images = product.images || [];
@@ -73,7 +74,10 @@ export async function GET() {
     try {
       const categories = await getCategories("en", market.defaultCurrency, frontendHost);
 
-      for (const category of categories) {
+      const uniqueCategories = categories.filter(
+        (category, index, all) => index === all.findIndex((candidate) => candidate.slug === category.slug)
+      );
+      for (const category of uniqueCategories) {
         if (!category.image?.src) continue;
 
         for (const locale of locales) {

@@ -13,6 +13,7 @@ import { useWishlist } from "@/contexts/WishlistContext";
 import { useComparison } from "@/contexts/ComparisonContext";
 import { cn, decodeHtmlEntities, htmlToPlainText } from "@/lib/utils";
 import type { Product } from "@/types";
+import { buildProductImageAlt } from "@/lib/utils/image-alt";
 import type { Locale } from "@/config/site";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
@@ -137,7 +138,7 @@ export function ProductCard({ product, locale, className, wcProduct }: ProductCa
                 <>
                   <Image
                     src={product.image.sourceUrl}
-                    alt={product.image.altText || product.name}
+                    alt={product.image.altText || buildProductImageAlt({ productName: product.name, locale })}
                     fill
                     quality={60}
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
@@ -150,7 +151,7 @@ export function ProductCard({ product, locale, className, wcProduct }: ProductCa
                   {hoverImage && (
                     <Image
                       src={hoverImage.sourceUrl}
-                      alt={hoverImage.altText || product.name}
+                      alt={hoverImage.altText || buildProductImageAlt({ productName: product.name, locale, imageIndex: 1, lifestyle: true })}
                       fill
                       quality={60}
                       sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"

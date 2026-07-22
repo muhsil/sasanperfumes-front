@@ -51,8 +51,48 @@ const staticPages = [
   "/returns",
   "/privacy",
   "/terms-and-conditions",
-  "/track-order",
+  "/notes/oud",
+  "/notes/musk",
+  "/notes/vanilla",
+  "/notes/rose",
+  "/notes/amber",
 ];
+
+function withLanguageAlternates(baseUrl: string, marketCode: MarketCode, page: string) {
+  const en = marketUrl(baseUrl, marketCode, "en", page);
+  return {
+    en,
+    ar: marketUrl(baseUrl, marketCode, "ar", page),
+    "x-default": en,
+  };
+}
+
+function canonicalProductKey(product: Awaited<ReturnType<typeof getAllProductsForMarket>>[number]): string {
+  const normalizedName = product.name.replace(/<[^>]*>/g, " ").replace(/&(?:amp|#038);/gi, "&").replace(/\s+/g, " ").trim().toLowerCase();
+  const category = product.categories?.[0]?.slug || "uncategorized";
+  const sku = product.sku?.trim().toLowerCase();
+  const image = product.images?.[0]?.src?.split("/").pop()?.toLowerCase() || "";
+  return sku ? `sku:${sku}|${normalizedName}` : `content:${normalizedName}|${category}|${image}`;
+}
+
+function canonicalSlugScore(slug: string): number {
+  let score = slug.length;
+  if (/-ar(?:-|$)/i.test(slug)) score += 100;
+  if (/-\d+$/.test(slug)) score += 50;
+  return score;
+}
+
+export function dedupeProductsForSitemap<T extends Awaited<ReturnType<typeof getAllProductsForMarket>>[number]>(products: T[]): T[] {
+  const canonicalProducts = new Map<string, T>();
+  for (const product of products) {
+    const key = canonicalProductKey(product);
+    const current = canonicalProducts.get(key);
+    if (!current || canonicalSlugScore(product.slug) < canonicalSlugScore(current.slug)) {
+      canonicalProducts.set(key, product);
+    }
+  }
+  return Array.from(canonicalProducts.values());
+}
 
 async function generateMarketSitemap(marketCode: MarketCode, currency: Currency): Promise<MetadataRoute.Sitemap> {
   const baseUrl = siteConfig.url;
@@ -64,33 +104,25 @@ async function generateMarketSitemap(marketCode: MarketCode, currency: Currency)
     for (const page of staticPages) {
       entries.push({
         url: marketUrl(baseUrl, marketCode, locale, page),
-        lastModified: new Date(),
         changeFrequency: page === "" ? "daily" : "weekly",
         priority: marketCode === "intl" && page === "" ? 1.0 : page === "" ? 0.95 : 0.8,
         alternates: {
-          languages: {
-            en: marketUrl(baseUrl, marketCode, "en", page),
-            ar: marketUrl(baseUrl, marketCode, "ar", page),
-          },
+          languages: withLanguageAlternates(baseUrl, marketCode, page),
         },
       });
     }
   }
 
   try {
-    const products = await getAllProductsForMarket(marketCode, currency, frontendHost);
+    const products = dedupeProductsForSitemap(await getAllProductsForMarket(marketCode, currency, frontendHost));
     for (const product of products) {
       for (const locale of locales) {
         entries.push({
           url: marketUrl(baseUrl, marketCode, locale, `/product/${product.slug}`),
-          lastModified: new Date(),
           changeFrequency: "weekly",
           priority: 0.9,
           alternates: {
-            languages: {
-              en: marketUrl(baseUrl, marketCode, "en", `/product/${product.slug}`),
-              ar: marketUrl(baseUrl, marketCode, "ar", `/product/${product.slug}`),
-            },
+            languages: withLanguageAlternates(baseUrl, marketCode, `/product/${product.slug}`),
           },
         });
       }
@@ -101,18 +133,17 @@ async function generateMarketSitemap(marketCode: MarketCode, currency: Currency)
 
   try {
     const categories = await getCategories("en", currency, frontendHost);
-    for (const category of categories) {
+    const uniqueCategories = categories.filter(
+      (category, index, all) => index === all.findIndex((candidate) => candidate.slug === category.slug)
+    );
+    for (const category of uniqueCategories) {
       for (const locale of locales) {
         entries.push({
           url: marketUrl(baseUrl, marketCode, locale, `/category/${category.slug}`),
-          lastModified: new Date(),
           changeFrequency: "weekly",
           priority: 0.8,
           alternates: {
-            languages: {
-              en: marketUrl(baseUrl, marketCode, "en", `/category/${category.slug}`),
-              ar: marketUrl(baseUrl, marketCode, "ar", `/category/${category.slug}`),
-            },
+            languages: withLanguageAlternates(baseUrl, marketCode, `/category/${category.slug}`),
           },
         });
       }
@@ -127,14 +158,10 @@ async function generateMarketSitemap(marketCode: MarketCode, currency: Currency)
       for (const locale of locales) {
         entries.push({
           url: marketUrl(baseUrl, marketCode, locale, `/guides/${guide.slug}`),
-          lastModified: new Date(),
           changeFrequency: "weekly",
           priority: 0.8,
           alternates: {
-            languages: {
-              en: marketUrl(baseUrl, marketCode, "en", `/guides/${guide.slug}`),
-              ar: marketUrl(baseUrl, marketCode, "ar", `/guides/${guide.slug}`),
-            },
+            languages: withLanguageAlternates(baseUrl, marketCode, `/guides/${guide.slug}`),
           },
         });
       }

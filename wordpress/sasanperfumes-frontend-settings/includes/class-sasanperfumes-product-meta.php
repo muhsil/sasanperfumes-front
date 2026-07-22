@@ -18,6 +18,55 @@
 
 if (!defined('ABSPATH')) exit;
 
+/**
+ * Gradually fill missing product image ALT fields without changing product
+ * names. Small batches keep normal storefront requests inexpensive.
+ */
+add_action('init', 'sasanperfumes_backfill_product_image_alt_batch', 30);
+
+function sasanperfumes_backfill_product_image_alt_batch() {
+    if (!function_exists('wc_get_product')) return;
+    if (get_option('sasanperfumes_image_alt_backfill_version') === '1') return;
+    if (get_transient('sasanperfumes_image_alt_backfill_lock')) return;
+
+    set_transient('sasanperfumes_image_alt_backfill_lock', 1, 30);
+    $offset = max(0, (int) get_option('sasanperfumes_image_alt_backfill_offset', 0));
+    $product_ids = get_posts(array(
+        'post_type' => 'product',
+        'post_status' => 'publish',
+        'posts_per_page' => 20,
+        'offset' => $offset,
+        'orderby' => 'ID',
+        'order' => 'ASC',
+        'fields' => 'ids',
+        'suppress_filters' => true,
+    ));
+
+    foreach ($product_ids as $product_id) {
+        $product = wc_get_product($product_id);
+        if (!$product) continue;
+        $name = html_entity_decode($product->get_name(), ENT_QUOTES, 'UTF-8');
+        $image_ids = array_values(array_filter(array_merge(
+            array($product->get_image_id()),
+            $product->get_gallery_image_ids()
+        )));
+
+        foreach ($image_ids as $index => $image_id) {
+            if (trim((string) get_post_meta($image_id, '_wp_attachment_image_alt', true)) !== '') continue;
+            $view = 0 === $index ? 'product bottle' : 'lifestyle fragrance image';
+            update_post_meta($image_id, '_wp_attachment_image_alt', sanitize_text_field("{$name} - {$view}"));
+        }
+    }
+
+    if (count($product_ids) < 20) {
+        update_option('sasanperfumes_image_alt_backfill_version', '1', false);
+        delete_option('sasanperfumes_image_alt_backfill_offset');
+    } else {
+        update_option('sasanperfumes_image_alt_backfill_offset', $offset + count($product_ids), false);
+    }
+    delete_transient('sasanperfumes_image_alt_backfill_lock');
+}
+
 // ---------------------------------------------------------------------------
 // Inject product_brand terms into WC REST API v3 product responses
 // ---------------------------------------------------------------------------
@@ -95,6 +144,7 @@ function sasanperfumes_get_product_meta_description($request) {
             'keywords'         => '',
             'og_image'         => '',
             'source'           => 'none',
+            'canonical_slug'   => '',
         ), 200);
     }
 
@@ -108,6 +158,7 @@ function sasanperfumes_get_product_meta_description($request) {
             'keywords'         => '',
             'og_image'         => '',
             'source'           => 'none',
+            'canonical_slug'   => '',
         ), 200);
     }
 
@@ -135,6 +186,7 @@ function sasanperfumes_get_product_meta_description($request) {
             'keywords'         => sasanperfumes_auto_generate_product_keywords($product, $lang, $yoast_focuskw),
             'og_image'         => $resolved_og_image ?: sasanperfumes_get_product_featured_image_url($product),
             'source'           => 'yoast',
+            'canonical_slug'   => sasanperfumes_get_canonical_product_slug($product),
         ), 200);
     }
 
@@ -150,7 +202,64 @@ function sasanperfumes_get_product_meta_description($request) {
         'keywords'         => $keywords,
         'og_image'         => $og_image,
         'source'           => 'auto',
+        'canonical_slug'   => sasanperfumes_get_canonical_product_slug($product),
     ), 200);
+}
+
+/**
+ * Consolidate only demonstrably identical records. Product names, records,
+ * stock, and historical order references remain unchanged.
+ */
+function sasanperfumes_get_canonical_product_slug($product) {
+    if (!$product || !is_a($product, 'WC_Product')) return '';
+
+    $name = html_entity_decode($product->get_name(), ENT_QUOTES, 'UTF-8');
+    $sku = trim((string) $product->get_sku());
+    $image_url = $product->get_image_id() ? wp_get_attachment_image_url($product->get_image_id(), 'full') : '';
+    $image_file = $image_url ? wp_basename((string) wp_parse_url($image_url, PHP_URL_PATH)) : '';
+    $candidates = get_posts(array(
+        'post_type' => 'product',
+        'post_status' => 'publish',
+        'posts_per_page' => 20,
+        's' => $name,
+        'suppress_filters' => false,
+        'orderby' => 'ID',
+        'order' => 'ASC',
+    ));
+    $matches = array();
+
+    foreach ($candidates as $candidate_post) {
+        $candidate = wc_get_product($candidate_post->ID);
+        if (!$candidate) continue;
+        $candidate_name = html_entity_decode($candidate->get_name(), ENT_QUOTES, 'UTF-8');
+        if (0 !== strcasecmp(trim($candidate_name), trim($name))) continue;
+
+        $candidate_sku = trim((string) $candidate->get_sku());
+        $candidate_image_url = $candidate->get_image_id() ? wp_get_attachment_image_url($candidate->get_image_id(), 'full') : '';
+        $candidate_image_file = $candidate_image_url ? wp_basename((string) wp_parse_url($candidate_image_url, PHP_URL_PATH)) : '';
+        $same_sku = $sku !== '' && $candidate_sku !== '' && 0 === strcasecmp($sku, $candidate_sku);
+        $same_image = $image_file !== '' && $candidate_image_file !== '' && 0 === strcasecmp($image_file, $candidate_image_file);
+
+        if ($candidate->get_id() === $product->get_id() || $same_sku || $same_image) {
+            $matches[] = $candidate;
+        }
+    }
+
+    if (count($matches) < 2) return $product->get_slug();
+
+    usort($matches, function($a, $b) {
+        $score = function($candidate) {
+            $slug = $candidate->get_slug();
+            $value = strlen($slug);
+            if (preg_match('/-ar(?:-|$)/i', $slug)) $value += 100;
+            if (preg_match('/-\d+$/', $slug)) $value += 50;
+            return $value;
+        };
+        $score_diff = $score($a) - $score($b);
+        return 0 !== $score_diff ? $score_diff : $a->get_id() - $b->get_id();
+    });
+
+    return $matches[0]->get_slug();
 }
 
 /**
@@ -326,7 +435,7 @@ function sasanperfumes_build_english_product_meta_desc($name, $short_desc, $cate
 
     // Start with short description snippet if available (truncate at ~80 chars)
     $desc_snippet = '';
-    if (!empty($short_desc)) {
+    if (!empty($short_desc) && !preg_match('/[\x{0600}-\x{06FF}]/u', $short_desc)) {
         if (mb_strlen($short_desc) > 80) {
             $desc_snippet = preg_replace('/\s+\S*$/', '', mb_substr($short_desc, 0, 80));
         } else {
@@ -353,10 +462,8 @@ function sasanperfumes_build_english_product_meta_desc($name, $short_desc, $cate
 
     if (!empty($price)) {
         $formatted_price = intval($price);
-        $parts[] = "Price: {$formatted_price} AED.";
+        $parts[] = "Price: {$formatted_price} " . get_woocommerce_currency() . ".";
     }
-
-    $parts[] = 'Free delivery on orders over 500 AED.';
 
     // Combine and truncate to 160 chars at word boundary
     $description = implode(' ', $parts);
@@ -380,7 +487,7 @@ function sasanperfumes_build_arabic_product_meta_desc($name, $short_desc, $categ
     $brand = "Sasan Perfumes";
 
     $desc_snippet = "";
-    if (!empty($short_desc)) {
+    if (!empty($short_desc) && preg_match('/[\x{0600}-\x{06FF}]/u', $short_desc)) {
         if (mb_strlen($short_desc) > 80) {
             $desc_snippet = preg_replace("/\s+\S*$/u", "", mb_substr($short_desc, 0, 80));
         } else {
@@ -407,10 +514,8 @@ function sasanperfumes_build_arabic_product_meta_desc($name, $short_desc, $categ
 
     if (!empty($price)) {
         $formatted_price = intval($price);
-        $parts[] = "السعر: {$formatted_price} AED.";
+        $parts[] = "السعر: {$formatted_price} " . get_woocommerce_currency() . ".";
     }
-
-    $parts[] = "توصيل مجاني للطلبات فوق 500 AED.";
 
     $description = implode(" ", $parts);
 

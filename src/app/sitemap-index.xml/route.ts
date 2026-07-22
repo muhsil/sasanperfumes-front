@@ -7,15 +7,12 @@ export const revalidate = 3600;
 
 export async function GET() {
   const baseUrl = siteConfig.url;
-  const now = new Date();
-
   const sitemaps = [
-    { url: `${baseUrl}/sitemap.xml`, lastModified: now },
-    { url: `${baseUrl}/sitemap-intl.xml`, lastModified: now },
-    { url: `${baseUrl}/sitemap-qa.xml`, lastModified: now },
-    { url: `${baseUrl}/sitemap-om.xml`, lastModified: now },
-    { url: `${baseUrl}/sitemap-sa.xml`, lastModified: now },
-    { url: `${baseUrl}/image-sitemap.xml`, lastModified: now },
+    { url: `${baseUrl}/sitemap-intl.xml` },
+    { url: `${baseUrl}/sitemap-qa.xml` },
+    { url: `${baseUrl}/sitemap-om.xml` },
+    { url: `${baseUrl}/sitemap-sa.xml` },
+    { url: `${baseUrl}/image-sitemap.xml` },
   ];
 
   return new NextResponse(buildSitemapIndexXml(sitemaps), {

@@ -3,10 +3,10 @@ import dns from "dns";
 import https from "https";
 import { disableRuntimeCache, siteConfig, API_BASE_CURRENCY, type Locale, type Currency } from "@/config/site";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
+import { decodeHtmlEntities } from "@/lib/utils";
 import {
   buildProductSearchAliases,
   localizeProductAttributes,
-  localizeProductHtml,
   localizeProductTaxonomyItems,
   localizeProductText,
   PRODUCT_SEARCH_ALIASES_EXTENSION_KEY,
@@ -398,6 +398,28 @@ function getArabicProductLabels() {
   };
 }
 
+function buildArabicProductFallbackCopy(product: WCProduct): { shortDescription: string; description: string } {
+  const name = decodeHtmlEntities(product.name || "").trim();
+  const category = product.categories?.[0]?.name
+    ? localizeProductText(product.categories[0].name, "ar")
+    : "العطور الفاخرة";
+  const noteNames = (product.attributes || [])
+    .filter((attribute) => {
+      const label = decodeHtmlEntities(attribute.name || "").toLowerCase();
+      return attribute.taxonomy === "pa_notes" || label === "notes" || label === "fragrance notes";
+    })
+    .flatMap((attribute) => attribute.terms || [])
+    .map((term) => localizeProductText(term.name || "", "ar"))
+    .filter(Boolean)
+    .slice(0, 3);
+  const notesText = noteNames.length > 0 ? ` بنفحات ${noteNames.join("، ")}` : "";
+
+  return {
+    shortDescription: `<p>اكتشف ${name} من Sasan Perfumes، اختيار أنيق من ${category}${notesText} للاستخدام اليومي والمناسبات.</p>`,
+    description: `<p>${name} من Sasan Perfumes يقدم تجربة عطرية متوازنة تجمع بين الأناقة والثبات${notesText}. مناسب للاستخدام اليومي أو الإهداء، ومصمم لعشاق الروائح العصرية الراقية.</p>`,
+  };
+}
+
 const ARABIC_PRODUCT_COPY_OVERRIDES: Record<string, {
   name: string;
   shortDescription: string;
@@ -426,13 +448,20 @@ function localizeArabicProduct(product: WCProduct, locale?: Locale): WCProduct {
   }
 
   const labels = getArabicProductLabels();
+  const fallbackCopy = buildArabicProductFallbackCopy(product);
+  const originalShortDescription = product.short_description || "";
+  const originalDescription = product.description || "";
   const existingAliases = readProductSearchAliases(product.extensions?.[PRODUCT_SEARCH_ALIASES_EXTENSION_KEY]);
   const searchAliases = existingAliases || buildProductSearchAliases(product);
   const localizedProduct: WCProduct = {
     ...product,
-    name: localizeProductText(product.name || "", locale),
-    short_description: localizeProductHtml(product.short_description || "", locale),
-    description: localizeProductHtml(product.description || "", locale),
+    name: product.name,
+    short_description: /[\u0600-\u06ff]/.test(originalShortDescription)
+      ? originalShortDescription
+      : fallbackCopy.shortDescription,
+    description: /[\u0600-\u06ff]/.test(originalDescription)
+      ? originalDescription
+      : fallbackCopy.description,
     images: (product.images || []).map((image) => ({
       ...image,
       name: localizeProductText(image.name || "", locale),
@@ -468,7 +497,6 @@ function localizeArabicProduct(product: WCProduct, locale?: Locale): WCProduct {
 
   return {
     ...localizedProduct,
-    name: copy.name,
     short_description: copy.shortDescription,
     description: copy.description,
   };

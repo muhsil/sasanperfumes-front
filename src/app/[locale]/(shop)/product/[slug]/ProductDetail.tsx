@@ -673,6 +673,27 @@ interface ProductDetailProps {
   reviewsEnabled?: boolean;
 }
 
+function noteValueToSlug(value: string): string {
+  const arabicNoteSlugs: Record<string, string> = {
+    "عود": "oud",
+    "المسك": "musk",
+    "مسك": "musk",
+    "فانيلا": "vanilla",
+    "فانيليا": "vanilla",
+    "ورد": "rose",
+    "الورد": "rose",
+    "عنبر": "amber",
+    "العنبر": "amber",
+  };
+  const firstNote = value.split(/,|\band\b|،/i)[0].trim();
+  if (arabicNoteSlugs[firstNote]) return arabicNoteSlugs[firstNote];
+
+  return firstNote
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 export function ProductDetail({ product, locale, addonForms = [], englishCategorySlug, hiddenGiftProductIds = [], freeShippingThreshold, reviewsEnabled = true }: ProductDetailProps) {
   const marketPrefix = useMarketPrefix();
   const [quantity, setQuantity] = useState(1);
@@ -1777,8 +1798,18 @@ export function ProductDetail({ product, locale, addonForms = [], englishCategor
                     <span className="shrink-0 text-[12px] font-semibold uppercase tracking-[0.08em] text-brand-muted">
                       {note.label}
                     </span>
-                    <span className="max-w-[68%] text-right text-sm leading-6 text-brand-primary/75 rtl:text-left">                      {note.value}
-                    </span>
+                    {noteValueToSlug(note.value) ? (
+                      <Link
+                        href={`${marketPrefix}/${locale}/notes/${noteValueToSlug(note.value)}`}
+                        className="max-w-[68%] text-right text-sm leading-6 text-brand-primary/75 underline-offset-4 hover:underline rtl:text-left"
+                      >
+                        {note.value}
+                      </Link>
+                    ) : (
+                      <span className="max-w-[68%] text-right text-sm leading-6 text-brand-primary/75 rtl:text-left">
+                        {note.value}
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>

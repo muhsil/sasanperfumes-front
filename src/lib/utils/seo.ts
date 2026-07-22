@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { siteConfig, type Locale } from "@/config/site";
-import { getMarketPathPrefix, type MarketCode } from "@/config/market";
+import { getMarketCommerceSeoConfig, getMarketPathPrefix, type MarketCode } from "@/config/market";
 
 interface AlternateUrls {
   en?: string;
@@ -31,6 +31,52 @@ export const NOINDEX_NOFOLLOW_ROBOTS = {
   follow: false,
 } satisfies Metadata["robots"];
 
+const SEO_TITLE_MAX_LENGTH = 65;
+const SEO_DESCRIPTION_MAX_LENGTH = 160;
+
+function truncateAtWord(value: string, maxLength: number): string {
+  const normalized = value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  if (normalized.length <= maxLength) return normalized;
+
+  const contentLength = Math.max(1, maxLength - 3);
+  const shortened = normalized.slice(0, contentLength + 1).replace(/\s+\S*$/, "").trim();
+  return `${shortened || normalized.slice(0, contentLength).trim()}...`;
+}
+
+function getConciseMarketTitleSuffix(marketCode: MarketCode, locale: Locale): string {
+  const suffixes: Record<MarketCode, Record<Locale, string>> = {
+    intl: { en: "Sasan Perfumes UAE", ar: "Sasan Perfumes UAE" },
+    qa: { en: "Sasan Perfumes Qatar", ar: "Sasan Perfumes Qatar" },
+    om: { en: "Sasan Perfumes Oman", ar: "Sasan Perfumes Oman" },
+    sa: { en: "Sasan Perfumes Saudi", ar: "Sasan Perfumes Saudi" },
+  };
+  return suffixes[marketCode][locale];
+}
+
+function buildSeoTitle(rawTitle: string, marketCode: MarketCode | undefined, locale: Locale): string {
+  if (!marketCode) return truncateAtWord(rawTitle, SEO_TITLE_MAX_LENGTH);
+
+  const suffix = getConciseMarketTitleSuffix(marketCode, locale);
+  if (rawTitle.toLowerCase().includes(suffix.toLowerCase())) {
+    return truncateAtWord(rawTitle, SEO_TITLE_MAX_LENGTH);
+  }
+
+  const availableTitleLength = Math.max(24, SEO_TITLE_MAX_LENGTH - suffix.length - 3);
+  return `${truncateAtWord(rawTitle, availableTitleLength).replace(/\.\.\.$/, "")} | ${suffix}`;
+}
+
+function isWrongMarketDescription(value: string, marketCode: MarketCode): boolean {
+  if (marketCode === "intl") return false;
+  const normalized = value.toLowerCase();
+  const marketName = getMarketCommerceSeoConfig(marketCode).countryName.toLowerCase();
+  const mentionsTargetMarket = normalized.includes(marketName) ||
+    (marketCode === "qa" && /qatar|قطر/.test(normalized)) ||
+    (marketCode === "om" && /oman|عمان|عُمان/.test(normalized)) ||
+    (marketCode === "sa" && /saudi|السعودية/.test(normalized));
+  const mentionsUaeOnly = /\baed\b|\bdubai\b|\buae\b|دبي|الإمارات/.test(normalized);
+  return mentionsUaeOnly && !mentionsTargetMarket;
+}
+
 export function generateMetadata({
   title,
   description,
@@ -42,14 +88,16 @@ export function generateMetadata({
   keywords,
   marketCode,
 }: GenerateMetadataParams): Metadata {
-  const marketTitleSuffix = marketCode ? getMarketSeoTitleSuffix(marketCode, locale) : "";
   const rawTitle = title || siteConfig.name;
-  const fullTitle =
-    marketTitleSuffix && !rawTitle.toLowerCase().includes(marketTitleSuffix.toLowerCase())
-      ? `${rawTitle} | ${marketTitleSuffix}`
-      : rawTitle;
-  const fullDescription =
-    description || (marketCode ? getMarketSeoDescription(marketCode, locale) : siteConfig.description);
+  const fullTitle = buildSeoTitle(rawTitle, marketCode, locale);
+  const requestedDescription = description || (marketCode ? getMarketSeoDescription(marketCode, locale) : siteConfig.description);
+  const localizedDescription = marketCode && isWrongMarketDescription(requestedDescription, marketCode)
+    ? getMarketSeoDescription(marketCode, locale)
+    : requestedDescription;
+  const fullDescription = truncateAtWord(
+    localizedDescription,
+    SEO_DESCRIPTION_MAX_LENGTH
+  );
   const ogImage = image || siteConfig.ogImage;
   const marketPrefix = marketCode ? getMarketPathPrefix(marketCode) : "";
   const canonicalUrl = `${siteConfig.url}${marketPrefix}/${locale}${pathname}`;
@@ -61,7 +109,7 @@ export function generateMetadata({
   const altAr = alternatePathnames?.ar || `${siteConfig.url}${marketPrefix}/ar${pathname}`;
 
   return {
-    title: fullTitle,
+    title: { absolute: fullTitle },
     description: fullDescription,
     metadataBase: new URL(siteConfig.url),
     robots: noIndex ? NOINDEX_NOFOLLOW_ROBOTS : INDEX_NOFOLLOW_ROBOTS,
@@ -114,6 +162,9 @@ export function generateProductJsonLd(product: {
   returnPolicyUrl?: string;
   shippingCountry?: string;
   shippingCurrency?: string;
+  shippingRate?: number;
+  returnPolicyDays?: number;
+  returnFees?: "FreeReturn" | "ReturnShippingFees";
 }) {
   // Use all images if available, otherwise fall back to single image
   const imageList = product.images && product.images.length > 0
@@ -170,7 +221,7 @@ export function generateProductJsonLd(product: {
         },
         shippingRate: {
           "@type": "MonetaryAmount",
-          value: "0",
+          value: String(product.shippingRate ?? 0),
           currency: product.shippingCurrency || product.currency,
         },
         deliveryTime: {
@@ -189,15 +240,19 @@ export function generateProductJsonLd(product: {
           },
         },
       },
-      hasMerchantReturnPolicy: {
-        "@type": "MerchantReturnPolicy",
-        applicableCountry: "AE",
-        returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
-        merchantReturnDays: 14,
-        returnMethod: "https://schema.org/ReturnByMail",
-        returnFees: "https://schema.org/FreeReturn",
-        url: product.returnPolicyUrl || `${siteConfig.url}/en/returns`,
-      },
+      ...(product.returnPolicyDays && product.returnPolicyDays > 0
+        ? {
+            hasMerchantReturnPolicy: {
+              "@type": "MerchantReturnPolicy",
+              applicableCountry: product.shippingCountry || "AE",
+              returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+              merchantReturnDays: product.returnPolicyDays,
+              returnMethod: "https://schema.org/ReturnByMail",
+              returnFees: `https://schema.org/${product.returnFees || "ReturnShippingFees"}`,
+              url: product.returnPolicyUrl || `${siteConfig.url}/en/returns`,
+            },
+          }
+        : {}),
     },
   };
 }
@@ -217,15 +272,17 @@ export function generateBreadcrumbJsonLd(
   };
 }
 
-export function generateOrganizationJsonLd() {
+export function generateOrganizationJsonLd(marketCode: MarketCode = "intl") {
   const socialLinks = Object.values(siteConfig.links).filter(Boolean);
   const logo = siteConfig.logoUrl || siteConfig.faviconUrl;
+  const market = getMarketCommerceSeoConfig(marketCode);
+  const prefix = getMarketPathPrefix(marketCode);
 
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: siteConfig.name,
-    url: siteConfig.url,
+    url: `${siteConfig.url}${prefix}`,
     ...(logo ? { logo } : {}),
     description: siteConfig.description,
     contactPoint: {
@@ -233,31 +290,31 @@ export function generateOrganizationJsonLd() {
       telephone: siteConfig.contact.phone,
       contactType: "customer service",
       availableLanguage: ["English", "Arabic"],
-      areaServed: ["AE", "SA", "KW", "BH", "QA", "OM"],
+      areaServed: market.countryCode,
     },
     address: {
       "@type": "PostalAddress",
-      addressCountry: "AE",
-      addressLocality: "Dubai",
-      addressRegion: "Dubai",
+      addressCountry: market.countryCode,
     },
     sameAs: socialLinks,
   };
 }
 
-export function generateWebSiteJsonLd() {
+export function generateWebSiteJsonLd(marketCode: MarketCode = "intl", locale: Locale = "en") {
+  const prefix = getMarketPathPrefix(marketCode);
+  const marketUrl = `${siteConfig.url}${prefix}`;
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: siteConfig.name,
-    url: siteConfig.url,
+    url: marketUrl,
     description: siteConfig.description,
     inLanguage: ["en", "ar"],
     potentialAction: {
       "@type": "SearchAction",
       target: {
         "@type": "EntryPoint",
-        urlTemplate: `${siteConfig.url}/en/search?q={search_term_string}`,
+        urlTemplate: `${marketUrl}/${locale}/search?q={search_term_string}`,
       },
       "query-input": "required name=search_term_string",
     },

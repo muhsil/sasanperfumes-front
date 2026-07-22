@@ -78,7 +78,7 @@ export default async function NewProductsPage({ params, searchParams }: NewProdu
 
   const [productsResult, giftProductIds, bundleProductSlugs] = await Promise.all([
     getNewProducts({
-      per_page: 30,
+      per_page: 18,
       locale: locale as Locale,
       currency: market.defaultCurrency,
       frontendHost,

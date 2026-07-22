@@ -220,18 +220,18 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      // Product listing pages should always reflect the latest catalog/menu state.
-      // These routes are frequently used as landing pages, so avoid CDN HTML caching.
+      // Cache public listing HTML briefly. Cart, checkout, account, and API state
+      // remain uncached, while catalog updates can still revalidate quickly.
       {
         source: "/:locale(en|ar)/category/:path*",
         headers: [
           {
             key: "Cache-Control",
-            value: "no-store, max-age=0, must-revalidate",
+            value: disableRuntimeCache ? "no-store, max-age=0" : "public, max-age=0, s-maxage=60, stale-while-revalidate=300",
           },
           {
             key: "CDN-Cache-Control",
-            value: "no-store",
+            value: disableRuntimeCache ? "no-store" : "public, s-maxage=60, stale-while-revalidate=300",
           },
         ],
       },
@@ -240,11 +240,11 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Cache-Control",
-            value: "no-store, max-age=0, must-revalidate",
+            value: disableRuntimeCache ? "no-store, max-age=0" : "public, max-age=0, s-maxage=60, stale-while-revalidate=300",
           },
           {
             key: "CDN-Cache-Control",
-            value: "no-store",
+            value: disableRuntimeCache ? "no-store" : "public, s-maxage=60, stale-while-revalidate=300",
           },
         ],
       },
@@ -253,11 +253,11 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Cache-Control",
-            value: "no-store, max-age=0, must-revalidate",
+            value: disableRuntimeCache ? "no-store, max-age=0" : "public, max-age=0, s-maxage=60, stale-while-revalidate=300",
           },
           {
             key: "CDN-Cache-Control",
-            value: "no-store",
+            value: disableRuntimeCache ? "no-store" : "public, s-maxage=60, stale-while-revalidate=300",
           },
         ],
       },
@@ -266,11 +266,11 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Cache-Control",
-            value: "no-store, max-age=0, must-revalidate",
+            value: disableRuntimeCache ? "no-store, max-age=0" : "public, max-age=0, s-maxage=60, stale-while-revalidate=300",
           },
           {
             key: "CDN-Cache-Control",
-            value: "no-store",
+            value: disableRuntimeCache ? "no-store" : "public, s-maxage=60, stale-while-revalidate=300",
           },
         ],
       },
@@ -279,11 +279,11 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Cache-Control",
-            value: "no-store, max-age=0, must-revalidate",
+            value: disableRuntimeCache ? "no-store, max-age=0" : "public, max-age=0, s-maxage=60, stale-while-revalidate=300",
           },
           {
             key: "CDN-Cache-Control",
-            value: "no-store",
+            value: disableRuntimeCache ? "no-store" : "public, s-maxage=60, stale-while-revalidate=300",
           },
         ],
       },
@@ -292,11 +292,11 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Cache-Control",
-            value: "no-store, max-age=0, must-revalidate",
+            value: disableRuntimeCache ? "no-store, max-age=0" : "public, max-age=0, s-maxage=60, stale-while-revalidate=300",
           },
           {
             key: "CDN-Cache-Control",
-            value: "no-store",
+            value: disableRuntimeCache ? "no-store" : "public, s-maxage=60, stale-while-revalidate=300",
           },
         ],
       },
@@ -305,11 +305,11 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Cache-Control",
-            value: "no-store, max-age=0, must-revalidate",
+            value: disableRuntimeCache ? "no-store, max-age=0" : "public, max-age=0, s-maxage=60, stale-while-revalidate=300",
           },
           {
             key: "CDN-Cache-Control",
-            value: "no-store",
+            value: disableRuntimeCache ? "no-store" : "public, s-maxage=60, stale-while-revalidate=300",
           },
         ],
       },
@@ -318,11 +318,11 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Cache-Control",
-            value: "no-store, max-age=0, must-revalidate",
+            value: disableRuntimeCache ? "no-store, max-age=0" : "public, max-age=0, s-maxage=60, stale-while-revalidate=300",
           },
           {
             key: "CDN-Cache-Control",
-            value: "no-store",
+            value: disableRuntimeCache ? "no-store" : "public, s-maxage=60, stale-while-revalidate=300",
           },
         ],
       },

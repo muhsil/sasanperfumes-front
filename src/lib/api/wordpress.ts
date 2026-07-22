@@ -3348,6 +3348,7 @@ interface ProductSeoResponse {
   keywords: string;
   og_image: string;
   source: "yoast" | "auto" | "none";
+  canonical_slug?: string;
 }
 
 /**
@@ -3357,13 +3358,15 @@ interface ProductSeoResponse {
  */
 export async function getProductSeo(
   slug: string,
-  locale?: Locale
+  locale?: Locale,
+  frontendHost?: string
 ): Promise<ProductSeoResponse | null> {
   const data = await fetchWPAPI<ProductSeoResponse>(
     `/sasanperfumes/v1/product-meta/${encodeURIComponent(slug)}`,
     {
       tags: ["products", `product-meta-${slug}`],
       locale,
+      frontendHost,
       revalidate: 300,
     }
   );
@@ -3378,6 +3381,7 @@ export async function getProductSeo(
     keywords: decodeHtmlEntities(data.keywords || ""),
     og_image: data.og_image || "",
     source: data.source,
+    canonical_slug: data.canonical_slug || "",
   };
 }
 
@@ -3386,9 +3390,10 @@ export async function getProductSeo(
  */
 export async function getProductMetaDescription(
   slug: string,
-  locale?: Locale
+  locale?: Locale,
+  frontendHost?: string
 ): Promise<string | null> {
-  const data = await getProductSeo(slug, locale);
+  const data = await getProductSeo(slug, locale, frontendHost);
   if (!data || !data.meta_description) {
     return null;
   }

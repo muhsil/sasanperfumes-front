@@ -5,7 +5,7 @@ import { ProductListing } from "@/components/shop/ProductListing";
 import type { WCProduct, WCProductsResponse } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
 
-const PER_PAGE = 30;
+const PER_PAGE = 18;
 const LOAD_AHEAD_MARGIN = "1200px 0px";
 
 interface NewProductsClientProps {
