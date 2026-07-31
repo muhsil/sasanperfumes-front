@@ -480,6 +480,37 @@ curl -s http://localhost:3001/robots.txt | grep Sitemap
 - **Product price currency**: WooCommerce backend returns `currency_code=AED` for ALL subsites (including QA, OM, SA). The frontend uses `market.defaultCurrency` from `src/config/market.ts` for OG tags (`product:price:currency`) and Product JSON-LD (`priceCurrency`). Never use `product.prices.currency_code` for multi-market currency display — always use the market config.
 - **Product JSON-LD URLs**: The product page `frontendBaseUrl` is built from `siteConfig.url + pathPrefix` (not from request host). This ensures JSON-LD URLs always use `sasanperfumes.com` with correct market prefix, even in dev mode.
 
+## Verifying Multi-Market Price Conversion (Double Conversion Bug)
+
+Sub-market sites (OM, QA, SA) fetch products via `buildStoreAPIUrls()` in `src/lib/api/woocommerce.ts`. The `currency=AED` query param must be present in ALL Store API requests — including sub-market ones — to prevent double conversion. Without it, the backend may return prices in the local currency (e.g. OMR) while `currency_code` still says "AED", causing the frontend `convertPrice()` to convert again.
+
+### Symptoms of double conversion
+- All products on a sub-market show the same suspiciously low price (e.g. "OMR 0.827" for 75 AED products)
+- The wrong price equals: `correct_local_price × local_rate` (e.g. 7.875 × 0.105 = 0.827)
+
+### Code-level verification (when CMS is unreachable)
+```js
+// Run with: node -e '...' in the repo root
+// Simulate buildStoreAPIUrls to verify currency param
+const url = buildStoreAPIUrls('/products', 'om', { locale: 'en', currency: 'OMR' })[0];
+console.log('Has currency=AED:', url.includes('currency=AED')); // Must be true
+```
+
+### Visual verification (when CMS is reachable)
+```bash
+# Compare international vs sub-market prices for the same product
+# International (AED)
+curl -s http://localhost:3001/en/product/mimosa-glow | grep -oP 'product:price:amount" content="\K[^"]*'
+# Oman (OMR) — should be AED_price × 0.105, NOT AED_price × 0.105 × 0.105
+curl -s http://localhost:3001/om/en/product/mimosa-glow | grep -oP 'product:price:amount" content="\K[^"]*'
+```
+
+### Key files
+- `src/lib/api/woocommerce.ts` — `buildStoreAPIUrls()` (line ~304): must pass `currency=AED` for market requests
+- `src/contexts/CurrencyContext.tsx` — `convertPrice()`: checks `fromCurrency === currency` to skip no-op conversions
+- `src/components/shop/WCProductCard.tsx` — reads `product.prices.currency_code` as `sourceCurrency`
+- `src/config/market.ts` — market configs with `defaultCurrency` per market
+
 ## Verifying Product Currency Per Market
 
 ```bash
