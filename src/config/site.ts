@@ -81,8 +81,8 @@ export const siteConfig = {
   // Public contact details used by contact buttons and structured data.
   contact: {
     whatsapp: "0567394314",
-    phone: "0563982953",
-    callPhone: "0563982953",
+    phone: "0567394314",
+    callPhone: "0567394314",
     email: "support@sasanperfumes.com",
     address: "Dubai, United Arab Emirates",
   },

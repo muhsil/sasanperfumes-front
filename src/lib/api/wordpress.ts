@@ -177,12 +177,22 @@ const legacyStorefrontHosts = [
   ["www", [["fragrance", "network"].join(""), "ae"].join(".")].join("."),
 ];
 
+const retiredPhoneReplacements: Array<[RegExp, string]> = [
+  [/\+?971[\s-]?56[\s-]?398[\s-]?2953/g, "+971567394314"],
+  [/0563982953/g, "0567394314"],
+];
+
 function rebrandText(value: string): string {
+  const withoutRetiredPhones = retiredPhoneReplacements.reduce(
+    (text, [pattern, replacement]) => text.replace(pattern, replacement),
+    value
+  );
+
   const withMediaHosts = legacyMediaHosts.reduce(
     (text, host) => text
       .replaceAll(`https://${host}`, siteConfig.apiUrl)
       .replaceAll(`http://${host}`, siteConfig.apiUrl),
-    value
+    withoutRetiredPhones
   );
 
   return legacyStorefrontHosts.reduce(
@@ -2925,11 +2935,6 @@ function buildStaticPageFallbackContent(slug: string): StaticPageResponse | null
             key: "phone",
             title: bi("WhatsApp", "واتساب"),
             content: bi("0567394314", "0567394314"),
-          },
-          {
-            key: "callPhone",
-            title: bi("Complaints & Calls", "الشكاوى والمكالمات"),
-            content: bi("0563982953", "0563982953"),
           },
           {
             key: "email",

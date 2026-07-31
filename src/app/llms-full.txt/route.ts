@@ -51,7 +51,6 @@ ${categoriesSection}
 - Contact Us: ${siteConfig.url}/en/contact-us
 - Guides: ${siteConfig.url}/en/guides
 - WhatsApp: ${siteConfig.contact.whatsapp}
-- Complaints & Calls: ${siteConfig.contact.callPhone}
 
 ## Policies
 - Return Policy: ${siteConfig.url}/en/returns
