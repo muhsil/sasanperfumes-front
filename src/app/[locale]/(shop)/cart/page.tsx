@@ -773,13 +773,12 @@ export default function CartPage() {
                   {isRTL ? "تواصل معنا عبر واتساب" : "Contact us on WhatsApp"}
                 </a>
                 <a
-                  href="tel:+971563982953"
+                  href="tel:+971567394314"
                   className="mt-2 flex items-center justify-center gap-2 text-sm font-medium text-brand-primary hover:text-brand-accent"
                   dir="ltr"
                 >
                   <Phone className="h-4 w-4" />
-                  {isRTL ? "الشكاوى والمكالمات" : "Complaints & Calls"}:
-                  <span className="font-semibold">+971 56 398 2953</span>
+                  <span className="font-semibold">+971 56 739 4314</span>
                 </a>
               </div>
             </div>
