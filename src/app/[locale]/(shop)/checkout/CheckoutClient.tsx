@@ -110,7 +110,7 @@ const MARKET_DEFAULT_COUNTRIES: Record<string, string> = {
   sa: "SA",
 };
 
-const WOO_PAYMENTS_METHODS = new Set(["woocommerce_payments", "stripe", "card"]);
+const WOO_PAYMENTS_METHODS = new Set(["woocommerce_payments", "stripe", "card", "paymob"]);
 
 const isWooPaymentsMethod = (paymentMethod: string): boolean => {
   const normalized = (paymentMethod || "").toLowerCase();
@@ -1497,10 +1497,7 @@ export default function CheckoutClient() {
                 throw new Error(tamaraData.error?.message || "Failed to initiate Tamara payment");
               }
               } else if (isWooPayments) {
-              const stripeResponse = await fetch(buildCheckoutApiUrl("/api/stripe/create-checkout-session"), {
-                method: "POST",
-                headers: getCheckoutApiHeaders(),
-                body: JSON.stringify({
+              const cardPaymentBody = JSON.stringify({
                   order_id: data.order_id,
                   order_key: data.order_key,
                   locale,
@@ -1508,7 +1505,29 @@ export default function CheckoutClient() {
                   order_total: data.order?.total,
                   order_currency: data.order?.currency,
                   customer_email: billingInfo.email || formData.shipping.email || data.order?.billing?.email,
-                }),
+              });
+
+              const paymobResponse = await fetch(buildCheckoutApiUrl("/api/paymob/create-checkout-session"), {
+                method: "POST",
+                headers: getCheckoutApiHeaders(),
+                body: cardPaymentBody,
+              });
+
+              const paymobData = await paymobResponse.json();
+
+              if (paymobData.success && paymobData.checkout_url) {
+                window.location.assign(paymobData.checkout_url);
+                return;
+              }
+
+              if (paymobData.error?.code !== "paymob_not_configured") {
+                throw new Error(paymobData.error?.message || "Failed to initiate card payment");
+              }
+
+              const stripeResponse = await fetch(buildCheckoutApiUrl("/api/stripe/create-checkout-session"), {
+                method: "POST",
+                headers: getCheckoutApiHeaders(),
+                body: cardPaymentBody,
               });
 
               const stripeData = await stripeResponse.json();
@@ -1518,7 +1537,7 @@ export default function CheckoutClient() {
                 return;
               }
 
-              throw new Error(stripeData.error?.message || "Failed to initiate Stripe payment");
+              throw new Error(stripeData.error?.message || "Failed to initiate card payment");
             } else {
               router.push(`${marketPrefix}/${locale}/order-confirmation?order_id=${data.order_id}&order_key=${data.order_key}`);
             }
@@ -2174,6 +2193,7 @@ export default function CheckoutClient() {
                                                                     woocommerce_payments: { en: "Credit Card", ar: "بطاقة ائتمان" },
                                                                     stripe: { en: "Credit Card", ar: "بطاقة ائتمان" },
                                                                     card: { en: "Credit Card", ar: "بطاقة ائتمان" },
+                                                                    paymob: { en: "Credit Card", ar: "بطاقة ائتمان" },
                                                                   };
                                                                   return labels[id]?.[isRTL ? "ar" : "en"] || title;
                                                                 };
@@ -2192,6 +2212,7 @@ export default function CheckoutClient() {
                                                                     woocommerce_payments: { en: "Pay securely with your card", ar: "ادفع بأمان ببطاقتك" },
                                                                     stripe: { en: "Pay securely with your card", ar: "ادفع بأمان ببطاقتك" },
                                                                     card: { en: "Pay securely with your card", ar: "ادفع بأمان ببطاقتك" },
+                                                                    paymob: { en: "Pay securely with your card", ar: "ادفع بأمان ببطاقتك" },
                                                                   };
                                                                   return descriptions[id]?.[isRTL ? "ar" : "en"] || description || "";
                                                                 };
@@ -2219,7 +2240,7 @@ export default function CheckoutClient() {
                                                                       />
                                                                     );
                                                                   }
-                                                                  if (id === "woocommerce_payments" || id === "stripe" || id === "card") {
+                                                                  if (id === "woocommerce_payments" || id === "stripe" || id === "card" || id === "paymob") {
                                                                     return (
                                                                       <Image
                                                                         src="/images/payment/credit-debit-card.png"
