@@ -234,16 +234,24 @@ async function NewProductsSection({ locale, isRTL, dictionary, homeSettings, cur
     getBundleEnabledProductSlugs(frontendHost),
   ]);
 
-  const newProductEnglishSlugs: Record<number, string> = {};
-  newProductsEn.forEach((product) => {
-    newProductEnglishSlugs[product.id] = product.slug;
-  });
-
   const newProducts = newProductsRaw.filter(
     (product) =>
+      product.is_in_stock !== false &&
       !giftProductInfo.ids.includes(product.id) &&
       !giftProductInfo.slugs.includes(product.slug)
   );
+
+  const newProductsEnVisible = newProductsEn.filter(
+    (product) =>
+      product.is_in_stock !== false &&
+      !giftProductInfo.ids.includes(product.id) &&
+      !giftProductInfo.slugs.includes(product.slug)
+  );
+
+  const filteredEnglishSlugs: Record<number, string> = {};
+  newProductsEnVisible.forEach((product) => {
+    filteredEnglishSlugs[product.id] = product.slug;
+  });
 
   const newProductsCount = homeSettings.new_products.products_count || HOME_PRODUCT_COUNT;
 
@@ -272,7 +280,7 @@ async function NewProductsSection({ locale, isRTL, dictionary, homeSettings, cur
       fullView
       showHeaderNavigation
       bundleProductSlugs={bundleProductSlugs}
-      englishProductSlugs={newProductEnglishSlugs}
+      englishProductSlugs={filteredEnglishSlugs}
     />
   );
 }
