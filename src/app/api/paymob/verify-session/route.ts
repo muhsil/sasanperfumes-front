@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRequestMarket } from "@/lib/market/server";
-import { backendMarketPostHeaders, fetchBackendForMarket, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
+import { fetchBackendForMarket, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { verifyPaymobRedirectHmac } from "@/lib/paymob/api";
 import { getPaymobHmacSecret } from "@/lib/paymob/config";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+interface PaymobVerificationOrder {
+  order_key?: string;
+}
 
 function getBasicAuthParams(marketCode?: string): string {
   const { consumerKey, consumerSecret } = getWcCredentials(marketCode);
@@ -49,24 +53,20 @@ export async function GET(request: NextRequest) {
     }
 
     const paymentStatus = success ? "success" : pending ? "pending" : "failed";
-    const market = await getRequestMarket();
+    const marketParam = params.get("market") || "";
+    const market = await getRequestMarket(marketParam === "intl" ? undefined : marketParam);
+    const orderResponse = await fetchBackendForMarket(
+      `${getOrdersApiBase(market.code)}/orders/${orderId}?${getBasicAuthParams(market.code)}`,
+      { method: "GET", cache: "no-store" },
+      market.code
+    );
+    const order = (await orderResponse.json().catch(() => ({}))) as PaymobVerificationOrder;
 
-    if (paymentStatus === "success") {
-      await fetchBackendForMarket(`${getOrdersApiBase(market.code)}/orders/${orderId}?${getBasicAuthParams(market.code)}`, {
-        method: "PUT",
-        headers: backendMarketPostHeaders(market.code),
-        body: JSON.stringify({
-          status: "processing",
-          set_paid: true,
-          transaction_id: transactionId,
-          payment_method: "paymob",
-          payment_method_title: "Credit/Debit Card",
-          meta_data: [
-            { key: "_paymob_transaction_id", value: transactionId },
-            { key: "_paymob_order_id", value: params.get("order") || "" },
-          ],
-        }),
-      }, market.code);
+    if (!orderResponse.ok || !order.order_key || order.order_key !== orderKey) {
+      return NextResponse.json(
+        { success: false, error: { code: "order_mismatch", message: "Paymob redirect does not match this order." } },
+        { status: 403 }
+      );
     }
 
     return NextResponse.json({
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
       transaction_id: transactionId,
       status_message:
         paymentStatus === "success"
-          ? "Paymob payment completed."
+          ? "Paymob accepted the payment. Final order confirmation is processed by the signed webhook."
           : paymentStatus === "failed"
             ? "Paymob payment was not completed."
             : "Paymob payment is pending.",

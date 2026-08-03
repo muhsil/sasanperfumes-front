@@ -3,7 +3,12 @@ import { getRequestMarket } from "@/lib/market/server";
 import { backendMarketPostHeaders, extractMarketCode, fetchBackendForMarket, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { buildPaymobCheckoutUrl, createPaymobIntention, getPaymobCurrencyMinorUnit } from "@/lib/paymob/api";
-import { getPaymobIntegrationIds, getPaymobPublicKey, getPaymobSecretKey } from "@/lib/paymob/config";
+import {
+  getPaymobAllowedCurrencies,
+  getPaymobIntegrationIds,
+  getPaymobPublicKey,
+  getPaymobSecretKey,
+} from "@/lib/paymob/config";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -14,6 +19,8 @@ interface PaymobCheckoutOrder {
   order_key?: string;
   total?: string;
   currency?: string;
+  status?: string;
+  transaction_id?: string;
   billing?: {
     first_name?: string;
     last_name?: string;
@@ -67,8 +74,6 @@ export async function POST(request: NextRequest) {
     const orderKey = String(body.order_key || "");
     const locale = String(body.locale || "en");
     const marketPrefix = String(body.market_prefix || "");
-    const fallbackAmount = Number(body.order_total);
-    const fallbackCurrency = String(body.order_currency || "");
     const fallbackEmail = String(body.customer_email || "");
 
     if (!orderId || !orderKey) {
@@ -86,44 +91,34 @@ export async function POST(request: NextRequest) {
       cache: "no-store",
     }, market.code).catch(() => null);
 
-    let order = orderResponse
+    const order = orderResponse
       ? ((await orderResponse.json().catch(() => ({}))) as PaymobCheckoutOrder)
       : ({} as PaymobCheckoutOrder);
-    const hasFallbackOrder = Number.isFinite(fallbackAmount) && fallbackAmount > 0;
 
     if (!orderResponse || !orderResponse.ok) {
-      if (!hasFallbackOrder) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: {
-              code: order.code || "order_fetch_failed",
-              message: order.message || "Failed to fetch order before creating Paymob checkout.",
-            },
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: order.code || "order_fetch_failed",
+            message: order.message || "Failed to verify the WooCommerce order before creating Paymob checkout.",
           },
-          { status: orderResponse?.status || 502 }
-        );
-      }
-
-      order = {
-        order_key: orderKey,
-        total: String(fallbackAmount),
-        currency: fallbackCurrency || market.defaultCurrency,
-        billing: fallbackEmail ? { email: fallbackEmail } : undefined,
-      };
+        },
+        { status: orderResponse?.status || 502 }
+      );
     }
 
-    if (orderResponse?.ok && order.order_key && order.order_key !== orderKey) {
+    if (!order.order_key || order.order_key !== orderKey) {
       return NextResponse.json(
         { success: false, error: { code: "invalid_order_key", message: "Invalid order key." } },
         { status: 403 }
       );
     }
 
-    if (!orderResponse?.ok && !order.order_key) {
+    if (["processing", "completed", "refunded"].includes((order.status || "").toLowerCase()) || order.transaction_id) {
       return NextResponse.json(
-        { success: false, error: { code: "order_fetch_failed", message: "Failed to prepare Paymob checkout." } },
-        { status: 500 }
+        { success: false, error: { code: "order_already_paid", message: "This order has already been paid." } },
+        { status: 409 }
       );
     }
 
@@ -135,14 +130,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const currency = (order.currency || fallbackCurrency || market.defaultCurrency || "AED").toUpperCase();
+    const currency = (order.currency || market.defaultCurrency || "AED").toUpperCase();
+    if (!getPaymobAllowedCurrencies().includes(currency)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "unsupported_currency",
+            message: `Paymob is not configured for ${currency}.`,
+          },
+        },
+        { status: 400 }
+      );
+    }
     const amountMinor = Math.round(amount * Math.pow(10, getPaymobCurrencyMinorUnit(currency)));
 
     const origin = getRequestOrigin(request);
     const prefix = marketPrefix === "/" ? "" : marketPrefix;
     const redirectionUrl =
       `${origin}${prefix}/${locale}/order-confirmation?order_id=${orderId}` +
-      `&order_key=${encodeURIComponent(orderKey)}&paymob=1`;
+      `&order_key=${encodeURIComponent(orderKey)}&paymob=1` +
+      `&market=${encodeURIComponent(market.code || "intl")}`;
     const notificationUrl = `${origin}/api/paymob/webhook?market=${market.code || "intl"}`;
 
     const billing = order.billing || {};

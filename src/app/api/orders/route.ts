@@ -239,6 +239,7 @@ const PAYMENT_METHOD_TITLES: Record<string, string> = {
   bacs: "Bank Transfer",
   cheque: "Check Payment",
   paypal: "PayPal",
+  paymob: "Credit/Debit Card",
   stripe: "Credit Card",
   tabby: "Tabby - Pay in Installments",
   tabby_checkout: "Tabby - Pay in Installments",
@@ -260,6 +261,9 @@ function resolvePaymentMethodTitle(paymentMethod: string, providedTitle: unknown
     return "Credit/Debit Card";
   }
   if (normalizedMethod.startsWith("stripe")) {
+    return "Credit/Debit Card";
+  }
+  if (normalizedMethod.startsWith("paymob")) {
     return "Credit/Debit Card";
   }
   if (normalizedMethod.startsWith("tabby")) {
@@ -473,7 +477,7 @@ export async function POST(request: NextRequest) {
     const paymentMethod =
       typeof body.payment_method === "string" && body.payment_method.trim()
         ? body.payment_method.trim()
-        : "stripe";
+        : "paymob";
     
     const isCod = paymentMethod.toLowerCase() === "cod";
     const inclusiveVatRate = getInclusiveVatRate(body);

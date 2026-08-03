@@ -166,7 +166,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
   const [retryingPayment, setRetryingPayment] = useState(false);
   const [retryError, setRetryError] = useState<string | null>(null);
 
-  const startStripeCheckout = useCallback(async (targetOrder: OrderData) => {
+  const startCardCheckout = useCallback(async (targetOrder: OrderData) => {
     const requestBody = JSON.stringify({
       order_id: targetOrder.id,
       order_key: targetOrder.order_key,
@@ -188,25 +188,25 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
       return;
     }
 
-    if (paymobData.error?.code !== "paymob_not_configured") {
-      throw new Error(paymobData.error?.message || "Failed to initiate card payment");
+    if (!["paymob_not_configured", "unsupported_currency"].includes(paymobData.error?.code)) {
+      throw new Error(paymobData.error?.message || "Failed to initiate Paymob card payment");
     }
 
-    const response = await fetch("/api/stripe/create-checkout-session", {
+    const stripeResponse = await fetch("/api/stripe/create-checkout-session", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: requestBody,
     });
+    const stripeData = await stripeResponse.json();
 
-    const data = await response.json();
-    if (data.success && data.checkout_url) {
-      window.location.href = data.checkout_url;
+    if (stripeData.success && stripeData.checkout_url) {
+      window.location.href = stripeData.checkout_url;
       return;
     }
 
-    throw new Error(data.error?.message || "Failed to initiate card payment");
+    throw new Error(stripeData.error?.message || "Failed to initiate card payment");
   }, [locale, marketPrefix]);
 
   useEffect(() => {
@@ -325,7 +325,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
           throw new Error(tamaraData.error?.message || "Failed to initiate payment");
         }
       } else if (isWooPaymentsPayment || isLikelyCardCheckout) {
-        await startStripeCheckout(order);
+        await startCardCheckout(order);
         return;
       } else {
         setRetryError(isRTL ? "طريقة الدفع غير مدعومة لإعادة المحاولة" : "Payment method not supported for retry");
@@ -335,7 +335,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
     } finally {
       setRetryingPayment(false);
     }
-    }, [order, resolvedOrderId, locale, isRTL, startStripeCheckout]);
+    }, [order, resolvedOrderId, locale, isRTL, startCardCheckout]);
 
   useEffect(() => {
     const verifyPaymentAndFetchOrder = async () => {
@@ -346,6 +346,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
       }
 
       try {
+        let verifiedPaymentStatus: "success" | "failed" | "pending" | null = null;
         const hasExternalPayment = tabbyPaymentId || tamaraOrderId || stripeSessionId || paymobTransactionId;
         
         if (hasExternalPayment && !paymentVerifiedRef.current) {
@@ -376,10 +377,11 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
               const verifyData: PaymentVerificationResult = await verifyResponse.json();
               
               if (verifyData.success && verifyData.payment_status) {
+                verifiedPaymentStatus = verifyData.payment_status;
                 setPaymentStatus(verifyData.payment_status);
                 setPaymentMessage(verifyData.status_message || null);
                 
-                if (verifyData.payment_status === "success") {
+                if (verifyData.payment_status === "success" && !paymobTransactionId) {
                   try {
                     const updateResponse = await fetch("/api/orders", {
                       method: "PUT",
@@ -400,7 +402,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
                   } catch (updateError) {
                     console.error("Failed to update order status:", updateError);
                   }
-                } else if (verifyData.payment_status === "failed") {
+                } else if (verifyData.payment_status === "failed" && !paymobTransactionId) {
                   try {
                     const updateResponse = await fetch("/api/orders", {
                       method: "PUT",
@@ -465,7 +467,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
           const alreadyRedirectedToStripe = window.sessionStorage.getItem(`${gatewayRedirectKey}_stripe`);
           if (!alreadyRedirectedToStripe) {
             window.sessionStorage.setItem(`${gatewayRedirectKey}_stripe`, "1");
-            await startStripeCheckout(fetchedOrder);
+            await startCardCheckout(fetchedOrder);
             return;
           }
         } else if (
@@ -500,7 +502,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
         const isFailedOrder = fetchedStatus === "failed" || fetchedStatus === "cancelled";
         const isPendingOrder = fetchedStatus === "pending";
         const isSuccessOrder = fetchedStatus === "processing" || fetchedStatus === "completed" || fetchedStatus === "on-hold";
-        if (!paymentStatus) {
+        if (!verifiedPaymentStatus && !paymentStatus) {
           if (isFailedOrder) {
             setPaymentStatus("failed");
           } else if (isPendingOrder) {
@@ -568,7 +570,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
     };
 
     verifyPaymentAndFetchOrder();
-    }, [resolvedOrderId, orderKey, wcOrderKey, tabbyPaymentId, tamaraOrderId, stripeSessionId, paymobTransactionId, clearCart, paymentStatus, startStripeCheckout]);
+    }, [resolvedOrderId, orderKey, wcOrderKey, tabbyPaymentId, tamaraOrderId, stripeSessionId, paymobTransactionId, clearCart, paymentStatus, startCardCheckout]);
 
   if (loading) {
     return (

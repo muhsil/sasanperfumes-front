@@ -300,7 +300,7 @@ export default function CheckoutClient() {
     shipping: { ...emptyAddress, country: defaultCheckoutCountry },
     billing: { ...emptyAddress, country: defaultCheckoutCountry },
     sameAsShipping: true,
-    paymentMethod: "stripe",
+    paymentMethod: "paymob",
     orderNotes: "",
   });
 
@@ -1507,21 +1507,20 @@ export default function CheckoutClient() {
                   customer_email: billingInfo.email || formData.shipping.email || data.order?.billing?.email,
               });
 
-              const paymobResponse = await fetch(buildCheckoutApiUrl("/api/paymob/create-checkout-session"), {
-                method: "POST",
-                headers: getCheckoutApiHeaders(),
-                body: cardPaymentBody,
-              });
+              if (normalizedPaymentMethod === "paymob") {
+                const paymobResponse = await fetch(buildCheckoutApiUrl("/api/paymob/create-checkout-session"), {
+                  method: "POST",
+                  headers: getCheckoutApiHeaders(),
+                  body: cardPaymentBody,
+                });
+                const paymobData = await paymobResponse.json();
 
-              const paymobData = await paymobResponse.json();
+                if (paymobData.success && paymobData.checkout_url) {
+                  window.location.assign(paymobData.checkout_url);
+                  return;
+                }
 
-              if (paymobData.success && paymobData.checkout_url) {
-                window.location.assign(paymobData.checkout_url);
-                return;
-              }
-
-              if (paymobData.error?.code !== "paymob_not_configured") {
-                throw new Error(paymobData.error?.message || "Failed to initiate card payment");
+                throw new Error(paymobData.error?.message || "Failed to initiate Paymob card payment");
               }
 
               const stripeResponse = await fetch(buildCheckoutApiUrl("/api/stripe/create-checkout-session"), {
@@ -1529,7 +1528,6 @@ export default function CheckoutClient() {
                 headers: getCheckoutApiHeaders(),
                 body: cardPaymentBody,
               });
-
               const stripeData = await stripeResponse.json();
 
               if (stripeData.success && stripeData.checkout_url) {

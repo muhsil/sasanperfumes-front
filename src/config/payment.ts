@@ -190,8 +190,8 @@ export function getPaymentGatewayFilters(marketCode?: string | null): PaymentGat
   let allowed = envAllowed.length > 0
     ? envAllowed
     : intl
-      ? ["woocommerce_payments", "stripe", "cod"]
-      : ["woocommerce_payments", "stripe"];
+      ? ["paymob", "cod"]
+      : ["paymob"];
 
   // COD must always be in the allowed list for intl market (UAE only)
   // even when env vars override the default allowlist

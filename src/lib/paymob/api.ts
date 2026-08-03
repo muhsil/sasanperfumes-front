@@ -67,6 +67,7 @@ export async function createPaymobIntention(
         email: input.billing.email || "NA",
         floor: input.billing.floor || "NA",
         state: input.billing.state || "NA",
+        postal_code: input.billing.postal_code || "NA",
       },
       special_reference: input.specialReference,
       redirection_url: input.redirectionUrl,

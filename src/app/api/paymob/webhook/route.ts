@@ -1,11 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { backendMarketPostHeaders, fetchBackendForMarket, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
-import { verifyPaymobWebhookHmac, type PaymobWebhookPayload } from "@/lib/paymob/api";
+import {
+  getPaymobCurrencyMinorUnit,
+  verifyPaymobWebhookHmac,
+  type PaymobWebhookPayload,
+} from "@/lib/paymob/api";
 import { getPaymobHmacSecret } from "@/lib/paymob/config";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+interface PaymobWebhookOrder {
+  total?: string;
+  currency?: string;
+  status?: string;
+  transaction_id?: string;
+  meta_data?: Array<{ key?: string; value?: unknown }>;
+}
 
 function getBasicAuthParams(marketCode?: string): string {
   const { consumerKey, consumerSecret } = getWcCredentials(marketCode);
@@ -54,11 +66,45 @@ export async function POST(request: NextRequest) {
     const marketCode = request.nextUrl.searchParams.get("market") || "";
     const market = marketCode === "intl" ? "" : marketCode;
     const transactionId = String(payload.obj.id || "");
-    const isSuccess = payload.obj.success === true && payload.obj.pending !== true;
+    const isSuccess =
+      payload.obj.success === true &&
+      payload.obj.pending !== true &&
+      payload.obj.error_occured !== true;
     const isFailed = payload.obj.success !== true && payload.obj.pending !== true;
+    const orderUrl = `${getOrdersApiBase(market)}/orders/${orderId}?${getBasicAuthParams(market)}`;
+    const orderResponse = await fetchBackendForMarket(
+      orderUrl,
+      { method: "GET", cache: "no-store" },
+      market
+    );
+    const order = (await orderResponse.json().catch(() => ({}))) as PaymobWebhookOrder;
+
+    if (!orderResponse.ok) {
+      return NextResponse.json({ received: false, error: "order_fetch_failed" }, { status: 502 });
+    }
+
+    const orderCurrency = (order.currency || "").toUpperCase();
+    const transactionCurrency = (payload.obj.currency || "").toUpperCase();
+    const orderTotal = Number.parseFloat(order.total || "0");
+    const expectedAmountMinor = Math.round(
+      orderTotal * Math.pow(10, getPaymobCurrencyMinorUnit(orderCurrency))
+    );
+
+    if (
+      !Number.isFinite(orderTotal) ||
+      orderTotal <= 0 ||
+      !payload.obj.amount_cents ||
+      payload.obj.amount_cents !== expectedAmountMinor ||
+      transactionCurrency !== orderCurrency
+    ) {
+      return NextResponse.json(
+        { received: false, error: "order_amount_mismatch" },
+        { status: 400 }
+      );
+    }
 
     if (isSuccess) {
-      await fetchBackendForMarket(`${getOrdersApiBase(market)}/orders/${orderId}?${getBasicAuthParams(market)}`, {
+      await fetchBackendForMarket(orderUrl, {
         method: "PUT",
         headers: backendMarketPostHeaders(market),
         body: JSON.stringify({
@@ -74,7 +120,17 @@ export async function POST(request: NextRequest) {
         }),
       }, market);
     } else if (isFailed) {
-      await fetchBackendForMarket(`${getOrdersApiBase(market)}/orders/${orderId}?${getBasicAuthParams(market)}`, {
+      const paidStatus = ["processing", "completed", "refunded"].includes((order.status || "").toLowerCase());
+      const latestReference = String(
+        order.meta_data?.find((item) => item.key === "_paymob_special_reference")?.value || ""
+      );
+      const callbackReference = payload.obj.order?.merchant_order_id || "";
+
+      if (paidStatus || order.transaction_id || !callbackReference || callbackReference !== latestReference) {
+        return NextResponse.json({ received: true, ignored: "stale_or_paid_attempt" });
+      }
+
+      await fetchBackendForMarket(orderUrl, {
         method: "PUT",
         headers: backendMarketPostHeaders(market),
         body: JSON.stringify({

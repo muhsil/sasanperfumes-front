@@ -34,6 +34,26 @@ export function getPaymobIntegrationIds(): number[] {
     .filter((item) => Number.isFinite(item) && item > 0);
 }
 
-export function isPaymobConfigured(): boolean {
-  return Boolean(getPaymobSecretKey() && getPaymobPublicKey() && getPaymobIntegrationIds().length > 0);
+export function getPaymobAllowedCurrencies(): string[] {
+  const raw = (
+    process.env.PAYMOB_ALLOWED_CURRENCIES ||
+    getEnvVar("PAYMOB_ALLOWED_CURRENCIES") ||
+    "AED"
+  ).trim();
+
+  return raw
+    .split(",")
+    .map((currency) => currency.trim().toUpperCase())
+    .filter(Boolean);
+}
+
+export function isPaymobConfigured(currency?: string): boolean {
+  const hasCredentials = Boolean(
+    getPaymobSecretKey() &&
+    getPaymobPublicKey() &&
+    getPaymobIntegrationIds().length > 0
+  );
+
+  if (!hasCredentials || !currency) return hasCredentials;
+  return getPaymobAllowedCurrencies().includes(currency.trim().toUpperCase());
 }
