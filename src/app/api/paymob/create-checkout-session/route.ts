@@ -5,9 +5,11 @@ import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { buildPaymobCheckoutUrl, createPaymobIntention, getPaymobCurrencyMinorUnit } from "@/lib/paymob/api";
 import {
   getPaymobAllowedCurrencies,
+  getPaymobIntegrationIdForMethod,
   getPaymobIntegrationIds,
   getPaymobPublicKey,
   getPaymobSecretKey,
+  type PaymobPaymentMethod,
 } from "@/lib/paymob/config";
 
 export const dynamic = "force-dynamic";
@@ -51,12 +53,25 @@ function getRequestOrigin(request: NextRequest): string {
   return host ? `${proto}://${host}` : "https://sasanperfumes.com";
 }
 
+const PAYMOB_METHOD_TITLES: Record<PaymobPaymentMethod, string> = {
+  card: "Credit/Debit Card",
+  tabby: "Tabby - Pay in Installments",
+  tamara: "Tamara - Buy Now Pay Later",
+};
+
+function resolvePaymobPaymentMethod(value: unknown): PaymobPaymentMethod {
+  const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
+  if (normalized === "paymob_tabby" || normalized === "tabby") return "tabby";
+  if (normalized === "paymob_tamara" || normalized === "tamara") return "tamara";
+  return "card";
+}
+
 export async function POST(request: NextRequest) {
   try {
     const secretKey = getPaymobSecretKey();
     const publicKey = getPaymobPublicKey();
-    const integrationIds = getPaymobIntegrationIds();
-    if (!secretKey || !publicKey || integrationIds.length === 0) {
+    const configuredIntegrationIds = getPaymobIntegrationIds();
+    if (!secretKey || !publicKey || configuredIntegrationIds.length === 0) {
       return NextResponse.json(
         {
           success: false,
@@ -70,6 +85,20 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const paymentMethod = resolvePaymobPaymentMethod(body.payment_method);
+    const integrationId = getPaymobIntegrationIdForMethod(paymentMethod);
+    if (!integrationId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "paymob_method_not_configured",
+            message: `${PAYMOB_METHOD_TITLES[paymentMethod]} is not configured in Paymob.`,
+          },
+        },
+        { status: 400 }
+      );
+    }
     const orderId = Number(body.order_id);
     const orderKey = String(body.order_key || "");
     const locale = String(body.locale || "en");
@@ -157,7 +186,7 @@ export async function POST(request: NextRequest) {
     const intention = await createPaymobIntention(secretKey, {
       amountMinor,
       currency,
-      integrationIds,
+      integrationIds: [integrationId],
       billing: {
         first_name: billing.first_name || "Guest",
         last_name: billing.last_name || "Customer",
@@ -176,6 +205,7 @@ export async function POST(request: NextRequest) {
         order_id: String(orderId),
         order_key: orderKey,
         market: market.code || "intl",
+        payment_method: paymentMethod,
       },
     });
 
@@ -184,10 +214,11 @@ export async function POST(request: NextRequest) {
       headers: backendMarketPostHeaders(market.code),
       body: JSON.stringify({
         payment_method: "paymob",
-        payment_method_title: "Credit/Debit Card",
+        payment_method_title: PAYMOB_METHOD_TITLES[paymentMethod],
         meta_data: [
           { key: "_paymob_intention_id", value: intention.id },
           { key: "_paymob_special_reference", value: intention.special_reference || "" },
+          { key: "_paymob_payment_method", value: paymentMethod },
         ],
       }),
     }, market.code).catch(() => undefined);

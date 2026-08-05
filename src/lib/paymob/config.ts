@@ -34,6 +34,38 @@ export function getPaymobIntegrationIds(): number[] {
     .filter((item) => Number.isFinite(item) && item > 0);
 }
 
+export type PaymobPaymentMethod = "card" | "tamara" | "tabby";
+
+const PAYMOB_METHOD_ENV_KEYS: Record<PaymobPaymentMethod, string> = {
+  card: "PAYMOB_CARD_INTEGRATION_ID",
+  tamara: "PAYMOB_TAMARA_INTEGRATION_ID",
+  tabby: "PAYMOB_TABBY_INTEGRATION_ID",
+};
+
+const PAYMOB_METHOD_FALLBACK_INDEX: Record<PaymobPaymentMethod, number> = {
+  card: 0,
+  tamara: 1,
+  tabby: 2,
+};
+
+export function getPaymobIntegrationIdForMethod(method: PaymobPaymentMethod): number | null {
+  const envKey = PAYMOB_METHOD_ENV_KEYS[method];
+  const configuredValue = (process.env[envKey] || getEnvVar(envKey) || "").trim();
+  const configuredId = Number.parseInt(configuredValue, 10);
+
+  if (Number.isFinite(configuredId) && configuredId > 0) {
+    return configuredId;
+  }
+
+  return getPaymobIntegrationIds()[PAYMOB_METHOD_FALLBACK_INDEX[method]] || null;
+}
+
+export function getConfiguredPaymobPaymentMethods(): PaymobPaymentMethod[] {
+  return (["card", "tamara", "tabby"] as const).filter(
+    (method) => getPaymobIntegrationIdForMethod(method) !== null
+  );
+}
+
 export function getPaymobAllowedCurrencies(): string[] {
   const raw = (
     process.env.PAYMOB_ALLOWED_CURRENCIES ||

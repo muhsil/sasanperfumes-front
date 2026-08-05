@@ -9,7 +9,7 @@ import {
   wpJsonBaseForMarket,
 } from "@/lib/utils/backendFetch";
 import { getRequestMarket } from "@/lib/market/server";
-import { isPaymobConfigured } from "@/lib/paymob/config";
+import { getConfiguredPaymobPaymentMethods, isPaymobConfigured } from "@/lib/paymob/config";
 import { isStripeConfigured } from "@/lib/stripe/config";
 
 export const dynamic = "force-dynamic";
@@ -98,6 +98,14 @@ const PAYMENT_METHOD_DETAILS: Record<string, { title: string; description: strin
     title: "Credit/Debit Card",
     description: "Pay securely with your card via Paymob",
   },
+  paymob_tabby: {
+    title: "Tabby - Pay in Installments",
+    description: "Split your purchase into 4 interest-free payments",
+  },
+  paymob_tamara: {
+    title: "Tamara - Buy Now Pay Later",
+    description: "Pay in easy installments with Tamara",
+  },
   cod: {
     title: "Cash on Delivery",
     description: "Pay with cash upon delivery",
@@ -141,6 +149,8 @@ function expandPaymentGatewayIdAliases(ids: string[]): Set<string> {
     normalized.add("stripe");
     normalized.add("woocommerce_payments");
     normalized.add("card");
+    normalized.add("paymob_tabby");
+    normalized.add("paymob_tamara");
   }
 
   return normalized;
@@ -245,21 +255,45 @@ function addConfiguredCardGateway(
     return id === "paymob" || id === "stripe" || id === "woocommerce_payments" || id === "card";
   });
 
-  if (hasCardGateway) {
-    return gateways;
+  const configuredGateways = [...gateways];
+  if (!hasCardGateway) {
+    const details = PAYMENT_METHOD_DETAILS[gatewayId];
+    configuredGateways.push({
+      id: gatewayId,
+      title: details.title,
+      description: details.description,
+      method_title: details.title,
+      order: configuredGateways.length + 1,
+      enabled: true,
+    });
   }
 
-  const fallbackOrder = gateways.length + 1;
-  const fallbackGateway: PaymentGatewayResponseItem = {
-    id: gatewayId,
-    title: PAYMENT_METHOD_DETAILS[gatewayId].title,
-    description: PAYMENT_METHOD_DETAILS[gatewayId].description,
-    method_title: PAYMENT_METHOD_DETAILS[gatewayId].title,
-    order: fallbackOrder,
-    enabled: true,
-  };
+  if (gatewayId === "paymob") {
+    const bnplGatewayIds = getConfiguredPaymobPaymentMethods()
+      .filter((method) => method !== "card")
+      .map((method) => `paymob_${method}`);
 
-  return [...gateways, fallbackGateway].sort((a, b) => a.order - b.order || a.title.localeCompare(b.title));
+    for (const bnplGatewayId of bnplGatewayIds) {
+      if (
+        blockedSet.has(bnplGatewayId) ||
+        configuredGateways.some((gateway) => gateway.id === bnplGatewayId)
+      ) {
+        continue;
+      }
+
+      const details = PAYMENT_METHOD_DETAILS[bnplGatewayId];
+      configuredGateways.push({
+        id: bnplGatewayId,
+        title: details.title,
+        description: details.description,
+        method_title: details.title,
+        order: configuredGateways.length + 1,
+        enabled: true,
+      });
+    }
+  }
+
+  return configuredGateways.sort((a, b) => a.order - b.order || a.title.localeCompare(b.title));
 }
 
 function logGatewayFetchWarning(stage: string, error: unknown) {

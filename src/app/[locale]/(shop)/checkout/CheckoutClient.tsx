@@ -101,6 +101,8 @@ const PAYMENT_METHOD_COUNTRY_AVAILABILITY: Record<string, PaymentMethodCountryAv
   tabby: { type: "include", countries: ["AE", "SA", "KW", "BH", "QA"] },
   "tamara-gateway": { type: "include", countries: ["AE", "SA", "BH"] },
   tamara: { type: "include", countries: ["AE", "SA", "BH"] },
+  paymob_tabby: { type: "include", countries: ["AE"] },
+  paymob_tamara: { type: "include", countries: ["AE"] },
   cod: { type: "include", countries: ["AE"] },
 };
 
@@ -115,6 +117,7 @@ const WOO_PAYMENTS_METHODS = new Set(["woocommerce_payments", "stripe", "card", 
 const isWooPaymentsMethod = (paymentMethod: string): boolean => {
   const normalized = (paymentMethod || "").toLowerCase();
   if (WOO_PAYMENTS_METHODS.has(normalized)) return true;
+  if (normalized.startsWith("paymob_")) return true;
 
   // WooPayments method IDs can vary by version (for example: stripe_card).
   return (
@@ -1211,7 +1214,7 @@ export default function CheckoutClient() {
       const selectedPaymentGateway = filteredPaymentGateways.find((gateway) => gateway.id === formData.paymentMethod);
 
       const orderPayload = {
-        payment_method: formData.paymentMethod,
+        payment_method: formData.paymentMethod.startsWith("paymob") ? "paymob" : formData.paymentMethod,
         payment_method_title: selectedPaymentGateway?.title || formData.paymentMethod,
         currency: currency || marketCurrency,
         billing: {
@@ -1497,7 +1500,7 @@ export default function CheckoutClient() {
                 throw new Error(tamaraData.error?.message || "Failed to initiate Tamara payment");
               }
               } else if (isWooPayments) {
-              const cardPaymentBody = JSON.stringify({
+              const cardPaymentBody = {
                   order_id: data.order_id,
                   order_key: data.order_key,
                   locale,
@@ -1505,13 +1508,16 @@ export default function CheckoutClient() {
                   order_total: data.order?.total,
                   order_currency: data.order?.currency,
                   customer_email: billingInfo.email || formData.shipping.email || data.order?.billing?.email,
-              });
+              };
 
-              if (normalizedPaymentMethod === "paymob") {
+              if (normalizedPaymentMethod.startsWith("paymob")) {
                 const paymobResponse = await fetch(buildCheckoutApiUrl("/api/paymob/create-checkout-session"), {
                   method: "POST",
                   headers: getCheckoutApiHeaders(),
-                  body: cardPaymentBody,
+                  body: JSON.stringify({
+                    ...cardPaymentBody,
+                    payment_method: normalizedPaymentMethod,
+                  }),
                 });
                 const paymobData = await paymobResponse.json();
 
@@ -1526,7 +1532,7 @@ export default function CheckoutClient() {
               const stripeResponse = await fetch(buildCheckoutApiUrl("/api/stripe/create-checkout-session"), {
                 method: "POST",
                 headers: getCheckoutApiHeaders(),
-                body: cardPaymentBody,
+                body: JSON.stringify(cardPaymentBody),
               });
               const stripeData = await stripeResponse.json();
 
@@ -2178,6 +2184,12 @@ export default function CheckoutClient() {
                             ) : (
                               filteredPaymentGateways.map((gateway) => {
                                                                 const getGatewayLabel = (id: string, title: string) => {
+                                                                  if (id === "paymob_tabby") {
+                                                                    return isRTL ? "الدفع مع تابي" : "Pay with Tabby";
+                                                                  }
+                                                                  if (id === "paymob_tamara") {
+                                                                    return isRTL ? "تمارا - اشتر الآن وادفع لاحقاً" : "Tamara - Buy Now Pay Later";
+                                                                  }
                                                                   const labels: Record<string, { en: string; ar: string }> = {
                                                                     tabby_installments: { en: "Pay with Tabby", ar: "الدفع مع تابي" },
                                                                     tabby_checkout: { en: "Pay with Tabby", ar: "الدفع مع تابي" },
@@ -2197,6 +2209,16 @@ export default function CheckoutClient() {
                                                                 };
 
                                                                 const getGatewayDescription = (id: string, description: string) => {
+                                                                  if (id === "paymob_tabby") {
+                                                                    return isRTL
+                                                                      ? "قسّم دفعتك إلى 4 أقساط بدون فوائد"
+                                                                      : "Split your payment into 4 interest-free installments";
+                                                                  }
+                                                                  if (id === "paymob_tamara") {
+                                                                    return isRTL
+                                                                      ? "ادفع بأقساط سهلة مع تمارا"
+                                                                      : "Pay in easy installments with Tamara";
+                                                                  }
                                                                   const descriptions: Record<string, { en: string; ar: string }> = {
                                                                     tabby_installments: { en: "Split your payment into 4 interest-free installments", ar: "قسّم دفعتك إلى 4 أقساط بدون فوائد" },
                                                                     tabby_checkout: { en: "Split your payment into 4 interest-free installments", ar: "قسّم دفعتك إلى 4 أقساط بدون فوائد" },
@@ -2216,7 +2238,7 @@ export default function CheckoutClient() {
                                                                 };
 
                                                                 const getGatewayIcon = (id: string) => {
-                                                                  if (id === "tabby" || id === "tabby_installments" || id === "tabby_checkout") {
+                                                                  if (id === "paymob_tabby" || id === "tabby" || id === "tabby_installments" || id === "tabby_checkout") {
                                                                     return (
                                                                       <Image
                                                                         src="/images/payment/tabby.png"
@@ -2227,7 +2249,7 @@ export default function CheckoutClient() {
                                                                       />
                                                                     );
                                                                   }
-                                                                  if (id === "tamara" || id === "tamara-gateway" || id.startsWith("tamara")) {
+                                                                  if (id === "paymob_tamara" || id === "tamara" || id === "tamara-gateway" || id.startsWith("tamara")) {
                                                                     return (
                                                                       <Image
                                                                         src="/images/payment/tamara.png"

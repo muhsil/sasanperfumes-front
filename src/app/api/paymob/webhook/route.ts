@@ -16,6 +16,7 @@ interface PaymobWebhookOrder {
   currency?: string;
   status?: string;
   transaction_id?: string;
+  payment_method_title?: string;
   meta_data?: Array<{ key?: string; value?: unknown }>;
 }
 
@@ -112,7 +113,7 @@ export async function POST(request: NextRequest) {
           set_paid: true,
           transaction_id: transactionId,
           payment_method: "paymob",
-          payment_method_title: "Credit/Debit Card",
+          payment_method_title: order.payment_method_title || "Credit/Debit Card",
           meta_data: [
             { key: "_paymob_transaction_id", value: transactionId },
             { key: "_paymob_order_id", value: String(payload.obj.order?.id || "") },
