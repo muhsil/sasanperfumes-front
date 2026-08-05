@@ -55,6 +55,8 @@ function getRequestOrigin(request: NextRequest): string {
 
 const PAYMOB_METHOD_TITLES: Record<PaymobPaymentMethod, string> = {
   card: "Credit/Debit Card",
+  apple_pay: "Apple Pay",
+  google_pay: "Google Pay",
   tabby: "Tabby - Pay in Installments",
   tamara: "Tamara - Buy Now Pay Later",
 };
@@ -63,6 +65,8 @@ function resolvePaymobPaymentMethod(value: unknown): PaymobPaymentMethod {
   const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
   if (normalized === "paymob_tabby" || normalized === "tabby") return "tabby";
   if (normalized === "paymob_tamara" || normalized === "tamara") return "tamara";
+  if (normalized === "paymob_apple_pay" || normalized === "apple_pay") return "apple_pay";
+  if (normalized === "paymob_google_pay" || normalized === "google_pay") return "google_pay";
   return "card";
 }
 

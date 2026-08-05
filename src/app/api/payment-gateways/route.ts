@@ -98,6 +98,14 @@ const PAYMENT_METHOD_DETAILS: Record<string, { title: string; description: strin
     title: "Credit/Debit Card",
     description: "Pay securely with your card via Paymob",
   },
+  paymob_apple_pay: {
+    title: "Apple Pay",
+    description: "Pay quickly and securely with Apple Pay",
+  },
+  paymob_google_pay: {
+    title: "Google Pay",
+    description: "Pay quickly and securely with Google Pay",
+  },
   paymob_tabby: {
     title: "Tabby - Pay in Installments",
     description: "Split your purchase into 4 interest-free payments",
@@ -151,6 +159,8 @@ function expandPaymentGatewayIdAliases(ids: string[]): Set<string> {
     normalized.add("card");
     normalized.add("paymob_tabby");
     normalized.add("paymob_tamara");
+    normalized.add("paymob_apple_pay");
+    normalized.add("paymob_google_pay");
   }
 
   return normalized;
@@ -269,21 +279,21 @@ function addConfiguredCardGateway(
   }
 
   if (gatewayId === "paymob") {
-    const bnplGatewayIds = getConfiguredPaymobPaymentMethods()
+    const additionalGatewayIds = getConfiguredPaymobPaymentMethods()
       .filter((method) => method !== "card")
       .map((method) => `paymob_${method}`);
 
-    for (const bnplGatewayId of bnplGatewayIds) {
+    for (const additionalGatewayId of additionalGatewayIds) {
       if (
-        blockedSet.has(bnplGatewayId) ||
-        configuredGateways.some((gateway) => gateway.id === bnplGatewayId)
+        blockedSet.has(additionalGatewayId) ||
+        configuredGateways.some((gateway) => gateway.id === additionalGatewayId)
       ) {
         continue;
       }
 
-      const details = PAYMENT_METHOD_DETAILS[bnplGatewayId];
+      const details = PAYMENT_METHOD_DETAILS[additionalGatewayId];
       configuredGateways.push({
-        id: bnplGatewayId,
+        id: additionalGatewayId,
         title: details.title,
         description: details.description,
         method_title: details.title,

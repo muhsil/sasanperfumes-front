@@ -16,7 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { getCustomer, getSavedAddressesFromCustomer, saveSavedAddresses, generateAddressId, resolveCountryCode, type Customer, type SavedAddress } from "@/lib/api/customer";
 import { featureFlags, type Locale } from "@/config/site";
-import { MapPin, Check, ChevronDown, ChevronUp, Tag, X, Truck, Phone } from "lucide-react";
+import { Apple, MapPin, Check, ChevronDown, ChevronUp, Tag, X, Truck, Phone } from "lucide-react";
 import { BundleItemsList, getBundleItems, getBundleItemsTotal, getBoxPrice, getPricingMode, getFixedPrice, getBundleTotal } from "@/components/cart/BundleItemsList";
 import { PhoneInput } from "@/components/common/PhoneInput";
 import { useProductMeta } from "@/hooks/useProductCategories";
@@ -122,6 +122,8 @@ const PAYMENT_METHOD_COUNTRY_AVAILABILITY: Record<string, PaymentMethodCountryAv
   tamara: { type: "include", countries: ["AE", "SA", "BH"] },
   paymob_tabby: { type: "include", countries: ["AE"] },
   paymob_tamara: { type: "include", countries: ["AE"] },
+  paymob_apple_pay: { type: "include", countries: ["AE"] },
+  paymob_google_pay: { type: "include", countries: ["AE"] },
   cod: { type: "include", countries: ["AE"] },
 };
 
@@ -982,6 +984,11 @@ export default function CheckoutClient() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const checkoutForm = e.currentTarget as HTMLFormElement;
+    if (!checkoutForm.checkValidity()) {
+      checkoutForm.reportValidity();
+      return;
+    }
     setIsSubmitting(true);
     setError(null);
     setPasswordError(null);
@@ -2222,6 +2229,12 @@ export default function CheckoutClient() {
                                                                   if (id === "paymob_tamara") {
                                                                     return isRTL ? "تمارا - اشتر الآن وادفع لاحقاً" : "Tamara - Buy Now Pay Later";
                                                                   }
+                                                                  if (id === "paymob_apple_pay") {
+                                                                    return isRTL ? "الدفع باستخدام Apple Pay" : "Apple Pay";
+                                                                  }
+                                                                  if (id === "paymob_google_pay") {
+                                                                    return isRTL ? "الدفع باستخدام Google Pay" : "Google Pay";
+                                                                  }
                                                                   const labels: Record<string, { en: string; ar: string }> = {
                                                                     tabby_installments: { en: "Pay with Tabby", ar: "الدفع مع تابي" },
                                                                     tabby_checkout: { en: "Pay with Tabby", ar: "الدفع مع تابي" },
@@ -2251,6 +2264,11 @@ export default function CheckoutClient() {
                                                                       ? "ادفع بأقساط سهلة مع تمارا"
                                                                       : "Pay in easy installments with Tamara";
                                                                   }
+                                                                  if (id === "paymob_apple_pay" || id === "paymob_google_pay") {
+                                                                    return isRTL
+                                                                      ? "أكمل بيانات التوصيل ثم ادفع بسرعة وأمان"
+                                                                      : "Complete your delivery details, then pay securely";
+                                                                  }
                                                                   const descriptions: Record<string, { en: string; ar: string }> = {
                                                                     tabby_installments: { en: "Split your payment into 4 interest-free installments", ar: "قسّم دفعتك إلى 4 أقساط بدون فوائد" },
                                                                     tabby_checkout: { en: "Split your payment into 4 interest-free installments", ar: "قسّم دفعتك إلى 4 أقساط بدون فوائد" },
@@ -2270,6 +2288,22 @@ export default function CheckoutClient() {
                                                                 };
 
                                                                 const getGatewayIcon = (id: string) => {
+                                                                  if (id === "paymob_apple_pay") {
+                                                                    return (
+                                                                      <div className="flex h-6 w-16 items-center justify-center gap-1 text-brand-primary" aria-label="Apple Pay">
+                                                                        <Apple className="h-5 w-5 fill-current" strokeWidth={1.8} />
+                                                                        <span className="text-sm font-semibold tracking-tight">Pay</span>
+                                                                      </div>
+                                                                    );
+                                                                  }
+                                                                  if (id === "paymob_google_pay") {
+                                                                    return (
+                                                                      <div className="flex h-6 w-16 items-center justify-center gap-1" aria-label="Google Pay">
+                                                                        <span className="text-lg font-bold leading-none text-[#4285F4]">G</span>
+                                                                        <span className="text-sm font-semibold tracking-tight text-brand-primary">Pay</span>
+                                                                      </div>
+                                                                    );
+                                                                  }
                                                                   if (id === "paymob_tabby" || id === "tabby" || id === "tabby_installments" || id === "tabby_checkout") {
                                                                     return (
                                                                       <Image

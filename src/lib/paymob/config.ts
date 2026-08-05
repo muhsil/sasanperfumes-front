@@ -34,10 +34,12 @@ export function getPaymobIntegrationIds(): number[] {
     .filter((item) => Number.isFinite(item) && item > 0);
 }
 
-export type PaymobPaymentMethod = "card" | "tamara" | "tabby";
+export type PaymobPaymentMethod = "card" | "apple_pay" | "google_pay" | "tamara" | "tabby";
 
 const PAYMOB_METHOD_ENV_KEYS: Record<PaymobPaymentMethod, string> = {
   card: "PAYMOB_CARD_INTEGRATION_ID",
+  apple_pay: "PAYMOB_APPLE_PAY_INTEGRATION_ID",
+  google_pay: "PAYMOB_GOOGLE_PAY_INTEGRATION_ID",
   tamara: "PAYMOB_TAMARA_INTEGRATION_ID",
   tabby: "PAYMOB_TABBY_INTEGRATION_ID",
 };
@@ -46,6 +48,8 @@ const PAYMOB_METHOD_FALLBACK_INDEX: Record<PaymobPaymentMethod, number> = {
   card: 0,
   tamara: 1,
   tabby: 2,
+  apple_pay: 3,
+  google_pay: 4,
 };
 
 export function getPaymobIntegrationIdForMethod(method: PaymobPaymentMethod): number | null {
@@ -61,7 +65,7 @@ export function getPaymobIntegrationIdForMethod(method: PaymobPaymentMethod): nu
 }
 
 export function getConfiguredPaymobPaymentMethods(): PaymobPaymentMethod[] {
-  return (["card", "tamara", "tabby"] as const).filter(
+  return (["card", "apple_pay", "google_pay", "tamara", "tabby"] as const).filter(
     (method) => getPaymobIntegrationIdForMethod(method) !== null
   );
 }
