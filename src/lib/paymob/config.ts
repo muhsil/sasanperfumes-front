@@ -36,14 +36,6 @@ export function getPaymobIntegrationIds(): number[] {
 
 export type PaymobPaymentMethod = "card" | "apple_pay" | "google_pay" | "tamara" | "tabby";
 
-const PAYMOB_METHOD_ENV_KEYS: Record<PaymobPaymentMethod, string> = {
-  card: "PAYMOB_CARD_INTEGRATION_ID",
-  apple_pay: "PAYMOB_APPLE_PAY_INTEGRATION_ID",
-  google_pay: "PAYMOB_GOOGLE_PAY_INTEGRATION_ID",
-  tamara: "PAYMOB_TAMARA_INTEGRATION_ID",
-  tabby: "PAYMOB_TABBY_INTEGRATION_ID",
-};
-
 const PAYMOB_METHOD_FALLBACK_INDEX: Record<PaymobPaymentMethod, number> = {
   card: 0,
   tamara: 1,
@@ -52,9 +44,24 @@ const PAYMOB_METHOD_FALLBACK_INDEX: Record<PaymobPaymentMethod, number> = {
   google_pay: 4,
 };
 
+function getExplicitPaymobMethodIntegrationId(method: PaymobPaymentMethod): string {
+  // Hostinger's Next.js build only inlines environment variables accessed with literal keys.
+  switch (method) {
+    case "card":
+      return process.env.PAYMOB_CARD_INTEGRATION_ID || getEnvVar("PAYMOB_CARD_INTEGRATION_ID") || "";
+    case "apple_pay":
+      return process.env.PAYMOB_APPLE_PAY_INTEGRATION_ID || getEnvVar("PAYMOB_APPLE_PAY_INTEGRATION_ID") || "";
+    case "google_pay":
+      return process.env.PAYMOB_GOOGLE_PAY_INTEGRATION_ID || getEnvVar("PAYMOB_GOOGLE_PAY_INTEGRATION_ID") || "";
+    case "tamara":
+      return process.env.PAYMOB_TAMARA_INTEGRATION_ID || getEnvVar("PAYMOB_TAMARA_INTEGRATION_ID") || "";
+    case "tabby":
+      return process.env.PAYMOB_TABBY_INTEGRATION_ID || getEnvVar("PAYMOB_TABBY_INTEGRATION_ID") || "";
+  }
+}
+
 export function getPaymobIntegrationIdForMethod(method: PaymobPaymentMethod): number | null {
-  const envKey = PAYMOB_METHOD_ENV_KEYS[method];
-  const configuredValue = (process.env[envKey] || getEnvVar(envKey) || "").trim();
+  const configuredValue = getExplicitPaymobMethodIntegrationId(method).trim();
   const configuredId = Number.parseInt(configuredValue, 10);
 
   if (Number.isFinite(configuredId) && configuredId > 0) {
