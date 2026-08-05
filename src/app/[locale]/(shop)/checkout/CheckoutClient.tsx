@@ -31,6 +31,7 @@ import { GiftWrapOption } from "@/components/checkout/GiftWrapOption";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 import { calculateCartDiscounts, getCartDiscountTotal } from "@/lib/discountRules";
 import { getMarketDefaultCurrency } from "@/config/market";
+import { calculateBnplConvenienceFeeMinor } from "@/lib/payment/bnpl";
 
 interface ShippingRate {
   rate_id: string;
@@ -577,6 +578,10 @@ export default function CheckoutClient() {
         }, [emptyCartCountdown, router, locale, marketPrefix]);
 
         const discountedCartSubtotal = Math.max((parseFloat(cartSubtotal) || 0) - couponDiscount - promotionalDiscountTotal, 0);
+        const bnplConvenienceFee = calculateBnplConvenienceFeeMinor(
+          discountedCartSubtotal,
+          formData.paymentMethod
+        );
 
         const fetchShippingMethods = async (country: string, city: string, postcode: string) => {
           setIsLoadingShipping(true);
@@ -706,7 +711,7 @@ export default function CheckoutClient() {
           : fees
               .filter(fee => fee?.name?.toLowerCase() === "customs fees")
               .reduce((sum, fee) => sum + (parseFloat(fee?.fee) || 0), 0);
-        total += nonCustomsFeesTotal + customsFeesTotal;
+        total += nonCustomsFeesTotal + customsFeesTotal + bnplConvenienceFee;
         return total;
       } catch (err) {
         console.error("[Checkout] Failed to calculate fees:", err);
@@ -727,7 +732,10 @@ export default function CheckoutClient() {
           .filter(fee => fee?.name?.toLowerCase() === "customs fees")
           .reduce((sum, fee) => sum + (parseFloat(fee?.fee) || 0), 0);
         const clientCustomsFee = customsFee ? (parseFloat(customsFee.fee) || 0) : 0;
-        return Math.max(baseTotalMinor - promotionalDiscountTotal - serverCustomsFeeTotal + clientCustomsFee, 0) / divisor;
+        return Math.max(
+          baseTotalMinor - promotionalDiscountTotal - serverCustomsFeeTotal + clientCustomsFee + bnplConvenienceFee,
+          0
+        ) / divisor;
       } catch (err) {
         console.error("[Checkout] Failed to calculate checkout total:", err);
         return Math.max(parseFloat(cartTotal) || 0, 0) / divisor;
@@ -1265,6 +1273,12 @@ export default function CheckoutClient() {
               });
             }
           });
+          if (bnplConvenienceFee > 0) {
+            feeLines.push({
+              name: "BNPL Convenience Fee (7%)",
+              total: convertPrice(bnplConvenienceFee / divisor).toFixed(getCurrencyInfo().decimals),
+            });
+          }
           // Add client-side customs fee, or server-side customs fees if no client-side
           if (customsFee) {
             feeLines.push({
@@ -2241,22 +2255,22 @@ export default function CheckoutClient() {
                                                                   if (id === "paymob_tabby" || id === "tabby" || id === "tabby_installments" || id === "tabby_checkout") {
                                                                     return (
                                                                       <Image
-                                                                        src="/images/payment/tabby.png"
+                                                                        src="/images/payment/tabby-badge.svg"
                                                                         alt="Tabby"
-                                                                        width={60}
-                                                                        height={32}
-                                                                        className="h-8 w-auto object-contain"
+                                                                        width={76}
+                                                                        height={30}
+                                                                        className="h-7 w-auto object-contain"
                                                                       />
                                                                     );
                                                                   }
                                                                   if (id === "paymob_tamara" || id === "tamara" || id === "tamara-gateway" || id.startsWith("tamara")) {
                                                                     return (
                                                                       <Image
-                                                                        src="/images/payment/tamara.png"
+                                                                        src="/images/payment/tamara-badge.png"
                                                                         alt="Tamara"
-                                                                        width={60}
+                                                                        width={63}
                                                                         height={32}
-                                                                        className="h-8 w-auto object-contain"
+                                                                        className="h-7 w-auto object-contain"
                                                                       />
                                                                     );
                                                                   }
@@ -2537,6 +2551,15 @@ export default function CheckoutClient() {
                                   />
                                 </div>
                               ))}
+                              {bnplConvenienceFee > 0 && (
+                                <div className="flex justify-between text-sm font-medium text-brand-primary">
+                                  <span>{isRTL ? "رسوم تسهيل الدفع (7%)" : "BNPL Convenience Fee (7%)"}</span>
+                                  <FormattedPrice
+                                    price={bnplConvenienceFee / divisor}
+                                    iconSize="xs"
+                                  />
+                                </div>
+                              )}
                               {customsFee ? (
                                 <div className="flex justify-between text-sm text-brand-muted">
                                   <span>{isRTL ? "رسوم جمركية" : customsFee.name}</span>

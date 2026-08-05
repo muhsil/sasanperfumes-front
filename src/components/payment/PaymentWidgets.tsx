@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { TamaraPromoWidget } from "./TamaraPromoWidget";
+import Image from "next/image";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
+import { BNPL_CONVENIENCE_FEE_RATE } from "@/lib/payment/bnpl";
 
 interface PaymentWidgetsProps {
   price: number;
@@ -47,17 +48,62 @@ export function PaymentWidgets({ price, currency, locale }: PaymentWidgetsProps)
   // Don't render anything while loading to avoid flash
   if (isLoading) return null;
 
-  // Check if Tamara is enabled (any tamara variant)
+  const isRTL = locale === "ar";
+  const formattedInstallment = new Intl.NumberFormat(isRTL ? "ar-AE" : "en-AE", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: currency === "KWD" || currency === "BHD" || currency === "OMR" ? 3 : 2,
+  }).format((price * (1 + BNPL_CONVENIENCE_FEE_RATE)) / 4);
+
+  const isTabbyEnabled = enabledGateways.some((gateway) =>
+    ["paymob_tabby", "tabby", "tabby_checkout", "tabby_installments"].includes(gateway.id)
+  );
   const isTamaraEnabled = enabledGateways.some(
-    (gateway) => gateway.id === "tamara" || gateway.id === "tamara-gateway"
+    (gateway) => ["paymob_tamara", "tamara", "tamara-gateway"].includes(gateway.id)
   );
 
-  // Don't render the container if Tamara is not enabled
-  if (!isTamaraEnabled) return null;
+  if (!isTabbyEnabled && !isTamaraEnabled) return null;
 
   return (
-    <div className="space-y-2 border-t border-gray-200 pt-3 mt-3">
-      {isTamaraEnabled && <TamaraPromoWidget price={price} currency={currency} locale={locale} />}
+    <div className="mt-3 rounded-lg border border-brand-border/70 bg-brand-beige/35 px-3 py-2.5">
+      <p className="mb-2 text-xs font-semibold text-brand-primary">
+        {isRTL ? "خيارات دفع مرنة عند إتمام الطلب" : "Flexible payment options at checkout"}
+      </p>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        {isTabbyEnabled && (
+          <div className="flex min-w-0 items-center gap-2">
+            <Image
+              src="/images/payment/tabby-badge.svg"
+              alt="Tabby"
+              width={66}
+              height={26}
+              className="h-5 w-auto shrink-0"
+            />
+            <span className="text-xs text-brand-muted">
+              {isRTL ? `4 دفعات بقيمة ${formattedInstallment}` : `4 payments of ${formattedInstallment}`}
+            </span>
+          </div>
+        )}
+        {isTamaraEnabled && (
+          <div className="flex min-w-0 items-center gap-2">
+            <Image
+              src="/images/payment/tamara-badge.png"
+              alt="Tamara"
+              width={66}
+              height={34}
+              className="h-5 w-auto shrink-0 object-contain"
+            />
+            <span className="text-xs text-brand-muted">
+              {isRTL ? "تقسيط مرن مع تمارا" : "Flexible installments with Tamara"}
+            </span>
+          </div>
+        )}
+      </div>
+      <p className="mt-2 text-[11px] leading-4 text-brand-muted/90">
+        {isRTL
+          ? "تُضاف رسوم تسهيل دفع بنسبة 7% عند اختيار تابي أو تمارا. لا تشمل الرسوم تكلفة الشحن."
+          : "A 7% convenience fee applies when Tabby or Tamara is selected. Shipping is excluded."}
+      </p>
     </div>
   );
 }
