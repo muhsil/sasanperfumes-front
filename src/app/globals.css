@@ -412,6 +412,37 @@ input::-webkit-credentials-auto-fill-button {
   }
 }
 
+/* Checkout uses softer controls while the wider storefront keeps its editorial square geometry. */
+.site-shell .checkout-shell :where(.rounded-full) {
+  border-radius: 9999px !important;
+}
+
+.site-shell .checkout-shell :where(.rounded-l-full) {
+  border-bottom-left-radius: 9999px !important;
+  border-top-left-radius: 9999px !important;
+}
+
+.site-shell .checkout-shell :where(.rounded-r-full) {
+  border-bottom-right-radius: 9999px !important;
+  border-top-right-radius: 9999px !important;
+}
+
+.site-shell .checkout-shell :where(.rounded-3xl) {
+  border-radius: 1.5rem !important;
+}
+
+.site-shell .checkout-shell :where(.rounded-2xl) {
+  border-radius: 1rem !important;
+}
+
+.site-shell .checkout-shell :where(.rounded-xl) {
+  border-radius: 0.75rem !important;
+}
+
+.site-shell .checkout-shell :where(.rounded-lg, .rounded-md) {
+  border-radius: 0.625rem !important;
+}
+
 .pb-safe {
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }

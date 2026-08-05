@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
-import { BNPL_CONVENIENCE_FEE_RATE } from "@/lib/payment/bnpl";
 
 interface PaymentWidgetsProps {
   price: number;
@@ -53,7 +52,7 @@ export function PaymentWidgets({ price, currency, locale }: PaymentWidgetsProps)
     style: "currency",
     currency,
     minimumFractionDigits: currency === "KWD" || currency === "BHD" || currency === "OMR" ? 3 : 2,
-  }).format((price * (1 + BNPL_CONVENIENCE_FEE_RATE)) / 4);
+  }).format(price / 4);
 
   const isTabbyEnabled = enabledGateways.some((gateway) =>
     ["paymob_tabby", "tabby", "tabby_checkout", "tabby_installments"].includes(gateway.id)
@@ -99,11 +98,6 @@ export function PaymentWidgets({ price, currency, locale }: PaymentWidgetsProps)
           </div>
         )}
       </div>
-      <p className="mt-2 text-[11px] leading-4 text-brand-muted/90">
-        {isRTL
-          ? "تُضاف رسوم تسهيل دفع بنسبة 7% عند اختيار تابي أو تمارا. لا تشمل الرسوم تكلفة الشحن."
-          : "A 7% convenience fee applies when Tabby or Tamara is selected. Shipping is excluded."}
-      </p>
     </div>
   );
 }

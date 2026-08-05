@@ -26,7 +26,7 @@ import { omnisendIdentify, omnisendTrackStartedCheckout, type OmnisendLineItem }
 import { fbTrackInitiateCheckout } from "@/lib/utils/fbpixel";
 import { trackAnalyticsEvent } from "@/lib/utils/analytics";
 import type { CoCartItem } from "@/lib/api/cocart";
-import { decodeHtmlEntities } from "@/lib/utils";
+import { cn, decodeHtmlEntities } from "@/lib/utils";
 import { GiftWrapOption } from "@/components/checkout/GiftWrapOption";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 import { calculateCartDiscounts, getCartDiscountTotal } from "@/lib/discountRules";
@@ -84,6 +84,24 @@ interface PaymentGateway {
   title: string;
   description: string;
   method_title: string;
+}
+
+function CheckoutLoader({ size = "md", className }: { size?: "sm" | "md" | "lg"; className?: string }) {
+  const shellSize = size === "sm" ? "h-7 w-7" : size === "lg" ? "h-11 w-11" : "h-9 w-9";
+  const ringSize = size === "sm" ? "h-3.5 w-3.5" : size === "lg" ? "h-6 w-6" : "h-5 w-5";
+
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "inline-flex shrink-0 items-center justify-center rounded-full border border-brand-border/70 bg-brand-ivory shadow-[0_5px_16px_rgba(20,15,10,0.10)]",
+        shellSize,
+        className
+      )}
+    >
+      <span className={cn("animate-spin rounded-full border-2 border-brand-border/65 border-t-brand-primary", ringSize)} />
+    </span>
+  );
 }
 
 const CURRENCY_TO_COUNTRY: Record<string, string> = {
@@ -1566,7 +1584,7 @@ export default function CheckoutClient() {
   };
 
   return (
-                <div className="min-h-screen bg-transparent pb-44 md:pb-8">
+                <div className="checkout-shell min-h-screen bg-transparent pb-44 md:pb-8">
                   <div className="container mx-auto px-4 py-3 md:py-8">
 
         {/* Modern User Status Card */}
@@ -1617,7 +1635,7 @@ export default function CheckoutClient() {
         {isVerifyingPayment && (
           <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
             <div className="flex items-center gap-3">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-300 border-t-blue-600"></div>
+              <CheckoutLoader size="sm" />
               <span className="text-blue-700">
                 {isRTL ? "جاري التحقق من حالة الدفع..." : "Verifying payment status..."}
               </span>
@@ -1658,14 +1676,14 @@ export default function CheckoutClient() {
               {/* Cart still initializing (grace period for SWR + localStorage hydration) */}
               {!cartInitReady && (isCartLoading || cartItems.length === 0) && (
                 <div className="mb-6 flex items-center justify-center py-8">
-                  <div className="h-8 w-8 animate-spin rounded-full border-3 border-brand-border border-t-brand-primary"></div>
+                  <CheckoutLoader size="lg" />
                   <span className="ml-3 text-brand-muted">{isRTL ? "جاري تحميل سلة التسوق..." : "Loading your cart..."}</span>
                 </div>
               )}
 
               {isLoadingCustomer && (
                 <div className="mb-6 flex items-center justify-center py-4">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-border border-t-brand-primary"></div>
+                  <CheckoutLoader />
                   <span className="ml-2 text-brand-muted">{isRTL ? "جاري تحميل بياناتك..." : "Loading your data..."}</span>
                 </div>
               )}
@@ -1721,7 +1739,7 @@ export default function CheckoutClient() {
                     onChange={(e) => handleShippingChange("email", e.target.value)}
                   />
                   {isCheckingEmail && (
-                    <div className="absolute right-3 top-9 h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600"></div>
+                    <CheckoutLoader size="sm" className="absolute right-3 top-8" />
                   )}
                 </div>
                 )}
@@ -1801,7 +1819,7 @@ export default function CheckoutClient() {
                       )}
                       {isCreatingAccount && (
                         <div className="flex items-center gap-2 rounded-md bg-blue-50 p-3 text-sm text-blue-600">
-                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-300 border-t-blue-600"></div>
+                          <CheckoutLoader size="sm" />
                           {isRTL ? "جاري إنشاء الحساب..." : "Creating account..."}
                         </div>
                       )}
@@ -1986,7 +2004,7 @@ export default function CheckoutClient() {
               
               {isLoadingShipping ? (
                 <div className="flex items-center justify-center py-4">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-border border-t-brand-primary"></div>
+                  <CheckoutLoader />
                   <span className="ml-2 text-brand-muted">{isRTL ? "جاري تحميل طرق الشحن..." : "Loading shipping methods..."}</span>
                 </div>
               ) : shippingPackages.length === 0 || shippingPackages.every(pkg => !pkg.shipping_rates || pkg.shipping_rates.length === 0) ? (
@@ -2008,7 +2026,7 @@ export default function CheckoutClient() {
                         return (
                           <div
                             key={rate.rate_id}
-                            className={`rounded-lg border p-3 transition-colors md:p-4 ${
+                            className={`rounded-2xl border p-3 transition-colors md:p-4 ${
                               rate.method_id === "free_shipping" && rate.free_shipping_eligible === false
                                 ? "border-brand-border/60 bg-brand-beige/35 opacity-60"
                                 : isSelected
@@ -2021,7 +2039,7 @@ export default function CheckoutClient() {
                             }}
                           >
                               <div className="flex items-center gap-2.5 md:gap-3">
-                               <div className="flex h-9 w-9 items-center justify-center rounded-full border border-brand-border/70 bg-brand-ivory md:h-10 md:w-10">
+                               <div className="flex h-10 w-20 shrink-0 items-center justify-center rounded-full border border-brand-border/70 bg-brand-ivory">
                                 <Truck className="h-4 w-4 text-brand-muted md:h-5 md:w-5" />
                               </div>
                               <div className="flex-1">
@@ -2094,7 +2112,7 @@ export default function CheckoutClient() {
               </div>
 
               {/* Same as shipping checkbox */}
-              <div className="rounded-lg border border-brand-border/70 p-3 transition-colors hover:bg-brand-beige/55 md:p-4">
+              <div className="rounded-2xl border border-brand-border/70 p-3 transition-colors hover:bg-brand-beige/55 md:p-4">
                 <Checkbox
                   checked={formData.sameAsShipping}
                   onChange={(e) => handleSameAsShippingChange(e.target.checked)}
@@ -2188,7 +2206,7 @@ export default function CheckoutClient() {
                           <div className="space-y-3">
                             {isLoadingGateways ? (
                               <div className="flex items-center justify-center py-4">
-                                <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-border border-t-brand-primary"></div>
+                                <CheckoutLoader />
                                 <span className="ml-2 text-brand-muted">{isRTL ? "جاري تحميل طرق الدفع..." : "Loading payment methods..."}</span>
                               </div>
                             ) : filteredPaymentGateways.length === 0 ? (
@@ -2259,7 +2277,7 @@ export default function CheckoutClient() {
                                                                         alt="Tabby"
                                                                         width={76}
                                                                         height={30}
-                                                                        className="h-7 w-auto object-contain"
+                                                                        className="h-6 w-[64px] object-contain"
                                                                       />
                                                                     );
                                                                   }
@@ -2270,7 +2288,7 @@ export default function CheckoutClient() {
                                                                         alt="Tamara"
                                                                         width={63}
                                                                         height={32}
-                                                                        className="h-7 w-auto object-contain"
+                                                                        className="h-6 w-[64px] object-contain"
                                                                       />
                                                                     );
                                                                   }
@@ -2281,13 +2299,13 @@ export default function CheckoutClient() {
                                                                         alt="Card"
                                                                         width={80}
                                                                         height={32}
-                                                                        className="h-8 w-auto object-contain"
+                                                                        className="h-6 w-[64px] object-contain"
                                                                       />
                                                                     );
                                                                   }
                                   if (id === "cod") {
                                     return (
-                                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100">
+                                      <div className="flex h-6 w-16 items-center justify-center">
                                         <svg className="h-5 w-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                                         </svg>
@@ -2296,13 +2314,13 @@ export default function CheckoutClient() {
                                   }
                                   if (id === "paypal") {
                                     return (
-                                      <div className="flex h-8 w-12 items-center justify-center rounded bg-[#003087] px-1">
+                                      <div className="flex h-6 w-16 items-center justify-center rounded-full bg-[#003087] px-1">
                                         <span className="text-xs font-bold text-white">PayPal</span>
                                       </div>
                                     );
                                   }
                                   return (
-                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-beige">
+                                    <div className="flex h-6 w-16 items-center justify-center">
                                       <svg className="h-5 w-5 text-brand-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                                       </svg>
@@ -2313,7 +2331,7 @@ export default function CheckoutClient() {
                                 return (
                                   <div
                                     key={gateway.id}
-                                    className={`cursor-pointer rounded-lg border p-3 transition-colors md:p-4 ${
+                                    className={`cursor-pointer rounded-2xl border p-3 transition-colors md:p-4 ${
                                       formData.paymentMethod === gateway.id
                                         ? "border-brand-primary bg-brand-beige"
                                         : "border-brand-border/70 hover:border-brand-primary/45 hover:bg-brand-beige/55"
@@ -2321,7 +2339,9 @@ export default function CheckoutClient() {
                                     onClick={() => handlePaymentChange(gateway.id)}
                                   >
                                     <div className="flex items-center gap-3">
-                                      {getGatewayIcon(gateway.id)}
+                                      <div className="flex h-10 w-20 shrink-0 items-center justify-center rounded-full border border-brand-border/70 bg-brand-ivory shadow-sm">
+                                        {getGatewayIcon(gateway.id)}
+                                      </div>
                                       <div className="flex-1">
                                         <Radio
                                           name="payment"
@@ -2348,7 +2368,7 @@ export default function CheckoutClient() {
                               {isRTL ? "ملاحظات الطلب" : "Order Notes"}
                             </h2>
               <textarea
-                className="w-full rounded-lg border border-brand-border/80 bg-brand-beige/50 p-3 text-sm text-brand-primary transition-colors hover:border-brand-primary/45 focus:border-brand-primary/55 focus:outline-none focus:ring-2 focus:ring-brand-gold/15"
+                className="w-full rounded-3xl border border-brand-border/80 bg-brand-beige/50 p-4 text-sm text-brand-primary transition-colors hover:border-brand-primary/45 focus:border-brand-primary/55 focus:outline-none focus:ring-2 focus:ring-brand-gold/15"
                 rows={4}
                 placeholder={
                   isRTL

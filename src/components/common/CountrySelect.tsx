@@ -309,7 +309,7 @@ export function CountrySelect({
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           className={cn(
-            "flex h-10 w-full items-center justify-between rounded-md border bg-white px-3 py-2 text-sm transition-colors",
+            "flex h-12 w-full items-center justify-between rounded-full border bg-white px-4 py-2 text-sm transition-colors",
             "hover:border-gray-900 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900/15",
             error ? "border-red-500 hover:border-red-500" : "border-gray-900/20",
             !displayLabel && "text-gray-500"
@@ -327,7 +327,7 @@ export function CountrySelect({
         </button>
 
         {isOpen && (
-          <div className="absolute z-50 mt-1 w-full rounded-md border border-gray-200 bg-white shadow-lg">
+          <div className="absolute z-50 mt-1 w-full rounded-2xl border border-gray-200 bg-white shadow-lg">
             <div className="border-b p-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -337,7 +337,7 @@ export function CountrySelect({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={isRTL ? "ابحث عن دولة..." : "Search country..."}
-                  className="w-full rounded-md border border-gray-900/20 py-2 pl-9 pr-3 text-sm hover:border-gray-900 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900/15"
+                  className="w-full rounded-full border border-gray-900/20 py-2 pl-9 pr-3 text-sm hover:border-gray-900 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900/15"
                 />
               </div>
             </div>

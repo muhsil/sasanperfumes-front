@@ -211,11 +211,11 @@ export function PhoneInput({
           onClick={() => !disabled && setIsDropdownOpen(!isDropdownOpen)}
           disabled={disabled}
           className={cn(
-            "flex h-10 items-center gap-1 border bg-white px-2 text-sm transition-colors flex-shrink-0",
+            "flex h-12 items-center gap-1 border bg-white px-3 text-sm transition-colors flex-shrink-0",
             "hover:border-gray-900 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900/15",
             "disabled:cursor-not-allowed disabled:opacity-50",
             displayError ? "border-red-500 hover:border-red-500" : "border-gray-900/20",
-            isRTL ? "rounded-r-md border-l-0" : "rounded-l-md border-r-0"
+            isRTL ? "rounded-r-full border-l-0" : "rounded-l-full border-r-0"
           )}
         >
           <img src={getCountryFlagUrl(selectedCountry)} alt={selectedCountry} width={20} height={15} className="inline-block flex-shrink-0" />
@@ -241,12 +241,12 @@ export function PhoneInput({
           required={required}
           disabled={disabled}
           className={cn(
-            "flex h-10 w-full border bg-white px-3 py-2 text-base sm:text-sm transition-colors flex-1 min-w-0",
+            "flex h-12 w-full border bg-white px-4 py-2 text-base sm:text-sm transition-colors flex-1 min-w-0",
             "placeholder:text-gray-400",
             "hover:border-gray-900 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900/15",
             "disabled:cursor-not-allowed disabled:opacity-50",
             displayError ? "border-red-500 hover:border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-900/20",
-            isRTL ? "rounded-l-md" : "rounded-r-md"
+            isRTL ? "rounded-l-full" : "rounded-r-full"
           )}
           dir="ltr"
         />
@@ -254,7 +254,7 @@ export function PhoneInput({
         {isDropdownOpen && (
           <div
             className={cn(
-              "absolute z-50 mt-11 w-72 rounded-md border border-gray-200 bg-white shadow-lg",
+              "absolute z-50 mt-13 w-72 rounded-2xl border border-gray-200 bg-white shadow-lg",
               isRTL ? "right-0" : "left-0"
             )}
           >
@@ -267,7 +267,7 @@ export function PhoneInput({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={isRTL ? "ابحث عن دولة..." : "Search country..."}
-                  className="w-full rounded-md border border-gray-900/20 py-2 pl-9 pr-3 text-sm hover:border-gray-900 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900/15"
+                  className="w-full rounded-full border border-gray-900/20 py-2 pl-9 pr-3 text-sm hover:border-gray-900 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900/15"
                   dir="ltr"
                 />
               </div>
