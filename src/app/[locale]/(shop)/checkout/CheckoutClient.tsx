@@ -86,6 +86,11 @@ interface PaymentGateway {
   method_title: string;
 }
 
+interface DeviceWalletCapabilities {
+  applePay: boolean;
+  googlePay: boolean;
+}
+
 function CheckoutLoader({ size = "md", className }: { size?: "sm" | "md" | "lg"; className?: string }) {
   const shellSize = size === "sm" ? "h-7 w-7" : size === "lg" ? "h-11 w-11" : "h-9 w-9";
   const ringSize = size === "sm" ? "h-3.5 w-3.5" : size === "lg" ? "h-6 w-6" : "h-5 w-5";
@@ -161,6 +166,52 @@ function isPaymentMethodAvailableForCountry(
     return availability.countries.includes(countryCode);
   }
   return !availability.countries.includes(countryCode);
+}
+
+function detectDeviceWalletCapabilities(): DeviceWalletCapabilities {
+  if (typeof window === "undefined" || typeof navigator === "undefined") {
+    return { applePay: false, googlePay: false };
+  }
+
+  const userAgent = navigator.userAgent || "";
+  const platform = navigator.platform || "";
+  const isApplePlatform =
+    /iPhone|iPad|iPod|Macintosh/i.test(userAgent) ||
+    /Mac|iPhone|iPad|iPod/i.test(platform) ||
+    (platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const isAndroid = /Android/i.test(userAgent);
+  const isDesktopChromium =
+    !isApplePlatform &&
+    !isAndroid &&
+    /(Chrome|Chromium|Edg)\//i.test(userAgent);
+  const applePaySession = (
+    window as Window & {
+      ApplePaySession?: { canMakePayments?: () => boolean };
+    }
+  ).ApplePaySession;
+
+  let canMakeApplePayments = Boolean(applePaySession);
+  if (canMakeApplePayments && applePaySession?.canMakePayments) {
+    try {
+      canMakeApplePayments = applePaySession.canMakePayments();
+    } catch {
+      canMakeApplePayments = false;
+    }
+  }
+
+  return {
+    applePay: isApplePlatform && canMakeApplePayments,
+    googlePay: isAndroid || isDesktopChromium,
+  };
+}
+
+function isPaymentMethodAvailableForDevice(
+  methodId: string,
+  capabilities: DeviceWalletCapabilities
+): boolean {
+  if (methodId === "paymob_apple_pay") return capabilities.applePay;
+  if (methodId === "paymob_google_pay") return capabilities.googlePay;
+  return true;
 }
 
 interface AddressFormData {
@@ -244,6 +295,10 @@ export default function CheckoutClient() {
   
             const [giftWrap, setGiftWrap] = useState(false);
         const [paymentGateways, setPaymentGateways] = useState<PaymentGateway[]>([]);
+        const [deviceWalletCapabilities, setDeviceWalletCapabilities] = useState<DeviceWalletCapabilities>({
+          applePay: false,
+          googlePay: false,
+        });
         const [apiCountryAvailability, setApiCountryAvailability] = useState<Record<string, PaymentMethodCountryAvailability>>({});
         const [isLoadingGateways, setIsLoadingGateways] = useState(true);
         const [shippingPackages, setShippingPackages] = useState<ShippingPackage[]>([]);
@@ -327,6 +382,12 @@ export default function CheckoutClient() {
     paymentMethod: "paymob",
     orderNotes: "",
   });
+
+  useEffect(() => {
+    // Wallet APIs are browser-only, so detect them after hydration.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDeviceWalletCapabilities(detectDeviceWalletCapabilities());
+  }, []);
 
   useEffect(() => {
     const fetchCustomerData = async () => {
@@ -482,13 +543,17 @@ export default function CheckoutClient() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [currency]);
 
-        const filteredPaymentGateways = paymentGateways.filter((gateway) =>
-          isPaymentMethodAvailableForCountry(gateway.id, formData.shipping.country, apiCountryAvailability)
+        const filteredPaymentGateways = paymentGateways.filter(
+          (gateway) =>
+            isPaymentMethodAvailableForCountry(gateway.id, formData.shipping.country, apiCountryAvailability) &&
+            isPaymentMethodAvailableForDevice(gateway.id, deviceWalletCapabilities)
         );
 
         useEffect(() => {
-          const available = paymentGateways.filter((gateway) =>
-            isPaymentMethodAvailableForCountry(gateway.id, formData.shipping.country, apiCountryAvailability)
+          const available = paymentGateways.filter(
+            (gateway) =>
+              isPaymentMethodAvailableForCountry(gateway.id, formData.shipping.country, apiCountryAvailability) &&
+              isPaymentMethodAvailableForDevice(gateway.id, deviceWalletCapabilities)
           );
           if (available.length > 0) {
             const currentMethodAvailable = available.some(
@@ -503,7 +568,7 @@ export default function CheckoutClient() {
               }));
             }
           }
-        }, [paymentGateways, formData.shipping.country, formData.paymentMethod, apiCountryAvailability]);
+        }, [paymentGateways, formData.shipping.country, formData.paymentMethod, apiCountryAvailability, deviceWalletCapabilities]);
 
         // Check for payment error from redirect (Tabby, Tamara)
         useEffect(() => {
