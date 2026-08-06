@@ -481,6 +481,64 @@ function sasanperfumes_order_admin_render_payment_box($post_or_order) {
 
     echo '<div class="sasanperfumes-payment-details">';
 
+    $paymob_intention_id = (string) $order->get_meta('_paymob_intention_id', true);
+    if ($order->get_payment_method() === 'paymob' || $paymob_intention_id !== '') {
+        $sync_status = (string) $order->get_meta('_paymob_sync_status', true);
+        $callback_result = (string) $order->get_meta('_paymob_last_callback_result', true);
+        $callback_at = (string) $order->get_meta('_paymob_last_callback_at', true);
+        $paymob_transaction_id = (string) $order->get_meta('_paymob_transaction_id', true);
+        $expected_amount = (string) $order->get_meta('_paymob_expected_amount_minor', true);
+        $callback_amount = (string) $order->get_meta('_paymob_callback_amount_minor', true);
+        $expected_currency = strtoupper((string) $order->get_meta('_paymob_expected_currency', true));
+        $callback_currency = strtoupper((string) $order->get_meta('_paymob_callback_currency', true));
+        $processed_events = json_decode((string) $order->get_meta('_paymob_processed_events', true), true);
+        $processed_count = is_array($processed_events) ? count($processed_events) : 0;
+        $order_status = $order->get_status();
+        $is_paid_status = in_array($order_status, array('processing', 'completed', 'refunded'), true);
+        $amount_mismatch = $expected_amount !== '' && $callback_amount !== '' && $expected_amount !== $callback_amount;
+        $currency_mismatch = $expected_currency !== '' && $callback_currency !== '' && $expected_currency !== $callback_currency;
+        $has_mismatch = $amount_mismatch || $currency_mismatch;
+
+        $health_label = 'Awaiting callback';
+        $health_class = 'pending';
+        $health_message = 'Paymob checkout was created. Waiting for a verified payment callback.';
+
+        if ($has_mismatch) {
+            $health_label = 'Mismatch detected';
+            $health_class = 'error';
+            $health_message = 'The callback amount or currency does not match the expected WooCommerce order.';
+        } elseif ($sync_status === 'synced_paid' && $is_paid_status && $order->get_transaction_id() !== '') {
+            $health_label = 'Payment synchronized';
+            $health_class = 'success';
+            $health_message = 'WooCommerce accepted and verified the successful Paymob callback.';
+        } elseif ($sync_status === 'synced_failed' && $order_status === 'failed') {
+            $health_label = 'Failure synchronized';
+            $health_class = 'error';
+            $health_message = 'Paymob reported a failed payment and WooCommerce recorded it.';
+        } elseif ($sync_status === 'synced_paid' || $is_paid_status) {
+            $health_label = 'Review required';
+            $health_class = 'warning';
+            $health_message = 'The WooCommerce order status and Paymob synchronization record do not fully agree.';
+        }
+
+        echo '<section class="sasanperfumes-paymob-monitor sasanperfumes-paymob-monitor--' . esc_attr($health_class) . '">';
+        echo '<div class="sasanperfumes-paymob-monitor__header"><strong>Paymob Monitoring</strong><span class="sasanperfumes-paymob-badge">' . esc_html($health_label) . '</span></div>';
+        echo '<p>' . esc_html($health_message) . '</p>';
+        echo '<table class="widefat striped sasanperfumes-payment-table"><tbody>';
+        sasanperfumes_order_admin_row('Sync status', $sync_status ?: 'Not recorded');
+        sasanperfumes_order_admin_row('Payment method', (string) $order->get_meta('_paymob_payment_method', true));
+        sasanperfumes_order_admin_row('Intention ID', $paymob_intention_id);
+        sasanperfumes_order_admin_row('Transaction ID', $paymob_transaction_id ?: $order->get_transaction_id());
+        sasanperfumes_order_admin_row('Last callback', $callback_at);
+        sasanperfumes_order_admin_row('Callback result', $callback_result);
+        sasanperfumes_order_admin_row('Expected amount (minor units)', $expected_amount);
+        sasanperfumes_order_admin_row('Callback amount (minor units)', $callback_amount);
+        sasanperfumes_order_admin_row('Expected / callback currency', trim($expected_currency . ($callback_currency !== '' ? ' / ' . $callback_currency : '')));
+        sasanperfumes_order_admin_row('Processed callback events', (string) $processed_count);
+        echo '</tbody></table>';
+        echo '</section>';
+    }
+
     echo '<h4>Order & Payment</h4>';
     echo '<table class="widefat striped sasanperfumes-payment-table"><tbody>';
     sasanperfumes_order_admin_row('Order Number', '#' . sasanperfumes_order_admin_display_order_number($order));
@@ -711,6 +769,40 @@ function sasanperfumes_order_admin_styles($hook) {
             color: #646970;
             font-style: italic;
         }
+        .sasanperfumes-paymob-monitor {
+            margin: 0 0 18px;
+            padding: 14px;
+            border: 1px solid #c3c4c7;
+            border-left-width: 4px;
+            border-radius: 4px;
+            background: #fff;
+        }
+        .sasanperfumes-paymob-monitor--success { border-left-color: #00a32a; background: #f0f6fc; }
+        .sasanperfumes-paymob-monitor--pending { border-left-color: #dba617; background: #fcf9e8; }
+        .sasanperfumes-paymob-monitor--warning,
+        .sasanperfumes-paymob-monitor--error { border-left-color: #d63638; background: #fcf0f1; }
+        .sasanperfumes-paymob-monitor__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 6px;
+        }
+        .sasanperfumes-paymob-monitor p { margin: 0 0 12px; }
+        .sasanperfumes-paymob-badge {
+            display: inline-flex;
+            padding: 3px 9px;
+            border-radius: 999px;
+            background: #1d2327;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .sasanperfumes-paymob-monitor--success .sasanperfumes-paymob-badge { background: #008a20; }
+        .sasanperfumes-paymob-monitor--pending .sasanperfumes-paymob-badge { background: #996800; }
+        .sasanperfumes-paymob-monitor--warning .sasanperfumes-paymob-badge,
+        .sasanperfumes-paymob-monitor--error .sasanperfumes-paymob-badge { background: #b32d2e; }
     ');
 
     wp_enqueue_script('jquery');

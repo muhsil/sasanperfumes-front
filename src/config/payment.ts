@@ -233,6 +233,15 @@ export function getCodAllowedCountries(): string[] {
 
 export function getPaymentMethodCountryAvailability(): Record<string, PaymentMethodCountryAvailability> {
   return {
+    tabby: { type: "include", countries: ["AE"] },
+    tabby_checkout: { type: "include", countries: ["AE"] },
+    tabby_installments: { type: "include", countries: ["AE"] },
+    tamara: { type: "include", countries: ["AE"] },
+    "tamara-gateway": { type: "include", countries: ["AE"] },
+    paymob_tabby: { type: "include", countries: ["AE"] },
+    paymob_tamara: { type: "include", countries: ["AE"] },
+    paymob_apple_pay: { type: "include", countries: ["AE"] },
+    paymob_google_pay: { type: "include", countries: ["AE"] },
     cod: { type: "include", countries: getCodAllowedCountries() },
   };
 }

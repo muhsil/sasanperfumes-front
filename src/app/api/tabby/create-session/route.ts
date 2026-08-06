@@ -25,6 +25,7 @@ interface TabbySessionRequest {
   order_key: string;
   amount: number;
   currency: string;
+  country_code?: string;
   description?: string;
   buyer: {
     name: string;
@@ -86,6 +87,7 @@ export async function POST(request: NextRequest) {
       order_key,
       amount,
       currency,
+      country_code = "",
       description,
       buyer,
       shipping_address,
@@ -106,6 +108,19 @@ export async function POST(request: NextRequest) {
           error: {
             code: "missing_params",
             message: "Missing required parameters",
+          },
+        },
+        { status: 400 }
+      );
+    }
+
+    if (country_code.toUpperCase() !== "AE" || (currency || marketCurrency).toUpperCase() !== "AED") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "tabby_uae_only",
+            message: "Tabby is available only for UAE delivery addresses in AED.",
           },
         },
         { status: 400 }

@@ -32,6 +32,7 @@ import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 import { calculateCartDiscounts, getCartDiscountTotal } from "@/lib/discountRules";
 import { getMarketDefaultCurrency } from "@/config/market";
 import { calculateBnplConvenienceFeeMinor } from "@/lib/payment/bnpl";
+import { getPaymentProvider, trackPaymentFunnelEvent, trackPaymentFunnelEventOnce } from "@/lib/payment/analytics";
 
 interface ShippingRate {
   rate_id: string;
@@ -120,11 +121,11 @@ const CURRENCY_TO_COUNTRY: Record<string, string> = {
 };
 
 const PAYMENT_METHOD_COUNTRY_AVAILABILITY: Record<string, PaymentMethodCountryAvailability> = {
-  tabby_installments: { type: "include", countries: ["AE", "SA", "KW", "BH", "QA"] },
-  tabby_checkout: { type: "include", countries: ["AE", "SA", "KW", "BH", "QA"] },
-  tabby: { type: "include", countries: ["AE", "SA", "KW", "BH", "QA"] },
-  "tamara-gateway": { type: "include", countries: ["AE", "SA", "BH"] },
-  tamara: { type: "include", countries: ["AE", "SA", "BH"] },
+  tabby_installments: { type: "include", countries: ["AE"] },
+  tabby_checkout: { type: "include", countries: ["AE"] },
+  tabby: { type: "include", countries: ["AE"] },
+  "tamara-gateway": { type: "include", countries: ["AE"] },
+  tamara: { type: "include", countries: ["AE"] },
   paymob_tabby: { type: "include", countries: ["AE"] },
   paymob_tamara: { type: "include", countries: ["AE"] },
   paymob_apple_pay: { type: "include", countries: ["AE"] },
@@ -321,6 +322,7 @@ export default function CheckoutClient() {
         const beginCheckoutTrackedRef = useRef(false);
         const shippingInfoTrackedRef = useRef<string | null>(null);
         const paymentInfoTrackedRef = useRef(false);
+        const lastPaymentSelectionRef = useRef<string | null>(null);
 
   const [addressErrors, setAddressErrors] = useState<{ shippingAddress?: string; shippingCity?: string; billingAddress?: string; billingCity?: string }>({});
 
@@ -889,6 +891,16 @@ export default function CheckoutClient() {
   };
 
   const handlePaymentChange = (value: string) => {
+    if (lastPaymentSelectionRef.current === value) return;
+    lastPaymentSelectionRef.current = value;
+    trackPaymentFunnelEvent("payment_method_selected", {
+      paymentMethod: value,
+      provider: getPaymentProvider(value),
+      value: checkoutTotal,
+      currency: currency || marketCurrency,
+      market: marketCode || "ae",
+      stage: "checkout",
+    });
     setFormData((prev) => ({ ...prev, paymentMethod: value }));
   };
 
@@ -1058,6 +1070,8 @@ export default function CheckoutClient() {
     setError(null);
     setPasswordError(null);
     setAddressErrors({});
+    let createdOrderId: number | string | undefined;
+    let paymentFailureStage = "order_creation";
 
     try {
       const newAddressErrors: typeof addressErrors = {};
@@ -1403,6 +1417,7 @@ export default function CheckoutClient() {
       if (!data.success) {
         throw new Error(sanitizeCheckoutMessage(data.error?.message || "Failed to create order"));
       }
+      createdOrderId = data.order_id;
 
       if (!paymentInfoTrackedRef.current) {
         trackAnalyticsEvent("add_payment_info", {
@@ -1496,6 +1511,14 @@ export default function CheckoutClient() {
             
             // Use the WooCommerce order total as the payment amount at the active currency precision
             const paymentAmount = Number(orderTotal.toFixed(paymentCurrencyDecimals));
+            const paymentAnalytics = {
+              paymentMethod: normalizedPaymentMethod,
+              provider: getPaymentProvider(normalizedPaymentMethod),
+              value: paymentAmount,
+              currency: data.order?.currency || currency || marketCurrency,
+              market: marketCode || "ae",
+              orderId: data.order_id,
+            };
             
             // Log if there's a significant difference between frontend and backend calculations
             // This helps identify potential pricing discrepancies for debugging
@@ -1510,6 +1533,7 @@ export default function CheckoutClient() {
             }
       
             if (isTabbyPayment) {
+              paymentFailureStage = "tabby_session";
               // Initiate Tabby payment directly
               const tabbyResponse = await fetch(buildCheckoutApiUrl("/api/tabby/create-session"), {
                 method: "POST",
@@ -1519,6 +1543,7 @@ export default function CheckoutClient() {
                   order_key: data.order_key,
                   amount: paymentAmount,
                   currency: data.order?.currency || currency || marketCurrency,
+                  country_code: formData.shipping.country,
                   description: `Order #${data.order_id}`,
                   buyer: {
                     name: `${billingInfo.firstName} ${billingInfo.lastName}`,
@@ -1546,11 +1571,17 @@ export default function CheckoutClient() {
               const tabbyData = await tabbyResponse.json();
 
               if (tabbyData.success && tabbyData.payment_url) {
+                trackPaymentFunnelEventOnce(
+                  "payment_redirect",
+                  { ...paymentAnalytics, stage: "gateway_redirect" },
+                  `redirect_${data.order_id}_${normalizedPaymentMethod}`
+                );
                 window.location.assign(tabbyData.payment_url);
               } else {
                 throw new Error(tabbyData.error?.message || "Failed to initiate Tabby payment");
               }
             } else if (isTamaraPayment) {
+              paymentFailureStage = "tamara_session";
               // Initiate Tamara payment directly
               const tamaraResponse = await fetch(buildCheckoutApiUrl("/api/tamara/create-checkout"), {
                 method: "POST",
@@ -1599,11 +1630,17 @@ export default function CheckoutClient() {
               const tamaraData = await tamaraResponse.json();
 
               if (tamaraData.success && tamaraData.checkout_url) {
+                trackPaymentFunnelEventOnce(
+                  "payment_redirect",
+                  { ...paymentAnalytics, stage: "gateway_redirect" },
+                  `redirect_${data.order_id}_${normalizedPaymentMethod}`
+                );
                 window.location.assign(tamaraData.checkout_url);
               } else {
                 throw new Error(tamaraData.error?.message || "Failed to initiate Tamara payment");
               }
               } else if (isWooPayments) {
+              paymentFailureStage = normalizedPaymentMethod.startsWith("paymob") ? "paymob_session" : "stripe_session";
               const cardPaymentBody = {
                   order_id: data.order_id,
                   order_key: data.order_key,
@@ -1626,6 +1663,11 @@ export default function CheckoutClient() {
                 const paymobData = await paymobResponse.json();
 
                 if (paymobData.success && paymobData.checkout_url) {
+                  trackPaymentFunnelEventOnce(
+                    "payment_redirect",
+                    { ...paymentAnalytics, stage: "gateway_redirect" },
+                    `redirect_${data.order_id}_${normalizedPaymentMethod}`
+                  );
                   window.location.assign(paymobData.checkout_url);
                   return;
                 }
@@ -1641,6 +1683,11 @@ export default function CheckoutClient() {
               const stripeData = await stripeResponse.json();
 
               if (stripeData.success && stripeData.checkout_url) {
+                trackPaymentFunnelEventOnce(
+                  "payment_redirect",
+                  { ...paymentAnalytics, stage: "gateway_redirect" },
+                  `redirect_${data.order_id}_${normalizedPaymentMethod}`
+                );
                 window.location.assign(stripeData.checkout_url);
                 return;
               }
@@ -1650,6 +1697,19 @@ export default function CheckoutClient() {
               router.push(`${marketPrefix}/${locale}/order-confirmation?order_id=${data.order_id}&order_key=${data.order_key}`);
             }
     } catch (err) {
+      trackPaymentFunnelEventOnce(
+        "payment_failure",
+        {
+          paymentMethod: formData.paymentMethod,
+          provider: getPaymentProvider(formData.paymentMethod),
+          value: checkoutTotal,
+          currency: currency || marketCurrency,
+          market: marketCode || "ae",
+          orderId: createdOrderId,
+          stage: paymentFailureStage,
+        },
+        `failure_${createdOrderId || "uncreated"}_${formData.paymentMethod}_${paymentFailureStage}`
+      );
       setError(sanitizeCheckoutMessage(err instanceof Error ? err.message : "An error occurred while placing your order"));
       setIsSubmitting(false);
     }

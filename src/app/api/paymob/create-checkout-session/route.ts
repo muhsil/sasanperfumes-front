@@ -176,6 +176,19 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    const billingCountry = (order.billing?.country || "").toUpperCase();
+    if ((paymentMethod === "tabby" || paymentMethod === "tamara") && (currency !== "AED" || billingCountry !== "AE")) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "bnpl_uae_only",
+            message: `${PAYMOB_METHOD_TITLES[paymentMethod]} is available only for UAE billing addresses in AED.`,
+          },
+        },
+        { status: 400 }
+      );
+    }
     const amountMinor = Math.round(amount * Math.pow(10, getPaymobCurrencyMinorUnit(currency)));
 
     const origin = getRequestOrigin(request);
@@ -213,7 +226,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    await fetchBackendForMarket(`${getOrdersApiBase(market.code)}/orders/${orderId}?${getBasicAuthParams(market.code)}`, {
+    const monitoringResponse = await fetchBackendForMarket(`${getOrdersApiBase(market.code)}/orders/${orderId}?${getBasicAuthParams(market.code)}`, {
       method: "PUT",
       headers: backendMarketPostHeaders(market.code),
       body: JSON.stringify({
@@ -223,9 +236,26 @@ export async function POST(request: NextRequest) {
           { key: "_paymob_intention_id", value: intention.id },
           { key: "_paymob_special_reference", value: intention.special_reference || "" },
           { key: "_paymob_payment_method", value: paymentMethod },
+          { key: "_paymob_sync_status", value: "awaiting_callback" },
+          { key: "_paymob_checkout_created_at", value: new Date().toISOString() },
+          { key: "_paymob_expected_amount_minor", value: String(amountMinor) },
+          { key: "_paymob_expected_currency", value: currency },
         ],
       }),
-    }, market.code).catch(() => undefined);
+    }, market.code).catch(() => null);
+
+    if (!monitoringResponse?.ok) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "order_monitoring_update_failed",
+            message: "Payment checkout was created, but WooCommerce could not record its monitoring details. Please retry.",
+          },
+        },
+        { status: 502 }
+      );
+    }
 
     return NextResponse.json({
       success: true,

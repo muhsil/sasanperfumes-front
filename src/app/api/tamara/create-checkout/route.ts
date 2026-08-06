@@ -129,6 +129,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const resolvedCountry = (country_code || shipping_address?.country_code || "").toUpperCase();
+    if (resolvedCountry !== "AE" || (currency || marketCurrency).toUpperCase() !== "AED") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "tamara_uae_only",
+            message: "Tamara is available only for UAE delivery addresses in AED.",
+          },
+        },
+        { status: 400 }
+      );
+    }
+
     const tamaraPayload = {
       order_reference_id: `WC-${order_id}`,
       order_number: `${order_id}`,

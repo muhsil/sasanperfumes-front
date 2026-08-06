@@ -15,6 +15,7 @@ import { normalizeFrontendPaymentUrl } from "@/lib/utils/payment";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 import { getGrossDiscountTotal, getGrossFeeTotal, getGrossLineItemTotal, getGrossLineItemUnitPrice, getGrossOrderSubtotal, getGrossShippingTotal } from "@/lib/orders/pricing";
 import { getMarketDefaultCurrency } from "@/config/market";
+import { getPaymentProvider, trackPaymentFunnelEventOnce } from "@/lib/payment/analytics";
 
 interface OrderMetaData {
   id: number;
@@ -136,6 +137,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
   const cartClearedRef = useRef(false);
   const paymentVerifiedRef = useRef(false);
   const purchaseTrackedRef = useRef(false);
+  const paymentOutcomeTrackedRef = useRef(false);
 
   const getMarketHeaders = useCallback((extra: HeadersInit = {}): HeadersInit => {
     const headers: Record<string, string> = {
@@ -508,6 +510,42 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
           } else if (isPendingOrder) {
             setPaymentStatus("pending");
           }
+        }
+        if (!paymentOutcomeTrackedRef.current && (isSuccessOrder || isFailedOrder || verifiedPaymentStatus === "failed")) {
+          paymentOutcomeTrackedRef.current = true;
+          const storedPaymobMethod = String(
+            fetchedOrder.meta_data?.find((item) => item.key === "_paymob_payment_method")?.value || ""
+          );
+          const analyticsPaymentMethod =
+            paymentMethod === "paymob" && storedPaymobMethod
+              ? `paymob_${storedPaymobMethod}`
+              : paymentMethod || storedPaymobMethod || "unknown";
+          const redirectStatus = (searchParams.get("status") || searchParams.get("payment_status") || "").toLowerCase();
+          const wasCancelled =
+            fetchedStatus === "cancelled" ||
+            redirectStatus === "cancelled" ||
+            redirectStatus === "canceled" ||
+            redirectStatus === "expired" ||
+            /cancelled|canceled|expired/i.test(paymentMessage || "");
+          const outcomeEvent = isSuccessOrder
+            ? "payment_success"
+            : wasCancelled
+              ? "payment_cancelled"
+              : "payment_failure";
+
+          trackPaymentFunnelEventOnce(
+            outcomeEvent,
+            {
+              paymentMethod: analyticsPaymentMethod,
+              provider: getPaymentProvider(analyticsPaymentMethod),
+              value: Number.parseFloat(fetchedOrder.total || "0") || 0,
+              currency: fetchedOrder.currency || marketCurrency,
+              market: marketCode || "ae",
+              orderId: fetchedOrder.id,
+              stage: "gateway_return",
+            },
+            `${outcomeEvent}_${fetchedOrder.id}_${analyticsPaymentMethod}`
+          );
         }
         if (!purchaseTrackedRef.current && fetchedOrder && isSuccessOrder) {
           purchaseTrackedRef.current = true;
