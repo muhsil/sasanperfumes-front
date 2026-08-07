@@ -98,18 +98,35 @@ export function getPaymobAllowedCurrencies(marketCode?: string | null): string[]
   const suffix = getMarketSuffix(marketCode);
   const key = `PAYMOB_ALLOWED_CURRENCIES${suffix}`;
   const publicKey = `NEXT_PUBLIC_PAYMOB_ALLOWED_CURRENCIES${suffix}`;
+  const rawByMarket = (process.env[key] || getEnvVar(key) || "").trim();
+  const publicRawByMarket = (process.env[publicKey] || getEnvVar(publicKey) || "").trim();
 
-  const raw = (
-    process.env[key] ||
-    getEnvVar(key) ||
+  if (rawByMarket || publicRawByMarket) {
+    return (rawByMarket || publicRawByMarket)
+      .split(",")
+      .map((currency) => currency.trim().toUpperCase())
+      .filter(Boolean);
+  }
+
+  const marketCodeNormalized = (marketCode || "").toString().toLowerCase().replace(/^\//, "");
+  if (["qa", "om", "sa"].includes(marketCodeNormalized)) {
+    return getPaymobCurrencyFallback(marketCode);
+  }
+
+  const globalRaw = (
     process.env.PAYMOB_ALLOWED_CURRENCIES ||
     getEnvVar("PAYMOB_ALLOWED_CURRENCIES") ||
-    process.env[publicKey] ||
-    getEnvVar(publicKey) ||
     process.env.NEXT_PUBLIC_PAYMOB_ALLOWED_CURRENCIES ||
     getEnvVar("NEXT_PUBLIC_PAYMOB_ALLOWED_CURRENCIES") ||
     ""
   ).trim();
+
+  const publicGlobalRaw = (
+    process.env["NEXT_PUBLIC_PAYMOB_ALLOWED_CURRENCIES"] ||
+    getEnvVar("NEXT_PUBLIC_PAYMOB_ALLOWED_CURRENCIES") ||
+    ""
+  ).trim();
+  const raw = globalRaw || publicGlobalRaw;
 
   if (raw) {
     return raw
