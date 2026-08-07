@@ -4,7 +4,6 @@ import { backendMarketPostHeaders, extractMarketCode, fetchBackendForMarket, wpJ
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { buildPaymobCheckoutUrl, createPaymobIntention, getPaymobCurrencyMinorUnit } from "@/lib/paymob/api";
 import {
-  getPaymobAllowedCurrencies,
   getPaymobIntegrationIdForMethod,
   getPaymobIntegrationIds,
   getPaymobPublicKey,
@@ -90,19 +89,6 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const paymentMethod = resolvePaymobPaymentMethod(body.payment_method);
-    const integrationId = getPaymobIntegrationIdForMethod(paymentMethod);
-    if (!integrationId) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: "paymob_method_not_configured",
-            message: `${PAYMOB_METHOD_TITLES[paymentMethod]} is not configured in Paymob.`,
-          },
-        },
-        { status: 400 }
-      );
-    }
     const orderId = Number(body.order_id);
     const orderKey = String(body.order_key || "");
     const locale = String(body.locale || "en");
@@ -164,7 +150,8 @@ export async function POST(request: NextRequest) {
     }
 
     const currency = (order.currency || market.defaultCurrency || "AED").toUpperCase();
-    if (!getPaymobAllowedCurrencies(market.code).includes(currency)) {
+    const integrationId = getPaymobIntegrationIdForMethod(paymentMethod, currency);
+    if (!integrationId) {
       return NextResponse.json(
         {
           success: false,

@@ -35,6 +35,7 @@ export function getPaymobIntegrationIds(): number[] {
 }
 
 export type PaymobPaymentMethod = "card" | "apple_pay" | "google_pay" | "tamara" | "tabby";
+export type PaymobCurrencyCode = "AED" | "QAR" | "OMR" | "SAR" | "KWD" | "BHD" | "USD";
 
 const PAYMOB_METHOD_FALLBACK_INDEX: Record<PaymobPaymentMethod, number> = {
   card: 0,
@@ -60,20 +61,88 @@ function getExplicitPaymobMethodIntegrationId(method: PaymobPaymentMethod): stri
   }
 }
 
-export function getPaymobIntegrationIdForMethod(method: PaymobPaymentMethod): number | null {
-  const configuredValue = getExplicitPaymobMethodIntegrationId(method).trim();
+function normalizeCurrencyCode(currency?: string | null): string {
+  return (currency || "").trim().toUpperCase();
+}
+
+function getExplicitPaymobCurrencyIntegrationId(method: PaymobPaymentMethod, currency?: string | null): string {
+  const code = normalizeCurrencyCode(currency);
+  if (!code) return "";
+
+  switch (method) {
+    case "card":
+      return (
+        process.env[`PAYMOB_CARD_INTEGRATION_ID_${code}` as keyof NodeJS.ProcessEnv] ||
+        getEnvVar(`PAYMOB_CARD_INTEGRATION_ID_${code}`) ||
+        process.env[`PAYMOB_${code}_CARD_INTEGRATION_ID` as keyof NodeJS.ProcessEnv] ||
+        getEnvVar(`PAYMOB_${code}_CARD_INTEGRATION_ID`) ||
+        process.env[`PAYMOB_INTEGRATION_ID_${code}` as keyof NodeJS.ProcessEnv] ||
+        getEnvVar(`PAYMOB_INTEGRATION_ID_${code}`) ||
+        process.env[`PAYMOB_${code}_INTEGRATION_ID` as keyof NodeJS.ProcessEnv] ||
+        getEnvVar(`PAYMOB_${code}_INTEGRATION_ID`) ||
+        ""
+      );
+    case "apple_pay":
+      return (
+        process.env[`PAYMOB_APPLE_PAY_INTEGRATION_ID_${code}` as keyof NodeJS.ProcessEnv] ||
+        getEnvVar(`PAYMOB_APPLE_PAY_INTEGRATION_ID_${code}`) ||
+        process.env[`PAYMOB_${code}_APPLE_PAY_INTEGRATION_ID` as keyof NodeJS.ProcessEnv] ||
+        getEnvVar(`PAYMOB_${code}_APPLE_PAY_INTEGRATION_ID`) ||
+        ""
+      );
+    case "google_pay":
+      return (
+        process.env[`PAYMOB_GOOGLE_PAY_INTEGRATION_ID_${code}` as keyof NodeJS.ProcessEnv] ||
+        getEnvVar(`PAYMOB_GOOGLE_PAY_INTEGRATION_ID_${code}`) ||
+        process.env[`PAYMOB_${code}_GOOGLE_PAY_INTEGRATION_ID` as keyof NodeJS.ProcessEnv] ||
+        getEnvVar(`PAYMOB_${code}_GOOGLE_PAY_INTEGRATION_ID`) ||
+        ""
+      );
+    case "tamara":
+      return (
+        process.env[`PAYMOB_TAMARA_INTEGRATION_ID_${code}` as keyof NodeJS.ProcessEnv] ||
+        getEnvVar(`PAYMOB_TAMARA_INTEGRATION_ID_${code}`) ||
+        process.env[`PAYMOB_${code}_TAMARA_INTEGRATION_ID` as keyof NodeJS.ProcessEnv] ||
+        getEnvVar(`PAYMOB_${code}_TAMARA_INTEGRATION_ID`) ||
+        ""
+      );
+    case "tabby":
+      return (
+        process.env[`PAYMOB_TABBY_INTEGRATION_ID_${code}` as keyof NodeJS.ProcessEnv] ||
+        getEnvVar(`PAYMOB_TABBY_INTEGRATION_ID_${code}`) ||
+        process.env[`PAYMOB_${code}_TABBY_INTEGRATION_ID` as keyof NodeJS.ProcessEnv] ||
+        getEnvVar(`PAYMOB_${code}_TABBY_INTEGRATION_ID`) ||
+        ""
+      );
+  }
+}
+
+export function getPaymobIntegrationIdForMethod(method: PaymobPaymentMethod, currency?: string | null): number | null {
+  const normalizedCurrency = normalizeCurrencyCode(currency);
+  const configuredValue = getExplicitPaymobCurrencyIntegrationId(method, normalizedCurrency).trim();
   const configuredId = Number.parseInt(configuredValue, 10);
 
   if (Number.isFinite(configuredId) && configuredId > 0) {
     return configuredId;
   }
 
+  if (normalizedCurrency && normalizedCurrency !== "AED") {
+    return null;
+  }
+
+  const fallbackConfiguredValue = getExplicitPaymobMethodIntegrationId(method).trim();
+  const fallbackConfiguredId = Number.parseInt(fallbackConfiguredValue, 10);
+
+  if (Number.isFinite(fallbackConfiguredId) && fallbackConfiguredId > 0) {
+    return fallbackConfiguredId;
+  }
+
   return getPaymobIntegrationIds()[PAYMOB_METHOD_FALLBACK_INDEX[method]] || null;
 }
 
-export function getConfiguredPaymobPaymentMethods(): PaymobPaymentMethod[] {
+export function getConfiguredPaymobPaymentMethods(currency?: string | null): PaymobPaymentMethod[] {
   return (["card", "apple_pay", "google_pay", "tamara", "tabby"] as const).filter(
-    (method) => getPaymobIntegrationIdForMethod(method) !== null
+    (method) => getPaymobIntegrationIdForMethod(method, currency) !== null
   );
 }
 
@@ -146,5 +215,9 @@ export function isPaymobConfigured(currency?: string, marketCode?: string | null
   );
 
   if (!hasCredentials || !currency) return hasCredentials;
-  return getPaymobAllowedCurrencies(marketCode).includes(currency.trim().toUpperCase());
+  const normalizedCurrency = normalizeCurrencyCode(currency);
+  if (normalizedCurrency !== "AED") {
+    return getPaymobIntegrationIdForMethod("card", normalizedCurrency) !== null;
+  }
+  return getPaymobAllowedCurrencies(marketCode).includes(normalizedCurrency);
 }

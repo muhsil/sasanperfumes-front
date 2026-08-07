@@ -492,7 +492,8 @@ export default function CheckoutClient() {
           const fetchPaymentGateways = async () => {
             setIsLoadingGateways(true);
             try {
-              const response = await fetch(buildCheckoutApiUrl("/api/payment-gateways"));
+              const activeCurrency = cart?.currency?.currency_code || currency || marketCurrency;
+              const response = await fetch(buildCheckoutApiUrl(`/api/payment-gateways?currency=${encodeURIComponent(activeCurrency)}`));
               const data = await response.json();
               if (data.success && data.gateways) {
                 setPaymentGateways(data.gateways);

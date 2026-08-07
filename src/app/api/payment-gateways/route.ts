@@ -364,6 +364,8 @@ function getConfiguredFallbackGateways(
 export async function GET(request: NextRequest) {
   try {
     const market = await getRequestMarket(request.nextUrl.searchParams.get("market"));
+    const requestedCurrency = request.nextUrl.searchParams.get("currency")?.trim().toUpperCase() || "";
+    const activeCurrency = requestedCurrency || market.defaultCurrency;
     const cacheKey = getGatewayCacheKey(market.code);
     const cached = getCachedGateways(cacheKey);
 
@@ -380,7 +382,7 @@ export async function GET(request: NextRequest) {
     const { consumerKey, consumerSecret } = getWcCredentials(market.code);
     const allowedGatewaySet = expandPaymentGatewayIdAliases(gatewayFilters.allowed);
     const hasAllowFilter = gatewayFilters.allowed.length > 0;
-    const paymobConfigured = isPaymobConfigured(market.defaultCurrency);
+    const paymobConfigured = isPaymobConfigured(activeCurrency, market.code);
     const stripeConfigured = !paymobConfigured && isStripeConfigured();
     
     if (consumerKey && consumerSecret) {
@@ -444,7 +446,7 @@ export async function GET(request: NextRequest) {
                 gatewayFilters
               ),
               gatewayFilters,
-              market.defaultCurrency
+              activeCurrency
             ),
             gatewayFilters,
             market.code
@@ -483,7 +485,7 @@ export async function GET(request: NextRequest) {
         gatewayOverrides,
         gatewayFilters,
         market.code,
-        market.defaultCurrency
+        activeCurrency
       );
 
       if (envFallbackGateways.length > 0) {
@@ -529,7 +531,7 @@ export async function GET(request: NextRequest) {
               .map((id: string, index: number) => {
                 const normalizedId = id.toLowerCase();
                 const resolvedId =
-                  isPaymobConfigured(market.defaultCurrency) &&
+                  isPaymobConfigured(activeCurrency, market.code) &&
                   ["woocommerce_payments", "stripe", "card"].includes(normalizedId)
                     ? "paymob"
                     : id;
@@ -551,7 +553,7 @@ export async function GET(request: NextRequest) {
           gatewayFilters
         ),
         gatewayFilters,
-        market.defaultCurrency
+        activeCurrency
       ),
       gatewayFilters,
       market.code

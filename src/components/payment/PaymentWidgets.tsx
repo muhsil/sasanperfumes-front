@@ -26,7 +26,9 @@ export function PaymentWidgets({ price, currency, locale }: PaymentWidgetsProps)
     const fetchPaymentGateways = async () => {
       try {
         const market = marketPrefix.replace(/^\//, "");
-        const query = market ? `?market=${encodeURIComponent(market)}` : "";
+        const query = market
+          ? `?market=${encodeURIComponent(market)}&currency=${encodeURIComponent(currency)}`
+          : `?currency=${encodeURIComponent(currency)}`;
         const response = await fetch(`/api/payment-gateways${query}`);
         const data = await response.json();
         if (data.success && data.gateways) {
