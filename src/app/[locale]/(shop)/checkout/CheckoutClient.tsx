@@ -163,16 +163,14 @@ const MARKET_DEFAULT_COUNTRIES: Record<string, string> = {
   sa: "SA",
 };
 
-const WOO_PAYMENTS_METHODS = new Set(["woocommerce_payments", "stripe", "card", "paymob"]);
+const WOO_PAYMENTS_METHODS = new Set(["woocommerce_payments", "card", "paymob"]);
 
 const isWooPaymentsMethod = (paymentMethod: string): boolean => {
   const normalized = (paymentMethod || "").toLowerCase();
   if (WOO_PAYMENTS_METHODS.has(normalized)) return true;
   if (normalized.startsWith("paymob_")) return true;
 
-  // WooPayments method IDs can vary by version (for example: stripe_card).
   return (
-    normalized.includes("stripe") ||
     normalized.includes("woocommerce_payments") ||
     (normalized.includes("card") && !normalized.includes("check"))
   );
@@ -1377,9 +1375,15 @@ export default function CheckoutClient() {
 
       const billingEmail = billingData.email || formData.shipping.email || (isAuthenticated && user?.user_email ? user.user_email : "");
       const selectedPaymentGateway = filteredPaymentGateways.find((gateway) => gateway.id === formData.paymentMethod);
+      const selectedOrderPaymentMethod =
+        formData.paymentMethod.startsWith("paymob") ||
+        formData.paymentMethod === "card" ||
+        formData.paymentMethod === "woocommerce_payments"
+          ? "paymob"
+          : formData.paymentMethod;
 
       const orderPayload = {
-        payment_method: formData.paymentMethod.startsWith("paymob") ? "paymob" : formData.paymentMethod,
+        payment_method: selectedOrderPaymentMethod,
         payment_method_title: selectedPaymentGateway?.title || formData.paymentMethod,
         currency: checkoutCurrency,
         billing: {
@@ -1692,60 +1696,39 @@ export default function CheckoutClient() {
               } else {
                 throw new Error(tamaraData.error?.message || "Failed to initiate Tamara payment");
               }
-              } else if (isWooPayments) {
-              paymentFailureStage = normalizedPaymentMethod.startsWith("paymob") ? "paymob_session" : "stripe_session";
+            } else if (isWooPayments) {
+              paymentFailureStage = "paymob_session";
               const cardPaymentBody = {
-                  order_id: data.order_id,
-                  order_key: data.order_key,
-                  locale,
-                  market_prefix: checkoutMarketPrefix,
-                  order_total: data.order?.total,
-                  order_currency: data.order?.currency,
-                  customer_email: billingInfo.email || formData.shipping.email || data.order?.billing?.email,
+                order_id: data.order_id,
+                order_key: data.order_key,
+                locale,
+                market_prefix: checkoutMarketPrefix,
+                order_total: data.order?.total,
+                order_currency: data.order?.currency,
+                customer_email: billingInfo.email || formData.shipping.email || data.order?.billing?.email,
               };
 
-              if (normalizedPaymentMethod.startsWith("paymob")) {
-                const paymobResponse = await fetch(buildCheckoutApiUrl("/api/paymob/create-checkout-session"), {
-                  method: "POST",
-                  headers: getCheckoutApiHeaders(),
+              const paymobResponse = await fetch(buildCheckoutApiUrl("/api/paymob/create-checkout-session"), {
+                method: "POST",
+                headers: getCheckoutApiHeaders(),
                 body: JSON.stringify({
                   ...cardPaymentBody,
                   payment_method: normalizedPaymentMethod,
                 }),
               });
-                const paymobData = await paymobResponse.json();
+              const paymobData = await paymobResponse.json();
 
-                if (paymobData.success && paymobData.checkout_url) {
-                  trackPaymentFunnelEventOnce(
-                    "payment_redirect",
-                    { ...paymentAnalytics, stage: "gateway_redirect" },
-                    `redirect_${data.order_id}_${normalizedPaymentMethod}`
-                  );
-                  window.location.assign(paymobData.checkout_url);
-                  return;
-                }
-
-                throw new Error(paymobData.error?.message || "Failed to initiate Paymob card payment");
-              }
-
-              const stripeResponse = await fetch(buildCheckoutApiUrl("/api/stripe/create-checkout-session"), {
-                method: "POST",
-                headers: getCheckoutApiHeaders(),
-                body: JSON.stringify(cardPaymentBody),
-              });
-              const stripeData = await stripeResponse.json();
-
-              if (stripeData.success && stripeData.checkout_url) {
+              if (paymobData.success && paymobData.checkout_url) {
                 trackPaymentFunnelEventOnce(
                   "payment_redirect",
                   { ...paymentAnalytics, stage: "gateway_redirect" },
                   `redirect_${data.order_id}_${normalizedPaymentMethod}`
                 );
-                window.location.assign(stripeData.checkout_url);
+                window.location.assign(paymobData.checkout_url);
                 return;
               }
 
-              throw new Error(stripeData.error?.message || "Failed to initiate card payment");
+              throw new Error(paymobData.error?.message || "Failed to initiate Paymob card payment");
             } else {
               router.push(`${checkoutMarketPrefix}/${locale}/order-confirmation?order_id=${data.order_id}&order_key=${data.order_key}`);
             }
@@ -2424,7 +2407,6 @@ export default function CheckoutClient() {
                                                                     cheque: { en: "Check Payment", ar: "الدفع بشيك" },
                                                                     paypal: { en: "PayPal", ar: "باي بال" },
                                                                     woocommerce_payments: { en: "Credit Card", ar: "بطاقة ائتمان" },
-                                                                    stripe: { en: "Credit Card", ar: "بطاقة ائتمان" },
                                                                     card: { en: "Credit Card", ar: "بطاقة ائتمان" },
                                                                     paymob: { en: "Credit Card", ar: "بطاقة ائتمان" },
                                                                   };
@@ -2458,7 +2440,6 @@ export default function CheckoutClient() {
                                                                     cheque: { en: "Pay with a check", ar: "الدفع بشيك" },
                                                                     paypal: { en: "Pay securely with PayPal", ar: "ادفع بأمان مع باي بال" },
                                                                     woocommerce_payments: { en: "Pay securely with your card", ar: "ادفع بأمان ببطاقتك" },
-                                                                    stripe: { en: "Pay securely with your card", ar: "ادفع بأمان ببطاقتك" },
                                                                     card: { en: "Pay securely with your card", ar: "ادفع بأمان ببطاقتك" },
                                                                     paymob: { en: "Pay securely with your card", ar: "ادفع بأمان ببطاقتك" },
                                                                   };
@@ -2504,7 +2485,7 @@ export default function CheckoutClient() {
                                                                       />
                                                                     );
                                                                   }
-                                                                  if (id === "woocommerce_payments" || id === "stripe" || id === "card" || id === "paymob") {
+                                                                  if (id === "woocommerce_payments" || id === "card" || id === "paymob") {
                                                                     return (
                                                                       <Image
                                                                         src="/images/payment/credit-debit-card.png"

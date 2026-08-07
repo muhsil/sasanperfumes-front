@@ -253,12 +253,12 @@ function normalizeFeeLinesForNoTax(feeLines: FeeLine[]): FeeLine[] {
 
 const PAYMENT_METHOD_TITLES: Record<string, string> = {
   woocommerce_payments: "Credit/Debit Card",
+  card: "Credit/Debit Card",
   cod: "Cash on Delivery",
   bacs: "Bank Transfer",
   cheque: "Check Payment",
   paypal: "PayPal",
   paymob: "Credit/Debit Card",
-  stripe: "Credit Card",
   tabby: "Tabby - Pay in Installments",
   tabby_checkout: "Tabby - Pay in Installments",
   tabby_installments: "Tabby - Pay in Installments",
@@ -278,7 +278,7 @@ function resolvePaymentMethodTitle(paymentMethod: string, providedTitle: unknown
   if (normalizedMethod.startsWith("woocommerce_payments")) {
     return "Credit/Debit Card";
   }
-  if (normalizedMethod.startsWith("stripe")) {
+  if (normalizedMethod.startsWith("card")) {
     return "Credit/Debit Card";
   }
   if (normalizedMethod.startsWith("paymob")) {

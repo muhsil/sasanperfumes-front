@@ -90,14 +90,13 @@ interface OrderConfirmationClientProps {
   locale: string;
 }
 
-const WOO_PAYMENTS_METHODS = new Set(["woocommerce_payments", "stripe", "card", "paymob"]);
+const WOO_PAYMENTS_METHODS = new Set(["woocommerce_payments", "card", "paymob"]);
 
 function isWooPaymentsMethod(method: string): boolean {
   const normalized = (method || "").toLowerCase();
   if (WOO_PAYMENTS_METHODS.has(normalized)) return true;
 
   return (
-    normalized.includes("stripe") ||
     normalized.includes("woocommerce_payments") ||
     (normalized.includes("card") && !normalized.includes("check"))
   );
@@ -129,7 +128,6 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
   const wcOrderKey = searchParams.get("key");
   const tabbyPaymentId = searchParams.get("payment_id");
   const tamaraOrderId = searchParams.get("orderId");
-  const stripeSessionId = searchParams.get("stripe_session_id");
   const paymobTransactionId = searchParams.get("paymob") ? searchParams.get("id") : null;
   const isRTL = locale === "ar";
   const resolvedOrderId = orderId || orderReceivedId;
@@ -190,25 +188,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
       return;
     }
 
-    if (!["paymob_not_configured", "unsupported_currency"].includes(paymobData.error?.code)) {
-      throw new Error(paymobData.error?.message || "Failed to initiate Paymob card payment");
-    }
-
-    const stripeResponse = await fetch("/api/stripe/create-checkout-session", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: requestBody,
-    });
-    const stripeData = await stripeResponse.json();
-
-    if (stripeData.success && stripeData.checkout_url) {
-      window.location.href = stripeData.checkout_url;
-      return;
-    }
-
-    throw new Error(stripeData.error?.message || "Failed to initiate card payment");
+    throw new Error(paymobData.error?.message || "Failed to initiate Paymob card payment");
   }, [locale, marketPrefix]);
 
   useEffect(() => {
@@ -349,7 +329,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
 
       try {
         let verifiedPaymentStatus: "success" | "failed" | "pending" | null = null;
-        const hasExternalPayment = tabbyPaymentId || tamaraOrderId || stripeSessionId || paymobTransactionId;
+        const hasExternalPayment = tabbyPaymentId || tamaraOrderId || paymobTransactionId;
         
         if (hasExternalPayment && !paymentVerifiedRef.current) {
           paymentVerifiedRef.current = true;
@@ -362,11 +342,6 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
               verifyUrl = `/api/tabby/verify-payment?payment_id=${tabbyPaymentId}`;
             } else if (tamaraOrderId) {
               verifyUrl = `/api/tamara/verify-payment?order_id=${tamaraOrderId}`;
-            } else if (stripeSessionId) {
-              verifyUrl =
-                `/api/stripe/verify-session?session_id=${encodeURIComponent(stripeSessionId)}` +
-                `&order_id=${encodeURIComponent(resolvedOrderId)}` +
-                `&order_key=${encodeURIComponent(orderKey || wcOrderKey || "")}`;
             } else if (paymobTransactionId && typeof window !== "undefined") {
               const paymobParams = new URLSearchParams(window.location.search);
               paymobParams.set("order_id", resolvedOrderId);
@@ -458,7 +433,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
           isExternalPaymentMethod(paymentMethod) ||
           isLikelyCardPayment(paymentMethod, paymentMethodTitle);
 
-        const hasExternalPaymentParams = tabbyPaymentId || tamaraOrderId || stripeSessionId || paymobTransactionId;
+        const hasExternalPaymentParams = tabbyPaymentId || tamaraOrderId || paymobTransactionId;
 
         if (
           isLikelyCardPayment(paymentMethod, paymentMethodTitle) &&
@@ -466,9 +441,9 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
           !hasExternalPaymentParams &&
           typeof window !== "undefined"
         ) {
-          const alreadyRedirectedToStripe = window.sessionStorage.getItem(`${gatewayRedirectKey}_stripe`);
-          if (!alreadyRedirectedToStripe) {
-            window.sessionStorage.setItem(`${gatewayRedirectKey}_stripe`, "1");
+          const alreadyRedirected = window.sessionStorage.getItem(`${gatewayRedirectKey}_paymob`);
+          if (!alreadyRedirected) {
+            window.sessionStorage.setItem(`${gatewayRedirectKey}_paymob`, "1");
             await startCardCheckout(fetchedOrder);
             return;
           }
@@ -498,7 +473,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
         } else if (fetchedOrder?.order_key && typeof window !== "undefined") {
           window.sessionStorage.removeItem(`${gatewayRedirectKey}_orderpay`);
           window.sessionStorage.removeItem(gatewayRedirectKey);
-          window.sessionStorage.removeItem(`${gatewayRedirectKey}_stripe`);
+          window.sessionStorage.removeItem(`${gatewayRedirectKey}_paymob`);
         }
 
         const isFailedOrder = fetchedStatus === "failed" || fetchedStatus === "cancelled";
@@ -608,7 +583,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
     };
 
     verifyPaymentAndFetchOrder();
-    }, [resolvedOrderId, orderKey, wcOrderKey, tabbyPaymentId, tamaraOrderId, stripeSessionId, paymobTransactionId, clearCart, paymentStatus, startCardCheckout]);
+    }, [resolvedOrderId, orderKey, wcOrderKey, tabbyPaymentId, tamaraOrderId, paymobTransactionId, clearCart, paymentStatus, startCardCheckout]);
 
   if (loading) {
     return (

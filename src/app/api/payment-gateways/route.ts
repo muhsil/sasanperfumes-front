@@ -10,7 +10,6 @@ import {
 } from "@/lib/utils/backendFetch";
 import { getRequestMarket } from "@/lib/market/server";
 import { getConfiguredPaymobPaymentMethods, isPaymobConfigured } from "@/lib/paymob/config";
-import { isStripeConfigured } from "@/lib/stripe/config";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -90,10 +89,6 @@ const PAYMENT_METHOD_DETAILS: Record<string, { title: string; description: strin
     title: "Credit/Debit Card",
     description: "Pay securely with your card",
   },
-  stripe: {
-    title: "Credit/Debit Card",
-    description: "Pay securely with your card",
-  },
   paymob: {
     title: "Credit/Debit Card",
     description: "Pay securely with your card via Paymob",
@@ -144,6 +139,14 @@ interface PaymentGatewayResponseItem {
   enabled: boolean;
 }
 
+function normalizeConfiguredGatewayId(id: string): string {
+  const normalized = id.toLowerCase();
+  if (normalized === "stripe" || normalized === "woocommerce_payments" || normalized === "card") {
+    return "paymob";
+  }
+  return id;
+}
+
 function expandPaymentGatewayIdAliases(ids: string[]): Set<string> {
   const normalized = new Set(ids.map((id) => id.toLowerCase()));
 
@@ -154,7 +157,6 @@ function expandPaymentGatewayIdAliases(ids: string[]): Set<string> {
     normalized.has("card")
   ) {
     normalized.add("paymob");
-    normalized.add("stripe");
     normalized.add("woocommerce_payments");
     normalized.add("card");
     normalized.add("paymob_tabby");
@@ -163,6 +165,7 @@ function expandPaymentGatewayIdAliases(ids: string[]): Set<string> {
     normalized.add("paymob_google_pay");
   }
 
+  normalized.delete("stripe");
   return normalized;
 }
 
@@ -210,16 +213,18 @@ function mergeGatewayOverrides(
   for (const override of overrides) {
     if (!override.id) continue;
 
+    const gatewayId = normalizeConfiguredGatewayId(override.id);
+
     if (override.enabled === false) {
-      gatewayMap.delete(override.id);
+      gatewayMap.delete(gatewayId);
       continue;
     }
 
-    const existing = gatewayMap.get(override.id);
-    const fallbackTitle = override.title || existing?.title || override.id;
+    const existing = gatewayMap.get(gatewayId);
+    const fallbackTitle = override.title || existing?.title || gatewayId;
 
-    gatewayMap.set(override.id, {
-      id: override.id,
+    gatewayMap.set(gatewayId, {
+      id: gatewayId,
       title: fallbackTitle,
       description: override.description ?? existing?.description ?? "",
       method_title: override.title || existing?.method_title || fallbackTitle,
@@ -234,13 +239,10 @@ function mergeGatewayOverrides(
 function addConfiguredCardGateway(
   gateways: PaymentGatewayResponseItem[],
   filters: { allowed: string[]; blocked: string[] },
-  currency: string
+  currency: string,
+  marketCode?: string | null
 ): PaymentGatewayResponseItem[] {
-  const gatewayId = isPaymobConfigured(currency)
-    ? "paymob"
-    : isStripeConfigured()
-      ? "stripe"
-      : "";
+  const gatewayId = isPaymobConfigured(currency, marketCode) ? "paymob" : "";
 
   if (!gatewayId) {
     return gateways;
@@ -260,10 +262,7 @@ function addConfiguredCardGateway(
     return gateways;
   }
 
-  const hasCardGateway = gateways.some((gateway) => {
-    const id = gateway.id.toLowerCase();
-    return id === "paymob" || id === "stripe" || id === "woocommerce_payments" || id === "card";
-  });
+  const hasCardGateway = gateways.some((gateway) => normalizeConfiguredGatewayId(gateway.id) === "paymob");
 
   const configuredGateways = [...gateways];
   if (!hasCardGateway) {
@@ -354,7 +353,8 @@ function getConfiguredFallbackGateways(
         gatewayFilters
       ),
       gatewayFilters,
-      currency
+      currency,
+      marketCode
     ),
     gatewayFilters,
     marketCode
@@ -383,7 +383,6 @@ export async function GET(request: NextRequest) {
     const allowedGatewaySet = expandPaymentGatewayIdAliases(gatewayFilters.allowed);
     const hasAllowFilter = gatewayFilters.allowed.length > 0;
     const paymobConfigured = isPaymobConfigured(activeCurrency, market.code);
-    const stripeConfigured = !paymobConfigured && isStripeConfigured();
     
     if (consumerKey && consumerSecret) {
       const url = `${apiBase}/payment_gateways?${getBasicAuthParams(market.code)}`;
@@ -403,31 +402,21 @@ export async function GET(request: NextRequest) {
         const data = await safeJsonResponse(response);
 
         if (isGatewayArray(data)) {
-        const enabledGateways: PaymentGatewayResponseItem[] = data
+          const enabledGateways: PaymentGatewayResponseItem[] = data
             .filter((gateway) => {
-              const gatewayId = gateway.id.toLowerCase();
-              if (
-                (gatewayId === "woocommerce_payments" || gatewayId === "stripe" || gatewayId === "card") &&
-                !paymobConfigured &&
-                !stripeConfigured
-              ) {
+              const gatewayId = normalizeConfiguredGatewayId(gateway.id);
+              if (gatewayId === "paymob" && !paymobConfigured) {
                 return false;
               }
 
               if (gateway.enabled) {
-                return isPaymentGatewayAllowed(gateway.id, allowedGatewaySet, hasAllowFilter);
+                return isPaymentGatewayAllowed(gatewayId, allowedGatewaySet, hasAllowFilter);
               }
               return false;
             })
             .sort((a, b) => a.order - b.order)
             .map((gateway) => {
-              const rawGatewayId = gateway.id.toLowerCase();
-              const gatewayId =
-                paymobConfigured && (rawGatewayId === "woocommerce_payments" || rawGatewayId === "stripe" || rawGatewayId === "card")
-                  ? "paymob"
-                  : stripeConfigured && (rawGatewayId === "woocommerce_payments" || rawGatewayId === "stripe" || rawGatewayId === "card")
-                    ? "stripe"
-                  : gateway.id;
+              const gatewayId = normalizeConfiguredGatewayId(gateway.id);
               const details = PAYMENT_METHOD_DETAILS[gatewayId];
               return {
                 id: gatewayId,
@@ -446,7 +435,8 @@ export async function GET(request: NextRequest) {
                 gatewayFilters
               ),
               gatewayFilters,
-              activeCurrency
+              activeCurrency,
+              market.code
             ),
             gatewayFilters,
             market.code
@@ -526,15 +516,14 @@ export async function GET(request: NextRequest) {
       addConfiguredCardGateway(
         applyPaymentGatewayFilters(
           mergeGatewayOverrides(
-            fallbackPaymentMethodIds
+              fallbackPaymentMethodIds
               .filter((id: string) => !excludedFromFallback.includes(id))
               .map((id: string, index: number) => {
-                const normalizedId = id.toLowerCase();
-                const resolvedId =
-                  isPaymobConfigured(activeCurrency, market.code) &&
-                  ["woocommerce_payments", "stripe", "card"].includes(normalizedId)
-                    ? "paymob"
-                    : id;
+                const resolvedId = normalizeConfiguredGatewayId(id);
+                if (resolvedId === "paymob" && !isPaymobConfigured(activeCurrency, market.code)) {
+                  return null;
+                }
+
                 const details = PAYMENT_METHOD_DETAILS[resolvedId] || {
                   title: resolvedId.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
                   description: "",
@@ -547,13 +536,15 @@ export async function GET(request: NextRequest) {
                   order: index,
                   enabled: true, // Assumed enabled since it's in the cart response
                 };
-              }),
+              })
+              .filter((item): item is PaymentGatewayResponseItem => Boolean(item)),
             gatewayOverrides
           ),
           gatewayFilters
         ),
         gatewayFilters,
-        activeCurrency
+        activeCurrency,
+        market.code
       ),
       gatewayFilters,
       market.code

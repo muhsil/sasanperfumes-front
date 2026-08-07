@@ -32,7 +32,9 @@ export function getPaymentProvider(paymentMethod: string): string {
   if (method.includes("paymob")) return "paymob";
   if (method.includes("tabby")) return "tabby";
   if (method.includes("tamara")) return "tamara";
-  if (method.includes("stripe") || method.includes("woocommerce_payments")) return "stripe";
+  if (method.includes("stripe") || method.includes("woocommerce_payments") || method === "card" || method.endsWith("_card")) {
+    return "paymob";
+  }
   if (method === "cod") return "cod";
   return method;
 }

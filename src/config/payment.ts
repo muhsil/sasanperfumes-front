@@ -191,7 +191,7 @@ export function getPaymentGatewayFilters(marketCode?: string | null): PaymentGat
     ? envAllowed
     : intl
       ? ["paymob", "cod"]
-      : ["paymob", "stripe", "woocommerce_payments", "card"];
+      : ["paymob", "woocommerce_payments", "card"];
 
   // COD must always be in the allowed list for intl market (UAE only)
   // even when env vars override the default allowlist
