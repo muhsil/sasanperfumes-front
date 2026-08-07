@@ -15,6 +15,24 @@ function getBasicAuthParams(marketCode?: string): string {
   return `consumer_key=${consumerKey}&consumer_secret=${consumerSecret}`;
 }
 
+const COUNTRY_TO_MARKET: Record<string, string> = {
+  QA: "qa",
+  OM: "om",
+  SA: "sa",
+};
+
+function normalizeOrderCountryCode(value: unknown): string {
+  return typeof value === "string" ? value.trim().toUpperCase() : "";
+}
+
+function inferMarketFromOrderBody(body: Record<string, unknown>): string {
+  const shipping = (body.shipping as Record<string, unknown> | undefined) || {};
+  const billing = (body.billing as Record<string, unknown> | undefined) || {};
+  const shippingCountry = normalizeOrderCountryCode(shipping.country || shipping.country_code);
+  const billingCountry = normalizeOrderCountryCode(billing.country || billing.country_code);
+  return COUNTRY_TO_MARKET[shippingCountry] || COUNTRY_TO_MARKET[billingCountry] || "";
+}
+
 
 const MARKET_CODES = new Set(["qa", "om", "sa"]);
 const BACKEND_ORIGIN = (() => {
@@ -472,8 +490,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const market = await getRequestMarket(request.nextUrl.searchParams.get("market"));
     const body = await request.json();
+    const marketHint = inferMarketFromOrderBody(body) || request.nextUrl.searchParams.get("market");
+    const market = await getRequestMarket(marketHint);
     const paymentMethod =
       typeof body.payment_method === "string" && body.payment_method.trim()
         ? body.payment_method.trim()

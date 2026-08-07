@@ -120,6 +120,30 @@ const CURRENCY_TO_COUNTRY: Record<string, string> = {
   USD: "US",
 };
 
+const COUNTRY_TO_MARKET: Record<string, string> = {
+  QA: "qa",
+  OM: "om",
+  SA: "sa",
+};
+
+const COUNTRY_TO_CURRENCY: Record<string, string> = {
+  AE: "AED",
+  QA: "QAR",
+  OM: "OMR",
+  SA: "SAR",
+  US: "USD",
+};
+
+const CURRENCY_MINOR_UNITS: Record<string, number> = {
+  AED: 2,
+  BHD: 3,
+  KWD: 3,
+  OMR: 3,
+  QAR: 2,
+  SAR: 2,
+  USD: 2,
+};
+
 const PAYMENT_METHOD_COUNTRY_AVAILABILITY: Record<string, PaymentMethodCountryAvailability> = {
   tabby_installments: { type: "include", countries: ["AE"] },
   tabby_checkout: { type: "include", countries: ["AE"] },
@@ -270,7 +294,7 @@ export default function CheckoutClient() {
         const { cart, cartItems, cartSubtotal, cartTotal, clearCart, removeCoupon, selectedCoupons, couponDiscount, clearSelectedCoupons, isLoading: isCartLoading } = useCart();
         const { rules: discountRules } = useDiscountRules();
         const { isAuthenticated, user, isLoading: isAuthLoading } = useAuth();
-        const { currency, convertPrice, getCurrencyInfo } = useCurrency();
+        const { currency, convertPrice, getCurrencyInfo, setCurrency } = useCurrency();
     // For variable products, use parent_id for brand/category lookup
     const getParentId = (item: CoCartItem): number => {
       const pid = item.meta?.variation?.Parent_id || item.meta?.variation?.parent_id;
@@ -326,32 +350,6 @@ export default function CheckoutClient() {
 
   const [addressErrors, setAddressErrors] = useState<{ shippingAddress?: string; shippingCity?: string; billingAddress?: string; billingCity?: string }>({});
 
-  const buildCheckoutApiUrl = useCallback((path: string, params: Record<string, string> = {}) => {
-    const searchParams = new URLSearchParams(params);
-    if (marketCode) {
-      searchParams.set("market", marketCode);
-    }
-    const query = searchParams.toString();
-    return query ? `${path}?${query}` : path;
-  }, [marketCode]);
-
-  const getCheckoutApiHeaders = useCallback((extra: HeadersInit = {}): HeadersInit => {
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      ...(extra as Record<string, string>),
-    };
-    if (typeof window !== "undefined") {
-      const host = window.location.hostname.replace(/^www\./, "");
-      if (host) {
-        headers["X-Frontend-Host"] = marketCode ? `${host}/${marketCode}` : host;
-      }
-    }
-    if (marketCode) {
-      headers["X-Market"] = marketCode;
-    }
-    return headers;
-  }, [marketCode]);
-  
   const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
   const divisor = Math.pow(10, currencyMinorUnit);
   const selectedShippingRateDetails = useMemo(() => {
@@ -384,6 +382,38 @@ export default function CheckoutClient() {
     paymentMethod: "paymob",
     orderNotes: "",
   });
+
+  const shippingCountryCode = (formData.shipping.country || "").trim().toUpperCase();
+  const checkoutMarketCode = COUNTRY_TO_MARKET[shippingCountryCode] || marketCode;
+  const checkoutCurrency = COUNTRY_TO_CURRENCY[shippingCountryCode] || currency || marketCurrency;
+  const checkoutMarketPrefix = checkoutMarketCode === marketCode ? marketPrefix : `/${checkoutMarketCode}`;
+  const checkoutCurrencyMinorUnit = CURRENCY_MINOR_UNITS[checkoutCurrency] ?? getCurrencyInfo().decimals;
+
+  const buildCheckoutApiUrl = useCallback((path: string, params: Record<string, string> = {}) => {
+    const searchParams = new URLSearchParams(params);
+    if (checkoutMarketCode) {
+      searchParams.set("market", checkoutMarketCode);
+    }
+    const query = searchParams.toString();
+    return query ? `${path}?${query}` : path;
+  }, [checkoutMarketCode]);
+
+  const getCheckoutApiHeaders = useCallback((extra: HeadersInit = {}): HeadersInit => {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      ...(extra as Record<string, string>),
+    };
+    if (typeof window !== "undefined") {
+      const host = window.location.hostname.replace(/^www\./, "");
+      if (host) {
+        headers["X-Frontend-Host"] = checkoutMarketCode ? `${host}/${checkoutMarketCode}` : host;
+      }
+    }
+    if (checkoutMarketCode) {
+      headers["X-Market"] = checkoutMarketCode;
+    }
+    return headers;
+  }, [checkoutMarketCode]);
 
   useEffect(() => {
     // Wallet APIs are browser-only, so detect them after hydration.
@@ -492,7 +522,7 @@ export default function CheckoutClient() {
           const fetchPaymentGateways = async () => {
             setIsLoadingGateways(true);
             try {
-              const activeCurrency = cart?.currency?.currency_code || currency || marketCurrency;
+              const activeCurrency = cart?.currency?.currency_code || checkoutCurrency;
               const response = await fetch(buildCheckoutApiUrl(`/api/payment-gateways?currency=${encodeURIComponent(activeCurrency)}`));
               const data = await response.json();
               if (data.success && data.gateways) {
@@ -508,7 +538,7 @@ export default function CheckoutClient() {
             }
           };
                   fetchPaymentGateways();
-                }, [marketPrefix]);
+                }, [buildCheckoutApiUrl, checkoutCurrency]);
 
         useEffect(() => {
           const fetchShippingCountries = async () => {
@@ -529,7 +559,7 @@ export default function CheckoutClient() {
             }
           };
           fetchShippingCountries();
-        }, []);
+        }, [buildCheckoutApiUrl]);
 
         useEffect(() => {
           if (!currency) return;
@@ -546,6 +576,14 @@ export default function CheckoutClient() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [currency]);
 
+        useEffect(() => {
+          const mappedCurrency = COUNTRY_TO_CURRENCY[shippingCountryCode];
+          if (mappedCurrency && mappedCurrency !== currency) {
+            setCurrency(mappedCurrency);
+          }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, [shippingCountryCode, currency, setCurrency]);
+
         const filteredPaymentGateways = paymentGateways.filter(
           (gateway) =>
             isPaymentMethodAvailableForCountry(gateway.id, formData.shipping.country, apiCountryAvailability) &&
@@ -559,9 +597,9 @@ export default function CheckoutClient() {
               isPaymentMethodAvailableForDevice(gateway.id, deviceWalletCapabilities)
           );
           if (available.length > 0) {
-            const currentMethodAvailable = available.some(
-              (gateway) => gateway.id === formData.paymentMethod
-            );
+              const currentMethodAvailable = available.some(
+                (gateway) => gateway.id === formData.paymentMethod
+              );
             if (!currentMethodAvailable) {
               // Keep the selected method valid for the newly selected country.
               // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -619,7 +657,7 @@ export default function CheckoutClient() {
           };
           
           verifyFailedPayment();
-        }, [searchParams, isRTL]);
+        }, [searchParams, isRTL, buildCheckoutApiUrl]);
 
 // Grace period: allow cart data (including localStorage seed) to resolve
         // before treating the cart as truly empty. Prevents false redirects when
@@ -683,7 +721,7 @@ export default function CheckoutClient() {
               postcode: postcode || "",
               cart_subtotal: String(subtotal),
               cart_weight: String(weight),
-              currency_code: currency || marketCurrency,
+              currency_code: checkoutCurrency,
             });
             const response = await fetch(buildCheckoutApiUrl("/api/shipping", Object.fromEntries(params.entries())));
             const data = await response.json();
@@ -763,7 +801,7 @@ export default function CheckoutClient() {
 
               if (shippingInfoTrackedRef.current !== shippingInfoKey && selectedRate) {
                 trackAnalyticsEvent("add_shipping_info", {
-                  currency: currency || marketCurrency,
+                  currency: checkoutCurrency,
                   value: parseFloat(data.totals?.shipping_total || shippingTotal || "0") / Math.pow(10, selectedRate.currency_minor_unit || shippingCurrencyMinorUnit),
                   shipping_tier: selectedRate.name || rateId,
                   items: checkoutAnalyticsItems,
@@ -860,6 +898,12 @@ export default function CheckoutClient() {
       shipping: { ...prev.shipping, [field]: value },
       billing: prev.sameAsShipping ? { ...prev.shipping, [field]: value } : prev.billing,
     }));
+    if (field === "country") {
+      const mappedCurrency = COUNTRY_TO_CURRENCY[value.trim().toUpperCase()];
+      if (mappedCurrency && mappedCurrency !== currency) {
+        setCurrency(mappedCurrency);
+      }
+    }
     setError(null);
     if (field === "address" && addressErrors.shippingAddress) {
       setAddressErrors((prev) => ({ ...prev, shippingAddress: undefined }));
@@ -898,8 +942,8 @@ export default function CheckoutClient() {
       paymentMethod: value,
       provider: getPaymentProvider(value),
       value: checkoutTotal,
-      currency: currency || marketCurrency,
-      market: marketCode || "ae",
+      currency: checkoutCurrency,
+      market: checkoutMarketCode || marketCode || "ae",
       stage: "checkout",
     });
     setFormData((prev) => ({ ...prev, paymentMethod: value }));
@@ -953,7 +997,7 @@ export default function CheckoutClient() {
     } finally {
       setIsCheckingEmail(false);
     }
-  }, [isAuthenticated, createAccount]);
+  }, [isAuthenticated, createAccount, buildCheckoutApiUrl]);
 
   // Debounced email check when email changes
   useEffect(() => {
@@ -993,7 +1037,7 @@ export default function CheckoutClient() {
           omnisendTrackStartedCheckout({
             lineItems,
             value: cartValue,
-            currency: cart.currency?.currency_code || currency || marketCurrency,
+            currency: checkoutCurrency,
             cartID: cart.cart_key || "",
             email,
           });
@@ -1002,13 +1046,13 @@ export default function CheckoutClient() {
           fbTrackInitiateCheckout({
             contentIds: cartItems.map((ci: CoCartItem) => String(ci.id)),
             value: cartValue,
-            currency: cart.currency?.currency_code || currency || marketCurrency,
+            currency: checkoutCurrency,
             numItems: cartItems.reduce((sum: number, ci: CoCartItem) => sum + ci.quantity.value, 0),
           });
 
           trackAnalyticsEvent("begin_checkout", {
             value: cartValue,
-            currency: cart.currency?.currency_code || currency || marketCurrency,
+            currency: checkoutCurrency,
             item_count: cartItems.length,
             total_quantity: cartItems.reduce((sum: number, ci: CoCartItem) => sum + ci.quantity.value, 0),
             items: cartItems
@@ -1038,6 +1082,7 @@ export default function CheckoutClient() {
   const handleSelectSavedAddress = (address: SavedAddress) => {
     setSelectedAddressId(address.id);
     setShowAddressSelector(false);
+    const resolvedCountry = resolveCountryCode(address.country);
     
     const addressFormData: AddressFormData = {
       firstName: address.first_name || "",
@@ -1047,10 +1092,17 @@ export default function CheckoutClient() {
       city: address.city || "",
       state: address.state || "",
       postalCode: address.postcode || "",
-      country: resolveCountryCode(address.country),
+      country: resolvedCountry,
       phone: address.phone || "",
       email: address.email || customerData?.email || "",
     };
+
+    if (resolvedCountry) {
+      const mappedCurrency = COUNTRY_TO_CURRENCY[resolvedCountry];
+      if (mappedCurrency && mappedCurrency !== currency) {
+        setCurrency(mappedCurrency);
+      }
+    }
     
     setFormData(prev => ({
       ...prev,
@@ -1224,8 +1276,8 @@ export default function CheckoutClient() {
           const quantity = item.quantity?.value || 1;
           const lineItemTotal = correctBundleTotal * quantity;
           
-          lineItem.subtotal = lineItemTotal.toFixed(getCurrencyInfo().decimals);
-          lineItem.total = lineItemTotal.toFixed(getCurrencyInfo().decimals);
+          lineItem.subtotal = lineItemTotal.toFixed(checkoutCurrencyMinorUnit);
+          lineItem.total = lineItemTotal.toFixed(checkoutCurrencyMinorUnit);
           
           const metaData: Array<{ key: string; value: string }> = [];
           
@@ -1299,8 +1351,8 @@ export default function CheckoutClient() {
           const unitPrice = convertPrice(parseFloat(item.price) / divisor);
           const qty = item.quantity?.value || 1;
           const lineTotal = unitPrice * qty;
-          lineItem.subtotal = lineTotal.toFixed(getCurrencyInfo().decimals);
-          lineItem.total = lineTotal.toFixed(getCurrencyInfo().decimals);
+          lineItem.subtotal = lineTotal.toFixed(checkoutCurrencyMinorUnit);
+          lineItem.total = lineTotal.toFixed(checkoutCurrencyMinorUnit);
         }
 
         return lineItem;
@@ -1318,7 +1370,7 @@ export default function CheckoutClient() {
           shippingLines.push({
             method_id: selectedRate.method_id,
             method_title: selectedRate.name,
-            total: ((parseFloat(shippingTotal) || 0) / shippingDivisor).toFixed(getCurrencyInfo().decimals),
+            total: ((parseFloat(shippingTotal) || 0) / shippingDivisor).toFixed(checkoutCurrencyMinorUnit),
           });
         }
       }
@@ -1329,7 +1381,7 @@ export default function CheckoutClient() {
       const orderPayload = {
         payment_method: formData.paymentMethod.startsWith("paymob") ? "paymob" : formData.paymentMethod,
         payment_method_title: selectedPaymentGateway?.title || formData.paymentMethod,
-        currency: currency || marketCurrency,
+        currency: checkoutCurrency,
         billing: {
           first_name: billingData.firstName,
           last_name: billingData.lastName,
@@ -1365,7 +1417,7 @@ export default function CheckoutClient() {
               .forEach(fee => {
                 feeLines.push({
                   name: fee.name,
-                  total: convertPrice(parseFloat(fee.fee) / divisor).toFixed(getCurrencyInfo().decimals),
+                  total: convertPrice(parseFloat(fee.fee) / divisor).toFixed(checkoutCurrencyMinorUnit),
                 });
               });
           }
@@ -1374,21 +1426,21 @@ export default function CheckoutClient() {
             if (discountAmount > 0) {
               feeLines.push({
                 name: discount.label,
-                total: (-discountAmount).toFixed(getCurrencyInfo().decimals),
+                total: (-discountAmount).toFixed(checkoutCurrencyMinorUnit),
               });
             }
           });
           if (bnplConvenienceFee > 0) {
             feeLines.push({
               name: "BNPL Convenience Fee (7%)",
-              total: convertPrice(bnplConvenienceFee / divisor).toFixed(getCurrencyInfo().decimals),
+              total: convertPrice(bnplConvenienceFee / divisor).toFixed(checkoutCurrencyMinorUnit),
             });
           }
           // Add client-side customs fee, or server-side customs fees if no client-side
           if (customsFee) {
             feeLines.push({
               name: customsFee.name,
-              total: convertPrice(parseFloat(customsFee.fee) / divisor).toFixed(getCurrencyInfo().decimals),
+              total: convertPrice(parseFloat(customsFee.fee) / divisor).toFixed(checkoutCurrencyMinorUnit),
             });
           } else if (Array.isArray(cart?.fees) && cart.fees.length > 0) {
             cart.fees
@@ -1396,7 +1448,7 @@ export default function CheckoutClient() {
               .forEach(fee => {
                 feeLines.push({
                   name: fee.name,
-                  total: convertPrice(parseFloat(fee.fee) / divisor).toFixed(getCurrencyInfo().decimals),
+                  total: convertPrice(parseFloat(fee.fee) / divisor).toFixed(checkoutCurrencyMinorUnit),
                 });
               });
           }
@@ -1422,7 +1474,7 @@ export default function CheckoutClient() {
 
       if (!paymentInfoTrackedRef.current) {
         trackAnalyticsEvent("add_payment_info", {
-          currency: currency || marketCurrency,
+          currency: checkoutCurrency,
           value: checkoutTotal,
           payment_type: selectedPaymentGateway?.title || formData.paymentMethod,
           items: checkoutAnalyticsItems,
@@ -1505,7 +1557,7 @@ export default function CheckoutClient() {
             // This ensures the payment gateway receives the exact amount calculated by the backend
             // and avoids any potential mismatch between frontend and backend calculations
             const orderTotal = parseFloat(data.order?.total) || 0;
-            const paymentCurrencyDecimals = getCurrencyInfo().decimals;
+            const paymentCurrencyDecimals = checkoutCurrencyMinorUnit;
             
             // Calculate frontend amount for comparison/logging purposes
             const frontendPaymentAmount = checkoutTotal;
@@ -1516,8 +1568,8 @@ export default function CheckoutClient() {
               paymentMethod: normalizedPaymentMethod,
               provider: getPaymentProvider(normalizedPaymentMethod),
               value: paymentAmount,
-              currency: data.order?.currency || currency || marketCurrency,
-              market: marketCode || "ae",
+              currency: data.order?.currency || checkoutCurrency,
+              market: checkoutMarketCode || marketCode || "ae",
               orderId: data.order_id,
             };
             
@@ -1543,7 +1595,7 @@ export default function CheckoutClient() {
                   order_id: data.order_id,
                   order_key: data.order_key,
                   amount: paymentAmount,
-                  currency: data.order?.currency || currency || marketCurrency,
+                  currency: data.order?.currency || checkoutCurrency,
                   country_code: formData.shipping.country,
                   description: `Order #${data.order_id}`,
                   buyer: {
@@ -1563,9 +1615,9 @@ export default function CheckoutClient() {
                     category: "General",
                   })),
                   language: locale === "ar" ? "ar" : "en",
-                  success_url: `${baseUrl}/${locale}/order-confirmation`,
-                  cancel_url: `${baseUrl}/${locale}/order-confirmation`,
-                  failure_url: `${baseUrl}/${locale}/order-confirmation`,
+                  success_url: `${baseUrl}${checkoutMarketPrefix}/${locale}/order-confirmation`,
+                  cancel_url: `${baseUrl}${checkoutMarketPrefix}/${locale}/order-confirmation`,
+                  failure_url: `${baseUrl}${checkoutMarketPrefix}/${locale}/order-confirmation`,
                 }),
               });
 
@@ -1591,7 +1643,7 @@ export default function CheckoutClient() {
                   order_id: data.order_id,
                   order_key: data.order_key,
                   total_amount: paymentAmount,
-                  currency: data.order?.currency || currency || marketCurrency,
+                  currency: data.order?.currency || checkoutCurrency,
                   country_code: formData.shipping.country || "AE",
                   locale: locale === "ar" ? "ar_SA" : "en_US",
                   consumer: {
@@ -1622,9 +1674,9 @@ export default function CheckoutClient() {
                     unit_price: parseFloat(item.totals.subtotal) / item.quantity.value / divisor,
                     sku: item.id?.toString() || "",
                   })),
-                  success_url: `${baseUrl}/${locale}/order-confirmation`,
-                  failure_url: `${baseUrl}/${locale}/order-confirmation`,
-                  cancel_url: `${baseUrl}/${locale}/order-confirmation`,
+                  success_url: `${baseUrl}${checkoutMarketPrefix}/${locale}/order-confirmation`,
+                  failure_url: `${baseUrl}${checkoutMarketPrefix}/${locale}/order-confirmation`,
+                  cancel_url: `${baseUrl}${checkoutMarketPrefix}/${locale}/order-confirmation`,
                 }),
               });
 
@@ -1646,7 +1698,7 @@ export default function CheckoutClient() {
                   order_id: data.order_id,
                   order_key: data.order_key,
                   locale,
-                  market_prefix: marketPrefix,
+                  market_prefix: checkoutMarketPrefix,
                   order_total: data.order?.total,
                   order_currency: data.order?.currency,
                   customer_email: billingInfo.email || formData.shipping.email || data.order?.billing?.email,
@@ -1656,11 +1708,11 @@ export default function CheckoutClient() {
                 const paymobResponse = await fetch(buildCheckoutApiUrl("/api/paymob/create-checkout-session"), {
                   method: "POST",
                   headers: getCheckoutApiHeaders(),
-                  body: JSON.stringify({
-                    ...cardPaymentBody,
-                    payment_method: normalizedPaymentMethod,
-                  }),
-                });
+                body: JSON.stringify({
+                  ...cardPaymentBody,
+                  payment_method: normalizedPaymentMethod,
+                }),
+              });
                 const paymobData = await paymobResponse.json();
 
                 if (paymobData.success && paymobData.checkout_url) {
@@ -1695,7 +1747,7 @@ export default function CheckoutClient() {
 
               throw new Error(stripeData.error?.message || "Failed to initiate card payment");
             } else {
-              router.push(`${marketPrefix}/${locale}/order-confirmation?order_id=${data.order_id}&order_key=${data.order_key}`);
+              router.push(`${checkoutMarketPrefix}/${locale}/order-confirmation?order_id=${data.order_id}&order_key=${data.order_key}`);
             }
     } catch (err) {
       trackPaymentFunnelEventOnce(
@@ -1704,8 +1756,8 @@ export default function CheckoutClient() {
           paymentMethod: formData.paymentMethod,
           provider: getPaymentProvider(formData.paymentMethod),
           value: checkoutTotal,
-          currency: currency || marketCurrency,
-          market: marketCode || "ae",
+          currency: checkoutCurrency,
+          market: checkoutMarketCode || marketCode || "ae",
           orderId: createdOrderId,
           stage: paymentFailureStage,
         },

@@ -14,7 +14,6 @@ const COUNTRY_TO_MARKET: Record<string, string> = {
   SA: "sa",
   QA: "qa",
 };
-const GEO_REDIRECT_COOKIE = "sp_geo_redirected";
 
 const BLOCKED_PATHS = [
   "/wp-admin",
@@ -343,7 +342,9 @@ export function proxy(request: NextRequest) {
     return addSecurityHeaders(NextResponse.next());
   }
 
-  // Geo-redirect: visitors from OM/SA/QA on the intl site → their market URL
+  // Geo-redirect: visitors from OM/SA/QA on the intl site → their market URL.
+  // This is intentionally forced so those visitors always land on the
+  // matching market instead of seeing the intl site first.
   if (!routeMarket && !pathname.startsWith("/api")) {
     const country = (
       request.headers.get("cf-ipcountry") ||
@@ -351,17 +352,11 @@ export function proxy(request: NextRequest) {
       ""
     ).toUpperCase();
     const targetMarket = COUNTRY_TO_MARKET[country];
-    if (targetMarket && !request.cookies.get(GEO_REDIRECT_COOKIE)) {
+    if (targetMarket) {
       const locale = routeLocale || getLocale(request);
       const rest = routeLocale ? segments.slice(1) : segments;
       const redirectPath = `/${targetMarket}/${locale}${rest.length ? `/${rest.join("/")}` : ""}`;
-      const response = addSecurityHeaders(redirectToPath(request, redirectPath, 302));
-      response.cookies.set(GEO_REDIRECT_COOKIE, "1", {
-        maxAge: 60 * 60 * 24, // 24 hours
-        path: "/",
-        sameSite: "lax",
-      });
-      return response;
+      return addSecurityHeaders(redirectToPath(request, redirectPath, 302));
     }
   }
 
