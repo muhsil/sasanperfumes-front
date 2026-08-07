@@ -520,7 +520,7 @@ export default function CheckoutClient() {
           const fetchPaymentGateways = async () => {
             setIsLoadingGateways(true);
             try {
-              const activeCurrency = cart?.currency?.currency_code || checkoutCurrency;
+              const activeCurrency = checkoutCurrency;
               const response = await fetch(buildCheckoutApiUrl(`/api/payment-gateways?currency=${encodeURIComponent(activeCurrency)}`));
               const data = await response.json();
               if (data.success && data.gateways) {
@@ -558,21 +558,6 @@ export default function CheckoutClient() {
           };
           fetchShippingCountries();
         }, [buildCheckoutApiUrl]);
-
-        useEffect(() => {
-          if (!currency) return;
-          const mappedCountry = CURRENCY_TO_COUNTRY[currency];
-          if (mappedCountry && mappedCountry !== formData.shipping.country) {
-            // Synchronize checkout country when the active market currency changes.
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setFormData((prev) => ({
-              ...prev,
-              shipping: { ...prev.shipping, country: mappedCountry },
-              billing: prev.sameAsShipping ? { ...prev.shipping, country: mappedCountry } : prev.billing,
-            }));
-          }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        }, [currency]);
 
         useEffect(() => {
           const mappedCurrency = COUNTRY_TO_CURRENCY[shippingCountryCode];
