@@ -22,8 +22,8 @@ interface CachedGateways {
 }
 const gatewaysCache = new Map<string, CachedGateways>();
 
-function getGatewayCacheKey(marketCode: string) {
-  return `gateways_${marketCode || "intl"}`;
+function getGatewayCacheKey(marketCode: string, currency: string) {
+  return `gateways_${marketCode || "intl"}_${(currency || "AED").toUpperCase()}`;
 }
 
 function gatewaysCacheIsEnabled() {
@@ -279,7 +279,7 @@ function addConfiguredCardGateway(
   }
 
   if (gatewayId === "paymob") {
-    const additionalGatewayIds = getConfiguredPaymobPaymentMethods()
+    const additionalGatewayIds = getConfiguredPaymobPaymentMethods(currency)
       .filter((method) => method !== "card")
       .map((method) => `paymob_${method}`);
 
@@ -366,7 +366,7 @@ export async function GET(request: NextRequest) {
     const market = await getRequestMarket(request.nextUrl.searchParams.get("market"));
     const requestedCurrency = request.nextUrl.searchParams.get("currency")?.trim().toUpperCase() || "";
     const activeCurrency = requestedCurrency || market.defaultCurrency;
-    const cacheKey = getGatewayCacheKey(market.code);
+    const cacheKey = getGatewayCacheKey(market.code, activeCurrency);
     const cached = getCachedGateways(cacheKey);
 
     if (cached && gatewaysCacheIsEnabled()) {
