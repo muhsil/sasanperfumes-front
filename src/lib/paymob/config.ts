@@ -71,6 +71,93 @@ function getExplicitPaymobCurrencyIntegrationId(method: PaymobPaymentMethod, cur
 
   switch (method) {
     case "card":
+      switch (code) {
+        case "AED":
+          return (
+            process.env.PAYMOB_CARD_INTEGRATION_ID_AED ||
+            getEnvVar("PAYMOB_CARD_INTEGRATION_ID_AED") ||
+            process.env.PAYMOB_AED_CARD_INTEGRATION_ID ||
+            getEnvVar("PAYMOB_AED_CARD_INTEGRATION_ID") ||
+            process.env.PAYMOB_INTEGRATION_ID_AED ||
+            getEnvVar("PAYMOB_INTEGRATION_ID_AED") ||
+            process.env.PAYMOB_AED_INTEGRATION_ID ||
+            getEnvVar("PAYMOB_AED_INTEGRATION_ID") ||
+            ""
+          );
+        case "QAR":
+          return (
+            process.env.PAYMOB_CARD_INTEGRATION_ID_QAR ||
+            getEnvVar("PAYMOB_CARD_INTEGRATION_ID_QAR") ||
+            process.env.PAYMOB_QAR_CARD_INTEGRATION_ID ||
+            getEnvVar("PAYMOB_QAR_CARD_INTEGRATION_ID") ||
+            process.env.PAYMOB_INTEGRATION_ID_QAR ||
+            getEnvVar("PAYMOB_INTEGRATION_ID_QAR") ||
+            process.env.PAYMOB_QAR_INTEGRATION_ID ||
+            getEnvVar("PAYMOB_QAR_INTEGRATION_ID") ||
+            ""
+          );
+        case "OMR":
+          return (
+            process.env.PAYMOB_CARD_INTEGRATION_ID_OMR ||
+            getEnvVar("PAYMOB_CARD_INTEGRATION_ID_OMR") ||
+            process.env.PAYMOB_OMR_CARD_INTEGRATION_ID ||
+            getEnvVar("PAYMOB_OMR_CARD_INTEGRATION_ID") ||
+            process.env.PAYMOB_INTEGRATION_ID_OMR ||
+            getEnvVar("PAYMOB_INTEGRATION_ID_OMR") ||
+            process.env.PAYMOB_OMR_INTEGRATION_ID ||
+            getEnvVar("PAYMOB_OMR_INTEGRATION_ID") ||
+            ""
+          );
+        case "SAR":
+          return (
+            process.env.PAYMOB_CARD_INTEGRATION_ID_SAR ||
+            getEnvVar("PAYMOB_CARD_INTEGRATION_ID_SAR") ||
+            process.env.PAYMOB_SAR_CARD_INTEGRATION_ID ||
+            getEnvVar("PAYMOB_SAR_CARD_INTEGRATION_ID") ||
+            process.env.PAYMOB_INTEGRATION_ID_SAR ||
+            getEnvVar("PAYMOB_INTEGRATION_ID_SAR") ||
+            process.env.PAYMOB_SAR_INTEGRATION_ID ||
+            getEnvVar("PAYMOB_SAR_INTEGRATION_ID") ||
+            ""
+          );
+        case "KWD":
+          return (
+            process.env.PAYMOB_CARD_INTEGRATION_ID_KWD ||
+            getEnvVar("PAYMOB_CARD_INTEGRATION_ID_KWD") ||
+            process.env.PAYMOB_KWD_CARD_INTEGRATION_ID ||
+            getEnvVar("PAYMOB_KWD_CARD_INTEGRATION_ID") ||
+            process.env.PAYMOB_INTEGRATION_ID_KWD ||
+            getEnvVar("PAYMOB_INTEGRATION_ID_KWD") ||
+            process.env.PAYMOB_KWD_INTEGRATION_ID ||
+            getEnvVar("PAYMOB_KWD_INTEGRATION_ID") ||
+            ""
+          );
+        case "BHD":
+          return (
+            process.env.PAYMOB_CARD_INTEGRATION_ID_BHD ||
+            getEnvVar("PAYMOB_CARD_INTEGRATION_ID_BHD") ||
+            process.env.PAYMOB_BHD_CARD_INTEGRATION_ID ||
+            getEnvVar("PAYMOB_BHD_CARD_INTEGRATION_ID") ||
+            process.env.PAYMOB_INTEGRATION_ID_BHD ||
+            getEnvVar("PAYMOB_INTEGRATION_ID_BHD") ||
+            process.env.PAYMOB_BHD_INTEGRATION_ID ||
+            getEnvVar("PAYMOB_BHD_INTEGRATION_ID") ||
+            ""
+          );
+        case "USD":
+          return (
+            process.env.PAYMOB_CARD_INTEGRATION_ID_USD ||
+            getEnvVar("PAYMOB_CARD_INTEGRATION_ID_USD") ||
+            process.env.PAYMOB_USD_CARD_INTEGRATION_ID ||
+            getEnvVar("PAYMOB_USD_CARD_INTEGRATION_ID") ||
+            process.env.PAYMOB_INTEGRATION_ID_USD ||
+            getEnvVar("PAYMOB_INTEGRATION_ID_USD") ||
+            process.env.PAYMOB_USD_INTEGRATION_ID ||
+            getEnvVar("PAYMOB_USD_INTEGRATION_ID") ||
+            ""
+          );
+      }
+
       return (
         process.env[`PAYMOB_CARD_INTEGRATION_ID_${code}` as keyof NodeJS.ProcessEnv] ||
         getEnvVar(`PAYMOB_CARD_INTEGRATION_ID_${code}`) ||
