@@ -77,26 +77,57 @@ export function getConfiguredPaymobPaymentMethods(): PaymobPaymentMethod[] {
   );
 }
 
-export function getPaymobAllowedCurrencies(): string[] {
-  const raw = (
-    process.env.PAYMOB_ALLOWED_CURRENCIES ||
-    getEnvVar("PAYMOB_ALLOWED_CURRENCIES") ||
-    "AED"
-  ).trim();
+function getMarketSuffix(marketCode?: string | null): string {
+  const code = (marketCode || "").toString().toLowerCase().replace(/^\//, "");
+  if (code === "qa" || code === "om" || code === "sa") {
+    return `_${code.toUpperCase()}`;
+  }
 
-  return raw
-    .split(",")
-    .map((currency) => currency.trim().toUpperCase())
-    .filter(Boolean);
+  return "";
 }
 
-export function isPaymobConfigured(currency?: string): boolean {
+function getPaymobCurrencyFallback(marketCode?: string | null): string[] {
+  const code = (marketCode || "").toString().toLowerCase().replace(/^\//, "");
+  if (code === "qa") return ["QAR"];
+  if (code === "om") return ["OMR"];
+  if (code === "sa") return ["SAR"];
+  return ["AED", "QAR", "OMR", "SAR", "KWD", "BHD", "USD"];
+}
+
+export function getPaymobAllowedCurrencies(marketCode?: string | null): string[] {
+  const suffix = getMarketSuffix(marketCode);
+  const key = `PAYMOB_ALLOWED_CURRENCIES${suffix}`;
+  const publicKey = `NEXT_PUBLIC_PAYMOB_ALLOWED_CURRENCIES${suffix}`;
+
+  const raw = (
+    process.env[key] ||
+    getEnvVar(key) ||
+    process.env.PAYMOB_ALLOWED_CURRENCIES ||
+    getEnvVar("PAYMOB_ALLOWED_CURRENCIES") ||
+    process.env[publicKey] ||
+    getEnvVar(publicKey) ||
+    process.env.NEXT_PUBLIC_PAYMOB_ALLOWED_CURRENCIES ||
+    getEnvVar("NEXT_PUBLIC_PAYMOB_ALLOWED_CURRENCIES") ||
+    ""
+  ).trim();
+
+  if (raw) {
+    return raw
+      .split(",")
+      .map((currency) => currency.trim().toUpperCase())
+      .filter(Boolean);
+  }
+
+  return getPaymobCurrencyFallback(marketCode);
+}
+
+export function isPaymobConfigured(currency?: string, marketCode?: string | null): boolean {
   const hasCredentials = Boolean(
     getPaymobSecretKey() &&
-    getPaymobPublicKey() &&
-    getPaymobIntegrationIds().length > 0
+      getPaymobPublicKey() &&
+      getPaymobIntegrationIds().length > 0
   );
 
   if (!hasCredentials || !currency) return hasCredentials;
-  return getPaymobAllowedCurrencies().includes(currency.trim().toUpperCase());
+  return getPaymobAllowedCurrencies(marketCode).includes(currency.trim().toUpperCase());
 }

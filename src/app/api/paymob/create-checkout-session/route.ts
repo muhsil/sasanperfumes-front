@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
     }
 
     const currency = (order.currency || market.defaultCurrency || "AED").toUpperCase();
-    if (!getPaymobAllowedCurrencies().includes(currency)) {
+    if (!getPaymobAllowedCurrencies(market.code).includes(currency)) {
       return NextResponse.json(
         {
           success: false,
