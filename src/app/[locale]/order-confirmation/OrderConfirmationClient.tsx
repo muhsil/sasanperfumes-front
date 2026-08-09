@@ -358,7 +358,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
                 setPaymentStatus(verifyData.payment_status);
                 setPaymentMessage(verifyData.status_message || null);
                 
-                if (verifyData.payment_status === "success" && !paymobTransactionId) {
+                if (verifyData.payment_status === "success") {
                   try {
                     const updateResponse = await fetch("/api/orders", {
                       method: "PUT",
@@ -379,7 +379,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
                   } catch (updateError) {
                     console.error("Failed to update order status:", updateError);
                   }
-                } else if (verifyData.payment_status === "failed" && !paymobTransactionId) {
+                } else if (verifyData.payment_status === "failed") {
                   try {
                     const updateResponse = await fetch("/api/orders", {
                       method: "PUT",

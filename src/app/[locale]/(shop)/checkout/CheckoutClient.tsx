@@ -1108,6 +1108,38 @@ export default function CheckoutClient() {
     setAddressErrors({});
     let createdOrderId: number | string | undefined;
     let paymentFailureStage = "order_creation";
+    let paymobFailureCleanupDone = false;
+
+    const markCreatedOrderFailed = async () => {
+      if (paymobFailureCleanupDone) {
+        return;
+      }
+
+      const failedOrderId = Number(createdOrderId);
+      if (!Number.isFinite(failedOrderId) || failedOrderId <= 0) {
+        return;
+      }
+
+      paymobFailureCleanupDone = true;
+
+      try {
+        const failureResponse = await fetch(buildCheckoutApiUrl("/api/orders"), {
+          method: "PUT",
+          headers: getCheckoutApiHeaders(),
+          body: JSON.stringify({
+            order_id: failedOrderId,
+            status: "failed",
+          }),
+        });
+
+        const failureData = await failureResponse.json().catch(() => ({}));
+        if (!failureResponse.ok || !failureData.success) {
+          console.warn("[Checkout] Failed to mark Paymob order as failed after session setup error:", failureData);
+        }
+      } catch (failureError) {
+        console.warn("[Checkout] Failed to mark Paymob order as failed after session setup error:", failureError);
+      }
+    };
 
     try {
       const newAddressErrors: typeof addressErrors = {};
@@ -1713,11 +1745,15 @@ export default function CheckoutClient() {
                 return;
               }
 
+              await markCreatedOrderFailed();
               throw new Error(paymobData.error?.message || "Failed to initiate Paymob card payment");
             } else {
               router.push(`${checkoutMarketPrefix}/${locale}/order-confirmation?order_id=${data.order_id}&order_key=${data.order_key}`);
             }
     } catch (err) {
+      if (paymentFailureStage === "paymob_session") {
+        await markCreatedOrderFailed();
+      }
       trackPaymentFunnelEventOnce(
         "payment_failure",
         {
