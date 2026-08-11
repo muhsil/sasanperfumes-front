@@ -18,16 +18,16 @@ export interface FreightChargeDisplayRow {
 }
 
 const DEFAULT_FREIGHT_TABLE: FreightChargeRow[] = [
-  { weightKg: 0.5, weightLabel: "0.5KG", pcs: 1, charges: { SA: 30, OM: 3, BH: 91, KW: 107, QA: 30 } },
-  { weightKg: 1, weightLabel: "1KG", pcs: 2, charges: { SA: 30, OM: 3, BH: 110, KW: 128, QA: 30 } },
-  { weightKg: 1.5, weightLabel: "1.5KG", pcs: 3, charges: { SA: 30, OM: 3, BH: 125, KW: 145, QA: 30 } },
-  { weightKg: 1.5, weightLabel: "1.5KG", pcs: 4, charges: { SA: 30, OM: 3, BH: 125, KW: 145, QA: 30 } },
-  { weightKg: 2, weightLabel: "2KG", pcs: 5, charges: { SA: 30, OM: 3, BH: 140, KW: 162, QA: 30 } },
-  { weightKg: 2.5, weightLabel: "2.5KG", pcs: 6, charges: { SA: 30, OM: 3, BH: 154, KW: 178, QA: 30 } },
-  { weightKg: 3, weightLabel: "3KG", pcs: 8, charges: { SA: 30, OM: 3, BH: 169, KW: 195, QA: 30 } },
-  { weightKg: 3.5, weightLabel: "3.5KG", pcs: 9, charges: { SA: 30, OM: 3, BH: 183, KW: 212, QA: 30 } },
-  { weightKg: 4, weightLabel: "4KG", pcs: 10, charges: { SA: 30, OM: 3, BH: 200, KW: 229, QA: 30 } },
-  { weightKg: 5, weightLabel: "5KG", pcs: 12, charges: { SA: 30, OM: 3, BH: 226, KW: 263, QA: 30 } },
+  { weightKg: 0.5, weightLabel: "0.5KG", pcs: 1, charges: { SA: 30, OM: 3, BH: 9.373, KW: 8.881, QA: 30 } },
+  { weightKg: 1, weightLabel: "1KG", pcs: 2, charges: { SA: 30, OM: 3, BH: 11.33, KW: 10.624, QA: 30 } },
+  { weightKg: 1.5, weightLabel: "1.5KG", pcs: 3, charges: { SA: 30, OM: 3, BH: 12.875, KW: 12.035, QA: 30 } },
+  { weightKg: 1.5, weightLabel: "1.5KG", pcs: 4, charges: { SA: 30, OM: 3, BH: 12.875, KW: 12.035, QA: 30 } },
+  { weightKg: 2, weightLabel: "2KG", pcs: 5, charges: { SA: 30, OM: 3, BH: 14.42, KW: 13.446, QA: 30 } },
+  { weightKg: 2.5, weightLabel: "2.5KG", pcs: 6, charges: { SA: 30, OM: 3, BH: 15.862, KW: 14.774, QA: 30 } },
+  { weightKg: 3, weightLabel: "3KG", pcs: 8, charges: { SA: 30, OM: 3, BH: 17.407, KW: 16.185, QA: 30 } },
+  { weightKg: 3.5, weightLabel: "3.5KG", pcs: 9, charges: { SA: 30, OM: 3, BH: 18.849, KW: 17.596, QA: 30 } },
+  { weightKg: 4, weightLabel: "4KG", pcs: 10, charges: { SA: 30, OM: 3, BH: 20.6, KW: 19.007, QA: 30 } },
+  { weightKg: 5, weightLabel: "5KG", pcs: 12, charges: { SA: 30, OM: 3, BH: 23.278, KW: 21.829, QA: 30 } },
 ];
 
 function formatNumber(value: number): string {
