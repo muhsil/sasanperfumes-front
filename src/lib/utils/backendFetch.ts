@@ -90,6 +90,12 @@ export function wpJsonBaseForMarket(market?: string | null): string {
   return `${backendBaseForMarket(market)}/wp-json`;
 }
 
+export function wpJsonSubsiteBaseForMarket(market?: string | null): string {
+  const cleanMarket = extractMarketCode(market);
+  const base = backendBaseForMarket().replace(/\/+$/, "");
+  return cleanMarket ? `${base}/${cleanMarket}/wp-json` : `${base}/wp-json`;
+}
+
 export function rewriteBackendUrlForMarket(url: string, market?: string | null): string {
   const cleanMarket = extractMarketCode(market);
   if (!cleanMarket) return url;

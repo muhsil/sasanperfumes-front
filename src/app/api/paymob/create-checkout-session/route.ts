@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRequestMarket } from "@/lib/market/server";
-import { backendMarketPostHeaders, extractMarketCode, fetchBackendForMarket, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
+import { backendMarketPostHeaders, extractMarketCode, fetchBackendForMarket, wpJsonSubsiteBaseForMarket } from "@/lib/utils/backendFetch";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { buildPaymobCheckoutUrl, createPaymobIntention, getPaymobCurrencyMinorUnit } from "@/lib/paymob/api";
 import {
@@ -76,7 +76,7 @@ function getBasicAuthParams(marketCode?: string): string {
 }
 
 function getOrdersApiBase(marketCode?: string | null): string {
-  return `${wpJsonBaseForMarket(marketCode)}/wc/v3`;
+  return `${wpJsonSubsiteBaseForMarket(marketCode)}/wc/v3`;
 }
 
 function getRequestOrigin(request: NextRequest): string {

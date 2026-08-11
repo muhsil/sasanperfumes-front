@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { backendMarketPostHeaders, fetchBackendForMarket, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
+import { backendMarketPostHeaders, fetchBackendForMarket, wpJsonSubsiteBaseForMarket } from "@/lib/utils/backendFetch";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import {
   getPaymobCurrencyMinorUnit,
@@ -69,7 +69,7 @@ function getBasicAuthParams(marketCode?: string): string {
 }
 
 function getOrdersApiBase(marketCode?: string | null): string {
-  return `${wpJsonBaseForMarket(marketCode)}/wc/v3`;
+  return `${wpJsonSubsiteBaseForMarket(marketCode)}/wc/v3`;
 }
 
 function extractWcOrderId(payload: PaymobWebhookPayload): number {
