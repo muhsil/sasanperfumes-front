@@ -37,6 +37,10 @@ export function getPaymobIntegrationIds(): number[] {
 export type PaymobPaymentMethod = "card" | "apple_pay" | "google_pay" | "tamara" | "tabby";
 export type PaymobCurrencyCode = "AED" | "QAR" | "OMR" | "SAR" | "KWD" | "BHD" | "USD";
 
+// Temporary restriction: the live Paymob account only accepts AED payments.
+// Add currencies back here once Paymob activates the other currency integrations.
+const PAYMOB_ENABLED_CURRENCIES = new Set(["AED"]);
+
 const PAYMOB_METHOD_FALLBACK_INDEX: Record<PaymobPaymentMethod, number> = {
   card: 0,
   tamara: 1,
@@ -206,6 +210,10 @@ function getExplicitPaymobCurrencyIntegrationId(method: PaymobPaymentMethod, cur
 
 export function getPaymobIntegrationIdForMethod(method: PaymobPaymentMethod, currency?: string | null): number | null {
   const normalizedCurrency = normalizeCurrencyCode(currency);
+  if (normalizedCurrency && !PAYMOB_ENABLED_CURRENCIES.has(normalizedCurrency)) {
+    return null;
+  }
+
   const configuredValue = getExplicitPaymobCurrencyIntegrationId(method, normalizedCurrency).trim();
   const configuredId = Number.parseInt(configuredValue, 10);
 
@@ -250,6 +258,10 @@ function getPaymobCurrencyFallback(marketCode?: string | null): string[] {
   return ["AED", "QAR", "OMR", "SAR", "KWD", "BHD", "USD"];
 }
 
+function filterEnabledCurrencies(currencies: string[]): string[] {
+  return currencies.filter((currency) => PAYMOB_ENABLED_CURRENCIES.has(currency));
+}
+
 export function getPaymobAllowedCurrencies(marketCode?: string | null): string[] {
   const suffix = getMarketSuffix(marketCode);
   const key = `PAYMOB_ALLOWED_CURRENCIES${suffix}`;
@@ -258,15 +270,17 @@ export function getPaymobAllowedCurrencies(marketCode?: string | null): string[]
   const publicRawByMarket = (process.env[publicKey] || getEnvVar(publicKey) || "").trim();
 
   if (rawByMarket || publicRawByMarket) {
-    return (rawByMarket || publicRawByMarket)
-      .split(",")
-      .map((currency) => currency.trim().toUpperCase())
-      .filter(Boolean);
+    return filterEnabledCurrencies(
+      (rawByMarket || publicRawByMarket)
+        .split(",")
+        .map((currency) => currency.trim().toUpperCase())
+        .filter(Boolean)
+    );
   }
 
   const marketCodeNormalized = (marketCode || "").toString().toLowerCase().replace(/^\//, "");
   if (["qa", "om", "sa"].includes(marketCodeNormalized)) {
-    return getPaymobCurrencyFallback(marketCode);
+    return filterEnabledCurrencies(getPaymobCurrencyFallback(marketCode));
   }
 
   const globalRaw = (
@@ -285,13 +299,15 @@ export function getPaymobAllowedCurrencies(marketCode?: string | null): string[]
   const raw = globalRaw || publicGlobalRaw;
 
   if (raw) {
-    return raw
-      .split(",")
-      .map((currency) => currency.trim().toUpperCase())
-      .filter(Boolean);
+    return filterEnabledCurrencies(
+      raw
+        .split(",")
+        .map((currency) => currency.trim().toUpperCase())
+        .filter(Boolean)
+    );
   }
 
-  return getPaymobCurrencyFallback(marketCode);
+  return filterEnabledCurrencies(getPaymobCurrencyFallback(marketCode));
 }
 
 export function isPaymobConfigured(currency?: string, marketCode?: string | null): boolean {
