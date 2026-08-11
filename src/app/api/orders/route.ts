@@ -189,8 +189,12 @@ interface CreateOrderRequest {
 
 const INCLUSIVE_VAT_RATES_BY_COUNTRY: Record<string, number> = {
   AE: 0.05,
+  BH: 0.05,
+  KW: 0.05,
   OM: 0.05,
+  QA: 0.05,
   SA: 0.15,
+  US: 0.05,
 };
 
 function getCurrencyDecimals(currency?: string): number {
