@@ -15,7 +15,7 @@ import { useDiscountRules } from "@/contexts/DiscountRulesContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { getCustomer, getSavedAddressesFromCustomer, saveSavedAddresses, generateAddressId, resolveCountryCode, type Customer, type SavedAddress } from "@/lib/api/customer";
-import { featureFlags, type Locale } from "@/config/site";
+import { featureFlags, type Currency, type Locale } from "@/config/site";
 import { Apple, MapPin, Check, ChevronDown, ChevronUp, Tag, X, Truck, Phone } from "lucide-react";
 import { BundleItemsList, getBundleItems, getBundleItemsTotal, getBoxPrice, getPricingMode, getFixedPrice, getBundleTotal } from "@/components/cart/BundleItemsList";
 import { PhoneInput } from "@/components/common/PhoneInput";
@@ -847,11 +847,13 @@ export default function CheckoutClient() {
 
     const checkoutTotal = (() => {
       try {
-        const subtotalMajor = (discountedCartSubtotal || 0) / divisor;
+        const subtotalMajor = convertPrice((discountedCartSubtotal || 0) / divisor);
         const selectedShippingMinor = parseFloat(shippingTotal) || 0;
         const cartShippingMinor = parseFloat(cart?.totals?.shipping_total || "0") || 0;
-        const shippingMajor = (selectedShippingMinor || cartShippingMinor) / shippingDivisor;
-        const feesMajor = (cartFeeTotal || 0) / divisor;
+        const shippingMajor = selectedShippingMinor
+          ? selectedShippingMinor / shippingDivisor
+          : convertPrice(cartShippingMinor / divisor);
+        const feesMajor = convertPrice((cartFeeTotal || 0) / divisor);
         return subtotalMajor + shippingMajor + feesMajor;
       } catch (err) {
         console.error("[Checkout] Failed to calculate checkout total:", err);
@@ -1411,7 +1413,6 @@ export default function CheckoutClient() {
         payment_method: selectedOrderPaymentMethod,
         payment_method_title: selectedPaymentGateway?.title || formData.paymentMethod,
         currency: checkoutCurrency,
-        expected_total: checkoutTotal,
         billing: {
           first_name: billingData.firstName,
           last_name: billingData.lastName,
@@ -2771,6 +2772,7 @@ export default function CheckoutClient() {
                                 {parseFloat(shippingTotal) > 0 ? (
                                   <FormattedPrice
                                     price={(parseFloat(shippingTotal) || 0) / shippingDivisor}
+                                    sourceCurrency={checkoutCurrency as Currency}
                                     iconSize="xs"
                                   />
                                 ) : parseFloat(cart?.totals?.shipping_total || "0") > 0 ? (
@@ -2828,6 +2830,7 @@ export default function CheckoutClient() {
                 <span>{isRTL ? "الإجمالي" : "Total"}</span>
                 <FormattedPrice
                   price={checkoutTotal}
+                  sourceCurrency={checkoutCurrency as Currency}
                   iconSize="sm"
                 />
               </div>
@@ -2895,6 +2898,7 @@ export default function CheckoutClient() {
             <span className="text-xs text-brand-muted">{isRTL ? "الإجمالي" : "Total"}</span>
             <FormattedPrice
               price={checkoutTotal}
+              sourceCurrency={checkoutCurrency as Currency}
               className="text-base font-bold text-brand-primary"
               iconSize="xs"
             />
