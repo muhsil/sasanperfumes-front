@@ -2280,6 +2280,7 @@ export default function CheckoutClient() {
                                 ) : (
                                   <FormattedPrice
                                     price={ratePrice}
+                                    sourceCurrency={(rate.currency_code || checkoutCurrency) as Currency}
                                     className="font-semibold"
                                     iconSize="xs"
                                   />
