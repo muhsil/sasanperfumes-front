@@ -317,7 +317,9 @@ interface CreatedOrderResponse {
   shipping_lines?: Array<{ id?: number }>;
 }
 
-const ORDER_TOTAL_TOLERANCE = 0.05;
+function getOrderTotalTolerance(currency?: string): number {
+  return 0.5 / Math.pow(10, getCurrencyDecimals(currency));
+}
 
 // WooCommerce (e.g. via multi-currency plugins) can recalculate order totals
 // from backend product prices and ignore the totals the storefront submitted,
@@ -330,7 +332,8 @@ async function reconcileOrderTotals(
   marketCode: string | undefined
 ): Promise<CreatedOrderResponse> {
   const createdTotal = parseMoney(createdOrder.total);
-  if (!createdOrder.id || createdTotal === null || Math.abs(createdTotal - expectedTotal) <= ORDER_TOTAL_TOLERANCE) {
+  const tolerance = getOrderTotalTolerance(createdOrder.currency);
+  if (!createdOrder.id || createdTotal === null || Math.abs(createdTotal - expectedTotal) <= tolerance) {
     return createdOrder;
   }
 
