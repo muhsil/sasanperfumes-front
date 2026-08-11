@@ -1411,6 +1411,7 @@ export default function CheckoutClient() {
         payment_method: selectedOrderPaymentMethod,
         payment_method_title: selectedPaymentGateway?.title || formData.paymentMethod,
         currency: checkoutCurrency,
+        expected_total: checkoutTotal,
         billing: {
           first_name: billingData.firstName,
           last_name: billingData.lastName,
