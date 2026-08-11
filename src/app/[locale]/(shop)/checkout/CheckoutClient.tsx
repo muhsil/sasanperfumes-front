@@ -689,21 +689,15 @@ export default function CheckoutClient() {
         }, [emptyCartCountdown, router, locale, marketPrefix]);
 
         const discountedCartSubtotal = Math.max((parseFloat(cartSubtotal) || 0) - couponDiscount - promotionalDiscountTotal, 0);
-        const cartItemDisplayTotals = useMemo(() => {
-          const subtotalMinor = parseFloat(cartSubtotal) || 0;
-          const rawLineTotals = cartItems.map((item) => ({
-            itemKey: item.item_key,
-            total: (parseFloat(item.price) || 0) * item.quantity.value,
-          }));
-          const rawCartTotal = rawLineTotals.reduce((sum, item) => sum + item.total, 0);
-
-          return new Map(
-            rawLineTotals.map((item) => [
-              item.itemKey,
-              rawCartTotal > 0 ? subtotalMinor * (item.total / rawCartTotal) : 0,
-            ])
-          );
-        }, [cartItems, cartSubtotal]);
+        const cartItemDisplayTotals = useMemo(() => new Map(
+          cartItems.map((item) => {
+            const unitPrice = convertPrice((parseFloat(item.price) || 0) / divisor);
+            const lineTotal = unitPrice * item.quantity.value;
+            return [item.item_key, Number(lineTotal.toFixed(checkoutCurrencyMinorUnit))];
+          })
+        ), [cartItems, checkoutCurrencyMinorUnit, convertPrice, divisor]);
+        const submittedLineSubtotal = Array.from(cartItemDisplayTotals.values())
+          .reduce((sum, amount) => sum + amount, 0);
         const bnplConvenienceFee = calculateBnplConvenienceFeeMinor(
           discountedCartSubtotal,
           formData.paymentMethod
@@ -847,7 +841,8 @@ export default function CheckoutClient() {
 
     const checkoutTotal = (() => {
       try {
-        const subtotalMajor = convertPrice((discountedCartSubtotal || 0) / divisor);
+        const discountsMajor = convertPrice((couponDiscount + promotionalDiscountTotal) / divisor);
+        const subtotalMajor = Math.max(submittedLineSubtotal - discountsMajor, 0);
         const selectedShippingMinor = parseFloat(shippingTotal) || 0;
         const cartShippingMinor = parseFloat(cart?.totals?.shipping_total || "0") || 0;
         const shippingMajor = selectedShippingMinor
@@ -2681,7 +2676,8 @@ export default function CheckoutClient() {
                                     </div>
                                   ) : (
                                     <FormattedPrice
-                                      price={(cartItemDisplayTotals.get(item.item_key) || 0) / divisor}
+                                      price={cartItemDisplayTotals.get(item.item_key) || 0}
+                                      sourceCurrency={checkoutCurrency as Currency}
                                       className="text-xs font-medium md:text-sm"
                                       iconSize="xs"
                                     />
@@ -2742,7 +2738,8 @@ export default function CheckoutClient() {
                               <div className="flex justify-between text-sm text-brand-muted">
                                 <span>{isRTL ? "المجموع الفرعي" : "Subtotal"}</span>
                                 <FormattedPrice
-                                  price={parseFloat(cartSubtotal) / divisor}
+                                  price={submittedLineSubtotal}
+                                  sourceCurrency={checkoutCurrency as Currency}
                                   iconSize="xs"
                                 />
                               </div>
