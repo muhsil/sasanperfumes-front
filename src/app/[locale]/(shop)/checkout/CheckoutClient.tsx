@@ -128,6 +128,8 @@ const COUNTRY_TO_MARKET: Record<string, string> = {
 
 const COUNTRY_TO_CURRENCY: Record<string, string> = {
   AE: "AED",
+  BH: "BHD",
+  KW: "KWD",
   QA: "QAR",
   OM: "OMR",
   SA: "SAR",
