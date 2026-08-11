@@ -830,21 +830,12 @@ export default function CheckoutClient() {
 
     const checkoutTotal = (() => {
       try {
-        if (shippingPackages.length > 0) {
-          const subtotalMajor = (discountedCartSubtotal || 0) / divisor;
-          const shippingMajor = (parseFloat(shippingTotal) || 0) / shippingDivisor;
-          const feesMajor = (cartFeeTotal || 0) / divisor;
-          return subtotalMajor + shippingMajor + feesMajor;
-        }
-        const baseTotalMinor = parseFloat(cartTotal) || 0;
-        const serverCustomsFeeTotal = (Array.isArray(cart?.fees) ? cart.fees : [])
-          .filter(fee => fee?.name?.toLowerCase() === "customs fees")
-          .reduce((sum, fee) => sum + (parseFloat(fee?.fee) || 0), 0);
-        const clientCustomsFee = customsFee ? (parseFloat(customsFee.fee) || 0) : 0;
-        return Math.max(
-          baseTotalMinor - promotionalDiscountTotal - serverCustomsFeeTotal + clientCustomsFee + bnplConvenienceFee,
-          0
-        ) / divisor;
+        const subtotalMajor = (discountedCartSubtotal || 0) / divisor;
+        const selectedShippingMinor = parseFloat(shippingTotal) || 0;
+        const cartShippingMinor = parseFloat(cart?.totals?.shipping_total || "0") || 0;
+        const shippingMajor = (selectedShippingMinor || cartShippingMinor) / shippingDivisor;
+        const feesMajor = (cartFeeTotal || 0) / divisor;
+        return subtotalMajor + shippingMajor + feesMajor;
       } catch (err) {
         console.error("[Checkout] Failed to calculate checkout total:", err);
         return Math.max(parseFloat(cartTotal) || 0, 0) / divisor;
@@ -2670,7 +2661,7 @@ export default function CheckoutClient() {
                                     </div>
                                   ) : (
                                     <FormattedPrice
-                                      price={parseFloat(item.price) * item.quantity.value / divisor}
+                                      price={parseFloat(item.totals.subtotal) / divisor}
                                       className="text-xs font-medium md:text-sm"
                                       iconSize="xs"
                                     />
