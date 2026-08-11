@@ -687,6 +687,21 @@ export default function CheckoutClient() {
         }, [emptyCartCountdown, router, locale, marketPrefix]);
 
         const discountedCartSubtotal = Math.max((parseFloat(cartSubtotal) || 0) - couponDiscount - promotionalDiscountTotal, 0);
+        const cartItemDisplayTotals = useMemo(() => {
+          const subtotalMinor = parseFloat(cartSubtotal) || 0;
+          const rawLineTotals = cartItems.map((item) => ({
+            itemKey: item.item_key,
+            total: (parseFloat(item.price) || 0) * item.quantity.value,
+          }));
+          const rawCartTotal = rawLineTotals.reduce((sum, item) => sum + item.total, 0);
+
+          return new Map(
+            rawLineTotals.map((item) => [
+              item.itemKey,
+              rawCartTotal > 0 ? subtotalMinor * (item.total / rawCartTotal) : 0,
+            ])
+          );
+        }, [cartItems, cartSubtotal]);
         const bnplConvenienceFee = calculateBnplConvenienceFeeMinor(
           discountedCartSubtotal,
           formData.paymentMethod
@@ -2661,7 +2676,7 @@ export default function CheckoutClient() {
                                     </div>
                                   ) : (
                                     <FormattedPrice
-                                      price={parseFloat(item.totals.subtotal) / divisor}
+                                      price={(cartItemDisplayTotals.get(item.item_key) || 0) / divisor}
                                       className="text-xs font-medium md:text-sm"
                                       iconSize="xs"
                                     />
