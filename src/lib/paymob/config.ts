@@ -37,9 +37,8 @@ export function getPaymobIntegrationIds(): number[] {
 export type PaymobPaymentMethod = "card" | "apple_pay" | "google_pay" | "tamara" | "tabby";
 export type PaymobCurrencyCode = "AED" | "QAR" | "OMR" | "SAR" | "KWD" | "BHD" | "USD";
 
-// Temporary restriction: the live Paymob account only accepts AED payments.
-// Add currencies back here once Paymob activates the other currency integrations.
-const PAYMOB_ENABLED_CURRENCIES = new Set(["AED"]);
+// Currencies the Paymob account can charge. Remove entries here to disable a currency temporarily.
+const PAYMOB_ENABLED_CURRENCIES = new Set(["AED", "QAR", "OMR", "SAR", "KWD", "BHD", "USD"]);
 
 const PAYMOB_METHOD_FALLBACK_INDEX: Record<PaymobPaymentMethod, number> = {
   card: 0,
