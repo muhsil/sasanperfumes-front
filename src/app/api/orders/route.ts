@@ -247,12 +247,22 @@ function normalizeOrderLineItemsForInclusiveTax(
   });
 }
 
-function normalizeFeeLinesForNoTax(feeLines: FeeLine[]): FeeLine[] {
-  return feeLines.map((feeLine) => ({
-    ...feeLine,
-    tax_status: "none",
-    tax_class: "",
-  }));
+function normalizeFeeLinesForNoTax(feeLines: FeeLine[], inclusiveVatRate: number, currency?: string): FeeLine[] {
+  const decimals = getCurrencyDecimals(currency);
+
+  return feeLines.map((feeLine) => {
+    const total = Number.parseFloat(String(feeLine.total));
+    const normalizedTotal = inclusiveVatRate > 0 && Number.isFinite(total) && total < 0
+      ? (total / (1 + inclusiveVatRate)).toFixed(decimals)
+      : feeLine.total;
+
+    return {
+      ...feeLine,
+      total: normalizedTotal,
+      tax_status: "none",
+      tax_class: "",
+    };
+  });
 }
 
 function parseMoney(value: unknown): number | null {
@@ -694,7 +704,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (Array.isArray(body.fee_lines) && body.fee_lines.length > 0) {
-      orderData.fee_lines = normalizeFeeLinesForNoTax(body.fee_lines);
+      orderData.fee_lines = normalizeFeeLinesForNoTax(body.fee_lines, inclusiveVatRate, currencyCode);
     }
 
     // For guest checkout, look up existing WooCommerce customer by billing email
