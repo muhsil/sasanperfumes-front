@@ -33,6 +33,41 @@ interface PaymobCheckoutOrder {
     country?: string;
     postcode?: string;
   };
+  meta_data?: Array<{ key?: string; value?: unknown }>;
+}
+
+function getOrderMetaValue(order: PaymobCheckoutOrder, key: string): string | null {
+  const meta = Array.isArray(order.meta_data)
+    ? order.meta_data.find((entry) => entry?.key === key)
+    : undefined;
+  return meta && typeof meta.value === "string" ? meta.value : null;
+}
+
+// Charge the total the customer saw at checkout. The storefront records it on
+// the order as _frontend_expected_total; if WooCommerce recalculated the order
+// to a different total (e.g. multi-currency price overrides), prefer the
+// customer-facing amount so the charge always matches the displayed total.
+function resolveChargeAmount(order: PaymobCheckoutOrder, currency: string, orderId: number): number {
+  const orderTotal = parseFloat(order.total || "0");
+  const expectedRaw = getOrderMetaValue(order, "_frontend_expected_total");
+  const expectedCurrency = (getOrderMetaValue(order, "_frontend_expected_currency") || order.currency || "").toUpperCase();
+  const expectedTotal = expectedRaw !== null ? parseFloat(expectedRaw) : NaN;
+
+  if (
+    Number.isFinite(expectedTotal) &&
+    expectedTotal > 0 &&
+    expectedCurrency === currency &&
+    Math.abs(expectedTotal - orderTotal) > 0.05
+  ) {
+    console.error("[paymob] Order total differs from customer-facing total, charging expected total:", {
+      orderId,
+      orderTotal,
+      expectedTotal,
+      currency,
+    });
+    return expectedTotal;
+  }
+  return orderTotal;
 }
 
 function getBasicAuthParams(marketCode?: string): string {
@@ -141,7 +176,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const amount = parseFloat(order.total || "0");
+    const currency = (order.currency || market.defaultCurrency || "AED").toUpperCase();
+    const amount = resolveChargeAmount(order, currency, orderId);
     if (!Number.isFinite(amount) || amount <= 0) {
       return NextResponse.json(
         { success: false, error: { code: "invalid_amount", message: "Order total is invalid for Paymob." } },
@@ -149,7 +185,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const currency = (order.currency || market.defaultCurrency || "AED").toUpperCase();
     const integrationId = getPaymobIntegrationIdForMethod(paymentMethod, currency);
     if (!integrationId) {
       return NextResponse.json(

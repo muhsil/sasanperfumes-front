@@ -251,6 +251,152 @@ function normalizeFeeLinesForNoTax(feeLines: FeeLine[]): FeeLine[] {
   }));
 }
 
+function parseMoney(value: unknown): number | null {
+  const parsed = Number.parseFloat(String(value ?? ""));
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+// The order total the customer saw at checkout: line items + fees + shipping
+// from the client payload (all amounts are VAT-inclusive display values).
+function computeExpectedOrderTotal(body: {
+  expected_total?: unknown;
+  line_items?: unknown;
+  fee_lines?: unknown;
+  shipping_lines?: unknown;
+}): number | null {
+  const provided = parseMoney(body.expected_total);
+  if (provided !== null && provided > 0) {
+    return provided;
+  }
+
+  const lineItems = Array.isArray(body.line_items) ? body.line_items : [];
+  const feeLines = Array.isArray(body.fee_lines) ? body.fee_lines : [];
+  const shippingLines = Array.isArray(body.shipping_lines) ? body.shipping_lines : [];
+  if (lineItems.length === 0) return null;
+
+  let total = 0;
+  for (const item of lineItems) {
+    const amount = parseMoney((item as OrderLineItem).total ?? (item as OrderLineItem).subtotal);
+    if (amount === null) return null;
+    total += amount;
+  }
+  for (const fee of feeLines) {
+    const amount = parseMoney((fee as FeeLine).total);
+    if (amount === null) return null;
+    total += amount;
+  }
+  for (const shipping of shippingLines) {
+    const amount = parseMoney((shipping as ShippingLine).total);
+    if (amount === null) return null;
+    total += amount;
+  }
+  return total;
+}
+
+interface CreatedOrderResponse {
+  id?: number;
+  total?: string;
+  currency?: string;
+  order_key?: string;
+  payment_url?: string;
+  line_items?: Array<{ id?: number }>;
+  fee_lines?: Array<{ id?: number; name?: string }>;
+  shipping_lines?: Array<{ id?: number }>;
+}
+
+const ORDER_TOTAL_TOLERANCE = 0.05;
+
+// WooCommerce (e.g. via multi-currency plugins) can recalculate order totals
+// from backend product prices and ignore the totals the storefront submitted,
+// making the charged amount differ from what the customer saw. Re-assert the
+// intended line item / fee / shipping totals on the created order.
+async function reconcileOrderTotals(
+  createdOrder: CreatedOrderResponse,
+  orderData: CreateOrderRequest,
+  expectedTotal: number,
+  marketCode: string | undefined
+): Promise<CreatedOrderResponse> {
+  const createdTotal = parseMoney(createdOrder.total);
+  if (!createdOrder.id || createdTotal === null || Math.abs(createdTotal - expectedTotal) <= ORDER_TOTAL_TOLERANCE) {
+    return createdOrder;
+  }
+
+  console.error("[orders] WooCommerce order total mismatch, reconciling:", {
+    orderId: createdOrder.id,
+    createdTotal,
+    expectedTotal,
+    currency: createdOrder.currency,
+    market: marketCode,
+  });
+
+  const updateData: Record<string, unknown> = {};
+
+  const createdLineItems = Array.isArray(createdOrder.line_items) ? createdOrder.line_items : [];
+  if (createdLineItems.length === orderData.line_items.length) {
+    updateData.line_items = createdLineItems.map((created, index) => ({
+      id: created.id,
+      subtotal: orderData.line_items[index].subtotal,
+      total: orderData.line_items[index].total,
+    }));
+  }
+
+  const intendedFees = orderData.fee_lines || [];
+  const createdFees = Array.isArray(createdOrder.fee_lines) ? createdOrder.fee_lines : [];
+  if (createdFees.length === intendedFees.length && intendedFees.length > 0) {
+    updateData.fee_lines = createdFees.map((created, index) => ({
+      id: created.id,
+      name: intendedFees[index].name,
+      total: intendedFees[index].total,
+      tax_status: "none",
+      tax_class: "",
+    }));
+  }
+
+  const intendedShipping = orderData.shipping_lines || [];
+  const createdShipping = Array.isArray(createdOrder.shipping_lines) ? createdOrder.shipping_lines : [];
+  if (createdShipping.length === intendedShipping.length && intendedShipping.length > 0) {
+    updateData.shipping_lines = createdShipping.map((created, index) => ({
+      id: created.id,
+      total: intendedShipping[index].total,
+      tax_status: "none",
+      total_tax: "0.00",
+    }));
+  }
+
+  if (Object.keys(updateData).length === 0) {
+    return createdOrder;
+  }
+
+  try {
+    const updateUrl = `${getOrdersApiBase(marketCode)}/orders/${createdOrder.id}?${getBasicAuthParams(marketCode)}`;
+    const updateResponse = await fetchOrdersBackend(updateUrl, {
+      method: "PUT",
+      headers: backendPostHeaders(),
+      body: JSON.stringify(updateData),
+    }, marketCode);
+    if (updateResponse.ok) {
+      const updatedOrder = (await updateResponse.json()) as CreatedOrderResponse;
+      const updatedTotal = parseMoney(updatedOrder.total);
+      console.error("[orders] Order total after reconciliation:", {
+        orderId: createdOrder.id,
+        updatedTotal,
+        expectedTotal,
+      });
+      return updatedOrder;
+    }
+    console.error("[orders] Order total reconciliation update failed:", {
+      orderId: createdOrder.id,
+      status: updateResponse.status,
+    });
+  } catch (error) {
+    console.error("[orders] Order total reconciliation error:", {
+      orderId: createdOrder.id,
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+  return createdOrder;
+}
+
 const PAYMENT_METHOD_TITLES: Record<string, string> = {
   woocommerce_payments: "Credit/Debit Card",
   card: "Credit/Debit Card",
@@ -576,8 +722,16 @@ export async function POST(request: NextRequest) {
       orderData.customer_id = resolvedCustomerId;
     }
 
+    const expectedTotal = computeExpectedOrderTotal(body);
+
     const metaData = Array.isArray(body.meta_data) ? [...body.meta_data] : [];
     metaData.push({ key: "_frontend_prices_include_vat", value: "yes" });
+    if (expectedTotal !== null && expectedTotal > 0) {
+      metaData.push({ key: "_frontend_expected_total", value: expectedTotal.toFixed(getCurrencyDecimals(currencyCode)) });
+      if (currencyCode) {
+        metaData.push({ key: "_frontend_expected_currency", value: currencyCode });
+      }
+    }
     if (inclusiveVatRate > 0) {
       metaData.push({ key: "_frontend_vat_rate", value: String(inclusiveVatRate) });
     }
@@ -597,7 +751,7 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify(orderData),
     }, market.code);
 
-    const data = await response.json();
+    let data = await response.json();
 
     if (!response.ok) {
       const errorCode = data.code || "order_creation_error";
@@ -627,6 +781,10 @@ export async function POST(request: NextRequest) {
         },
         { status: response.status }
       );
+    }
+
+    if (expectedTotal !== null && expectedTotal > 0) {
+      data = await reconcileOrderTotals(data, orderData, expectedTotal, market.code);
     }
 
     const normalizedOrder = normalizeOrderDisplayNumber(data);
