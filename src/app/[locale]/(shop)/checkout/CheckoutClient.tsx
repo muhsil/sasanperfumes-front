@@ -745,20 +745,20 @@ export default function CheckoutClient() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [couponDiscount, promotionalDiscountTotal, formData.shipping.country, formData.shipping.city, formData.shipping.postalCode, cartSubtotal]);
 
-        // Calculate customs fee client-side from the active market subtotal so
-        // each storefront keeps its own checkout totals.
+        // Calculate customs fee client-side from the discounted merchandise
+        // subtotal so promo discounts are reflected before customs are applied.
         const customsFee = useMemo(() => {
           const country = formData.shipping.country;
           if (!country || country === "AE") return null;
-          // 20% of cart subtotal (subtotal is in minor units)
-          const subtotal = parseFloat(cartSubtotal) || 0;
+          // 20% of discounted cart subtotal (subtotal is in minor units)
+          const subtotal = discountedCartSubtotal || 0;
           if (subtotal <= 0) return null;
           const feeAmount = Math.round(subtotal * 0.20);
           return {
             name: "Customs fees",
             fee: String(feeAmount),
           };
-        }, [formData.shipping.country, cartSubtotal]);
+        }, [discountedCartSubtotal, formData.shipping.country]);
 
         const handleSelectShippingRate = async (rateId: string, packageId: number = 0) => {
           setSelectedShippingRate(rateId);
