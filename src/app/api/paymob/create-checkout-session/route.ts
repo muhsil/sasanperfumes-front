@@ -143,6 +143,7 @@ export async function POST(request: NextRequest) {
     const orderResponse = await fetchBackendForMarket(orderUrl, {
       method: "GET",
       cache: "no-store",
+      headers: backendMarketPostHeaders(market.code),
     }, market.code).catch(() => null);
 
     const order = orderResponse
