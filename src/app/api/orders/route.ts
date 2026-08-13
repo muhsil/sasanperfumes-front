@@ -709,34 +709,30 @@ export async function POST(request: NextRequest) {
       orderData.fee_lines = normalizeFeeLinesForNoTax(body.fee_lines, inclusiveVatRate, currencyCode);
     }
 
-    // For guest checkout, look up existing WooCommerce customer by billing email
-    // so the order is associated with their account instead of being rejected.
-    // WooCommerce may reject orders with customer_id: 0 when the billing email
-    // belongs to a registered user (returns "unknown username" auth error).
-    if (body.customer_id) {
-      orderData.customer_id = body.customer_id;
-    } else {
-      let resolvedCustomerId = 0;
-      const billingEmail = orderData.billing?.email;
-      if (billingEmail) {
-        try {
-          const lookupUrl = `${getOrdersApiBase(market.code)}/customers?email=${encodeURIComponent(billingEmail)}&per_page=1&${getBasicAuthParams(market.code)}`;
-          const lookupRes = await fetchOrdersBackend(lookupUrl, {
-            method: "GET",
-            headers: backendHeaders(),
-          }, market.code);
-          if (lookupRes.ok) {
-            const customers = await lookupRes.json();
-            if (Array.isArray(customers) && customers.length > 0 && customers[0].id) {
-              resolvedCustomerId = customers[0].id;
-            }
+    // Resolve both guest and authenticated checkouts by email in the target
+    // market. Numeric customer IDs are not portable across multisite blogs.
+    let resolvedCustomerId = 0;
+    const billingEmail = orderData.billing?.email;
+    if (billingEmail) {
+      try {
+        const lookupUrl = `${getOrdersApiBase(market.code)}/customers?email=${encodeURIComponent(billingEmail)}&per_page=1&${getBasicAuthParams(market.code)}`;
+        const lookupRes = await fetchOrdersBackend(lookupUrl, {
+          method: "GET",
+          headers: backendHeaders(),
+        }, market.code);
+        if (lookupRes.ok) {
+          const customers = await lookupRes.json();
+          if (Array.isArray(customers) && customers.length > 0 && customers[0].id) {
+            resolvedCustomerId = customers[0].id;
           }
-        } catch {
-          // Lookup failed — fall back to guest (customer_id: 0)
         }
+      } catch {
+        // Lookup failed — fall back to guest (customer_id: 0)
       }
-      orderData.customer_id = resolvedCustomerId;
     }
+    // Customer IDs are blog-local in WordPress multisite. Always use the ID
+    // resolved in the target market, never an ID supplied by another store.
+    orderData.customer_id = resolvedCustomerId;
 
     const expectedTotal = computeExpectedOrderTotal(body);
 
