@@ -634,6 +634,9 @@ require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-fronten
 // Include Email Templates module (custom WooCommerce email templates)
 require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-email-templates.php';
 
+// Include Mailer module (SMTP / ZeptoMail transport fallback)
+require_once sasanperfumes_SETTINGS_PATH . 'includes/class-sasanperfumes-mailer.php';
+
 // Security module skipped - standalone sasanperfumes-security plugin provides same functionality
 
 // Include Customer Tracking module (order tracking data display in admin)
@@ -696,6 +699,45 @@ function sasanperfumes_unregister_retired_post_types() {
         }
     }
 }
+
+function sasanperfumes_sync_order_customer_by_email($order): void {
+    if (!function_exists('wc_get_order')) {
+        return;
+    }
+
+    if (is_numeric($order)) {
+        $order = wc_get_order(absint($order));
+    }
+
+    if (!$order || !is_a($order, 'WC_Order')) {
+        return;
+    }
+
+    $billing_email = sanitize_email((string) $order->get_billing_email());
+    if (!is_email($billing_email)) {
+        return;
+    }
+
+    $customer_id = absint($order->get_customer_id());
+    if ($customer_id > 0) {
+        return;
+    }
+
+    $user = get_user_by('email', $billing_email);
+    if (!$user instanceof WP_User) {
+        return;
+    }
+
+    $order->set_customer_id((int) $user->ID);
+    $order->save();
+}
+
+add_action('woocommerce_checkout_create_order', function ($order) {
+    sasanperfumes_sync_order_customer_by_email($order);
+}, 20);
+add_action('woocommerce_new_order', function ($order_id) {
+    sasanperfumes_sync_order_customer_by_email($order_id);
+}, 20);
 add_action('init', 'sasanperfumes_unregister_retired_post_types', PHP_INT_MAX);
 
 function sasanperfumes_disable_retired_admin_hooks() {

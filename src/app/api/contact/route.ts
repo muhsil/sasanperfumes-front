@@ -32,15 +32,16 @@ export async function POST(request: NextRequest) {
         .join(" ")
         .trim();
     const email = body.email?.trim() || "";
+    const phone = body.phone?.trim() || "";
     const message = body.message?.trim() || "";
 
-    if (!fullName || !email || !message) {
+    if (!fullName || !email || !phone || !message) {
       return NextResponse.json(
         {
           success: false,
           error: {
             code: "missing_fields",
-            message: "Name, email, and message are required.",
+            message: "Name, email, phone, and message are required.",
           },
         },
         { status: 400 }
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest) {
         first_name: firstName,
         last_name: lastName,
         email,
-        phone: body.phone || "",
+        phone,
         subject: body.subject || "General Inquiry",
         message,
       }),

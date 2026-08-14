@@ -44,6 +44,8 @@ class sasanperfumes_Email_Templates {
 		add_filter( 'password_change_email', array( $this, 'rewrite_password_change_email' ), 999, 3 );
 		add_filter( 'email_change_email', array( $this, 'rewrite_email_change_email' ), 999, 3 );
 		add_action( 'rest_api_init', array( $this, 'register_account_email_routes' ) );
+		add_action( 'woocommerce_order_status_shipped', array( $this, 'send_shipped_order_email' ), 20, 2 );
+		add_action( 'woocommerce_order_status_changed', array( $this, 'maybe_send_shipped_order_email' ), 20, 4 );
 	}
 
 	private function get_frontend_url() {
@@ -526,6 +528,98 @@ class sasanperfumes_Email_Templates {
 			. $frontend_url;
 
 		return $email_change_email;
+	}
+
+	private function get_order_customer_email( $order ) {
+		if ( ! $order || ! is_a( $order, 'WC_Order' ) ) {
+			return '';
+		}
+
+		$email = sanitize_email( (string) $order->get_billing_email() );
+		return is_email( $email ) ? $email : '';
+	}
+
+	private function has_sent_shipped_email( $order ) {
+		if ( ! $order || ! is_a( $order, 'WC_Order' ) ) {
+			return false;
+		}
+
+		return 'yes' === (string) $order->get_meta( '_sasanperfumes_shipped_email_sent', true );
+	}
+
+	private function mark_shipped_email_sent( $order ) {
+		if ( ! $order || ! is_a( $order, 'WC_Order' ) ) {
+			return;
+		}
+
+		$order->update_meta_data( '_sasanperfumes_shipped_email_sent', 'yes' );
+		$order->save_meta_data();
+	}
+
+	private function send_shipped_email_message( $order ) {
+		$to = $this->get_order_customer_email( $order );
+		if ( '' === $to || $this->has_sent_shipped_email( $order ) ) {
+			return false;
+		}
+
+		$frontend_url = $this->get_frontend_url();
+		$order_url = trailingslashit( $frontend_url ) . 'en/account/orders/' . $order->get_id() . '/';
+		$subject = sprintf( '[%s] Your order #%s has shipped', get_bloginfo( 'name' ), $order->get_order_number() );
+
+		$message  = '<div style="font-family:Arial,sans-serif;color:#1f1f1f;line-height:1.7">';
+		$message .= '<p>Hi ' . esc_html( $order->get_billing_first_name() ) . ',</p>';
+		$message .= '<p>Your order #' . esc_html( $order->get_order_number() ) . ' has been shipped and is on its way.</p>';
+		$message .= '<p>You can review the order here: <a href="' . esc_url( $order_url ) . '">' . esc_html( $order_url ) . '</a></p>';
+		$message .= '<p>Thank you for shopping with ' . esc_html( get_bloginfo( 'name' ) ) . '.</p>';
+		$message .= '</div>';
+
+		$headers = array(
+			'Content-Type: text/html; charset=UTF-8',
+		);
+
+		if ( function_exists( 'WC' ) && WC() ) {
+			WC()->mailer();
+		}
+
+		$sent = wp_mail( $to, wp_specialchars_decode( $subject, ENT_QUOTES ), $message, $headers );
+		if ( ! $sent ) {
+			$sent = $this->send_raw_mail( $to, $subject, $message, $headers );
+		}
+
+		if ( $sent ) {
+			$this->mark_shipped_email_sent( $order );
+			$order->add_order_note( sprintf( 'Shipped email sent to %s.', $to ), false, true );
+		}
+
+		return $sent;
+	}
+
+	public function send_shipped_order_email( $order_id, $order = null ) {
+		if ( ! $order || ! is_a( $order, 'WC_Order' ) ) {
+			$order = wc_get_order( $order_id );
+		}
+
+		if ( ! $order || ! is_a( $order, 'WC_Order' ) ) {
+			return;
+		}
+
+		$this->send_shipped_email_message( $order );
+	}
+
+	public function maybe_send_shipped_order_email( $order_id, $from_status, $to_status, $order ) {
+		if ( 'shipped' !== $to_status || 'shipped' === $from_status ) {
+			return;
+		}
+
+		if ( ! $order || ! is_a( $order, 'WC_Order' ) ) {
+			$order = wc_get_order( $order_id );
+		}
+
+		if ( ! $order || ! is_a( $order, 'WC_Order' ) ) {
+			return;
+		}
+
+		$this->send_shipped_email_message( $order );
 	}
 
 	public function override_woocommerce_template( $template, $template_name, $template_path ) {
