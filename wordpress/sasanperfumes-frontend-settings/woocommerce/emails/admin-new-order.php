@@ -43,21 +43,21 @@ $fee_total = function_exists( 'sasanperfumes_order_admin_fee_gross_total' )
  */
 do_action( 'woocommerce_email_header', $email_heading, $email ); ?>
 
-<p class="email-text" style="font-size: 14px; line-height: 1.7; color: #333333; margin: 0 0 15px 0;">
+<div class="admin-status" style="background-color:#f7f5f1; border-left:4px solid #b08a4a; color:#26231f; font-size:14px; line-height:1.6; margin:0 0 22px; padding:14px 16px;">
 	<?php
 	printf(
 		/* translators: %s: Customer billing full name */
-		esc_html__( 'You\'ve received the following order from %s:', 'woocommerce' ),
+		esc_html__( 'A new order has been placed by %s and is ready for review.', 'woocommerce' ),
 		$order->get_formatted_billing_full_name()
 	);
 	?>
-</p>
+</div>
 
 <!-- Manage Order Button -->
-<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 20px 0;">
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:0 0 24px;">
 	<tr>
-		<td align="center">
-			<a href="<?php echo esc_url( $admin_order_url ); ?>" style="display: inline-block; background-color: #1a1a1a; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; padding: 12px 32px; border-radius: 6px; letter-spacing: 0.3px;">
+		<td align="left">
+			<a class="button" href="<?php echo esc_url( $admin_order_url ); ?>" style="background-color:#191816; border-radius:3px; color:#ffffff; display:inline-block; font-size:13px; font-weight:700; padding:13px 22px; text-decoration:none;">
 				<?php esc_html_e( 'Manage this order', 'woocommerce' ); ?>
 			</a>
 		</td>

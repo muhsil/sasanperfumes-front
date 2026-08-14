@@ -20,7 +20,7 @@ $admin_order_url = $order->get_edit_order_url();
  */
 do_action( 'woocommerce_email_header', $email_heading, $email ); ?>
 
-<p class="email-text" style="font-size: 14px; line-height: 1.7; color: #333333; margin: 0 0 15px 0;">
+<div class="admin-status admin-status--cancelled" style="background-color:#f4f4f3; border-left:4px solid #77736c; color:#26231f; font-size:14px; line-height:1.6; margin:0 0 22px; padding:14px 16px;">
 	<?php
 	printf(
 		/* translators: %1$s: Customer full name. %2$s: Order number */
@@ -29,13 +29,13 @@ do_action( 'woocommerce_email_header', $email_heading, $email ); ?>
 		$order->get_order_number()
 	);
 	?>
-</p>
+</div>
 
 <!-- Manage Order Button -->
-<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 20px 0;">
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:0 0 24px;">
 	<tr>
-		<td align="center">
-			<a href="<?php echo esc_url( $admin_order_url ); ?>" style="display: inline-block; background-color: #1a1a1a; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; padding: 12px 32px; border-radius: 6px; letter-spacing: 0.3px;">
+		<td align="left">
+			<a class="button" href="<?php echo esc_url( $admin_order_url ); ?>" style="background-color:#191816; border-radius:3px; color:#ffffff; display:inline-block; font-size:13px; font-weight:700; padding:13px 22px; text-decoration:none;">
 				<?php esc_html_e( 'Manage this order', 'woocommerce' ); ?>
 			</a>
 		</td>
@@ -44,7 +44,7 @@ do_action( 'woocommerce_email_header', $email_heading, $email ); ?>
 
 <hr class="divider" style="border: none; border-top: 1px solid #e0e0e0; margin: 25px 0;">
 
-<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 0 0 20px 0;">
+<table class="admin-summary" role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#faf9f7; border:1px solid #dedbd5; margin:0 0 22px;">
 	<tr>
 		<td width="50%" valign="top" style="padding-right: 10px;">
 			<p class="username-label" style="font-size: 12px; color: #888888; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 0.5px;"><?php esc_html_e( 'Order number:', 'woocommerce' ); ?></p>

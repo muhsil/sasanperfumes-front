@@ -172,6 +172,55 @@ a.button {
 .username-value { color: #171614; font-size: 15px; font-weight: 700; margin: 0 0 18px; }
 .divider { border: 0; border-top: 1px solid #dedbd5; margin: 24px 0; }
 
+/* Compact operational blocks used by administrator notifications. */
+.admin-status {
+	background-color: #f7f5f1;
+	border-left: 4px solid #b08a4a;
+	color: #26231f;
+	font-size: 14px;
+	line-height: 1.6;
+	margin: 0 0 22px;
+	padding: 14px 16px;
+}
+
+.admin-status--failed {
+	background-color: #fff4f3;
+	border-left-color: #b42318;
+}
+
+.admin-status--cancelled {
+	background-color: #f4f4f3;
+	border-left-color: #77736c;
+}
+
+.admin-summary {
+	background-color: #faf9f7;
+	border: 1px solid #dedbd5;
+	margin: 0 0 22px;
+}
+
+.admin-summary td {
+	border-bottom: 1px solid #e6e2dc;
+	padding: 12px 14px !important;
+}
+
+.admin-summary tr:last-child td {
+	border-bottom: 0;
+}
+
+.admin-label {
+	color: #77736c;
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+}
+
+.admin-value {
+	color: #171614;
+	font-size: 14px;
+	font-weight: 700;
+}
+
 img {
 	border: 0;
 	height: auto;
@@ -186,5 +235,6 @@ img {
 	#template_header h1, h1 { font-size: 24px !important; }
 	#body_content table td, #body_content table th { padding: 9px 6px !important; }
 	.button, a.button { box-sizing: border-box; display: block !important; width: 100% !important; }
+	.admin-summary td { display: block !important; width: 100% !important; }
 }
 <?php

@@ -20,7 +20,7 @@ $admin_order_url = $order->get_edit_order_url();
  */
 do_action( 'woocommerce_email_header', $email_heading, $email ); ?>
 
-<p class="email-text" style="font-size: 14px; line-height: 1.7; color: #333333; margin: 0 0 15px 0;">
+<div class="admin-status admin-status--failed" style="background-color:#fff4f3; border-left:4px solid #b42318; color:#26231f; font-size:14px; line-height:1.6; margin:0 0 22px; padding:14px 16px;">
 	<?php
 	printf(
 		/* translators: %1$s: Order number. %2$s: Customer full name. */
@@ -29,13 +29,13 @@ do_action( 'woocommerce_email_header', $email_heading, $email ); ?>
 		$order->get_formatted_billing_full_name()
 	);
 	?>
-</p>
+</div>
 
 <!-- Manage Order Button -->
-<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 20px 0;">
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:0 0 24px;">
 	<tr>
-		<td align="center">
-			<a href="<?php echo esc_url( $admin_order_url ); ?>" style="display: inline-block; background-color: #dc2626; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; padding: 12px 32px; border-radius: 6px; letter-spacing: 0.3px;">
+		<td align="left">
+			<a class="button" href="<?php echo esc_url( $admin_order_url ); ?>" style="background-color:#b42318; border-radius:3px; color:#ffffff; display:inline-block; font-size:13px; font-weight:700; padding:13px 22px; text-decoration:none;">
 				<?php esc_html_e( 'Manage this order', 'woocommerce' ); ?>
 			</a>
 		</td>
@@ -44,7 +44,7 @@ do_action( 'woocommerce_email_header', $email_heading, $email ); ?>
 
 <hr class="divider" style="border: none; border-top: 1px solid #e0e0e0; margin: 25px 0;">
 
-<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 0 0 20px 0;">
+<table class="admin-summary" role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#faf9f7; border:1px solid #dedbd5; margin:0 0 22px;">
 	<tr>
 		<td width="50%" valign="top" style="padding-right: 10px;">
 			<p class="username-label" style="font-size: 12px; color: #888888; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 0.5px;"><?php esc_html_e( 'Order number:', 'woocommerce' ); ?></p>
@@ -55,6 +55,16 @@ do_action( 'woocommerce_email_header', $email_heading, $email ); ?>
 		<td width="50%" valign="top" style="padding-left: 10px;">
 			<p class="username-label" style="font-size: 12px; color: #888888; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 0.5px;"><?php esc_html_e( 'Order date:', 'woocommerce' ); ?></p>
 			<p class="username-value" style="font-size: 15px; font-weight: 600; color: #1a1a1a; margin: 0;"><?php echo esc_html( wc_format_datetime( $order->get_date_created() ) ); ?></p>
+		</td>
+	</tr>
+	<tr>
+		<td width="50%" valign="top" style="padding:12px 14px;">
+			<p class="username-label" style="font-size:12px; color:#77736c; margin:0 0 5px; text-transform:uppercase;"><?php esc_html_e( 'Payment method:', 'woocommerce' ); ?></p>
+			<p class="username-value" style="font-size:14px; font-weight:700; color:#171614; margin:0;"><?php echo wp_kses_post( $order->get_payment_method_title() ); ?></p>
+		</td>
+		<td width="50%" valign="top" style="padding:12px 14px;">
+			<p class="username-label" style="font-size:12px; color:#77736c; margin:0 0 5px; text-transform:uppercase;"><?php esc_html_e( 'Order total:', 'woocommerce' ); ?></p>
+			<p class="username-value" style="font-size:14px; font-weight:700; color:#171614; margin:0;"><?php echo wp_kses_post( $order->get_formatted_order_total() ); ?></p>
 		</td>
 	</tr>
 </table>
