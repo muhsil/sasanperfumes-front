@@ -136,6 +136,12 @@ interface OrderLineItem {
   total?: string;
   tax_status?: string;
   meta_data?: OrderLineItemMeta[];
+  // Blog-portable identity supplied by the storefront so the order can be
+  // re-pointed at the same product on another market's blog. Stripped before
+  // the payload reaches WooCommerce.
+  sku?: string;
+  slug?: string;
+  name?: string;
 }
 
 interface OrderAddress {
@@ -262,6 +268,93 @@ function normalizeFeeLinesForNoTax(feeLines: FeeLine[], inclusiveVatRate: number
       tax_class: "",
     };
   });
+}
+
+// Product IDs are blog-local in WordPress multisite. The target market is
+// derived from the shipping country (inferMarketFromOrderBody), which can differ
+// from the storefront the cart was built on: a base-store product ID then does
+// not exist on that market's blog and WooCommerce silently stores a line item
+// with product_id 0, an empty name and no SKU. Re-resolve every item against the
+// target market by SKU (preferred) or slug, and always carry a name through so
+// an item that still cannot be resolved is at least identifiable in wp-admin.
+const PRODUCT_LOOKUP_TIMEOUT_MS = 4000;
+
+async function lookupProductInMarket(
+  query: string,
+  marketCode: string | undefined
+): Promise<{ id: number; name?: string } | null> {
+  const url = `${getOrdersApiBase(marketCode)}/products?${query}&per_page=1&status=publish&${getBasicAuthParams(marketCode)}`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), PRODUCT_LOOKUP_TIMEOUT_MS);
+  try {
+    const res = await fetchOrdersBackend(url, {
+      method: "GET",
+      headers: backendHeaders(),
+      signal: controller.signal,
+    }, marketCode);
+    if (!res.ok) return null;
+    const products = await res.json();
+    if (Array.isArray(products) && products.length > 0 && products[0]?.id) {
+      return { id: Number(products[0].id), name: products[0].name };
+    }
+    return null;
+  } catch {
+    // Never block checkout on a lookup failure — fall through to the ID as sent.
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function resolveLineItemsForMarket(
+  lineItems: OrderLineItem[],
+  marketCode: string | undefined
+): Promise<OrderLineItem[]> {
+  if (lineItems.length === 0) {
+    return lineItems;
+  }
+
+  const cache = new Map<string, { id: number; name?: string } | null>();
+
+  const resolveOne = async (item: OrderLineItem): Promise<OrderLineItem> => {
+    const queries: string[] = [];
+    if (item.sku) queries.push(`sku=${encodeURIComponent(item.sku)}`);
+    if (item.slug) queries.push(`slug=${encodeURIComponent(item.slug)}`);
+
+    let resolved: { id: number; name?: string } | null = null;
+    for (const query of queries) {
+      if (!cache.has(query)) {
+        cache.set(query, await lookupProductInMarket(query, marketCode));
+      }
+      resolved = cache.get(query) ?? null;
+      if (resolved) break;
+    }
+
+    if (!resolved && !item.product_id) {
+      console.error("[orders] line item could not be resolved in market:", {
+        market: marketCode,
+        sku: item.sku,
+        slug: item.slug,
+        name: item.name,
+      });
+    }
+
+    // Strip sku/slug before handing the item to WooCommerce: they are our
+    // transport fields, not part of the WooCommerce line item schema.
+    const { sku: _sku, slug: _slug, ...wooItem } = item;
+    void _sku;
+    void _slug;
+
+    return {
+      ...wooItem,
+      product_id: resolved ? resolved.id : item.product_id,
+      // A stored name keeps the order readable even when the product is gone,
+      // and stops third-party plugins choking on a nameless item.
+      name: item.name || resolved?.name,
+    };
+  };
+
+  return Promise.all(lineItems.map(resolveOne));
 }
 
 function parseMoney(value: unknown): number | null {
@@ -693,7 +786,10 @@ export async function POST(request: NextRequest) {
         postcode: body.shipping?.postcode || body.billing.postcode || "",
         country: body.shipping?.country || body.billing.country,
       },
-      line_items: normalizeOrderLineItemsForInclusiveTax(lineItems, inclusiveVatRate, currencyCode),
+      line_items: await resolveLineItemsForMarket(
+        normalizeOrderLineItemsForInclusiveTax(lineItems, inclusiveVatRate, currencyCode),
+        market.code
+      ),
       customer_note: body.customer_note || "",
     };
 

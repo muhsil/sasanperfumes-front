@@ -1260,11 +1260,20 @@ export default function CheckoutClient() {
           variation_id?: number;
           subtotal?: string;
           total?: string;
+          sku?: string;
+          slug?: string;
+          name?: string;
           meta_data?: Array<{ key: string; value: string }>;
         } = {
           product_id: item.id,
           quantity: item.quantity.value,
           variation_id: item.variation_id || undefined,
+          // Product IDs are blog-local in WordPress multisite. When checkout
+          // routes the order to a different market than the storefront the
+          // cart was built on, the server re-resolves the product by SKU/slug.
+          sku: item.meta?.sku || undefined,
+          slug: item.slug || undefined,
+          name: item.name || item.title || undefined,
         };
 
         // Check if this is a bundle product and calculate correct total
