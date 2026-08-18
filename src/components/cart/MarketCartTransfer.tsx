@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useCart } from "@/contexts/CartContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { getMarketDefaultCurrency } from "@/config/market";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 import type { Locale } from "@/config/site";
 
@@ -61,6 +63,7 @@ export function MarketCartTransfer() {
   const params = useParams();
   const marketPrefix = useMarketPrefix();
   const { refreshCart } = useCart();
+  const { setCurrency } = useCurrency();
 
   const locale: Locale = (params?.locale as string) === "ar" ? "ar" : "en";
   const copy = COPY[locale];
@@ -93,6 +96,12 @@ export function MarketCartTransfer() {
         marketHeaders["X-Market"] = marketCode;
         marketHeaders["X-Frontend-Host"] = `${window.location.hostname.replace(/^www\./, "")}/${marketCode}`;
       }
+
+      // Move the display currency with the basket. The destination cart holds
+      // that market's own prices, but the cart still reported the origin
+      // currency, so the storefront converted an already-correct SAR price a
+      // second time and showed 78.03 where the store charges 76.50.
+      setCurrency(getMarketDefaultCurrency(marketCode || "intl"));
 
       let resolved: ResolvedItem[] = [];
       try {
