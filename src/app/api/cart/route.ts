@@ -510,13 +510,31 @@ export async function POST(request: NextRequest) {
         );
         couponHeaders.set("Content-Type", "application/json");
 
-        const couponResponse = await fetch(noCacheUrl(couponUrl), {
+        let couponResponse = await fetch(noCacheUrl(couponUrl), {
           method: "POST",
           headers: couponHeaders,
           body: JSON.stringify(body),
         });
 
-        const couponData = await safeJsonResponse(couponResponse);
+        let couponData = await safeJsonResponse(couponResponse);
+
+        // The CoCart JWT is bound to the IP address and User-Agent that obtained
+        // it, but this call is made server side, so it arrives with this server's
+        // IP and agent and the token is rejected with "Authentication failed" for
+        // every signed-in customer. The cart is addressed by cart_key regardless,
+        // so retry as a guest exactly as the other cart actions already do.
+        if (!couponResponse.ok && authToken && isAuthError(couponResponse.status, couponData)) {
+          const guestCouponHeaders = new Headers(getGuestHeaders(request, market));
+          guestCouponHeaders.set("Content-Type", "application/json");
+
+          couponResponse = await fetch(noCacheUrl(couponUrl), {
+            method: "POST",
+            headers: guestCouponHeaders,
+            body: JSON.stringify(body),
+          });
+          couponData = await safeJsonResponse(couponResponse);
+        }
+
         if (isInvalidBackendResponse(couponData)) {
           return NextResponse.json(
             {
