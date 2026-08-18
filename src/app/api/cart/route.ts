@@ -214,22 +214,6 @@ function isAuthError(status: number, data: Record<string, unknown>): boolean {
 }
 
 // Get Store API authentication tokens (cart-token and nonce) for coupon operations
-async function getStoreApiAuth(request: NextRequest, market: MarketConfig, wpJsonBase: string): Promise<{ cartToken: string | null; nonce: string | null }> {
-  try {
-    const response = await fetch(noCacheUrl(`${wpJsonBase}/wc/store/v1/cart`), {
-      method: "GET",
-      headers: toMarketAwareHeaders(request, market.code, backendHeaders()),
-    });
-    
-    const cartToken = response.headers.get("cart-token");
-    const nonce = response.headers.get("nonce");
-    
-    return { cartToken, nonce };
-  } catch {
-    return { cartToken: null, nonce: null };
-  }
-}
-
 function createResponseWithCartKey(
   data: Record<string, unknown>,
   cartKey: string | null,
@@ -505,51 +489,48 @@ export async function POST(request: NextRequest) {
       // fee recalculation unreliable for guest users.
       case "apply-coupon":
       case "remove-coupon": {
-        // Use WooCommerce Store API for coupons (CoCart v2 doesn't have coupon endpoints on this backend)
-        // Store API requires Cart-Token and X-WP-Nonce headers for authentication
-        const { cartToken, nonce } = await getStoreApiAuth(request, market, wpJsonBase);
-        
-        if (!cartToken || !nonce) {
-          return NextResponse.json(
-            { success: false, error: { code: "store_api_auth_error", message: "Failed to get Store API authentication" } },
-            { status: 500 }
-          );
-        }
-        
-        const storeApiUrl = action === "apply-coupon" 
-          ? `${wpJsonBase}/wc/store/v1/cart/apply-coupon`
-          : `${wpJsonBase}/wc/store/v1/cart/remove-coupon`;
-        
-        const storeApiResponse = await fetch(noCacheUrl(storeApiUrl), {
+        // Coupons run against the CoCart cart, addressed by the same cart_key as
+        // every other cart operation. The Store API was used here before, but a
+        // Store API request carries its own cart identity: with none supplied it
+        // opened a fresh empty cart, applied the coupon there and discarded it,
+        // so the customer's cart never received a discount and the request still
+        // reported success. CoCart v2 has no coupon route of its own, so these
+        // two live in its namespace via an mu-plugin on the backend.
+        const couponUrl = appendParamsToUrl(
+          `${coCartBase}/cocart/v2/cart/${action === "apply-coupon" ? "apply-coupon" : "remove-coupon"}${cartKey ? `?cart_key=${cartKey}` : ""}`,
+          currency,
+          locale
+        );
+
+        const couponResponse = await fetch(noCacheUrl(couponUrl), {
           method: "POST",
-          headers: toMarketAwareHeaders(request, market.code, backendPostHeaders({
-            "Cart-Token": cartToken,
-            "X-WP-Nonce": nonce,
-          })),
+          headers: authToken
+            ? getAuthHeaders(request, market, authToken)
+            : getGuestHeaders(request, market),
           body: JSON.stringify(body),
         });
-        
-        const storeApiData = await safeJsonResponse(storeApiResponse);
-        if (isInvalidBackendResponse(storeApiData)) {
+
+        const couponData = await safeJsonResponse(couponResponse);
+        if (isInvalidBackendResponse(couponData)) {
           return NextResponse.json(
             {
               success: false,
-              error: blockedBackendError(storeApiData),
+              error: blockedBackendError(couponData),
             },
             { status: 503 }
           );
         }
-        
-        if (!storeApiResponse.ok) {
+
+        if (!couponResponse.ok) {
           return NextResponse.json(
             {
               success: false,
               error: {
-                code: String(storeApiData.code || "coupon_error"),
-                message: String(storeApiData.message || "Coupon operation failed."),
+                code: String(couponData.code || "coupon_error"),
+                message: String(couponData.message || "Coupon operation failed."),
               },
             },
-            { status: storeApiResponse.status }
+            { status: couponResponse.status }
           );
         }
         
@@ -574,11 +555,11 @@ export async function POST(request: NextRequest) {
         }
         
         if (!coCartResponse.ok) {
-          const localizedStoreApiCart = await localizeCartItems(storeApiData as Record<string, unknown>, locale as Locale | null, request);
-          return NextResponse.json({ 
-            success: true, 
-            cart: localizedStoreApiCart,
-            warning: "Cart data may not be in expected format"
+          // The coupon call succeeded, so report that rather than dressing the
+          // coupon response up as a cart — it only carries totals, not items.
+          return NextResponse.json({
+            success: true,
+            warning: "Coupon applied but the cart could not be reloaded.",
           });
         }
         
