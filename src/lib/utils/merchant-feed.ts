@@ -70,10 +70,17 @@ async function getAllProductsForMarket(marketCode: MarketCode, currency: Currenc
   return products;
 }
 
-function buildItem(product: WCProduct, marketCode: MarketCode): string | null {
+function buildItem(product: WCProduct, marketCode: MarketCode, currency: Currency): string | null {
   const price = formatPrice(product.prices?.price, product.prices?.currency_minor_unit);
-  const currencyCode = product.prices?.currency_code;
-  if (!price || !currencyCode) return null;
+  if (!price) return null;
+
+  // The Store API reports the network's default currency_code (AED) on every
+  // blog even though the amounts themselves are converted per market, so
+  // trusting it labelled QAR/OMR/SAR prices as AED. The market's own currency is
+  // authoritative here. The amount deliberately keeps the API's minor-unit scale
+  // so the feed price matches what the landing page shows, which is what
+  // Merchant Center validates against.
+  const currencyCode = currency;
 
   const link = `${siteConfig.url}${getMarketPathPrefix(marketCode)}/en/product/${product.slug}`;
   const image = product.images?.[0]?.src;
@@ -117,7 +124,7 @@ export async function buildGoogleMerchantFeed(marketCode: MarketCode, currency: 
     .filter((p) => p.is_purchasable !== false)
     .filter((p) => p.catalog_visibility === undefined || p.catalog_visibility === "visible" || p.catalog_visibility === "catalog")
     .filter((p) => !AR_TRANSLATION_SLUG.test(p.slug))
-    .map((p) => buildItem(p, marketCode))
+    .map((p) => buildItem(p, marketCode, currency))
     .filter((item): item is string => item !== null);
 
   const title = `${siteConfig.name} — ${marketCode === "intl" ? "UAE" : marketCode.toUpperCase()} product feed`;
