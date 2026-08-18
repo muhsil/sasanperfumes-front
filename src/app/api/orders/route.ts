@@ -308,15 +308,24 @@ async function lookupProductInMarket(
 
 async function resolveLineItemsForMarket(
   lineItems: OrderLineItem[],
-  marketCode: string | undefined
+  marketCode: string | undefined,
+  sourceMarket: string | undefined
 ): Promise<OrderLineItem[]> {
   if (lineItems.length === 0) {
     return lineItems;
   }
 
   const cache = new Map<string, { id: number; name?: string } | null>();
+  const normalizedTarget = (marketCode || "ae").toLowerCase();
+  const normalizedSource = (sourceMarket || "").toLowerCase();
+  // Same catalogue on both ends: the incoming ID is already blog-local and safe.
+  const sameCatalogue = normalizedSource !== "" && normalizedSource === normalizedTarget;
 
   const resolveOne = async (item: OrderLineItem): Promise<OrderLineItem> => {
+    if (sameCatalogue) {
+      return item;
+    }
+
     const queries: string[] = [];
     if (item.sku) queries.push(`sku=${encodeURIComponent(item.sku)}`);
     if (item.slug) queries.push(`slug=${encodeURIComponent(item.slug)}`);
@@ -330,27 +339,44 @@ async function resolveLineItemsForMarket(
       if (resolved) break;
     }
 
-    if (!resolved && !item.product_id) {
-      console.error("[orders] line item could not be resolved in market:", {
-        market: marketCode,
-        sku: item.sku,
-        slug: item.slug,
-        name: item.name,
-      });
-    }
-
     // Strip sku/slug before handing the item to WooCommerce: they are our
     // transport fields, not part of the WooCommerce line item schema.
     const { sku: _sku, slug: _slug, ...wooItem } = item;
     void _sku;
     void _slug;
 
+    if (resolved) {
+      return { ...wooItem, product_id: resolved.id, name: item.name || resolved.name };
+    }
+
+    // Catalogues differ per market blog, so an ID from another store either
+    // does not exist here or — worse — points at an unrelated product. Never
+    // carry it over: drop to 0 and record what was actually ordered so the
+    // order stays readable and can be reconciled by hand.
+    console.error("[orders] line item unresolvable in target market:", {
+      targetMarket: normalizedTarget,
+      sourceMarket: normalizedSource || "(unknown)",
+      sourceProductId: item.product_id,
+      sku: item.sku,
+      slug: item.slug,
+      name: item.name,
+    });
+
+    const fallbackName =
+      item.name || item.slug || (item.sku ? `SKU ${item.sku}` : "Unmatched product");
+
     return {
       ...wooItem,
-      product_id: resolved ? resolved.id : item.product_id,
-      // A stored name keeps the order readable even when the product is gone,
-      // and stops third-party plugins choking on a nameless item.
-      name: item.name || resolved?.name,
+      product_id: 0,
+      variation_id: 0,
+      name: fallbackName,
+      meta_data: [
+        ...(item.meta_data || []),
+        {
+          key: "Source product",
+          value: `${normalizedSource || "unknown"} #${item.product_id}${item.sku ? ` · SKU ${item.sku}` : ""}${item.slug ? ` · ${item.slug}` : ""}`,
+        },
+      ],
     };
   };
 
@@ -788,7 +814,8 @@ export async function POST(request: NextRequest) {
       },
       line_items: await resolveLineItemsForMarket(
         normalizeOrderLineItemsForInclusiveTax(lineItems, inclusiveVatRate, currencyCode),
-        market.code
+        market.code,
+        typeof body.source_market === "string" ? body.source_market : undefined
       ),
       customer_note: body.customer_note || "",
     };

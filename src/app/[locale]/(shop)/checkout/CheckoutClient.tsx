@@ -1441,6 +1441,11 @@ export default function CheckoutClient() {
           phone: formData.shipping.phone,
         },
         line_items: lineItems,
+        // The storefront the cart was actually built on. checkoutMarketCode can
+        // differ (it follows the shipping country), and product catalogues are
+        // not shared between market blogs, so the server needs to know the
+        // origin catalogue to re-resolve items or flag them as unresolvable.
+        source_market: marketCode || "ae",
         shipping_lines: shippingLines,
         coupon_lines: couponLines,
         ...(() => {
