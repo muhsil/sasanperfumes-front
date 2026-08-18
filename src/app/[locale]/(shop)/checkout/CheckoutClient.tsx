@@ -569,6 +569,49 @@ export default function CheckoutClient() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [shippingCountryCode, currency, setCurrency]);
 
+        // Each market is a separate WordPress blog with its own catalogue and its
+        // own cart, and the catalogues are not in parity. Creating the order in
+        // the shipping country's market while the cart was built elsewhere is what
+        // produced orders with no line items, so move the customer to the store
+        // that can actually fulfil them instead. The basket travels as slugs and is
+        // rebuilt on arrival by MarketCartTransfer, which also reports anything
+        // that market does not stock.
+        const marketHandoverRef = useRef(false);
+        useEffect(() => {
+          if (marketHandoverRef.current) return;
+          if (!shippingCountryCode) return;
+          if (isCartLoading || cartItems.length === 0) return;
+
+          const targetMarket = COUNTRY_TO_MARKET[shippingCountryCode] || "";
+          if (targetMarket === (marketCode || "")) return;
+
+          marketHandoverRef.current = true;
+
+          const payload = cartItems
+            .map((item) => ({
+              slug: item.slug,
+              sku: item.meta?.sku || undefined,
+              qty: item.quantity?.value || 1,
+            }))
+            .filter((item) => item.slug);
+
+          const json = JSON.stringify(payload);
+          const bytes = new TextEncoder().encode(json);
+          let binary = "";
+          bytes.forEach((byte) => {
+            binary += String.fromCharCode(byte);
+          });
+          const encoded = window
+            .btoa(binary)
+            .replace(/\+/g, "-")
+            .replace(/\//g, "_")
+            .replace(/=+$/, "");
+
+          const prefix = targetMarket ? `/${targetMarket}` : "";
+          router.replace(`${prefix}/${locale}/cart?transfer=${encoded}`);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, [shippingCountryCode, marketCode, isCartLoading, cartItems, locale, router]);
+
         const filteredPaymentGateways = paymentGateways.filter(
           (gateway) =>
             isPaymentMethodAvailableForCountry(gateway.id, formData.shipping.country, apiCountryAvailability) &&

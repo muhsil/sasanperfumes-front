@@ -8,6 +8,7 @@ import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, User, UserCheck, Tag, X, G
 import { Button } from "@/components/common/Button";
 import { Input } from "@/components/common/Input";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
+import { MarketCartTransfer } from "@/components/cart/MarketCartTransfer";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { BundleItemsList } from "@/components/cart/BundleItemsList";
 import { useCart } from "@/contexts/CartContext";
@@ -236,6 +237,7 @@ export default function CartPage() {
     <div className="page-flush min-h-screen bg-transparent pb-44 md:pb-8">
       <div className="container mx-auto px-4 py-2 md:py-3">
         <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} contained={false} />
+        <MarketCartTransfer />
 
         {/* Login Status Indicator */}
         {!isEmpty && (
