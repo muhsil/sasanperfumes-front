@@ -466,8 +466,14 @@ async function reconcileOrderTotals(
 
   const updateData: Record<string, unknown> = {};
 
+  // Re-asserting line item totals rewrites the amounts a coupon just reduced,
+  // which silently removes the discount and leaves the coupon on the order at
+  // zero. WooCommerce has already priced these items correctly against the
+  // coupon, so leave them alone and reconcile only fees and shipping.
+  const orderHasCoupons = Array.isArray(orderData.coupon_lines) && orderData.coupon_lines.length > 0;
+
   const createdLineItems = Array.isArray(createdOrder.line_items) ? createdOrder.line_items : [];
-  if (createdLineItems.length === orderData.line_items.length) {
+  if (!orderHasCoupons && createdLineItems.length === orderData.line_items.length) {
     updateData.line_items = createdLineItems.map((created, index) => ({
       id: created.id,
       subtotal: orderData.line_items[index].subtotal,

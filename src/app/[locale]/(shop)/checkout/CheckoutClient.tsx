@@ -1484,6 +1484,12 @@ export default function CheckoutClient() {
           phone: formData.shipping.phone,
         },
         line_items: lineItems,
+        // The total shown to the customer, coupon discount included. Without it
+        // the server re-derives an expected total from line items, fees and
+        // shipping alone, which ignores coupons entirely - it then reads
+        // WooCommerce's correctly discounted total as a mismatch and overwrites
+        // the discount away.
+        expected_total: checkoutTotal.toFixed(checkoutCurrencyMinorUnit),
         // The storefront the cart was actually built on. checkoutMarketCode can
         // differ (it follows the shipping country), and product catalogues are
         // not shared between market blogs, so the server needs to know the
