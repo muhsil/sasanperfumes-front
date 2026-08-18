@@ -466,6 +466,14 @@ async function reconcileOrderTotals(
 
   const updateData: Record<string, unknown> = {};
 
+  // Carry the customer through the reconciliation write. Without it the order
+  // came back owned by nobody: it showed as Guest in wp-admin and vanished from
+  // the customer's own order history, because reconciliation runs for almost
+  // any order carrying a coupon or a rounded fee.
+  if (typeof orderData.customer_id === "number") {
+    updateData.customer_id = orderData.customer_id;
+  }
+
   // Re-asserting line item totals rewrites the amounts a coupon just reduced,
   // which silently removes the discount and leaves the coupon on the order at
   // zero. WooCommerce has already priced these items correctly against the
