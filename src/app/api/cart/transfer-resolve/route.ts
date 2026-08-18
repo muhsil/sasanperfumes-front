@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getProductBySlug } from "@/lib/api/woocommerce";
-import { fetchMarketProductsRest } from "@/lib/api/marketProductsRest";
-import { getMarketDefaultCurrency } from "@/config/market";
-import type { Locale } from "@/config/site";
+import { wpJsonSubsiteBaseForMarket } from "@/lib/utils/backendFetch";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -10,6 +7,7 @@ export const fetchCache = "force-no-store";
 // An empty code is the base/UAE store; the others are the market blogs.
 const MARKET_CODES = new Set(["", "qa", "om", "sa"]);
 const MAX_ITEMS = 50;
+const LOOKUP_TIMEOUT_MS = 8000;
 
 interface ResolvedItem {
   slug: string;
@@ -19,32 +17,37 @@ interface ResolvedItem {
   name: string | null;
 }
 
-// Market blogs must be queried through the market-scoped REST helper.
-// getProductBySlug falls back through the base catalogue when a slug is missing
-// on the requested host, which silently returned base-store product IDs for
-// products the market does not stock — exactly the cross-blog ID mix-up this
-// endpoint exists to prevent. fetchMarketProductsRest is pinned to the market's
-// own wp-json base and has no such fallback.
-async function resolveInMarket(slug: string, market: string): Promise<{ id: number; name: string | null } | null> {
-  const result = await fetchMarketProductsRest({ slug, per_page: 1 }, market);
-  const product = result.products?.[0] as { id?: unknown; name?: unknown } | undefined;
-  const id = Number(product?.id);
-  if (!Number.isFinite(id) || id <= 0) return null;
-  return { id, name: typeof product?.name === "string" ? product.name : null };
-}
+// Resolution goes through the public Store API on the destination blog's own
+// wp-json base. Two earlier approaches were wrong in opposite directions:
+// getProductBySlug falls back through the base catalogue, so a market lookup
+// returned base-store IDs for products that market does not stock, and
+// fetchMarketProductsRest needs WooCommerce consumer credentials and returns
+// nothing without them. The Store API needs no credentials, is scoped strictly
+// to the blog in the URL, and has no fallback — a missing slug is simply an
+// empty array, which is exactly the "not stocked here" answer we want.
+async function resolveOnBlog(slug: string, market: string): Promise<{ id: number; name: string | null } | null> {
+  const base = wpJsonSubsiteBaseForMarket(market);
+  const url = `${base}/wc/store/v1/products?slug=${encodeURIComponent(slug)}&per_page=1`;
 
-async function resolveInBaseStore(
-  slug: string,
-  locale: Locale
-): Promise<{ id: number; name: string | null } | null> {
-  const product = await getProductBySlug(
-    slug,
-    locale,
-    getMarketDefaultCurrency("intl"),
-    "sasanperfumes.com"
-  );
-  if (!product?.id) return null;
-  return { id: product.id, name: product.name ?? null };
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), LOOKUP_TIMEOUT_MS);
+  try {
+    const response = await fetch(url, {
+      cache: "no-store",
+      signal: controller.signal,
+      headers: { "Cache-Control": "no-cache" },
+    });
+    if (!response.ok) return null;
+    const products = await response.json();
+    if (!Array.isArray(products) || products.length === 0) return null;
+    const id = Number(products[0]?.id);
+    if (!Number.isFinite(id) || id <= 0) return null;
+    return { id, name: typeof products[0]?.name === "string" ? products[0].name : null };
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 // Resolves cart items against a different market's catalogue. Product IDs are
@@ -55,7 +58,6 @@ async function resolveInBaseStore(
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   const market = typeof body?.market === "string" ? body.market.replace(/^\/+/, "").toLowerCase() : "";
-  const locale: Locale = body?.locale === "ar" ? "ar" : "en";
   const items = Array.isArray(body?.items) ? body.items.slice(0, MAX_ITEMS) : [];
 
   if (!MARKET_CODES.has(market)) {
@@ -70,16 +72,12 @@ export async function POST(request: NextRequest) {
       const slug = typeof item.slug === "string" ? item.slug : "";
       const sku = typeof item.sku === "string" ? item.sku : null;
       const qty = Math.max(1, Math.min(99, Number(item.qty) || 1));
-      const miss: ResolvedItem = { slug, sku, qty, productId: null, name: null };
-      if (!slug) return miss;
+      if (!slug) return { slug, sku, qty, productId: null, name: null };
 
-      try {
-        const hit = market ? await resolveInMarket(slug, market) : await resolveInBaseStore(slug, locale);
-        if (!hit) return miss;
-        return { slug, sku, qty, productId: hit.id, name: hit.name };
-      } catch {
-        return miss;
-      }
+      const hit = await resolveOnBlog(slug, market);
+      return hit
+        ? { slug, sku, qty, productId: hit.id, name: hit.name }
+        : { slug, sku, qty, productId: null, name: null };
     })
   );
 
