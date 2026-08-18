@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { wpJsonSubsiteBaseForMarket } from "@/lib/utils/backendFetch";
+import { siteConfig } from "@/config/site";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -25,9 +25,16 @@ interface ResolvedItem {
 // nothing without them. The Store API needs no credentials, is scoped strictly
 // to the blog in the URL, and has no fallback — a missing slug is simply an
 // empty array, which is exactly the "not stocked here" answer we want.
+// Built explicitly rather than through a helper: the market blog is a path
+// segment on the CMS host, and this must not be rewritten or fall back to the
+// network's main site.
+function storeApiBase(market: string): string {
+  const origin = siteConfig.apiUrl.replace(/\/+$/, "");
+  return market ? `${origin}/${market}/wp-json` : `${origin}/wp-json`;
+}
+
 async function resolveOnBlog(slug: string, market: string): Promise<{ id: number; name: string | null } | null> {
-  const base = wpJsonSubsiteBaseForMarket(market);
-  const url = `${base}/wc/store/v1/products?slug=${encodeURIComponent(slug)}&per_page=1`;
+  const url = `${storeApiBase(market)}/wc/store/v1/products?slug=${encodeURIComponent(slug)}&per_page=1`;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), LOOKUP_TIMEOUT_MS);
@@ -81,5 +88,8 @@ export async function POST(request: NextRequest) {
     })
   );
 
-  return NextResponse.json({ market, resolved }, { headers: { "Cache-Control": "no-store" } });
+  return NextResponse.json(
+    { market, base: storeApiBase(market), resolved },
+    { headers: { "Cache-Control": "no-store" } }
+  );
 }
