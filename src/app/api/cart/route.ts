@@ -502,11 +502,17 @@ export async function POST(request: NextRequest) {
           locale
         );
 
+        // The cart header helpers are shaped for GET requests and carry no
+        // content type, so WordPress skipped JSON body parsing and rejected the
+        // call with "Missing parameter(s): code".
+        const couponHeaders = new Headers(
+          authToken ? getAuthHeaders(request, market, authToken) : getGuestHeaders(request, market)
+        );
+        couponHeaders.set("Content-Type", "application/json");
+
         const couponResponse = await fetch(noCacheUrl(couponUrl), {
           method: "POST",
-          headers: authToken
-            ? getAuthHeaders(request, market, authToken)
-            : getGuestHeaders(request, market),
+          headers: couponHeaders,
           body: JSON.stringify(body),
         });
 
