@@ -116,10 +116,18 @@ export function generateMetadata({
     ...(keywords && keywords.length > 0 ? { keywords } : {}),
     alternates: {
       canonical: canonicalUrl,
+      // Region-qualify hreflang per market. With bare "en"/"ar" all four markets
+      // advertised the same language for the same product, giving Google no
+      // signal that they are regional variants — so it consolidated them and the
+      // regional targeting was lost. Cross-linking the markets to each other is
+      // deliberately not done here: market catalogues are not in parity, so a
+      // cross-market product URL would frequently 404.
       languages: {
-        en: altEn,
-        ar: altAr,
-        "x-default": altEn,
+        [`en-${ogRegion}`]: altEn,
+        [`ar-${ogRegion}`]: altAr,
+        // Only the base market may declare the default; emitting x-default from
+        // every market meant four pages each claimed to be the fallback.
+        ...(ogRegion === "AE" ? { "x-default": altEn } : {}),
       },
     },
     openGraph: {
