@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { siteConfig } from "@/config/site";
+import { backendMarketHeaders } from "@/lib/utils/backendFetch";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -39,10 +40,13 @@ async function resolveOnBlog(slug: string, market: string): Promise<{ id: number
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), LOOKUP_TIMEOUT_MS);
   try {
+    // The CMS resolves which blog serves a request from the market headers, not
+    // from the path alone: without them every /qa, /om and /sa Store API call
+    // was answered by the network's main site, returning base-store product IDs.
     const response = await fetch(url, {
       cache: "no-store",
       signal: controller.signal,
-      headers: { "Cache-Control": "no-cache" },
+      headers: backendMarketHeaders(market, { "Cache-Control": "no-cache" }),
     });
     if (!response.ok) return null;
     const products = await response.json();
