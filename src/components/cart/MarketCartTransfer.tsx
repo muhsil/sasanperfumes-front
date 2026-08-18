@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { addToCart } from "@/lib/api/cocart";
 import { useCart } from "@/contexts/CartContext";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 import type { Locale } from "@/config/site";
@@ -82,14 +81,25 @@ export function MarketCartTransfer() {
 
     const run = async () => {
       setStatus("working");
-      const market = marketPrefix.replace(/^\//, "").toLowerCase();
+
+      // Read the market straight off the path rather than from the hook or from
+      // addToCart's own pathname sniffing: this runs immediately after a client
+      // side navigation, and resolving against the wrong market hands back the
+      // origin store's product IDs, which the destination cart then rejects.
+      const market = (window.location.pathname.split("/").filter(Boolean)[0] || "").toLowerCase();
+      const marketCode = ["qa", "om", "sa"].includes(market) ? market : "";
+      const marketHeaders: Record<string, string> = { "Content-Type": "application/json" };
+      if (marketCode) {
+        marketHeaders["X-Market"] = marketCode;
+        marketHeaders["X-Frontend-Host"] = `${window.location.hostname.replace(/^www\./, "")}/${marketCode}`;
+      }
 
       let resolved: ResolvedItem[] = [];
       try {
         const res = await fetch("/api/cart/transfer-resolve", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ market, locale, items }),
+          body: JSON.stringify({ market: marketCode, locale, items }),
         });
         const data = await res.json();
         resolved = Array.isArray(data?.resolved) ? data.resolved : [];
@@ -97,19 +107,40 @@ export function MarketCartTransfer() {
         resolved = [];
       }
 
-      let added = 0;
+      const attempted: ResolvedItem[] = [];
       for (const item of resolved) {
         if (!item.productId) continue;
         try {
-          const result = await addToCart(item.productId, item.qty);
-          if (result?.success !== false) added += 1;
+          await fetch("/api/cart?action=add", {
+            method: "POST",
+            headers: marketHeaders,
+            body: JSON.stringify({ id: String(item.productId), quantity: String(item.qty) }),
+          });
+          attempted.push(item);
         } catch {
-          // Report it as unavailable rather than failing the whole handover.
+          // Fall through: the verification pass below decides what actually landed.
         }
       }
 
-      setAddedCount(added);
-      setUnavailable(resolved.filter((entry) => !entry.productId));
+      // Count what the destination cart really holds rather than trusting the
+      // add responses, so the customer is never told an item moved when it did not.
+      let landed = new Set<number>();
+      try {
+        const cartRes = await fetch("/api/cart", { headers: marketHeaders });
+        const cartData = await cartRes.json();
+        const cartItems = (cartData?.cart?.items || cartData?.items || []) as Array<Record<string, unknown>>;
+        landed = new Set(cartItems.map((entry) => Number(entry.id)).filter((id) => Number.isFinite(id)));
+      } catch {
+        landed = new Set(attempted.map((entry) => entry.productId as number));
+      }
+
+      const carried = attempted.filter((entry) => landed.has(entry.productId as number));
+      const missed = resolved.filter(
+        (entry) => !entry.productId || !landed.has(entry.productId as number)
+      );
+
+      setAddedCount(carried.length);
+      setUnavailable(missed);
       await refreshCart();
       setStatus("done");
 
