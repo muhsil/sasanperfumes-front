@@ -297,9 +297,23 @@ function sasanperfumes_handle_site_customer_access(WP_REST_Request $request) {
             );
         }
 
+        $desired_username = $username !== '' ? $username : $email;
+        if (!validate_username($desired_username)) {
+            $desired_username = function_exists('wc_create_new_customer_username')
+                ? wc_create_new_customer_username($email)
+                : sanitize_user($email, true);
+        }
+        if ($desired_username === '' || username_exists($desired_username)) {
+            $base_username    = $desired_username !== '' ? $desired_username : 'customer';
+            $desired_username = $base_username . wp_rand(100, 99999);
+            while (username_exists($desired_username)) {
+                $desired_username = $base_username . wp_rand(100, 99999);
+            }
+        }
+
         $customer = new WC_Customer();
         $customer->set_email($email);
-        $customer->set_username($username !== '' ? $username : $email);
+        $customer->set_username($desired_username);
         $customer->set_password($password);
         sasanperfumes_apply_customer_request_fields($customer, $payload);
         $customer->save();
