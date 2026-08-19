@@ -2,6 +2,7 @@
 
 import { Phone, Mail } from "lucide-react";
 import { siteConfig } from "@/config/site";
+import { toWhatsAppNumber } from "@/lib/utils/phone";
 
 interface QuickContactButtonsProps {
   whatsappLabel: string;
@@ -14,7 +15,7 @@ export function QuickContactButtons({
   callLabel,
   emailLabel,
 }: QuickContactButtonsProps) {
-  const whatsappNumber = siteConfig.contact.whatsapp.replace(/\D/g, "");
+  const whatsappNumber = toWhatsAppNumber(siteConfig.contact.whatsapp);
   const phoneNumber = siteConfig.contact.phone.replace(/\s/g, "");
   const emailHref = `mailto:${siteConfig.contact.email}`;
 

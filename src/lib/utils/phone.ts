@@ -247,6 +247,31 @@ export function parsePhoneNumber(phone: string): { dialCode: string; localNumber
   return { dialCode: "", localNumber: cleaned };
 }
 
+/**
+ * wa.me only accepts a full international number in digits — no `+`, no leading
+ * zero. Support numbers are stored locally (`0567394314`), which produces a link
+ * WhatsApp rejects, so normalise before building the URL.
+ */
+export function toWhatsAppNumber(value: string, defaultDialCode = "971"): string {
+  if (!value) return "";
+
+  const raw = String(value).trim();
+  const parsed = parsePhoneNumber(raw);
+  if (parsed.dialCode) {
+    return `${parsed.dialCode}${parsed.localNumber}`.replace(/\D/g, "");
+  }
+
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) return "";
+
+  const fallback = defaultDialCode.replace(/\D/g, "");
+  if (digits.startsWith("0")) return `${fallback}${digits.replace(/^0+/, "")}`;
+  if (digits.startsWith(fallback)) return digits;
+
+  // A bare subscriber number still needs its country code.
+  return digits.length <= 9 ? `${fallback}${digits}` : digits;
+}
+
 export function formatPhoneWithCountryCode(dialCode: string, localNumber: string): string {
   const digitsOnly = localNumber.replace(/\D/g, "");
   if (!digitsOnly) return "";
@@ -259,31 +284,41 @@ export interface PhoneValidationResult {
   errorAr?: string;
 }
 
+/**
+ * Customers order from outside the listed countries and carry numbers that do
+ * not match the local digit count, so phone entry is not restricted to a
+ * specific country's format. Only loose sanity bounds are applied — the upper
+ * bound is the E.164 maximum.
+ */
+export const MIN_PHONE_DIGITS = 4;
+export const MAX_PHONE_DIGITS = 15;
+
 export function validatePhoneNumber(
   localNumber: string,
-  countryCode: string
+  // Retained so callers keep their existing signature; length is no longer
+  // enforced per country.
+  countryCode?: string
 ): PhoneValidationResult {
+  void countryCode;
   const digitsOnly = localNumber.replace(/\D/g, "");
 
   if (!digitsOnly) {
     return { isValid: false, error: "Phone number is required", errorAr: "رقم الهاتف مطلوب" };
   }
 
-  const config = getPhoneConfigByCountry(countryCode);
-
-  if (digitsOnly.length < config.minLength) {
+  if (digitsOnly.length < MIN_PHONE_DIGITS) {
     return {
       isValid: false,
-      error: `Phone number must be at least ${config.minLength} digits`,
-      errorAr: `يجب أن يكون رقم الهاتف ${config.minLength} أرقام على الأقل`,
+      error: `Phone number must be at least ${MIN_PHONE_DIGITS} digits`,
+      errorAr: `يجب أن يكون رقم الهاتف ${MIN_PHONE_DIGITS} أرقام على الأقل`,
     };
   }
 
-  if (digitsOnly.length > config.maxLength) {
+  if (digitsOnly.length > MAX_PHONE_DIGITS) {
     return {
       isValid: false,
-      error: `Phone number must not exceed ${config.maxLength} digits`,
-      errorAr: `يجب ألا يتجاوز رقم الهاتف ${config.maxLength} أرقام`,
+      error: `Phone number must not exceed ${MAX_PHONE_DIGITS} digits`,
+      errorAr: `يجب ألا يتجاوز رقم الهاتف ${MAX_PHONE_DIGITS} أرقام`,
     };
   }
 
