@@ -68,6 +68,19 @@ export interface WCProductVariation {
   purchasable?: boolean;
 }
 
+/**
+ * Editable fragrance fields kept on the product in WordPress and delivered by
+ * the Store API under `extensions.sasan_fragrance`. Preferred over the values
+ * parsed out of the description prose.
+ */
+export interface SasanFragranceFields {
+  inspired_by?: string;
+  top?: string;
+  middle?: string;
+  base?: string;
+  notes_raw?: string;
+}
+
 export interface WCProduct {
   id: number;
   name: string;
@@ -111,7 +124,7 @@ export interface WCProduct {
     maximum: number;
     multiple_of: number;
   };
-  extensions: Record<string, unknown>;
+  extensions: Record<string, unknown> & { sasan_fragrance?: SasanFragranceFields };
   sale_end?: string | null;
   sale_start?: string | null;
 }
