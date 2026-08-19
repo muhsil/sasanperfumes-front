@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/common/Checkbox";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { PhoneInput } from "@/components/common/PhoneInput";
 import { register } from "@/lib/api/auth";
-import { validatePhoneNumber, parsePhoneNumber } from "@/lib/utils/phone";
+import { validatePhoneNumber, parsePhoneNumber, detectCountryFromPhone } from "@/lib/utils/phone";
 import { useNotification } from "@/contexts/NotificationContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
@@ -133,7 +133,8 @@ export default function RegisterPage({ params }: RegisterPageProps) {
     } else {
       const parsed = parsePhoneNumber(formData.phone);
       if (parsed.localNumber) {
-        const validation = validatePhoneNumber(parsed.localNumber, "AE");
+        const phoneCountry = detectCountryFromPhone(formData.phone) || "AE";
+        const validation = validatePhoneNumber(parsed.localNumber, phoneCountry);
         if (!validation.isValid) {
           newErrors.phone = isRTL ? validation.errorAr : validation.error;
         }
