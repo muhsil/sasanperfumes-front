@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { toWhatsAppNumber } from "@/lib/utils/phone";
 
 interface WhatsAppFloatingButtonProps {
   phoneNumber?: string;
@@ -65,7 +66,7 @@ export function WhatsAppFloatingButton({
   const safeMessage = (message || defaultMessage)
     .replaceAll(legacyName, "Sasan Perfumes")
     .replaceAll(legacySlug, "Sasan Perfumes");
-  const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(safeMessage)}`;
+  const whatsappUrl = `https://wa.me/${toWhatsAppNumber(phoneNumber)}?text=${encodeURIComponent(safeMessage)}`;
 
   const isCartPage = pathname?.includes("/cart");
   const isCheckoutPage = pathname?.includes("/checkout");

@@ -10,6 +10,7 @@ import {
   parsePhoneNumber,
   formatPhoneWithCountryCode,
   validatePhoneNumber,
+  MAX_PHONE_DIGITS,
 } from "@/lib/utils/phone";
 import { countries, getMarketCountryCode } from "@/components/common/CountrySelect";
 
@@ -119,7 +120,7 @@ export function PhoneInput({
     (inputValue: string) => {
       const digitsOnly = inputValue.replace(/\D/g, "");
       const config = getPhoneConfigByCountry(selectedCountry);
-      const truncated = digitsOnly.slice(0, config.maxLength);
+      const truncated = digitsOnly.slice(0, MAX_PHONE_DIGITS);
       setLocalNumber(truncated);
 
       const fullPhone = formatPhoneWithCountryCode(config.dialCode, truncated);
@@ -151,7 +152,7 @@ export function PhoneInput({
 
       const config = getPhoneConfigByCountry(code);
       const digitsOnly = localNumber.replace(/\D/g, "");
-      const truncated = digitsOnly.slice(0, config.maxLength);
+      const truncated = digitsOnly.slice(0, MAX_PHONE_DIGITS);
       setLocalNumber(truncated);
 
       const fullPhone = formatPhoneWithCountryCode(config.dialCode, truncated);
@@ -195,7 +196,6 @@ export function PhoneInput({
   });
 
   const displayError = externalError || internalError;
-  const selectedConfig = visiblePhoneConfigs.find((c) => c.code === selectedCountry);
 
   return (
     <div className={cn("w-full", className)} ref={containerRef}>
@@ -236,7 +236,7 @@ export function PhoneInput({
           onChange={(e) => handleLocalNumberChange(e.target.value)}
           placeholder={
             placeholder ||
-            (isRTL ? "رقم الهاتف" : `${currentConfig.minLength} digits`)
+            (isRTL ? "رقم الهاتف" : "Phone number")
           }
           required={required}
           disabled={disabled}
@@ -305,13 +305,6 @@ export function PhoneInput({
       </div>
       {displayError && (
         <p className="mt-1.5 text-sm text-red-500">{displayError}</p>
-      )}
-      {!displayError && selectedConfig && (
-        <p className="mt-1 text-xs text-gray-400">
-          {isRTL
-            ? `${currentConfig.minLength === currentConfig.maxLength ? currentConfig.minLength : `${currentConfig.minLength}-${currentConfig.maxLength}`} أرقام`
-            : `${currentConfig.minLength === currentConfig.maxLength ? currentConfig.minLength : `${currentConfig.minLength}-${currentConfig.maxLength}`} digits`}
-        </p>
       )}
     </div>
   );

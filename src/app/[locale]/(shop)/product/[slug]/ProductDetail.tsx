@@ -984,8 +984,26 @@ export function ProductDetail({ product, locale, addonForms = [], englishCategor
           .filter((term) => isMeaningfulDisplayText(term))      )
     );
   }, [product.attributes]);
-  const fragranceNotes = useMemo(() => extractFragranceNotes(descriptionStoryText), [descriptionStoryText]);
-  const inspiredBy = useMemo(() => extractInspiredBy(descriptionStoryText), [descriptionStoryText]);
+  // Curated fields maintained in the WordPress "Fragrance" tab. These are
+  // authoritative; parsing the description is only a fallback for products that
+  // have not been filled in yet.
+  const fragranceFields = product.extensions?.sasan_fragrance;
+  const parsedFragranceNotes = useMemo(
+    () => extractFragranceNotes(descriptionStoryText),
+    [descriptionStoryText]
+  );
+  const fragranceNotes = useMemo(
+    () => ({
+      top: (fragranceFields?.top || "").trim() || parsedFragranceNotes.top,
+      middle: (fragranceFields?.middle || "").trim() || parsedFragranceNotes.middle,
+      base: (fragranceFields?.base || "").trim() || parsedFragranceNotes.base,
+    }),
+    [fragranceFields?.base, fragranceFields?.middle, fragranceFields?.top, parsedFragranceNotes]
+  );
+  const inspiredBy = useMemo(
+    () => (fragranceFields?.inspired_by || "").trim() || extractInspiredBy(descriptionStoryText),
+    [descriptionStoryText, fragranceFields?.inspired_by]
+  );
   const fragranceFamily = useMemo(() => {
     const familyAttribute = product.attributes?.find((attr) => decodeHtmlEntities(attr.name).toLowerCase() === "olfactory family");
     const familyName = familyAttribute?.terms?.[0]?.name;

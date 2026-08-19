@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { siteConfig, type Locale } from "@/config/site";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { toWhatsAppNumber } from "@/lib/utils/phone";
 
 interface TrustSignalsProps {
   locale: Locale;
@@ -24,7 +25,7 @@ export function TrustSignals({
 }: TrustSignalsProps) {
   const marketPrefix = useMarketPrefix();
   const isRTL = locale === "ar";
-  const whatsappUrl = `https://wa.me/${siteConfig.contact.whatsapp}`;
+  const whatsappUrl = `https://wa.me/${toWhatsAppNumber(siteConfig.contact.whatsapp)}`;
   void freeShippingThreshold;
   const shippingLabel = isRTL ? "توصيل سريع داخل الإمارات" : "Fast UAE delivery";
 

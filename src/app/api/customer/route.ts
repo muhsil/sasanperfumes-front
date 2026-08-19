@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { backendMarketHeaders, backendMarketPostHeaders, safeJsonResponse, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
 import { getRequestMarket } from "@/lib/market/server";
+import { resolveWordPressUsername } from "@/lib/utils/username";
 
 function getCustomersApiBase(marketCode?: string | null): string {
   return `${wpJsonBaseForMarket(marketCode)}/wc/v3`;
@@ -126,6 +127,12 @@ export async function POST(request: NextRequest) {
     const market = await getRequestMarket();
     const body = await request.json();
 
+    // WordPress rejects emails that are not valid usernames (plus-addressed
+    // emails in particular), so normalise before handing this to the backend.
+    const payload = body?.attach_only
+      ? body
+      : { ...body, username: resolveWordPressUsername(body?.username, body?.email) };
+
     const response = await fetch(
       `${wpJsonBaseForMarket(market.code)}/sasanperfumes/v1/customers/ensure`,
       {
@@ -133,7 +140,7 @@ export async function POST(request: NextRequest) {
         headers: backendMarketPostHeaders(market.code, {
           "Content-Type": "application/json",
         }),
-        body: JSON.stringify(body),
+        body: JSON.stringify(payload),
       }
     );
 
