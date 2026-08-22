@@ -33,8 +33,16 @@ function storeApiBase(market: string): string {
   return market ? `${origin}/${market}/wp-json` : `${origin}/wp-json`;
 }
 
-async function resolveOnBlog(slug: string, market: string): Promise<{ id: number; name: string | null } | null> {
-  const url = `${storeApiBase(market)}/wc/store/v1/products?slug=${encodeURIComponent(slug)}&per_page=1`;
+async function resolveOnBlog(
+  params: { slug?: string; sku?: string },
+  market: string
+): Promise<{ id: number; name: string | null } | null> {
+  const queryParts: string[] = [];
+  if (params.slug) queryParts.push(`slug=${encodeURIComponent(params.slug)}`);
+  if (params.sku) queryParts.push(`sku=${encodeURIComponent(params.sku)}`);
+  if (queryParts.length === 0) return null;
+
+  const url = `${storeApiBase(market)}/wc/store/v1/products?${queryParts.join("&")}&per_page=1`;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), LOOKUP_TIMEOUT_MS);
@@ -62,9 +70,11 @@ async function resolveOnBlog(slug: string, market: string): Promise<{ id: number
 
 // Resolves cart items against a different market's catalogue. Product IDs are
 // blog-local in WordPress multisite and the market catalogues are not in parity,
-// so a cart moved between stores has to be rebuilt from slugs. Items with no
-// counterpart in the destination are reported rather than dropped silently, so
-// the customer can be told what is unavailable in their market.
+// so a cart moved between stores has to be rebuilt from stable identifiers.
+// We prefer slug, but fall back to SKU for products that do not carry a slug in
+// the transfer payload. Items with no counterpart in the destination are
+// reported rather than dropped silently, so the customer can be told what is
+// unavailable in their market.
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   const market = typeof body?.market === "string" ? body.market.replace(/^\/+/, "").toLowerCase() : "";
@@ -82,9 +92,9 @@ export async function POST(request: NextRequest) {
       const slug = typeof item.slug === "string" ? item.slug : "";
       const sku = typeof item.sku === "string" ? item.sku : null;
       const qty = Math.max(1, Math.min(99, Number(item.qty) || 1));
-      if (!slug) return { slug, sku, qty, productId: null, name: null };
+      if (!slug && !sku) return { slug, sku, qty, productId: null, name: null };
 
-      const hit = await resolveOnBlog(slug, market);
+      const hit = await resolveOnBlog({ slug, sku: sku || undefined }, market);
       return hit
         ? { slug, sku, qty, productId: hit.id, name: hit.name }
         : { slug, sku, qty, productId: null, name: null };

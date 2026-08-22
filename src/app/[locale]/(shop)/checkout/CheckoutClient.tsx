@@ -591,9 +591,10 @@ export default function CheckoutClient() {
             .map((item) => ({
               slug: item.slug,
               sku: item.meta?.sku || undefined,
+              productId: item.id,
               qty: item.quantity?.value || 1,
             }))
-            .filter((item) => item.slug);
+            .filter((item) => item.slug || item.sku || item.productId);
 
           const json = JSON.stringify(payload);
           const bytes = new TextEncoder().encode(json);
