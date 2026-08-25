@@ -82,7 +82,27 @@ export default function CartPage() {
   const isEmpty = !isInitialCartLoading && cartItems.length === 0;
   
   const divisor = Math.pow(10, currencyMinorUnit);
-  const adjustedCartTotal = Math.max((parseFloat(cartTotal) || 0) - promotionalDiscountTotal, 0);
+
+  /**
+   * Promotions reach the cart twice: once as a negative fee already applied to
+   * the API total, and again through cartDiscounts, which is what the summary
+   * lists. Subtracting the second on top of the first counted "Buy 6 Get 1 Free"
+   * twice and showed 401.25 where checkout charged 480.00 — the customer saw the
+   * price rise between the two pages.
+   *
+   * Back the negative fees out of the API total, then apply the discount the
+   * summary actually shows. Positive fees (customs, BNPL) are genuine additions
+   * and stay. This matches what checkout charges and what the order records.
+   */
+  const promotionalFeeTotal = (Array.isArray(cart?.fees) ? cart.fees : [])
+    .map((fee) => parseFloat(fee?.fee || "0") || 0)
+    .filter((amount) => amount < 0)
+    .reduce((sum, amount) => sum + amount, 0);
+
+  const adjustedCartTotal = Math.max(
+    (parseFloat(cartTotal) || 0) - promotionalFeeTotal - promotionalDiscountTotal,
+    0
+  );
   const hasTrackedViewCartRef = useRef(false);
 
   useEffect(() => {
@@ -723,7 +743,14 @@ export default function CartPage() {
                                 </span>
                               </div>
                               {/* Customs Fees */}
-                              {Array.isArray(cart?.fees) && cart.fees.length > 0 && cart.fees.map((fee, index) => (
+                              {/*
+                                Negative fees are promotions, already listed
+                                above from cartDiscounts — showing them here too
+                                would repeat the same discount on screen.
+                              */}
+                              {Array.isArray(cart?.fees) && cart.fees.length > 0 && cart.fees
+                                .filter((fee) => (parseFloat(fee?.fee || "0") || 0) > 0)
+                                .map((fee, index) => (
                                 <div key={index} className="flex justify-between text-brand-muted">
                                   <span>{isRTL ? "رسوم جمركية" : fee.name}</span>
                                   <FormattedPrice
