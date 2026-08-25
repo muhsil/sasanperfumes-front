@@ -17,7 +17,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { getCustomer, getSavedAddressesFromCustomer, saveSavedAddresses, generateAddressId, resolveCountryCode, type Customer, type SavedAddress } from "@/lib/api/customer";
 import { featureFlags, type Currency, type Locale } from "@/config/site";
 import { Apple, MapPin, Check, ChevronDown, ChevronUp, Tag, X, Truck, Phone, TriangleAlert } from "lucide-react";
-import { getCityCountryMismatch, getPostcodeCountryWarning } from "@/lib/utils/cityCountry";
+import { getCityCountryMismatch, getPostcodeCountryWarning, getImportFeeLabel, isGccDestination } from "@/lib/utils/cityCountry";
 import { BundleItemsList, getBundleItems, getBundleItemsTotal, getBoxPrice, getPricingMode, getFixedPrice, getBundleTotal } from "@/components/cart/BundleItemsList";
 import { PhoneInput } from "@/components/common/PhoneInput";
 import { useProductMeta } from "@/hooks/useProductCategories";
@@ -828,10 +828,19 @@ export default function CheckoutClient() {
           if (subtotal <= 0) return null;
           const feeAmount = Math.round(subtotal * 0.20);
           return {
-            name: "Customs fees",
+            // Outside the GCC the destination charges its own duty and VAT on
+            // arrival, so this is a handling charge and must not be presented as
+            // customs already settled.
+            name: getImportFeeLabel(country),
             fee: String(feeAmount),
           };
         }, [discountedCartSubtotal, formData.shipping.country]);
+
+        // Duties are payable to the courier on delivery outside the GCC.
+        const showImportDutyNotice = useMemo(
+          () => Boolean(formData.shipping.country) && !isGccDestination(formData.shipping.country),
+          [formData.shipping.country]
+        );
 
         const handleSelectShippingRate = async (rateId: string, packageId: number = 0) => {
           setSelectedShippingRate(rateId);
@@ -2933,7 +2942,11 @@ export default function CheckoutClient() {
                               )}
                               {customsFee ? (
                                 <div className="flex justify-between text-sm text-brand-muted">
-                                  <span>{isRTL ? "رسوم جمركية" : customsFee.name}</span>
+                                  <span>
+                                    {isRTL
+                                      ? (isGccDestination(formData.shipping.country) ? "رسوم جمركية" : "رسوم مناولة وتصدير")
+                                      : customsFee.name}
+                                  </span>
                                   <FormattedPrice
                                     price={parseFloat(customsFee.fee) / divisor}
                                     iconSize="xs"
@@ -2950,6 +2963,13 @@ export default function CheckoutClient() {
                                   />
                                 </div>
                               ))}
+                              {showImportDutyNotice && (
+                                <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800">
+                                  {isRTL
+                                    ? "الرسوم الجمركية وضريبة الاستيراد في بلد الوجهة تحددها السلطات المحلية وتُدفع لشركة الشحن عند التسليم، وهي غير مشمولة في هذا الطلب."
+                                    : "Import duty and tax in the destination country are set by its authorities and are payable to the courier on delivery. They are not included in this order."}
+                                </p>
+                              )}
                             </div>
 
               <div className="flex justify-between py-4 text-base font-bold text-brand-primary lg:text-lg">

@@ -193,6 +193,9 @@ interface CreateOrderRequest {
   meta_data?: Array<{ key: string; value: string }>;
 }
 
+/** Destinations where the fee charged at checkout is the only import charge. */
+const GCC_DESTINATIONS = new Set(["AE", "SA", "QA", "OM", "BH", "KW"]);
+
 const INCLUSIVE_VAT_RATES_BY_COUNTRY: Record<string, number> = {
   AE: 0.05,
   BH: 0.05,
@@ -949,7 +952,9 @@ export async function POST(request: NextRequest) {
           orderData.fee_lines = [
             ...existingFees,
             {
-              name: "Customs fees",
+              // Outside the GCC the destination levies its own duty on arrival,
+              // so this is a handling charge, not customs already settled.
+              name: GCC_DESTINATIONS.has(customsCountry) ? "Customs fees" : "Handling & export fee",
               total: customsTotal.toFixed(decimals),
               tax_status: "none",
               tax_class: "",

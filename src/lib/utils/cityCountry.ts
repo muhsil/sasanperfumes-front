@@ -64,6 +64,26 @@ const COUNTRY_NAMES_AR: Record<string, string> = {
   IQ: "العراق",
 };
 
+/**
+ * Destinations inside the GCC customs union, where the fee charged at checkout
+ * is the only import charge the customer meets.
+ *
+ * Everywhere else the destination country levies its own duty and VAT, collected
+ * by the courier on delivery — so calling our fee "Customs fees" told the
+ * customer customs was settled when it was not. An order to Italy paid AED 15.00
+ * as "Customs fees" and was then billed EUR 31.18 on arrival.
+ */
+const GCC_DESTINATIONS = new Set(["AE", "SA", "QA", "OM", "BH", "KW"]);
+
+export function isGccDestination(country: string): boolean {
+  return GCC_DESTINATIONS.has(String(country || "").trim().toUpperCase());
+}
+
+/** The fee label that is truthful for this destination. */
+export function getImportFeeLabel(country: string): string {
+  return isGccDestination(country) ? "Customs fees" : "Handling & export fee";
+}
+
 /** Returns the country a city clearly belongs to, or "" when unrecognised. */
 export function detectCountryFromCity(city: string): string {
   const value = String(city || "").trim().toLowerCase();
