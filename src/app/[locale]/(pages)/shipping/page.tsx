@@ -201,12 +201,6 @@ export default async function ShippingPage({ params }: ShippingPageProps) {
         : [])
     : [];
 
-  const freightRowsSource = !isInternationalMarket
-    ? (Array.isArray((wp as Record<string, unknown> | null)?.shipping_freight_rates)
-        ? ((wp as Record<string, unknown>).shipping_freight_rates as Array<Record<string, unknown>>)
-        : [])
-    : [];
-
   const intlRows: ShippingDisplayRow[] = isInternationalMarket
     ? (intlRowsSource.length > 0
         ? intlRowsSource.map((row) => ({
@@ -228,18 +222,15 @@ export default async function ShippingPage({ params }: ShippingPageProps) {
         : await fetchInternationalShippingPreview(currencyCode, locale as Locale))
     : [];
 
+  /**
+   * Freight is charged from the table in src/config/shipping.ts, so the page
+   * has to display that same table. These rates were also stored in WordPress,
+   * and the two drifted: Qatar and Oman advertised the old flat 30 while
+   * checkout charged the current Aramex rate. Code is the single source now —
+   * whatever is charged is what is shown.
+   */
   const freightRows: FreightDisplayRow[] = !isInternationalMarket
-    ? (freightRowsSource.length > 0
-        ? freightRowsSource.map((row) => ({
-            weight: String(row.weight ?? row.weight_label ?? row.weightLabel ?? ""),
-            pcs: String(row.pcs ?? row.pieces ?? ""),
-            saudi_arabia: String(row.saudi_arabia ?? row.saudiArabia ?? row.sa ?? ""),
-            oman: String(row.oman ?? row.omanAr ?? row.oman_ar ?? row.om ?? ""),
-            bahrain: String(row.bahrain ?? row.bh ?? ""),
-            kuwait: String(row.kuwait ?? row.kw ?? ""),
-            qatar: String(row.qatar ?? row.qa ?? ""),
-          }))
-        : getShippingFreightDisplayRows())
+    ? getShippingFreightDisplayRows()
     : [];
 
   const breadcrumbItems = [
