@@ -3042,6 +3042,12 @@ function buildStaticPageFallbackContent(slug: string): StaticPageResponse | null
           { text: bi("Opened fragrance products", "المنتجات العطرية المفتوحة") },
           { text: bi("Items without proof of purchase", "المنتجات دون إثبات شراء") },
           { text: bi("Customized or final-sale items", "المنتجات المخصصة أو النهائية") },
+          {
+            text: bi(
+              "Import duty, tax and return shipping on refused or undelivered international parcels",
+              "الرسوم الجمركية وضريبة الاستيراد وتكاليف الإرجاع للشحنات الدولية المرفوضة أو غير المستلمة"
+            ),
+          },
         ],
         need_help: bi("Need help?", "تحتاج مساعدة؟"),
         need_help_text: bi(
@@ -3122,6 +3128,19 @@ function buildStaticPageFallbackContent(slug: string): StaticPageResponse | null
             content: bi(
               "Orders are packed carefully to protect fragrance bottles during transit.",
               "يتم تغليف الطلبات بعناية لحماية عبوات العطور أثناء الشحن."
+            ),
+          },
+          {
+            /**
+             * Nothing on the site said import duty could be charged on arrival,
+             * while the checkout fee was labelled "Customs fees" — so a customer
+             * in Italy paid the fee and was billed EUR 31.18 by the courier as
+             * well. Stated here so it is visible before an order is placed.
+             */
+            title: bi("International orders (outside the GCC)", "الطلبات الدولية (خارج دول مجلس التعاون)"),
+            content: bi(
+              "Import duty and tax are set by the destination country and are collected by the courier on delivery. These charges are not included in your order total and are payable by the recipient. The handling and export fee shown at checkout covers our export processing only and does not cover destination customs.",
+              "تحدد الدولة المستقبِلة الرسوم الجمركية وضريبة الاستيراد، وتقوم شركة الشحن بتحصيلها عند التسليم. هذه الرسوم غير مشمولة في إجمالي الطلب ويتحملها المستلم. أما رسوم المناولة والتصدير الظاهرة عند الدفع فتغطي إجراءات التصدير لدينا فقط ولا تشمل جمارك بلد الوجهة."
             ),
           },
           {
