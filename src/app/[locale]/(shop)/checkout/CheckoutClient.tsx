@@ -2215,6 +2215,28 @@ export default function CheckoutClient() {
               )}
 
               <div className="grid gap-3 md:gap-4 sm:grid-cols-2">
+                {/*
+                  Country comes first: it determines the shipping rates and the
+                  20% customs fee, and it arrives pre-filled with the market
+                  default. Left at the end of the form it was routinely never
+                  looked at, which is how an order shipped to Jeddah was recorded
+                  as United Arab Emirates and skipped customs entirely.
+                */}
+                <div className="sm:col-span-2">
+                  <CountrySelect
+                    label={isRTL ? "الدولة" : "Country"}
+                    required
+                    value={formData.shipping.country}
+                    onChange={(value) => handleShippingChange("country", value)}
+                    isRTL={isRTL}
+                    availableCountries={shippingCountries}
+                  />
+                  <p className="mt-1.5 text-xs text-gray-500">
+                    {isRTL
+                      ? "يحدد بلد التوصيل تكلفة الشحن ورسوم الجمارك."
+                      : "Your delivery country sets the shipping cost and customs charges."}
+                  </p>
+                </div>
                 <Input
                   label={isRTL ? "الاسم الأول" : "First Name"}
                   required
@@ -2283,14 +2305,6 @@ export default function CheckoutClient() {
                     </p>
                   )}
                 </div>
-                <CountrySelect
-                  label={isRTL ? "الدولة" : "Country"}
-                  required
-                  value={formData.shipping.country}
-                  onChange={(value) => handleShippingChange("country", value)}
-                  isRTL={isRTL}
-                  availableCountries={shippingCountries}
-                />
               </div>
             </div>
 
