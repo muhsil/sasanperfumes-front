@@ -87,6 +87,29 @@ export interface CityCountryMismatch {
 }
 
 /**
+ * The UAE does not use postal codes, so a postcode filled in against an AE
+ * address is strong evidence the parcel is actually leaving the country —
+ * independent of how the city happens to be spelled. Order #15338 carried the
+ * Saudi postcode 23544 with the country left as AE.
+ */
+export function getPostcodeCountryWarning(
+  postcode: string,
+  selectedCountry: string
+): { message: string; messageAr: string } | null {
+  if (String(selectedCountry || "").toUpperCase() !== "AE") return null;
+
+  const digits = String(postcode || "").replace(/\D/g, "");
+  if (digits.length < 4) return null;
+
+  return {
+    message:
+      "The UAE does not use postal codes. If this address is outside the UAE, please change the country — it affects delivery and customs charges.",
+    messageAr:
+      "الإمارات لا تستخدم الرموز البريدية. إذا كان هذا العنوان خارج الإمارات، يرجى تغيير الدولة، فهي تؤثر على التوصيل ورسوم الجمارك.",
+  };
+}
+
+/**
  * Flags a city that clearly belongs to a different country than the one chosen.
  * Returns null whenever the city is unrecognised, so unknown places never warn.
  */

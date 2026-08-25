@@ -17,7 +17,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { getCustomer, getSavedAddressesFromCustomer, saveSavedAddresses, generateAddressId, resolveCountryCode, type Customer, type SavedAddress } from "@/lib/api/customer";
 import { featureFlags, type Currency, type Locale } from "@/config/site";
 import { Apple, MapPin, Check, ChevronDown, ChevronUp, Tag, X, Truck, Phone, TriangleAlert } from "lucide-react";
-import { getCityCountryMismatch } from "@/lib/utils/cityCountry";
+import { getCityCountryMismatch, getPostcodeCountryWarning } from "@/lib/utils/cityCountry";
 import { BundleItemsList, getBundleItems, getBundleItemsTotal, getBoxPrice, getPricingMode, getFixedPrice, getBundleTotal } from "@/components/cart/BundleItemsList";
 import { PhoneInput } from "@/components/common/PhoneInput";
 import { useProductMeta } from "@/hooks/useProductCategories";
@@ -809,6 +809,13 @@ export default function CheckoutClient() {
         const cityCountryMismatch = useMemo(
           () => getCityCountryMismatch(formData.shipping.city, formData.shipping.country),
           [formData.shipping.city, formData.shipping.country]
+        );
+
+        // The UAE has no postal codes, so one filled in against an AE address
+        // signals the parcel is leaving the country regardless of the city text.
+        const postcodeCountryWarning = useMemo(
+          () => getPostcodeCountryWarning(formData.shipping.postalCode, formData.shipping.country),
+          [formData.shipping.postalCode, formData.shipping.country]
         );
 
         // Calculate customs fee client-side from the discounted merchandise
@@ -2260,11 +2267,22 @@ export default function CheckoutClient() {
                   value={formData.shipping.state}
                   onChange={(e) => handleShippingChange("state", e.target.value)}
                 />
-                <Input
-                  label={isRTL ? "الرمز البريدي" : "Postal Code"}
-                  value={formData.shipping.postalCode}
-                  onChange={(e) => handleShippingChange("postalCode", e.target.value)}
-                />
+                <div>
+                  <Input
+                    label={isRTL ? "الرمز البريدي" : "Postal Code"}
+                    value={formData.shipping.postalCode}
+                    onChange={(e) => handleShippingChange("postalCode", e.target.value)}
+                  />
+                  {postcodeCountryWarning && (
+                    <p
+                      role="status"
+                      className="mt-1.5 flex items-start gap-1.5 text-sm text-amber-700"
+                    >
+                      <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                      <span>{isRTL ? postcodeCountryWarning.messageAr : postcodeCountryWarning.message}</span>
+                    </p>
+                  )}
+                </div>
                 <CountrySelect
                   label={isRTL ? "الدولة" : "Country"}
                   required

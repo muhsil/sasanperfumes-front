@@ -914,6 +914,55 @@ export async function POST(request: NextRequest) {
       orderData.fee_lines = normalizeFeeLinesForNoTax(body.fee_lines, inclusiveVatRate, currencyCode);
     }
 
+    /**
+     * Customs is decided in the browser, so a request that simply omits the fee
+     * has it skipped entirely. Re-derive it here and add it when it is missing.
+     *
+     * Deliberately one-directional: an amount the storefront already sent is
+     * left alone. The server sees the same country field the customer chose, so
+     * it cannot detect an honest mis-selection — only a fee that never arrived.
+     */
+    const customsCountry = normalizeCountryCode(
+      orderData.shipping?.country || orderData.billing?.country
+    );
+    if (customsCountry && customsCountry !== "AE") {
+      const existingFees = orderData.fee_lines || [];
+      const hasCustoms = existingFees.some(
+        (fee) => String(fee.name || "").toLowerCase().includes("customs")
+      );
+
+      if (!hasCustoms) {
+        const decimals = getCurrencyDecimals(currencyCode);
+        const merchandiseNet = (orderData.line_items || []).reduce((sum, item) => {
+          const value = parseMoney(String(item.total ?? item.subtotal ?? "0"));
+          return sum + (value ?? 0);
+        }, 0);
+        const discountsNet = existingFees.reduce((sum, fee) => {
+          const value = parseMoney(String(fee.total));
+          return sum + (value !== null && value < 0 ? value : 0);
+        }, 0);
+
+        const taxableNet = Math.max(merchandiseNet + discountsNet, 0);
+        const customsTotal = taxableNet * 0.2;
+
+        if (customsTotal > 0) {
+          orderData.fee_lines = [
+            ...existingFees,
+            {
+              name: "Customs fees",
+              total: customsTotal.toFixed(decimals),
+              tax_status: "none",
+              tax_class: "",
+            },
+          ];
+          console.error("[orders] Customs fee was missing and has been added:", {
+            country: customsCountry,
+            customsTotal: customsTotal.toFixed(decimals),
+          });
+        }
+      }
+    }
+
     // Resolve both guest and authenticated checkouts by email in the target
     // market. Numeric customer IDs are not portable across multisite blogs.
     let resolvedCustomerId = 0;
