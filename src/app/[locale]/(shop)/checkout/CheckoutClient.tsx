@@ -16,7 +16,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { getCustomer, getSavedAddressesFromCustomer, saveSavedAddresses, generateAddressId, resolveCountryCode, type Customer, type SavedAddress } from "@/lib/api/customer";
 import { featureFlags, type Currency, type Locale } from "@/config/site";
-import { Apple, MapPin, Check, ChevronDown, ChevronUp, Tag, X, Truck, Phone } from "lucide-react";
+import { Apple, MapPin, Check, ChevronDown, ChevronUp, Tag, X, Truck, Phone, TriangleAlert } from "lucide-react";
+import { getCityCountryMismatch } from "@/lib/utils/cityCountry";
 import { BundleItemsList, getBundleItems, getBundleItemsTotal, getBoxPrice, getPricingMode, getFixedPrice, getBundleTotal } from "@/components/cart/BundleItemsList";
 import { PhoneInput } from "@/components/common/PhoneInput";
 import { useProductMeta } from "@/hooks/useProductCategories";
@@ -799,6 +800,16 @@ export default function CheckoutClient() {
           }
         // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [couponDiscount, promotionalDiscountTotal, formData.shipping.country, formData.shipping.city, formData.shipping.postalCode, cartSubtotal]);
+
+        /**
+         * Customs is decided by the country dropdown alone, so a wrong selection
+         * silently skips the 20% fee. Warn when the city clearly belongs to a
+         * different country — advisory only, it never blocks checkout.
+         */
+        const cityCountryMismatch = useMemo(
+          () => getCityCountryMismatch(formData.shipping.city, formData.shipping.country),
+          [formData.shipping.city, formData.shipping.country]
+        );
 
         // Calculate customs fee client-side from the discounted merchandise
         // subtotal so promo discounts are reflected before customs are applied.
@@ -2226,13 +2237,24 @@ export default function CheckoutClient() {
                     placeholder={isRTL ? "شقة، جناح، وحدة، إلخ. (اختياري)" : "Apartment, suite, unit, etc. (optional)"}
                   />
                 </div>
-                <Input
-                  label={isRTL ? "المدينة" : "City"}
-                  required
-                  value={formData.shipping.city}
-                  onChange={(e) => handleShippingChange("city", e.target.value)}
-                  error={addressErrors.shippingCity}
-                />
+                <div>
+                  <Input
+                    label={isRTL ? "المدينة" : "City"}
+                    required
+                    value={formData.shipping.city}
+                    onChange={(e) => handleShippingChange("city", e.target.value)}
+                    error={addressErrors.shippingCity}
+                  />
+                  {!addressErrors.shippingCity && cityCountryMismatch && (
+                    <p
+                      role="status"
+                      className="mt-1.5 flex items-start gap-1.5 text-sm text-amber-700"
+                    >
+                      <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                      <span>{isRTL ? cityCountryMismatch.messageAr : cityCountryMismatch.message}</span>
+                    </p>
+                  )}
+                </div>
                 <Input
                   label={isRTL ? "المنطقة" : "State/Province"}
                   value={formData.shipping.state}

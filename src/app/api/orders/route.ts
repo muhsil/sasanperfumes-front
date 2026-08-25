@@ -432,7 +432,7 @@ interface CreatedOrderResponse {
   order_key?: string;
   payment_url?: string;
   line_items?: Array<{ id?: number }>;
-  fee_lines?: Array<{ id?: number; name?: string }>;
+  fee_lines?: Array<{ id?: number; name?: string; total?: string }>;
   shipping_lines?: Array<{ id?: number }>;
 }
 
@@ -444,6 +444,74 @@ function getOrderTotalTolerance(currency?: string): number {
 // from backend product prices and ignore the totals the storefront submitted,
 // making the charged amount differ from what the customer saw. Re-assert the
 // intended line item / fee / shipping totals on the created order.
+/**
+ * Fees that the storefront sends are converted to net amounts by
+ * normalizeFeeLinesForNoTax before the order is created. A fee that instead
+ * comes from the cart never passes through that step: it still holds the
+ * VAT-inclusive amount, WooCommerce charges VAT on top, and the resulting
+ * discount is larger than the item it discounts — a "Buy 6 Get 1 Free" worth
+ * 75.00 was being applied as 78.75, undercharging the order by the VAT.
+ *
+ * Only fees absent from the request are touched, so amounts the storefront
+ * already normalised are never converted twice.
+ */
+async function normalizeCartSourcedFees(
+  createdOrder: CreatedOrderResponse,
+  orderData: CreateOrderRequest,
+  marketCode: string | undefined,
+  inclusiveVatRate: number,
+  currencyCode?: string
+): Promise<CreatedOrderResponse> {
+  if (!createdOrder.id || inclusiveVatRate <= 0) {
+    return createdOrder;
+  }
+
+  if (Array.isArray(orderData.fee_lines) && orderData.fee_lines.length > 0) {
+    return createdOrder;
+  }
+
+  const createdFees = Array.isArray(createdOrder.fee_lines) ? createdOrder.fee_lines : [];
+  const discountFees = createdFees.filter((fee) => parseMoney(String(fee.total)) !== null && parseMoney(String(fee.total))! < 0);
+
+  if (discountFees.length === 0) {
+    return createdOrder;
+  }
+
+  const decimals = getCurrencyDecimals(currencyCode || createdOrder.currency);
+  const feeLines = discountFees.map((fee) => ({
+    id: fee.id,
+    name: fee.name,
+    total: (parseMoney(String(fee.total))! / (1 + inclusiveVatRate)).toFixed(decimals),
+    tax_status: "none",
+    tax_class: "",
+  }));
+
+  try {
+    const updateUrl = `${getOrdersApiBase(marketCode)}/orders/${createdOrder.id}?${getBasicAuthParams(marketCode)}`;
+    const updateResponse = await fetchOrdersBackend(updateUrl, {
+      method: "PUT",
+      headers: backendPostHeaders(),
+      body: JSON.stringify({ fee_lines: feeLines }),
+    }, marketCode);
+
+    if (updateResponse.ok) {
+      return (await updateResponse.json()) as CreatedOrderResponse;
+    }
+
+    console.error("[orders] Cart-sourced fee normalization failed:", {
+      orderId: createdOrder.id,
+      status: updateResponse.status,
+    });
+  } catch (error) {
+    console.error("[orders] Cart-sourced fee normalization error:", {
+      orderId: createdOrder.id,
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  return createdOrder;
+}
+
 async function reconcileOrderTotals(
   createdOrder: CreatedOrderResponse,
   orderData: CreateOrderRequest,
@@ -931,6 +999,10 @@ export async function POST(request: NextRequest) {
         { status: response.status }
       );
     }
+
+    // Runs before reconciliation, which returns early when the created total
+    // already matches and would otherwise leave the inflated discount in place.
+    data = await normalizeCartSourcedFees(data, orderData, market.code, inclusiveVatRate, currencyCode);
 
     if (expectedTotal !== null && expectedTotal > 0) {
       data = await reconcileOrderTotals(data, orderData, expectedTotal, market.code);
