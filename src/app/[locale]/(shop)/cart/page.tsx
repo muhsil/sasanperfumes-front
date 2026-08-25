@@ -94,7 +94,16 @@ export default function CartPage() {
    * summary actually shows. Positive fees (customs, BNPL) are genuine additions
    * and stay. This matches what checkout charges and what the order records.
    */
-  const promotionalFeeTotal = (Array.isArray(cart?.fees) ? cart.fees : [])
+  /**
+   * The cart returns fees keyed by id rather than as a list, so an Array.isArray
+   * guard silently matches nothing — which is also why customs fees never
+   * appeared on this page.
+   */
+  const cartFeeList: Array<{ name?: string; fee?: string }> = Array.isArray(cart?.fees)
+    ? cart.fees
+    : Object.values((cart?.fees as Record<string, { name?: string; fee?: string }> | undefined) || {});
+
+  const promotionalFeeTotal = cartFeeList
     .map((fee) => parseFloat(fee?.fee || "0") || 0)
     .filter((amount) => amount < 0)
     .reduce((sum, amount) => sum + amount, 0);
@@ -748,13 +757,13 @@ export default function CartPage() {
                                 above from cartDiscounts — showing them here too
                                 would repeat the same discount on screen.
                               */}
-                              {Array.isArray(cart?.fees) && cart.fees.length > 0 && cart.fees
+                              {cartFeeList
                                 .filter((fee) => (parseFloat(fee?.fee || "0") || 0) > 0)
                                 .map((fee, index) => (
                                 <div key={index} className="flex justify-between text-brand-muted">
                                   <span>{isRTL ? "رسوم جمركية" : fee.name}</span>
                                   <FormattedPrice
-                                    price={parseFloat(fee.fee) / divisor}
+                                    price={(parseFloat(fee.fee || "0") || 0) / divisor}
                                     iconSize="xs"
                                   />
                                 </div>
