@@ -2963,12 +2963,27 @@ export default function CheckoutClient() {
                                   />
                                 </div>
                               ))}
+                              {/*
+                                Shown as its own line so the customer can see at
+                                a glance which amount we collect now and which
+                                one the courier will collect on delivery. An
+                                order to Italy paid our fee and was then billed
+                                EUR 31.18 on arrival, having had no warning.
+                              */}
                               {showImportDutyNotice && (
-                                <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800">
-                                  {isRTL
-                                    ? "الرسوم الجمركية وضريبة الاستيراد في بلد الوجهة تحددها السلطات المحلية وتُدفع لشركة الشحن عند التسليم، وهي غير مشمولة في هذا الطلب."
-                                    : "Import duty and tax in the destination country are set by its authorities and are payable to the courier on delivery. They are not included in this order."}
-                                </p>
+                                <>
+                                  <div className="flex justify-between text-sm text-brand-muted">
+                                    <span>{isRTL ? "الرسوم الجمركية وضريبة الاستيراد" : "Import duty & tax"}</span>
+                                    <span className="text-right text-xs text-amber-700">
+                                      {isRTL ? "تُدفع لشركة الشحن عند التسليم" : "Paid to courier on delivery"}
+                                    </span>
+                                  </div>
+                                  <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800">
+                                    {isRTL
+                                      ? "المبلغ أعلاه هو ما نحصّله الآن. أما الرسوم الجمركية وضريبة الاستيراد فتحددها الدولة المستقبِلة وتدفعها لشركة الشحن عند التسليم، وهي غير مشمولة في هذا الطلب."
+                                      : "The total above is what we collect now. Import duty and tax are set by the destination country and are paid to the courier on delivery — they are not included in this order."}
+                                  </p>
+                                </>
                               )}
                             </div>
 
