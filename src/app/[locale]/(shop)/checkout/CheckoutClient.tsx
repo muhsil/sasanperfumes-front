@@ -1439,7 +1439,17 @@ export default function CheckoutClient() {
         }
 
         if (!lineItem.subtotal) {
-          const unitPrice = convertPrice(parseFloat(item.price) / divisor);
+          /**
+           * The cart returns prices already in its own currency, so converting
+           * from AED applied the market rate a second time: a Qatari order was
+           * charged 73.51 against a listed 74.25 (74.25 x 0.99) and a Saudi one
+           * 78.03 against 76.50 (76.50 x 1.02). Passing the cart's currency
+           * makes the call a no-op when it already matches, and a real
+           * conversion only when the shipping country moves the order to a
+           * different currency.
+           */
+          const cartCurrency = (cart?.currency?.currency_code || currency) as Currency;
+          const unitPrice = convertPrice(parseFloat(item.price) / divisor, cartCurrency);
           const qty = item.quantity?.value || 1;
           const lineTotal = unitPrice * qty;
           lineItem.subtotal = lineTotal.toFixed(checkoutCurrencyMinorUnit);
