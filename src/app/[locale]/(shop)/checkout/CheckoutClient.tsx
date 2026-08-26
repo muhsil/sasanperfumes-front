@@ -30,7 +30,7 @@ import type { CoCartItem } from "@/lib/api/cocart";
 import { cn, decodeHtmlEntities } from "@/lib/utils";
 import { GiftWrapOption } from "@/components/checkout/GiftWrapOption";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
-import { calculateCartDiscounts, getCartDiscountTotal } from "@/lib/discountRules";
+import { calculateCartDiscounts, getCartDiscountTotal, getLocalizedCartDiscountLabel } from "@/lib/discountRules";
 import { getMarketDefaultCurrency } from "@/config/market";
 import { calculateBnplConvenienceFeeMinor } from "@/lib/payment/bnpl";
 import { getPaymentProvider, trackPaymentFunnelEvent, trackPaymentFunnelEventOnce } from "@/lib/payment/analytics";
@@ -2893,7 +2893,7 @@ export default function CheckoutClient() {
                               )}
                               {cartDiscounts.map((discount) => (
                                 <div key={discount.ruleId} className="flex justify-between text-sm text-green-600">
-                                  <span>{discount.label}</span>
+                                  <span>{getLocalizedCartDiscountLabel(discount, locale)}</span>
                                   <span className="inline-flex items-center gap-1">
                                     -<FormattedPrice
                                       price={discount.amount / divisor}

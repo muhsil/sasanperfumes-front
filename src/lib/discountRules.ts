@@ -4,8 +4,19 @@ import type { DiscountRule } from "@/types/discount";
 export interface CartDiscount {
   ruleId: string;
   label: string;
+  type: DiscountRule["type"];
+  buyQuantity: number;
+  getQuantity: number;
   amount: number;
   freeQuantity: number;
+}
+
+export function getLocalizedCartDiscountLabel(discount: CartDiscount, locale: string): string {
+  if (locale === "ar" && discount.type === "bogo") {
+    return `اشترِ ${discount.buyQuantity} واحصل على ${discount.getQuantity} مجاناً`;
+  }
+
+  return discount.label;
 }
 
 interface CartDiscountOptions {
@@ -132,7 +143,10 @@ function passesRuleMinimums(
   return true;
 }
 
-function calculateBogoDiscount(rule: DiscountRule, eligibleItems: Array<{ unitPrice: number; quantity: number }>): number {
+function calculateBogoDiscount(
+  rule: DiscountRule,
+  eligibleItems: Array<{ unitPrice: number; quantity: number }>
+): { amount: number; freeQuantity: number } {
   const buyQuantity = Math.max(1, Math.floor(rule.buy_quantity || 0));
   const getQuantity = Math.max(1, Math.floor(rule.get_quantity || 0));
   const groupSize = buyQuantity + getQuantity;
@@ -144,16 +158,20 @@ function calculateBogoDiscount(rule: DiscountRule, eligibleItems: Array<{ unitPr
     }
   }
 
-  if (eligiblePrices.length < groupSize) return 0;
+  if (eligiblePrices.length < groupSize) {
+    return { amount: 0, freeQuantity: 0 };
+  }
 
   const completeGroups = Math.floor(eligiblePrices.length / groupSize);
   const remainder = eligiblePrices.length % groupSize;
   const freeQuantity = completeGroups * getQuantity + Math.max(0, remainder - buyQuantity);
 
-  return eligiblePrices
+  const amount = eligiblePrices
     .sort((a, b) => a - b)
     .slice(0, Math.min(freeQuantity, eligiblePrices.length))
     .reduce((sum, price) => sum + price, 0);
+
+  return { amount, freeQuantity };
 }
 
 function calculatePercentageDiscount(rule: DiscountRule, eligibleTotal: number): number {
@@ -217,8 +235,9 @@ export function calculateCartDiscounts(
     let amount = 0;
     let freeQuantity = 0;
     if (rule.type === "bogo") {
-      amount = calculateBogoDiscount(rule, eligibleItems);
-      freeQuantity = Math.max(0, Math.floor(rule.get_quantity || 0));
+      const bogoDiscount = calculateBogoDiscount(rule, eligibleItems);
+      amount = bogoDiscount.amount;
+      freeQuantity = bogoDiscount.freeQuantity;
     } else if (rule.type === "percentage") {
       amount = calculatePercentageDiscount(rule, eligibleTotal);
     } else if (rule.type === "fixed") {
@@ -231,6 +250,9 @@ export function calculateCartDiscounts(
       discounts.push({
         ruleId: rule.id,
         label: getRuleLabel(rule),
+        type: rule.type,
+        buyQuantity: Math.max(0, Math.floor(rule.buy_quantity || 0)),
+        getQuantity: Math.max(0, Math.floor(rule.get_quantity || 0)),
         amount,
         freeQuantity,
       });

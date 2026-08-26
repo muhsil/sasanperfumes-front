@@ -7,7 +7,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useFreeGift, NEW_GIFT_ADDED_EVENT } from "@/contexts/FreeGiftContext";
 import { useDiscountRules } from "@/contexts/DiscountRulesContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { calculateCartDiscounts } from "@/lib/discountRules";
+import { calculateCartDiscounts, getLocalizedCartDiscountLabel } from "@/lib/discountRules";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { CartItemSkeleton } from "@/components/common/Skeleton";
 import MuiDrawer from "@mui/material/Drawer";
@@ -133,7 +133,7 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
       )}
       {cartDiscounts.map((discount) => (
         <div key={discount.ruleId} className="flex items-center justify-between text-green-600">
-          <span className="text-sm font-medium">{discount.label}</span>
+          <span className="text-sm font-medium">{getLocalizedCartDiscountLabel(discount, locale)}</span>
           <span className="inline-flex items-center gap-1 text-sm font-medium">
             -<FormattedPrice
               price={discount.amount / divisor}

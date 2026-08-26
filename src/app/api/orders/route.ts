@@ -452,7 +452,7 @@ function getOrderTotalTolerance(currency?: string): number {
  * normalizeFeeLinesForNoTax before the order is created. A fee that instead
  * comes from the cart never passes through that step: it still holds the
  * VAT-inclusive amount, WooCommerce charges VAT on top, and the resulting
- * discount is larger than the item it discounts — a "Buy 6 Get 1 Free" worth
+ * discount is larger than the item it discounts — a "Buy 3 Get 1 Free" worth
  * 75.00 was being applied as 78.75, undercharging the order by the VAT.
  *
  * Only fees absent from the request are touched, so amounts the storefront

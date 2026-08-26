@@ -16,7 +16,7 @@ import { useFreeGift, getLocalizedProduct, containsArabic } from "@/contexts/Fre
 import { useDiscountRules } from "@/contexts/DiscountRulesContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { calculateCartDiscounts, getCartDiscountTotal } from "@/lib/discountRules";
+import { calculateCartDiscounts, getCartDiscountTotal, getLocalizedCartDiscountLabel } from "@/lib/discountRules";
 import { featureFlags, type Locale } from "@/config/site";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { useProductMeta } from "@/hooks/useProductCategories";
@@ -86,7 +86,7 @@ export default function CartPage() {
   /**
    * Promotions reach the cart twice: once as a negative fee already applied to
    * the API total, and again through cartDiscounts, which is what the summary
-   * lists. Subtracting the second on top of the first counted "Buy 6 Get 1 Free"
+   * lists. Subtracting the second on top of the first counted "Buy 3 Get 1 Free"
    * twice and showed 401.25 where checkout charged 480.00 — the customer saw the
    * price rise between the two pages.
    *
@@ -730,7 +730,7 @@ export default function CartPage() {
                   )}
                 {cartDiscounts.map((discount) => (
                   <div key={discount.ruleId} className="flex justify-between text-green-600">
-                    <span>{discount.label}</span>
+                    <span>{getLocalizedCartDiscountLabel(discount, locale)}</span>
                     <span className="inline-flex items-center gap-1">
                       -<FormattedPrice
                         price={discount.amount / divisor}
