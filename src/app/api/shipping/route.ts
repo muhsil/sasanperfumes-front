@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { getRequestMarket } from "@/lib/market/server";
-import { resolveFreightPrice } from "@/config/shipping";
+import { resolveFreightPrice, convertFreightPrice, type FreightCountryCode } from "@/config/shipping";
 import { backendMarketHeaders, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
 
 export const dynamic = "force-dynamic";
@@ -226,7 +226,15 @@ function buildFreightRate(
   const countryLabel = FREIGHT_COUNTRY_LABELS[country.toUpperCase()] || country.toUpperCase();
   const currencyMinorUnit = getCurrencyMinorUnitForCode(currencyCode);
   const multiplier = Math.pow(10, currencyMinorUnit);
-  const ratePrice = String(Math.round(freightMatch.price * multiplier));
+
+  // The table is written in the destination's currency; the order may be priced
+  // in another one.
+  const converted = convertFreightPrice(
+    freightMatch.price,
+    country.toUpperCase() as FreightCountryCode,
+    currencyCode
+  );
+  const ratePrice = String(Math.round(converted * multiplier));
   const weightLabel = freightMatch.row.weightLabel;
 
   return {

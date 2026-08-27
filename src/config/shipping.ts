@@ -93,6 +93,48 @@ export function resolveFreightRow(country: string, cartWeight: number): FreightC
   return matched || null;
 }
 
+/**
+ * The freight table is written in each destination's own currency, which is
+ * correct for that market's own storefront. An order placed on the AED store
+ * and shipped to one of these countries was charged the figure as-is, so a
+ * parcel to Oman collected 13.65 AED against a 13.65 OMR rate — about a tenth
+ * of the intended amount. Bahrain and Kuwait were the same.
+ *
+ * Rates are units of the destination currency per AED, matching the storefront.
+ */
+const FREIGHT_CURRENCY_BY_COUNTRY: Record<FreightCountryCode, string> = {
+  SA: "SAR",
+  QA: "QAR",
+  OM: "OMR",
+  BH: "BHD",
+  KW: "KWD",
+};
+
+const CURRENCY_RATE_FROM_AED: Record<string, number> = {
+  AED: 1,
+  SAR: 1.02,
+  QAR: 0.99,
+  OMR: 0.105,
+  BHD: 0.103,
+  KWD: 0.083,
+  USD: 0.27,
+};
+
+/** Converts a freight charge into the currency the order is priced in. */
+export function convertFreightPrice(
+  price: number,
+  country: FreightCountryCode,
+  targetCurrency: string
+): number {
+  const sourceRate = CURRENCY_RATE_FROM_AED[FREIGHT_CURRENCY_BY_COUNTRY[country]];
+  const targetRate = CURRENCY_RATE_FROM_AED[String(targetCurrency || "AED").toUpperCase()];
+
+  // An unknown currency is left alone rather than converted by a guessed rate.
+  if (!sourceRate || !targetRate) return price;
+
+  return (price / sourceRate) * targetRate;
+}
+
 export function resolveFreightPrice(country: string, cartWeight: number): { row: FreightChargeRow; price: number } | null {
   const code = normalizeCountryCode(country);
   if (!code) return null;
