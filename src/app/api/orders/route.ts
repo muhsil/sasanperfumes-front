@@ -214,10 +214,26 @@ function normalizeCountryCode(value: unknown): string {
   return typeof value === "string" ? value.trim().toUpperCase() : "";
 }
 
+/**
+ * Catalogue prices are stored inclusive of the 5% UAE VAT, so a line total must
+ * be converted to net before WooCommerce adds tax back — otherwise tax is
+ * charged twice. Returning 0 for a country missing from the table skipped that
+ * conversion: order #16069 to London stored 75.00 as the net amount and billed
+ * 78.75 per item against a 75.00 catalogue price.
+ *
+ * An unlisted destination therefore falls back to the rate the stored prices
+ * already carry, never to zero.
+ */
+const BASE_INCLUSIVE_VAT_RATE = INCLUSIVE_VAT_RATES_BY_COUNTRY.AE;
+
 function getInclusiveVatRate(body: { billing?: Partial<OrderAddress>; shipping?: Partial<OrderAddress> }): number {
   const shippingCountry = normalizeCountryCode(body.shipping?.country);
   const billingCountry = normalizeCountryCode(body.billing?.country);
-  return INCLUSIVE_VAT_RATES_BY_COUNTRY[shippingCountry] ?? INCLUSIVE_VAT_RATES_BY_COUNTRY[billingCountry] ?? 0;
+  return (
+    INCLUSIVE_VAT_RATES_BY_COUNTRY[shippingCountry] ??
+    INCLUSIVE_VAT_RATES_BY_COUNTRY[billingCountry] ??
+    BASE_INCLUSIVE_VAT_RATE
+  );
 }
 
 function normalizeShippingLinesForNoTax(shippingLines: ShippingLine[]): ShippingLine[] {
@@ -930,9 +946,17 @@ export async function POST(request: NextRequest) {
     );
     if (customsCountry && customsCountry !== "AE") {
       const existingFees = orderData.fee_lines || [];
-      const hasCustoms = existingFees.some(
-        (fee) => String(fee.name || "").toLowerCase().includes("customs")
-      );
+      /**
+       * The storefront names this fee "Customs fees" inside the GCC and
+       * "Handling & export fee" everywhere else. Matching only "customs" missed
+       * the second name, so a fee the storefront had already sent looked absent
+       * and a duplicate was added — order #16069 to London carried two 45.00
+       * lines. Match both names.
+       */
+      const hasCustoms = existingFees.some((fee) => {
+        const name = String(fee.name || "").toLowerCase();
+        return name.includes("customs") || name.includes("handling");
+      });
 
       if (!hasCustoms) {
         const decimals = getCurrencyDecimals(currencyCode);
