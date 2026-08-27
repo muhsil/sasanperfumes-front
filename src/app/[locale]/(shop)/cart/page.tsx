@@ -27,6 +27,13 @@ import { trackAnalyticsEvent } from "@/lib/utils/analytics";
 
 
 
+/** Each market storefront delivers to its own country. */
+const MARKET_PREFIX_COUNTRIES: Record<string, string> = {
+  "/qa": "QA",
+  "/om": "OM",
+  "/sa": "SA",
+};
+
 export default function CartPage() {
   const marketPrefix = useMarketPrefix();
   const { locale } = useParams<{ locale: string }>();
@@ -63,13 +70,25 @@ export default function CartPage() {
   // Map each cart item to its lookup ID for brand/category
   const getItemLookupId = (item: CoCartItem): number => getParentId(item);
   const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
+  /**
+   * Promotions are a UAE offer. The shipping country is not known in the cart,
+   * but a market storefront is: /qa, /om and /sa deliver to their own country,
+   * so the promotion is not offered there. On the base store the cart assumes
+   * the UAE and checkout re-checks once the customer picks a country.
+   */
+  const marketDestinationCountry = MARKET_PREFIX_COUNTRIES[marketPrefix] ?? "AE";
+
   const cartDiscounts = useMemo(
     () => calculateCartDiscounts(
       cartItems.filter((item) => !isFreeGiftItem(item.item_key)),
       discountRules,
-      { categoryIdsByProductId: productCategoryIds, currencyMinorUnit }
+      {
+        categoryIdsByProductId: productCategoryIds,
+        currencyMinorUnit,
+        destinationCountry: marketDestinationCountry,
+      }
     ),
-    [cartItems, discountRules, isFreeGiftItem, productCategoryIds, currencyMinorUnit]
+    [cartItems, discountRules, isFreeGiftItem, productCategoryIds, currencyMinorUnit, marketDestinationCountry]
   );
   const promotionalDiscountTotal = getCartDiscountTotal(cartDiscounts);
 

@@ -22,6 +22,13 @@ import { useProductMeta } from "@/hooks/useProductCategories";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 import type { MiniCartDrawerProps } from "./types";
 
+/** Each market storefront delivers to its own country. */
+const MARKET_PREFIX_COUNTRIES: Record<string, string> = {
+  "/qa": "QA",
+  "/om": "OM",
+  "/sa": "SA",
+};
+
 export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
   const {
     cart,
@@ -76,13 +83,20 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
   };
   const productIds = cartItems.map((item) => getParentId(item));
   const { categories: productCategories, categoryIds: productCategoryIds } = useProductMeta(productIds, locale);
+  // Promotions are a UAE offer, so the market storefronts do not show them.
+  const marketDestinationCountry = MARKET_PREFIX_COUNTRIES[marketPrefix] ?? "AE";
+
   const cartDiscounts = useMemo(
     () => calculateCartDiscounts(
       cartItems.filter((item) => !isFreeGiftItem(item.item_key)),
       discountRules,
-      { categoryIdsByProductId: productCategoryIds, currencyMinorUnit }
+      {
+        categoryIdsByProductId: productCategoryIds,
+        currencyMinorUnit,
+        destinationCountry: marketDestinationCountry,
+      }
     ),
-    [cartItems, discountRules, isFreeGiftItem, productCategoryIds, currencyMinorUnit]
+    [cartItems, discountRules, isFreeGiftItem, productCategoryIds, currencyMinorUnit, marketDestinationCountry]
   );
 
   const handleQuantityChange = async (itemKey: string, newQuantity: number) => {

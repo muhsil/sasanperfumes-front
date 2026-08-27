@@ -363,18 +363,6 @@ export default function CheckoutClient() {
   }, [selectedShippingRate, shippingPackages]);
   const shippingCurrencyMinorUnit = selectedShippingRateDetails?.currency_minor_unit ?? currencyMinorUnit;
   const shippingDivisor = Math.pow(10, shippingCurrencyMinorUnit);
-  const cartDiscounts = useMemo(
-    () => {
-      try {
-        return calculateCartDiscounts(cartItems, discountRules, { categoryIdsByProductId: productCategoryIds, currencyMinorUnit });
-      } catch (err) {
-        console.error("[Checkout] Failed to calculate cart discounts:", err);
-        return [];
-      }
-    },
-    [cartItems, discountRules, productCategoryIds, currencyMinorUnit]
-  );
-  const promotionalDiscountTotal = getCartDiscountTotal(cartDiscounts);
 
   const [formData, setFormData] = useState<CheckoutFormData>({
     shipping: { ...emptyAddress, country: defaultCheckoutCountry },
@@ -383,6 +371,26 @@ export default function CheckoutClient() {
     paymentMethod: "paymob",
     orderNotes: "",
   });
+
+  const cartDiscounts = useMemo(
+    () => {
+      try {
+        // Promotions are a UAE offer. The destination is known here, so a cart
+        // going anywhere else earns none — and the discount is recalculated if
+        // the customer changes country.
+        return calculateCartDiscounts(cartItems, discountRules, {
+          categoryIdsByProductId: productCategoryIds,
+          currencyMinorUnit,
+          destinationCountry: formData.shipping.country,
+        });
+      } catch (err) {
+        console.error("[Checkout] Failed to calculate cart discounts:", err);
+        return [];
+      }
+    },
+    [cartItems, discountRules, productCategoryIds, currencyMinorUnit, formData.shipping.country]
+  );
+  const promotionalDiscountTotal = getCartDiscountTotal(cartDiscounts);
 
   const shippingCountryCode = (formData.shipping.country || "").trim().toUpperCase();
   const checkoutMarketCode = COUNTRY_TO_MARKET[shippingCountryCode] || marketCode;

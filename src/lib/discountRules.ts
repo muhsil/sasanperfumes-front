@@ -22,6 +22,20 @@ export function getLocalizedCartDiscountLabel(discount: CartDiscount, locale: st
 interface CartDiscountOptions {
   categoryIdsByProductId?: Record<number, number[]>;
   currencyMinorUnit?: number;
+  /**
+   * Destination the order is going to. Promotions run in the UAE only, so a
+   * cart heading anywhere else earns none. Left undefined the promotion still
+   * applies, which keeps callers that have no destination yet unchanged.
+   */
+  destinationCountry?: string;
+}
+
+/** Promotions are a UAE offer and are not extended to other destinations. */
+const PROMOTION_COUNTRY = "AE";
+
+export function isPromotionEligibleCountry(country: string | null | undefined): boolean {
+  const code = String(country || "").trim().toUpperCase();
+  return code === "" || code === PROMOTION_COUNTRY;
 }
 
 const DISABLED_STATUS_VALUES = new Set(["disabled", "inactive", "draft", "trash", "false", "0", "off"]);
@@ -220,6 +234,10 @@ export function calculateCartDiscounts(
   rules: DiscountRule[],
   options?: CartDiscountOptions
 ): CartDiscount[] {
+  if (!isPromotionEligibleCountry(options?.destinationCountry)) {
+    return [];
+  }
+
   const activeRules = getActiveDiscountRules(rules);
   const discounts: CartDiscount[] = [];
   const minorUnit = options?.currencyMinorUnit ?? 2;
