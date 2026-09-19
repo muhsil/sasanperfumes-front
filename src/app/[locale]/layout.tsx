@@ -19,6 +19,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { getSiteSettings, getHeaderSettings, getPrimaryMenu, getMobileHeaderMenu, getMobileBottomBarMenu, getMobileBarSettings, getCategoriesDrawerMenu, getTopbarSettings, getSeoSettings, getFooterSettings, getWhatsAppSettings, getFeatureToggles, getStaticPageContent, mapRepeater, pickLocale, getDiscountRules } from "@/lib/api/wordpress";
 import { getRequestMarket, getRequestFrontendHost } from "@/lib/market/server";
 import { getMarketPathPrefix } from "@/config/market";
+import { isPromotionEligibleMarket } from "@/lib/discountRules";
 import { GoogleTagScripts, TrackingScripts } from "@/components/tracking";
 import { Suspense } from "react";
 
@@ -125,7 +126,11 @@ export default async function LocaleLayout({
     platform: item.platform || "",
     url: item.url || "",
   }));
-  const discountRules = await getDiscountRules(frontendHost);
+  // Markets that earn no promotion are served none, so the badge is absent from
+  // the HTML itself rather than appearing and then vanishing on hydration.
+  const discountRules = isPromotionEligibleMarket(getMarketPathPrefix(market.code))
+    ? await getDiscountRules(frontendHost)
+    : [];
   const showWhatsApp = featureToggles.sasanperfumes_whatsapp_enabled !== false && (whatsAppSettings?.enabled ?? true);
   const showPromotionalPopup = featureToggles.sasanperfumes_popup_enabled === true;
   const showAbandonedCartPopup = featureToggles.sasanperfumes_ab_popup_enabled === true;

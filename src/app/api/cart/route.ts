@@ -589,6 +589,29 @@ export async function POST(request: NextRequest) {
         
         const newCartKey = coCartData.cart_key ? (coCartData.cart_key as string) : null;
         const localizedCart = await localizeCartItems(coCartData as Record<string, unknown>, locale as Locale | null, request);
+
+        // A coupon that applied but did not survive the reload is a silent
+        // failure: the customer is told nothing and the basket is unchanged.
+        // Report it rather than letting the cart quietly disagree with itself.
+        if (action === "apply-coupon") {
+          const requestedCode = String((body as { code?: string })?.code || "").trim().toLowerCase();
+          const appliedCodes = (Array.isArray(localizedCart?.coupons) ? localizedCart.coupons : [])
+            .map((entry) => String((entry as { coupon?: string })?.coupon || "").trim().toLowerCase());
+
+          if (requestedCode && !appliedCodes.includes(requestedCode)) {
+            return NextResponse.json(
+              {
+                success: false,
+                error: {
+                  code: "coupon_not_retained",
+                  message: "The coupon could not be applied to this cart.",
+                },
+              },
+              { status: 409 }
+            );
+          }
+        }
+
         return createResponseWithCartKey({ success: true, cart: localizedCart }, newCartKey, null, 200, market.code);
       }
       default:

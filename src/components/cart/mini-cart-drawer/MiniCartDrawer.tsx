@@ -7,7 +7,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useFreeGift, NEW_GIFT_ADDED_EVENT } from "@/contexts/FreeGiftContext";
 import { useDiscountRules } from "@/contexts/DiscountRulesContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { calculateCartDiscounts, getLocalizedCartDiscountLabel } from "@/lib/discountRules";
+import { calculateCartDiscounts, getMarketDestinationCountry, getLocalizedCartDiscountLabel } from "@/lib/discountRules";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { CartItemSkeleton } from "@/components/common/Skeleton";
 import MuiDrawer from "@mui/material/Drawer";
@@ -23,12 +23,6 @@ import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 import type { MiniCartDrawerProps } from "./types";
 
 /** Each market storefront delivers to its own country. */
-const MARKET_PREFIX_COUNTRIES: Record<string, string> = {
-  "/qa": "QA",
-  "/om": "OM",
-  "/sa": "SA",
-};
-
 export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
   const {
     cart,
@@ -84,7 +78,7 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
   const productIds = cartItems.map((item) => getParentId(item));
   const { categories: productCategories, categoryIds: productCategoryIds } = useProductMeta(productIds, locale);
   // Promotions are a UAE offer, so the market storefronts do not show them.
-  const marketDestinationCountry = MARKET_PREFIX_COUNTRIES[marketPrefix] ?? "AE";
+  const marketDestinationCountry = getMarketDestinationCountry(marketPrefix);
 
   const cartDiscounts = useMemo(
     () => calculateCartDiscounts(

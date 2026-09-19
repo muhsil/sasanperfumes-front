@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
-import { API_BASE as BASE_URL, backendHeaders, noCacheUrl } from "@/lib/utils/backendFetch";
+import { API_BASE as BASE_URL, backendMarketHeaders, noCacheUrl } from "@/lib/utils/backendFetch";
+import { marketFromRequest } from "@/lib/utils/requestMarket";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -41,13 +42,16 @@ export interface PublicCoupon {
   free_shipping: boolean;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    // Each market is its own store, so a request without the market header is
+    // answered with the main store's coupons — codes the caller cannot use.
+    const market = marketFromRequest(request);
     const url = `${API_BASE}/coupons?${getBasicAuthParams()}&per_page=20&status=publish`;
-    
+
     const response = await fetch(noCacheUrl(url), {
       method: "GET",
-      headers: backendHeaders(),
+      headers: backendMarketHeaders(market),
       cache: "no-store",
     });
 

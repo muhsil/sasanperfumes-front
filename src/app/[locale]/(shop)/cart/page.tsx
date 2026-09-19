@@ -16,7 +16,7 @@ import { useFreeGift, getLocalizedProduct, containsArabic } from "@/contexts/Fre
 import { useDiscountRules } from "@/contexts/DiscountRulesContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { calculateCartDiscounts, getCartDiscountTotal, getLocalizedCartDiscountLabel } from "@/lib/discountRules";
+import { calculateCartDiscounts, getMarketDestinationCountry, getCartDiscountTotal, getLocalizedCartDiscountLabel } from "@/lib/discountRules";
 import { featureFlags, type Locale } from "@/config/site";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { useProductMeta } from "@/hooks/useProductCategories";
@@ -28,12 +28,6 @@ import { trackAnalyticsEvent } from "@/lib/utils/analytics";
 
 
 /** Each market storefront delivers to its own country. */
-const MARKET_PREFIX_COUNTRIES: Record<string, string> = {
-  "/qa": "QA",
-  "/om": "OM",
-  "/sa": "SA",
-};
-
 export default function CartPage() {
   const marketPrefix = useMarketPrefix();
   const { locale } = useParams<{ locale: string }>();
@@ -76,7 +70,7 @@ export default function CartPage() {
    * so the promotion is not offered there. On the base store the cart assumes
    * the UAE and checkout re-checks once the customer picks a country.
    */
-  const marketDestinationCountry = MARKET_PREFIX_COUNTRIES[marketPrefix] ?? "AE";
+  const marketDestinationCountry = getMarketDestinationCountry(marketPrefix);
 
   const cartDiscounts = useMemo(
     () => calculateCartDiscounts(

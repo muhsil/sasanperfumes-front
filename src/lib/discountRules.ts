@@ -38,6 +38,28 @@ export function isPromotionEligibleCountry(country: string | null | undefined): 
   return code === "" || code === PROMOTION_COUNTRY;
 }
 
+/**
+ * The destination a market's storefront ships to. The Qatar, Oman and Saudi
+ * storefronts each serve one country, so the destination is known before the
+ * customer reaches checkout; the main storefront serves the UAE and everywhere
+ * else, so it stays on the UAE default until an address is entered.
+ */
+const MARKET_PREFIX_COUNTRIES: Record<string, string> = {
+  "/qa": "QA",
+  "/om": "OM",
+  "/sa": "SA",
+};
+
+export function getMarketDestinationCountry(marketPrefix: string | null | undefined): string {
+  const prefix = String(marketPrefix || "").trim().toLowerCase();
+  return MARKET_PREFIX_COUNTRIES[prefix] ?? PROMOTION_COUNTRY;
+}
+
+/** Whether a market's storefront should advertise promotions at all. */
+export function isPromotionEligibleMarket(marketPrefix: string | null | undefined): boolean {
+  return isPromotionEligibleCountry(getMarketDestinationCountry(marketPrefix));
+}
+
 const DISABLED_STATUS_VALUES = new Set(["disabled", "inactive", "draft", "trash", "false", "0", "off"]);
 
 function isExplicitFalse(value: unknown): boolean {

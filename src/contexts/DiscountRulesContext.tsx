@@ -1,7 +1,12 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
-import { getActiveDiscountRules, includesNumericId, isDiscountRuleEnabled } from "@/lib/discountRules";
+import {
+  getActiveDiscountRules,
+  includesNumericId,
+  isDiscountRuleEnabled,
+  isPromotionEligibleMarket,
+} from "@/lib/discountRules";
 import type { DiscountRule } from "@/types/discount";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
 
@@ -46,8 +51,19 @@ export function DiscountRulesProvider({
       .finally(() => setIsLoading(false));
   }, [initialRules, marketPrefix]);
 
+  /**
+   * Promotions run in the UAE only, so the Qatar, Oman and Saudi storefronts
+   * earn none. They were still advertising them: the badge promised "Buy 6 Get
+   * 1 Free" on every product page while the cart applied nothing, which read as
+   * the offer being broken. Withholding the rules here keeps the badge and the
+   * basket telling the customer the same thing.
+   */
+  const marketRuns = isPromotionEligibleMarket(marketPrefix);
+
   const getRulesForProduct = useCallback(
     (productId: number, categoryIds?: number[]): DiscountRule[] => {
+      if (!marketRuns) return [];
+
       return rules.filter((rule) => {
         if (!isDiscountRuleEnabled(rule)) return false;
         if (rule.applies_to === "all") return true;
@@ -56,7 +72,7 @@ export function DiscountRulesProvider({
         return false;
       });
     },
-    [rules]
+    [rules, marketRuns]
   );
 
   const getBadgeText = useCallback(
@@ -69,7 +85,9 @@ export function DiscountRulesProvider({
   );
 
   return (
-    <DiscountRulesContext.Provider value={{ rules, isLoading, getRulesForProduct, getBadgeText }}>
+    <DiscountRulesContext.Provider
+      value={{ rules: marketRuns ? rules : [], isLoading, getRulesForProduct, getBadgeText }}
+    >
       {children}
     </DiscountRulesContext.Provider>
   );

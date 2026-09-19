@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { getMarketByHost, normalizeMarketHost } from "@/config/market";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
-import { API_BASE as BASE_URL, backendHeaders, noCacheUrl } from "@/lib/utils/backendFetch";
+import { API_BASE as BASE_URL, backendMarketHeaders, noCacheUrl } from "@/lib/utils/backendFetch";
+import { marketFromRequest } from "@/lib/utils/requestMarket";
 
 const API_BASE = `${BASE_URL}/wp-json/wc/v3`;
 
@@ -72,6 +73,11 @@ export async function POST(request: Request): Promise<NextResponse<ValidateRespo
     const body: ValidateRequest = await request.json();
     const { code, subtotal = 0 } = body;
     const marketCurrency = getMarketCurrency(request);
+    // The coupon has to be looked up on the store the cart lives on. Without
+    // the market header the main store answers, so a code that exists only in
+    // the UAE was reported valid on /qa, /om and /sa and then refused by the
+    // cart itself.
+    const market = marketFromRequest(request);
 
     if (!code || typeof code !== "string") {
       return NextResponse.json(
@@ -91,7 +97,7 @@ export async function POST(request: Request): Promise<NextResponse<ValidateRespo
 
     const response = await fetch(noCacheUrl(url), {
       method: "GET",
-      headers: backendHeaders(),
+      headers: backendMarketHeaders(market),
       next: {
         revalidate: 0, // No caching for validation
       },
