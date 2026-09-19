@@ -50,7 +50,11 @@ function getConciseMarketTitleSuffix(marketCode: MarketCode, locale: Locale): st
     om: { en: "Sasan Perfumes Oman", ar: "Sasan Perfumes Oman" },
     sa: { en: "Sasan Perfumes Saudi", ar: "Sasan Perfumes Saudi" },
   };
-  return suffixes[marketCode][locale];
+  // Indexed straight into the table with no guard, so an unexpected locale
+  // returned undefined and buildSeoTitle threw on suffix.toLowerCase(). Same
+  // flaw as the copy tables below, and it was hidden behind them until those
+  // stopped throwing first.
+  return suffixes[marketCode]?.[toSeoLocale(locale)] ?? suffixes.intl.en;
 }
 
 function buildSeoTitle(rawTitle: string, marketCode: MarketCode | undefined, locale: Locale): string {
