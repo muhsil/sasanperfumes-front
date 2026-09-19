@@ -660,8 +660,21 @@ function dedupeKeywords(values: string[]): string[] {
     });
 }
 
+/**
+ * These tables are keyed by "en" and "ar" only, and the fallback was keyed by
+ * the same locale that had just missed, so an unexpected locale returned
+ * undefined from both sides and the caller crashed reading a field off it.
+ * The route casts its path segment to Locale rather than checking it, so any
+ * request carrying another value took the whole page down. Fall back to
+ * English instead of to a key that may not exist.
+ */
+function toSeoLocale(locale: Locale): "en" | "ar" {
+  return locale === "ar" ? "ar" : "en";
+}
+
 export function getMarketSeoCopy(marketCode: MarketCode, locale: Locale): MarketSeoCopy {
-  return MARKET_SEO_COPY[marketCode]?.[locale] || MARKET_SEO_COPY.intl[locale];
+  const key = toSeoLocale(locale);
+  return MARKET_SEO_COPY[marketCode]?.[key] || MARKET_SEO_COPY.intl[key];
 }
 
 export function buildMarketSeoKeywords(
@@ -694,17 +707,19 @@ const MARKET_SEO_LOCATION_COPY: Record<MarketCode, { en: string; ar: string }> =
 };
 
 export function getMarketSeoLocation(marketCode: MarketCode, locale: Locale): string {
-  return MARKET_SEO_LOCATION_COPY[marketCode]?.[locale] || MARKET_SEO_LOCATION_COPY.intl[locale];
+  const key = toSeoLocale(locale);
+  return MARKET_SEO_LOCATION_COPY[marketCode]?.[key] || MARKET_SEO_LOCATION_COPY.intl[key];
 }
 
 export function getMarketSeoDescription(marketCode: MarketCode, locale: Locale): string {
-  return locale === "ar"
+  return toSeoLocale(locale) === "ar"
     ? getMarketSeoCopy(marketCode, locale).descriptionAr
     : getMarketSeoCopy(marketCode, locale).description;
 }
 
 export function getMarketHomeSeoContent(marketCode: MarketCode, locale: Locale): MarketHomeSeoContent {
-  return MARKET_HOME_SEO_CONTENT[marketCode]?.[locale] || MARKET_HOME_SEO_CONTENT.intl[locale];
+  const key = toSeoLocale(locale);
+  return MARKET_HOME_SEO_CONTENT[marketCode]?.[key] || MARKET_HOME_SEO_CONTENT.intl[key];
 }
 
 export function getMarketSeoImageFallback(): string {
