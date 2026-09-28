@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { getRequestMarket } from "@/lib/market/server";
-import { resolveFreightPrice, convertFreightPrice, type FreightCountryCode } from "@/config/shipping";
+import { resolveFreightPrice, convertFreightPrice, convertCurrencyAmount, type FreightCountryCode } from "@/config/shipping";
 import { backendMarketHeaders, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
 
 export const dynamic = "force-dynamic";
@@ -347,11 +347,18 @@ function buildShippingRates(
   currencyCode: string,
   currencySymbol: string,
   cartWeight: number,
-  marketCode?: string
+  marketCode?: string,
+  storeCurrency?: string
 ): ShippingRate[] {
   const rates: ShippingRate[] = [];
   const currencyMinorUnit = getCurrencyMinorUnitForCode(currencyCode);
   const priceMultiplier = Math.pow(10, currencyMinorUnit);
+
+  // Zone costs come out of WooCommerce as bare numbers in the store's own
+  // currency. They were being stamped with the currency the customer happened
+  // to be browsing in, so a 250.00 AED rate read as USD 250.00 at checkout.
+  const toDisplayCurrency = (cost: number): number =>
+    convertCurrencyAmount(cost, storeCurrency || currencyCode, currencyCode);
 
   for (const method of methods) {
     if (!method.enabled) continue;
@@ -364,25 +371,25 @@ function buildShippingRates(
       if (rules.length > 0 && cartWeight > 0) {
         const weightCost = calculateWeightBasedCost(rules, cartWeight);
         if (weightCost !== null) {
-          price = String(Math.round(weightCost * priceMultiplier));
+          price = String(Math.round(toDisplayCurrency(weightCost) * priceMultiplier));
         } else {
           const cost = method.settings?.cost?.value || "0";
-          price = String(Math.round(parseFloat(cost) * priceMultiplier));
+          price = String(Math.round(toDisplayCurrency(parseFloat(cost)) * priceMultiplier));
         }
       } else {
         const cost = method.settings?.cost?.value || "0";
-        price = String(Math.round(parseFloat(cost) * priceMultiplier));
+        price = String(Math.round(toDisplayCurrency(parseFloat(cost)) * priceMultiplier));
       }
     } else if (method.method_id === "flexible_shipping_single" || method.method_id === "flexible_shipping") {
       const rules = parseFlexibleShippingRules(method.settings);
       if (rules.length > 0 && cartWeight > 0) {
         const weightCost = calculateWeightBasedCost(rules, cartWeight);
         if (weightCost !== null) {
-          price = String(Math.round(weightCost * priceMultiplier));
+          price = String(Math.round(toDisplayCurrency(weightCost) * priceMultiplier));
         }
       } else {
         const cost = method.settings?.cost?.value || "0";
-        price = String(Math.round(parseFloat(cost) * priceMultiplier));
+        price = String(Math.round(toDisplayCurrency(parseFloat(cost)) * priceMultiplier));
       }
     } else if (method.method_id === "free_shipping") {
       price = "0";
@@ -420,10 +427,10 @@ function buildShippingRates(
       continue;
     } else if (method.method_id === "local_pickup") {
       const cost = method.settings?.cost?.value || "0";
-      price = String(Math.round(parseFloat(cost) * priceMultiplier));
+      price = String(Math.round(toDisplayCurrency(parseFloat(cost)) * priceMultiplier));
     } else {
       const cost = method.settings?.cost?.value || "0";
-      price = String(Math.round(parseFloat(cost) * priceMultiplier));
+      price = String(Math.round(toDisplayCurrency(parseFloat(cost)) * priceMultiplier));
     }
 
     rates.push({
@@ -594,7 +601,8 @@ export async function GET(request: NextRequest) {
       currencyCode,
       currencySymbol,
       cartWeight,
-      shippingMarketCode
+      shippingMarketCode,
+      market.defaultCurrency
     );
 
     if (shippingRates.length === 0 && isOmanMarket) {

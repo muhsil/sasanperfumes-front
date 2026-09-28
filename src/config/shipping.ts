@@ -120,6 +120,31 @@ const CURRENCY_RATE_FROM_AED: Record<string, number> = {
   USD: 0.27,
 };
 
+/**
+ * Converts between any two of the currencies above.
+ *
+ * WooCommerce holds a shipping zone's cost as a bare number in the store's own
+ * currency, and the storefront was stamping that number with whichever currency
+ * the customer was browsing in. A 250.00 AED rate to the UK was shown to a
+ * customer shopping in dollars as USD 250.00 — about three and a half times the
+ * real charge.
+ *
+ * An unknown currency on either side returns the amount untouched rather than
+ * converting it by a guessed rate.
+ */
+export function convertCurrencyAmount(
+  amount: number,
+  fromCurrency: string,
+  toCurrency: string
+): number {
+  const from = CURRENCY_RATE_FROM_AED[String(fromCurrency || "").toUpperCase()];
+  const to = CURRENCY_RATE_FROM_AED[String(toCurrency || "").toUpperCase()];
+
+  if (!from || !to || !Number.isFinite(amount)) return amount;
+
+  return (amount / from) * to;
+}
+
 /** Converts a freight charge into the currency the order is priced in. */
 export function convertFreightPrice(
   price: number,
