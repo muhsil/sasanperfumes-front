@@ -325,6 +325,92 @@ async function lookupProductInMarket(
   }
 }
 
+/**
+ * WooCommerce checks stock when an item goes into the cart, not when an order
+ * is created over the REST API — that endpoint writes whatever line items it is
+ * given. The storefront creates orders that way, so a basket assembled while an
+ * item was still available went through unchallenged however long later, and a
+ * product allowing backorders could be bought past zero with nothing to stop
+ * it. Terra Sol went 1 -> 0 -> -2 -> -3 -> -5 across four orders in one day.
+ *
+ * Re-check availability against the market's own catalogue immediately before
+ * the order is written. A lookup that fails to answer is not treated as out of
+ * stock: a slow catalogue must not block a legitimate sale.
+ */
+const STOCK_CHECK_TIMEOUT_MS = 4000;
+
+interface StockVerdict {
+  name: string;
+  requested: number;
+  available: number | null;
+}
+
+async function findUnavailableLineItems(
+  lineItems: OrderLineItem[],
+  marketCode: string | undefined
+): Promise<StockVerdict[]> {
+  const productIds = Array.from(
+    new Set(
+      lineItems
+        .map((item) => Number(item.variation_id) || Number(item.product_id))
+        .filter((id) => Number.isFinite(id) && id > 0)
+    )
+  );
+
+  if (productIds.length === 0) return [];
+
+  const url = `${getOrdersApiBase(marketCode)}/products?include=${productIds.join(",")}&per_page=${productIds.length}&${getBasicAuthParams(marketCode)}`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), STOCK_CHECK_TIMEOUT_MS);
+
+  try {
+    const res = await fetchOrdersBackend(url, {
+      method: "GET",
+      headers: backendHeaders(),
+      signal: controller.signal,
+    }, marketCode);
+    if (!res.ok) return [];
+
+    const products = await res.json();
+    if (!Array.isArray(products)) return [];
+
+    const byId = new Map<number, { stock_status?: string; stock_quantity?: number | null; backorders_allowed?: boolean; name?: string }>();
+    for (const product of products) {
+      if (product?.id) byId.set(Number(product.id), product);
+    }
+
+    const unavailable: StockVerdict[] = [];
+
+    for (const item of lineItems) {
+      const id = Number(item.variation_id) || Number(item.product_id);
+      const product = byId.get(id);
+      if (!product) continue;
+
+      const requested = Math.max(1, Number(item.quantity) || 1);
+      const name = item.name || product.name || `Product ${id}`;
+
+      if (String(product.stock_status || "").toLowerCase() === "outofstock") {
+        unavailable.push({ name, requested, available: 0 });
+        continue;
+      }
+
+      // A managed product with a known quantity cannot go below zero unless it
+      // is explicitly set to accept backorders.
+      const quantity = product.stock_quantity;
+      if (!product.backorders_allowed && typeof quantity === "number" && quantity < requested) {
+        unavailable.push({ name, requested, available: Math.max(0, quantity) });
+      }
+    }
+
+    return unavailable;
+  } catch {
+    // A lookup that times out or errors must not stop a real customer buying.
+    return [];
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function resolveLineItemsForMarket(
   lineItems: OrderLineItem[],
   marketCode: string | undefined,
@@ -1034,8 +1120,38 @@ export async function POST(request: NextRequest) {
       orderData.meta_data = metaData;
     }
 
+    // Last check before the order exists. Everything above this point is
+    // arithmetic on what the customer was shown; this asks the catalogue
+    // whether the goods can actually be sold.
+    const unavailable = await findUnavailableLineItems(orderData.line_items, market.code);
+    if (unavailable.length > 0) {
+      const detail = unavailable
+        .map((entry) =>
+          (entry.available ?? 0) > 0
+            ? `${entry.name} (only ${entry.available} left, ${entry.requested} requested)`
+            : `${entry.name} (out of stock)`
+        )
+        .join(", ");
+
+      console.error("[orders] refused: line items no longer available:", {
+        market: market.code,
+        items: unavailable,
+      });
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "product_out_of_stock",
+            message: `Sorry, this is no longer available: ${detail}. Please update your cart and try again.`,
+          },
+        },
+        { status: 409 }
+      );
+    }
+
     const url = `${getOrdersApiBase(market.code)}/orders?${getBasicAuthParams(market.code)}`;
-    
+
     // Authenticate via query params only (consumer_key/consumer_secret in URL).
     // Sending an Authorization: Basic header alongside query-param auth causes
     // WordPress Application Passwords to intercept and reject the request with
