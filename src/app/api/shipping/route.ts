@@ -345,7 +345,6 @@ function calculateWeightBasedCost(rules: WeightRule[], weight: number): number |
 
 function buildShippingRates(
   methods: ZoneMethod[],
-  cartSubtotal: number,
   currencyCode: string,
   currencySymbol: string,
   cartWeight: number,
@@ -488,7 +487,13 @@ export async function GET(request: NextRequest) {
     const country = marketCountry || requestedCountry;
     const city = request.nextUrl.searchParams.get("city") || "";
     const postcode = request.nextUrl.searchParams.get("postcode") || "";
-    const cartSubtotal = parseFloat(request.nextUrl.searchParams.get("cart_subtotal") || "0");
+    // cart_subtotal arrives in minor units — the cart keeps its totals that way
+    // and the checkout forwards them unchanged. Comparing it against a shipping
+    // method's minimum, which is written in whole currency, made every basket
+    // over about four dirhams clear a 400.00 threshold: that is how free
+    // delivery reached baskets of three, four and five bottles. Nothing decides
+    // anything from it now, and it is left out of the rate builder entirely so
+    // the mismatch cannot be reintroduced by reaching for it.
     const cartWeight = parseFloat(request.nextUrl.searchParams.get("cart_weight") || "0");
     const currencyCode = request.nextUrl.searchParams.get("currency_code") || market.defaultCurrency;
     // How many items are in the basket decides free delivery, so it is read
@@ -612,7 +617,6 @@ export async function GET(request: NextRequest) {
     const methods = await getZoneMethods(zoneId, shippingMarketCode);
     const shippingRates = buildShippingRates(
       methods,
-      cartSubtotal,
       currencyCode,
       currencySymbol,
       cartWeight,
