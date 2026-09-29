@@ -331,6 +331,9 @@ export default function CheckoutClient() {
         const [isLoadingShipping, setIsLoadingShipping] = useState(false);
         const [selectedShippingRate, setSelectedShippingRate] = useState<string | null>(null);
         const [shippingTotal, setShippingTotal] = useState<string>("0");
+        // Whether a rate has actually come back, so a genuine zero can be told
+        // apart from nothing having been fetched yet.
+        const [hasResolvedShippingRate, setHasResolvedShippingRate] = useState(false);
         const [shippingCountries, setShippingCountries] = useState<CountryOption[] | undefined>(undefined);
         
         const [createAccount, setCreateAccount] = useState(false);
@@ -783,8 +786,9 @@ export default function CheckoutClient() {
             const data = await response.json();
             if (data.success && data.shipping_rates) {
               setShippingPackages(data.shipping_rates);
-              if (data.totals?.shipping_total) {
-                setShippingTotal(data.totals.shipping_total);
+              if (data.totals?.shipping_total !== undefined && data.totals?.shipping_total !== null) {
+                setShippingTotal(String(data.totals.shipping_total));
+                setHasResolvedShippingRate(true);
               }
               const allRates = data.shipping_rates.flatMap((pkg: ShippingPackage) => pkg.shipping_rates || []);
               const selectedRate = allRates.find((rate: ShippingRate) => rate.selected);
@@ -877,8 +881,9 @@ export default function CheckoutClient() {
               if (data.shipping_rates) {
                 setShippingPackages(data.shipping_rates);
               }
-              if (data.totals?.shipping_total) {
-                setShippingTotal(data.totals.shipping_total);
+              if (data.totals?.shipping_total !== undefined && data.totals?.shipping_total !== null) {
+                setShippingTotal(String(data.totals.shipping_total));
+                setHasResolvedShippingRate(true);
               }
 
               if (shippingInfoTrackedRef.current !== shippingInfoKey && selectedRate) {
@@ -933,7 +938,11 @@ export default function CheckoutClient() {
         const subtotalMajor = Math.max(submittedLineSubtotal - discountsMajor, 0);
         const selectedShippingMinor = parseFloat(shippingTotal) || 0;
         const cartShippingMinor = parseFloat(cart?.totals?.shipping_total || "0") || 0;
-        const shippingMajor = selectedShippingMinor
+        // Zero is an answer, not a missing one. Falling back to WooCommerce's
+        // figure whenever the chosen rate came to nothing meant free delivery
+        // was shown as a 30.00 charge while the order was written with none:
+        // the customer saw one total and was billed another.
+        const shippingMajor = hasResolvedShippingRate
           ? selectedShippingMinor / shippingDivisor
           : convertPrice(cartShippingMinor / divisor);
         const feesMajor = convertPrice((cartFeeTotal || 0) / divisor);
@@ -2921,13 +2930,13 @@ export default function CheckoutClient() {
                               ))}
                               <div className="flex justify-between text-sm text-brand-muted">
                                 <span>{isRTL ? "الشحن" : "Shipping"}</span>
-                                {parseFloat(shippingTotal) > 0 ? (
+                                {hasResolvedShippingRate && parseFloat(shippingTotal) > 0 ? (
                                   <FormattedPrice
                                     price={(parseFloat(shippingTotal) || 0) / shippingDivisor}
                                     sourceCurrency={checkoutCurrency as Currency}
                                     iconSize="xs"
                                   />
-                                ) : parseFloat(cart?.totals?.shipping_total || "0") > 0 ? (
+                                ) : !hasResolvedShippingRate && parseFloat(cart?.totals?.shipping_total || "0") > 0 ? (
                                   <FormattedPrice
                                     price={(parseFloat(cart?.totals?.shipping_total || "0") || 0) / shippingDivisor}
                                     iconSize="xs"
