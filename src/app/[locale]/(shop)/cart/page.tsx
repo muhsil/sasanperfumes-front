@@ -16,7 +16,7 @@ import { useFreeGift, getLocalizedProduct, containsArabic } from "@/contexts/Fre
 import { useDiscountRules } from "@/contexts/DiscountRulesContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { calculateCartDiscounts, getMarketDestinationCountry, getCartDiscountTotal, getLocalizedCartDiscountLabel } from "@/lib/discountRules";
+import { calculateCartDiscounts, getMarketDestinationCountry, getCartDiscountTotal, getLocalizedCartDiscountLabel, qualifiesForPromotionFreeDelivery } from "@/lib/discountRules";
 import { featureFlags, type Locale } from "@/config/site";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { useProductMeta } from "@/hooks/useProductCategories";
@@ -86,6 +86,23 @@ export default function CartPage() {
   );
   const promotionalDiscountTotal = getCartDiscountTotal(cartDiscounts);
 
+  /**
+   * Free delivery comes with the offer, so the basket shows it the moment the
+   * basket earns it. WooCommerce hands back both rates and marks the flat one
+   * as chosen, so reading its figure showed a qualifying basket a delivery
+   * charge that checkout was never going to make — the customer saw 30.00 here
+   * and nothing a page later.
+   */
+  const cartItemCount = cartItems.reduce(
+    (sum, item) => sum + (item.quantity?.value || 0),
+    0
+  );
+  const hasFreeDelivery = qualifiesForPromotionFreeDelivery(
+    discountRules,
+    cartItemCount,
+    marketDestinationCountry
+  );
+
   useEffect(() => {
     void refreshCart();
   }, [refreshCart]);
@@ -121,8 +138,15 @@ export default function CartPage() {
     .filter((amount) => amount < 0)
     .reduce((sum, amount) => sum + amount, 0);
 
+  // WooCommerce's total carries the flat delivery rate it chose, so a basket
+  // that has earned free delivery has to have that charge taken back out or the
+  // summary adds up to more than the customer will be asked for.
+  const includedShipping = parseFloat(cart?.totals?.shipping_total || "0") || 0;
   const adjustedCartTotal = Math.max(
-    (parseFloat(cartTotal) || 0) - promotionalFeeTotal - promotionalDiscountTotal,
+    (parseFloat(cartTotal) || 0)
+      - promotionalFeeTotal
+      - promotionalDiscountTotal
+      - (hasFreeDelivery ? includedShipping : 0),
     0
   );
   const hasTrackedViewCartRef = useRef(false);
@@ -754,14 +778,16 @@ export default function CartPage() {
                 ))}
                               <div className="flex justify-between text-brand-muted">
                                 <span>{texts.shipping}</span>
-                                <span>
-                                  {cart?.totals?.shipping_total &&
-                                  parseFloat(cart.totals.shipping_total) > 0
-                                    ? <FormattedPrice
-                                        price={parseFloat(cart.totals.shipping_total) / divisor}
-                                        iconSize="xs"
-                                      />
-                                    : texts.calculatedAtCheckout}
+                                <span className={hasFreeDelivery ? "font-semibold text-green-600" : undefined}>
+                                  {hasFreeDelivery
+                                    ? (isRTL ? "مجاني" : "Free")
+                                    : cart?.totals?.shipping_total &&
+                                      parseFloat(cart.totals.shipping_total) > 0
+                                      ? <FormattedPrice
+                                          price={parseFloat(cart.totals.shipping_total) / divisor}
+                                          iconSize="xs"
+                                        />
+                                      : texts.calculatedAtCheckout}
                                 </span>
                               </div>
                               {/* Customs Fees */}
