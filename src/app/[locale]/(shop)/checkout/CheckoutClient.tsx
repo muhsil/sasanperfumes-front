@@ -742,6 +742,12 @@ export default function CheckoutClient() {
         }, [emptyCartCountdown, router, locale, marketPrefix]);
 
         const discountedCartSubtotal = Math.max((parseFloat(cartSubtotal) || 0) - couponDiscount - promotionalDiscountTotal, 0);
+        // Bottles in the basket, counted the same way the Buy 6 Get 1 Free
+        // offer counts them, because free delivery goes with that offer.
+        const cartItemCount = cartItems.reduce(
+          (sum, item) => sum + (item.quantity?.value || 0),
+          0
+        );
         const cartItemDisplayTotals = useMemo(() => new Map(
           cartItems.map((item) => {
             const unitPrice = convertPrice((parseFloat(item.price) || 0) / divisor);
@@ -768,6 +774,9 @@ export default function CheckoutClient() {
               postcode: postcode || "",
               cart_subtotal: String(subtotal),
               cart_weight: String(weight),
+              // Free delivery goes with the Buy 6 Get 1 Free offer, so the
+              // basket's size is what decides it, not what it is worth.
+              cart_qty: String(cartItemCount),
               currency_code: checkoutCurrency,
             });
             const response = await fetch(buildCheckoutApiUrl("/api/shipping", Object.fromEntries(params.entries())));

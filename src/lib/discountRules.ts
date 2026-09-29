@@ -55,6 +55,41 @@ export function getMarketDestinationCountry(marketPrefix: string | null | undefi
   return MARKET_PREFIX_COUNTRIES[prefix] ?? PROMOTION_COUNTRY;
 }
 
+/**
+ * Free delivery rides on the Buy 6 Get 1 Free offer, so it is earned by
+ * qualifying for that offer and not by how much the basket is worth. A value
+ * threshold let five bottles of a pricier line reach it, and let a basket that
+ * had briefly held six keep the free rate after one was taken back out.
+ *
+ * The size of a qualifying group comes from the rule itself — buy 6 get 1 is
+ * seven items — so changing the offer changes this with it.
+ */
+export function getPromotionFreeDeliveryQuantity(rules: DiscountRule[] | null | undefined): number | null {
+  const active = getActiveDiscountRules(rules).filter((rule) => rule.type === "bogo");
+  if (active.length === 0) return null;
+
+  const sizes = active.map((rule) => {
+    const buy = Math.max(1, Math.floor(rule.buy_quantity || 0));
+    const get = Math.max(1, Math.floor(rule.get_quantity || 0));
+    return buy + get;
+  });
+
+  return Math.min(...sizes);
+}
+
+export function qualifiesForPromotionFreeDelivery(
+  rules: DiscountRule[] | null | undefined,
+  cartQuantity: number,
+  destinationCountry?: string | null
+): boolean {
+  if (!isPromotionEligibleCountry(destinationCountry)) return false;
+
+  const required = getPromotionFreeDeliveryQuantity(rules);
+  if (required === null) return false;
+
+  return Math.floor(cartQuantity) >= required;
+}
+
 /** Whether a market's storefront should advertise promotions at all. */
 export function isPromotionEligibleMarket(marketPrefix: string | null | undefined): boolean {
   return isPromotionEligibleCountry(getMarketDestinationCountry(marketPrefix));

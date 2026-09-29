@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
-import { getRequestMarket } from "@/lib/market/server";
+import { getRequestMarket, getRequestFrontendHost } from "@/lib/market/server";
 import { resolveFreightPrice, convertFreightPrice, convertCurrencyAmount, type FreightCountryCode } from "@/config/shipping";
+import { getDiscountRules } from "@/lib/api/wordpress";
+import { qualifiesForPromotionFreeDelivery } from "@/lib/discountRules";
 import { backendMarketHeaders, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
 
 export const dynamic = "force-dynamic";
@@ -348,7 +350,8 @@ function buildShippingRates(
   currencySymbol: string,
   cartWeight: number,
   marketCode?: string,
-  storeCurrency?: string
+  storeCurrency?: string,
+  promotionFreeDelivery?: boolean
 ): ShippingRate[] {
   const rates: ShippingRate[] = [];
   const currencyMinorUnit = getCurrencyMinorUnitForCode(currencyCode);
@@ -393,15 +396,12 @@ function buildShippingRates(
       }
     } else if (method.method_id === "free_shipping") {
       price = "0";
-      const requires = method.settings?.requires?.value || "";
-      const minAmount = parseFloat(method.settings?.min_amount?.value || "0");
-      let eligible = true;
-
-      if (requires === "min_amount" || requires === "both" || requires === "either") {
-        if (minAmount > 0 && cartSubtotal < minAmount) {
-          eligible = false;
-        }
-      }
+      // Free delivery is part of the Buy 6 Get 1 Free offer, so it is earned by
+      // qualifying for that offer. WooCommerce can only express a value
+      // threshold, and a value threshold is not the same rule: five bottles of
+      // a dearer line reached it, and a basket that had briefly held six kept
+      // the free rate once one was taken back out.
+      const eligible = promotionFreeDelivery === true;
 
       rates.push({
         rate_id: `${method.method_id}:${method.instance_id}`,
@@ -421,7 +421,9 @@ function buildShippingRates(
         currency_thousand_separator: ",",
         currency_prefix: currencySymbol,
         currency_suffix: "",
-        free_shipping_min_amount: minAmount > 0 ? minAmount : undefined,
+        // No minimum spend to report: the offer is earned by the number of
+        // bottles, and the checkout says so in its own wording.
+        free_shipping_min_amount: undefined,
         free_shipping_eligible: eligible,
       });
       continue;
@@ -489,6 +491,19 @@ export async function GET(request: NextRequest) {
     const cartSubtotal = parseFloat(request.nextUrl.searchParams.get("cart_subtotal") || "0");
     const cartWeight = parseFloat(request.nextUrl.searchParams.get("cart_weight") || "0");
     const currencyCode = request.nextUrl.searchParams.get("currency_code") || market.defaultCurrency;
+    // How many items are in the basket decides free delivery, so it is read
+    // here rather than inferred from the basket's value.
+    const cartQuantity = parseInt(request.nextUrl.searchParams.get("cart_qty") || "0", 10);
+    const promotionFreeDelivery = await (async () => {
+      if (!Number.isFinite(cartQuantity) || cartQuantity <= 0) return false;
+      try {
+        const rules = await getDiscountRules(await getRequestFrontendHost());
+        return qualifiesForPromotionFreeDelivery(rules, cartQuantity, country);
+      } catch {
+        // The offer cannot be confirmed, so it is not given away.
+        return false;
+      }
+    })();
     const currencySymbol = request.nextUrl.searchParams.get("currency_symbol") || getCurrencySymbolForCode(currencyCode);
     const buildOmanFallbackRate = () =>
       buildFixedShippingRate(
@@ -602,7 +617,8 @@ export async function GET(request: NextRequest) {
       currencySymbol,
       cartWeight,
       shippingMarketCode,
-      market.defaultCurrency
+      market.defaultCurrency,
+      promotionFreeDelivery
     );
 
     if (shippingRates.length === 0 && isOmanMarket) {

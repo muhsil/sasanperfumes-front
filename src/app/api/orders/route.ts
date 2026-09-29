@@ -4,7 +4,9 @@ import https from "https";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { verifyAuth, unauthorizedResponse, forbiddenResponse } from "@/lib/security";
 import { API_BASE, backendHeaders, backendMarketHeaders, backendPostHeaders, noCacheUrl, parseBackendJson, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
-import { getRequestMarket } from "@/lib/market/server";
+import { getRequestMarket, getRequestFrontendHost } from "@/lib/market/server";
+import { getDiscountRules } from "@/lib/api/wordpress";
+import { qualifiesForPromotionFreeDelivery } from "@/lib/discountRules";
 
 function getOrdersApiBase(marketCode?: string | null): string {
   return `${wpJsonBaseForMarket(marketCode)}/wc/v3`;
@@ -1118,6 +1120,58 @@ export async function POST(request: NextRequest) {
     }
     if (metaData.length > 0) {
       orderData.meta_data = metaData;
+    }
+
+    // Free delivery rides on the Buy 6 Get 1 Free offer. The checkout offers it
+    // only to a qualifying basket, but the rate the browser sends is whatever it
+    // last had selected: a basket that held six bottles and then had one taken
+    // back out kept the free rate, and order #17398 shipped five bottles for
+    // nothing. What the browser sends cannot be the thing that decides it.
+    const zeroShipping = (orderData.shipping_lines || []).some(
+      (line) => Math.abs(parseFloat(String(line.total ?? "0")) || 0) < 0.001
+    );
+
+    if (zeroShipping && (orderData.shipping_lines || []).length > 0) {
+      const orderedQuantity = (orderData.line_items || []).reduce(
+        (sum, item) => sum + Math.max(0, Number(item.quantity) || 0),
+        0
+      );
+
+      let entitled = false;
+      try {
+        const rules = await getDiscountRules(await getRequestFrontendHost());
+        entitled = qualifiesForPromotionFreeDelivery(
+          rules,
+          orderedQuantity,
+          orderData.shipping?.country || orderData.billing?.country
+        );
+      } catch {
+        // The offer could not be confirmed. Let the order through rather than
+        // block a real sale over a lookup, but say so in the log.
+        entitled = true;
+        console.error("[orders] could not verify free delivery entitlement, allowing:", {
+          market: market.code,
+          orderedQuantity,
+        });
+      }
+
+      if (!entitled) {
+        console.error("[orders] refused: free delivery on a basket that does not qualify:", {
+          market: market.code,
+          orderedQuantity,
+        });
+
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "free_delivery_not_eligible",
+              message: "Free delivery applies to the Buy 6 Get 1 Free offer. Please refresh the page to see the correct delivery charge.",
+            },
+          },
+          { status: 409 }
+        );
+      }
     }
 
     // Last check before the order exists. Everything above this point is
