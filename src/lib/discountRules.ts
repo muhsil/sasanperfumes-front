@@ -81,10 +81,35 @@ export function isDiscountRuleEnabled(rule: DiscountRule): boolean {
   }
 
   const now = new Date();
-  if (rule.start_date && new Date(rule.start_date) > now) return false;
-  if (rule.end_date && new Date(rule.end_date) < now) return false;
+  const start = parseRuleBoundary(rule.start_date, "start");
+  const end = parseRuleBoundary(rule.end_date, "end");
+  if (start && start > now) return false;
+  if (end && end < now) return false;
 
   return true;
+}
+
+/**
+ * The admin screen writes these from an <input type="date">, so they arrive as
+ * a bare YYYY-MM-DD and are meant to cover the whole day in the shop's own
+ * timezone. Read plainly, "2026-10-06" is midnight UTC, which is 4am in Dubai:
+ * an offer advertised to the 6th would have stopped twenty hours into its last
+ * day. A bare date is therefore read as the first or last instant of that day
+ * in Dubai, while anything carrying its own time is left exactly as written.
+ */
+const SHOP_UTC_OFFSET = "+04:00";
+const BARE_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+function parseRuleBoundary(value: string | null | undefined, edge: "start" | "end"): Date | null {
+  const raw = String(value || "").trim();
+  if (!raw) return null;
+
+  const iso = BARE_DATE.test(raw)
+    ? `${raw}T${edge === "start" ? "00:00:00.000" : "23:59:59.999"}${SHOP_UTC_OFFSET}`
+    : raw;
+
+  const parsed = new Date(iso);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
 export function getActiveDiscountRules(rules: DiscountRule[] | null | undefined): DiscountRule[] {
