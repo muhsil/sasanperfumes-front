@@ -258,6 +258,24 @@ export function PhoneInput({
               isRTL ? "right-0" : "left-0"
             )}
           >
+            {/*
+              This picker only sets the phone's dialling code, but it listed
+              countries with flags and a "Search country" box exactly like the
+              delivery country field — so customers opened it expecting to
+              change where the order ships, found nothing happened, and
+              reported that the country could not be changed at checkout. Say
+              what it does, and where the delivery country actually lives.
+            */}
+            <div className="border-b px-3 pt-2 pb-1">
+              <p className="text-xs font-medium text-gray-900">
+                {isRTL ? "رمز الاتصال الدولي" : "Phone dialling code"}
+              </p>
+              <p className="mt-0.5 text-[11px] leading-snug text-gray-500">
+                {isRTL
+                  ? "لتغيير بلد التوصيل، استخدم حقل \"الدولة\" ضمن قسم التوصيل."
+                  : "To change where your order ships, use the Country field under Delivery."}
+              </p>
+            </div>
             <div className="border-b p-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -266,7 +284,7 @@ export function PhoneInput({
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={isRTL ? "ابحث عن دولة..." : "Search country..."}
+                  placeholder={isRTL ? "ابحث عن رمز الاتصال..." : "Search dialling code..."}
                   className="w-full rounded-full border border-gray-900/20 py-2 pl-9 pr-3 text-sm hover:border-gray-900 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900/15"
                   dir="ltr"
                 />

@@ -243,6 +243,9 @@ export function CountrySelect({
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
+  // Set when a pointer has already toggled the list, so the click that follows
+  // the same tap does not immediately toggle it back.
+  const openedByPointerRef = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const pathname = usePathname();
 
@@ -305,9 +308,29 @@ export function CountrySelect({
         </label>
       )}
       <div className="relative">
+        {/*
+          Opened on pointer down rather than click. A click needs the press and
+          the release to land on the same element, so on a phone the smallest
+          drag of a finger cancels it and the field appears dead — which is how
+          a customer came to report that the country could not be changed. The
+          click handler is kept for keyboard activation, which arrives with no
+          preceding pointer event.
+        */}
         <button
           type="button"
-          onClick={() => setIsOpen(!isOpen)}
+          aria-haspopup="listbox"
+          aria-expanded={isOpen}
+          onPointerDown={() => {
+            openedByPointerRef.current = true;
+            setIsOpen((open) => !open);
+          }}
+          onClick={() => {
+            if (openedByPointerRef.current) {
+              openedByPointerRef.current = false;
+              return;
+            }
+            setIsOpen((open) => !open);
+          }}
           className={cn(
             "flex h-12 w-full items-center justify-between rounded-full border bg-white px-4 py-2 text-sm transition-colors",
             "hover:border-gray-900 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900/15",
@@ -327,7 +350,7 @@ export function CountrySelect({
         </button>
 
         {isOpen && (
-          <div className="absolute z-50 mt-1 w-full rounded-2xl border border-gray-200 bg-white shadow-lg">
+          <div role="listbox" className="absolute z-50 mt-1 w-full rounded-2xl border border-gray-200 bg-white shadow-lg">
             <div className="border-b p-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
