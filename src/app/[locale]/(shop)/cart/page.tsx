@@ -16,7 +16,7 @@ import { useFreeGift, getLocalizedProduct, containsArabic } from "@/contexts/Fre
 import { useDiscountRules } from "@/contexts/DiscountRulesContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { calculateCartDiscounts, getMarketDestinationCountry, getCartDiscountTotal, getLocalizedCartDiscountLabel, qualifiesForPromotionFreeDelivery } from "@/lib/discountRules";
+import { calculateCartDiscounts, getMarketDestinationCountry, getCartDiscountTotal, getLocalizedCartDiscountLabel } from "@/lib/discountRules";
 import { featureFlags, type Locale } from "@/config/site";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { useProductMeta } from "@/hooks/useProductCategories";
@@ -86,22 +86,64 @@ export default function CartPage() {
   );
   const promotionalDiscountTotal = getCartDiscountTotal(cartDiscounts);
 
-  /**
-   * Free delivery comes with the offer, so the basket shows it the moment the
-   * basket earns it. WooCommerce hands back both rates and marks the flat one
-   * as chosen, so reading its figure showed a qualifying basket a delivery
-   * charge that checkout was never going to make — the customer saw 30.00 here
-   * and nothing a page later.
-   */
   const cartItemCount = cartItems.reduce(
     (sum, item) => sum + (item.quantity?.value || 0),
     0
   );
-  const hasFreeDelivery = qualifiesForPromotionFreeDelivery(
-    discountRules,
-    cartItemCount,
-    marketDestinationCountry
-  );
+
+  /**
+   * What delivery will actually cost, asked of the same endpoint checkout asks.
+   *
+   * This was worked out here from the promotion rule instead, which agreed with
+   * checkout only while the two happened to coincide. Free delivery can be
+   * switched off on its own, and the moment it was, the basket went on
+   * promising "Free" to a qualifying order that checkout then charged 30.00
+   * for. Reading WooCommerce's own figure is no better — it returns both rates
+   * and marks the flat one chosen, which showed a charge where checkout gave
+   * none. Only the rate checkout will use can answer this.
+   */
+  const [cartShipping, setCartShipping] = useState<{ amount: number; resolved: boolean }>({
+    amount: 0,
+    resolved: false,
+  });
+
+  useEffect(() => {
+    if (cartItemCount <= 0) {
+      setCartShipping({ amount: 0, resolved: false });
+      return;
+    }
+
+    let cancelled = false;
+    const params = new URLSearchParams({
+      country: marketDestinationCountry,
+      cart_qty: String(cartItemCount),
+      cart_weight: String(cart?.items_weight || 0),
+      currency_code: cart?.currency?.currency_code || "AED",
+    });
+
+    fetch(`/api/shipping?${params.toString()}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled || !data?.success) return;
+        type CartRate = { price?: string; selected?: boolean };
+        const rates: CartRate[] = (data.shipping_rates || []).flatMap(
+          (pkg: { shipping_rates?: CartRate[] }) => pkg.shipping_rates || []
+        );
+        const chosen = rates.find((rate) => rate.selected) || rates[0];
+        if (!chosen) return;
+        setCartShipping({ amount: parseFloat(String(chosen.price ?? "0")) || 0, resolved: true });
+      })
+      .catch(() => {
+        // Leave it unresolved so the summary says the cost is worked out at
+        // checkout rather than inventing a figure.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [cartItemCount, marketDestinationCountry, cart?.items_weight, cart?.currency?.currency_code]);
+
+  const hasFreeDelivery = cartShipping.resolved && cartShipping.amount === 0;
 
   useEffect(() => {
     void refreshCart();
@@ -138,15 +180,16 @@ export default function CartPage() {
     .filter((amount) => amount < 0)
     .reduce((sum, amount) => sum + amount, 0);
 
-  // WooCommerce's total carries the flat delivery rate it chose, so a basket
-  // that has earned free delivery has to have that charge taken back out or the
-  // summary adds up to more than the customer will be asked for.
+  // WooCommerce's total carries whichever delivery rate it chose for itself,
+  // which is not necessarily the rate checkout will use. Take its figure out
+  // and put the real one back, so the basket total is the amount that will
+  // actually be asked for.
   const includedShipping = parseFloat(cart?.totals?.shipping_total || "0") || 0;
   const adjustedCartTotal = Math.max(
     (parseFloat(cartTotal) || 0)
       - promotionalFeeTotal
       - promotionalDiscountTotal
-      - (hasFreeDelivery ? includedShipping : 0),
+      - (cartShipping.resolved ? includedShipping - cartShipping.amount : 0),
     0
   );
   const hasTrackedViewCartRef = useRef(false);
@@ -781,10 +824,9 @@ export default function CartPage() {
                                 <span className={hasFreeDelivery ? "font-semibold text-green-600" : undefined}>
                                   {hasFreeDelivery
                                     ? (isRTL ? "مجاني" : "Free")
-                                    : cart?.totals?.shipping_total &&
-                                      parseFloat(cart.totals.shipping_total) > 0
+                                    : cartShipping.resolved
                                       ? <FormattedPrice
-                                          price={parseFloat(cart.totals.shipping_total) / divisor}
+                                          price={cartShipping.amount / divisor}
                                           iconSize="xs"
                                         />
                                       : texts.calculatedAtCheckout}
