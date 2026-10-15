@@ -10,6 +10,7 @@ import {
   getNewProducts,
   getFreeGiftProductInfo,
   getBundleEnabledProductSlugs,
+  stripProductFieldsForListing,
   getBestsellerProducts,
   getCategories,
 } from "@/lib/api/woocommerce";
@@ -196,7 +197,7 @@ async function NewProductsSection({ locale, isRTL, dictionary, homeSettings, cur
 
   const newProductsEn = englishList ? englishList.products : newProductsRaw;
 
-  const newProducts = newProductsRaw.filter(
+  const newProducts = newProductsRaw.map(stripProductFieldsForListing).filter(
     (product) =>
       product.is_in_stock !== false &&
       !giftProductInfo.ids.includes(product.id) &&
@@ -286,7 +287,7 @@ async function BestsellerProductsSection({ locale, isRTL, dictionary, homeSettin
     bestsellerEnglishSlugs[product.id] = product.slug;
   });
 
-  const bestsellerProducts = bestsellerProductsRaw.filter(
+  const bestsellerProducts = bestsellerProductsRaw.map(stripProductFieldsForListing).filter(
     (product) =>
       !giftProductInfo.ids.includes(product.id) &&
       !giftProductInfo.slugs.includes(product.slug)

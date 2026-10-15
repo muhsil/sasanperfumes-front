@@ -624,6 +624,33 @@ async function fetchStoreAPI<T>(
   throw new Error(`API Error: unable to read JSON response${lastError ? ` (${lastError})` : ""}`);
 }
 
+/**
+ * Strips the fields a product card never reads.
+ *
+ * A listing hands whole Store API product objects to client components, so all
+ * of it is serialised into the page the browser downloads. On the home page
+ * that was 40 copies of the WooCommerce HAL links, the rendered price markup
+ * and the add-to-cart descriptor, plus the full product description — which in
+ * the measured payload was 22% of the product JSON on its own.
+ *
+ * extensions is deliberately kept: it carries sasan_fragrance, which is where
+ * the Inspired By and note fields live.
+ */
+export function stripProductFieldsForListing<T extends WCProduct>(product: T): T {
+  const {
+    description: _description,
+    price_html: _priceHtml,
+    add_to_cart: _addToCart,
+    _links: _hal,
+    ...rest
+  } = product as WCProduct & { _links?: unknown };
+  void _description;
+  void _priceHtml;
+  void _addToCart;
+  void _hal;
+  return rest as unknown as T;
+}
+
 // Products API
 export async function getProducts(params?: {
   page?: number;
@@ -1776,7 +1803,7 @@ export async function getFreeGiftProductIds(currency?: string, frontendHost?: st
 // Slugs are needed for filtering across WPML locales since product IDs differ per locale
 // Note: WPML may create different slugs for Arabic products (e.g., "free-gift-2" instead of "free-gift")
 // so we need to fetch slugs for both English and Arabic locales
-export async function getFreeGiftProductInfo(currency?: string, frontendHost?: string): Promise<FreeGiftInfo> {
+const getFreeGiftProductInfoUncached = async (currency?: string, frontendHost?: string): Promise<FreeGiftInfo> => {
   try {
     let url = withFrontendHostParam(
       `${siteConfig.apiUrl}/wp-json/sasanperfumes-free-gifts/v1/rules`,
@@ -1855,6 +1882,14 @@ export async function getFreeGiftProductInfo(currency?: string, frontendHost?: s
   }
 }
 
+/*
+ * Memoised for the duration of a render. Each home section asked for these
+ * independently, and fetchWithTimeout passes an abort signal, which turns off
+ * Next's own request deduplication, so the free-gift rules and the bundle slugs
+ * were genuinely fetched once per section rather than once per page.
+ */
+export const getFreeGiftProductInfo = cache(getFreeGiftProductInfoUncached);
+
 // Fetch product IDs with catalog_visibility set to "hidden"
 // These products should not appear in shop listings, search results, or related products
 // Uses WC REST API v3 which returns catalog_visibility field
@@ -1909,7 +1944,7 @@ export async function getHiddenProductIds(frontendHost?: string): Promise<number
 
 // Fetch all bundle-enabled product slugs from the backend
 // Used to identify bundle products in shop listings
-export async function getBundleEnabledProductSlugs(frontendHost?: string): Promise<string[]> {
+const getBundleEnabledProductSlugsUncached = async (frontendHost?: string): Promise<string[]> => {
   try {
     const response = await fetchWithTimeout(
       withFrontendHostParam(
@@ -1999,6 +2034,14 @@ export async function getBundleEnabledProductSlugs(frontendHost?: string): Promi
     return [];
   }
 }
+
+/*
+ * Memoised for the duration of a render. Each home section asked for these
+ * independently, and fetchWithTimeout passes an abort signal, which turns off
+ * Next's own request deduplication, so the free-gift rules and the bundle slugs
+ * were genuinely fetched once per section rather than once per page.
+ */
+export const getBundleEnabledProductSlugs = cache(getBundleEnabledProductSlugsUncached);
 
 // Get upsell and cross-sell product IDs from WooCommerce REST API v3
 // The Store API doesn't include linked product IDs, so we use the REST API
