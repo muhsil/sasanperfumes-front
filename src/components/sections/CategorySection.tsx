@@ -43,7 +43,7 @@ interface CategorySectionProps {
 function CategoryCardSkeleton() {
   return (
     <div className="flex flex-col">
-      <Skeleton className="aspect-square w-full rounded-none" />
+      <Skeleton className="aspect-[4/5] w-full rounded-none" />
       <div className="mt-3 space-y-2 p-1">
         <Skeleton className="h-4 w-3/4" />
       </div>
@@ -123,9 +123,16 @@ export function CategorySection({
   const arrowClassName = isDark
     ? "flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/10 text-brand-ivory shadow-[0_8px_20px_rgba(0,0,0,0.16)] transition-colors hover:border-white/45 hover:bg-white hover:text-brand-primary md:h-10 md:w-10"
     : "flex h-9 w-9 items-center justify-center rounded-full border border-brand-border/70 bg-brand-ivory text-brand-primary shadow-[0_8px_20px_rgba(20,15,10,0.1)] transition-colors hover:border-brand-primary/45 hover:bg-brand-primary hover:text-white md:h-10 md:w-10";
+  /*
+    The artwork is shot portrait — most of it 1365x2048 or 1080x1350 — so a
+    square card cut the top and bottom off every one of them. 4/5 is a quarter
+    taller, matches the 1080x1350 images exactly and takes far less off the
+    taller ones, while the few square 500x500 category images lose only a sliver
+    from the sides.
+  */
   const cardClassName = isDark
-    ? "relative aspect-square overflow-hidden rounded-none border border-white/10 bg-white/10 shadow-[0_16px_34px_rgba(0,0,0,0.16)]"
-    : "relative aspect-square overflow-hidden rounded-none border border-brand-border/70 bg-brand-ivory shadow-[0_16px_34px_rgba(20,15,10,0.08)]";
+    ? "relative aspect-[4/5] overflow-hidden rounded-none border border-white/10 bg-white/10 shadow-[0_16px_34px_rgba(0,0,0,0.16)]"
+    : "relative aspect-[4/5] overflow-hidden rounded-none border border-brand-border/70 bg-brand-ivory shadow-[0_16px_34px_rgba(20,15,10,0.08)]";
   const nameClassName = isDark ? "text-brand-ivory" : "text-brand-primary";
 
   const getVisibilityClass = () => {
