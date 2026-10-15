@@ -11,7 +11,6 @@ import {
   getFreeGiftProductInfo,
   getBundleEnabledProductSlugs,
   getBestsellerProducts,
-  getFeaturedProducts,
   getCategories,
 } from "@/lib/api/woocommerce";
 import { getHomePageSettings, getSeoSettings, getHomeSections, getSiteSettings, getAdSettings } from "@/lib/api/wordpress";
@@ -25,7 +24,6 @@ import {
   CategorySection,
   CollectionsSection,
   SeoContentSection,
-  OurStorySection,
 } from "@/components/sections";
 import { ProductSectionSkeleton } from "@/components/sections/ProductSection";
 import { siteConfig, type Currency, type Locale } from "@/config/site";
@@ -35,55 +33,6 @@ import { decodeHtmlEntities } from "@/lib/utils";
 
 function hasText(value?: string | null): boolean {
   return Boolean(value?.trim());
-}
-
-function WhyChooseSection({
-  section,
-  locale,
-  isRTL,
-}: {
-  section: HomeSectionWhyChooseUs;
-  locale: Locale;
-  isRTL: boolean;
-}) {
-  const t = (bi: { en: string; ar: string }) => locale === "ar" ? bi.ar : bi.en;
-  const items = (section.items || []).filter((item) => hasText(t(item.title)) || hasText(t(item.description)));
-  if (section.enabled === false || items.length === 0) return null;
-
-  return (
-    <section className="section-band py-10 md:py-14" dir={isRTL ? "rtl" : "ltr"}>
-      <div className="section-shell">
-        <div className={isRTL ? "text-right" : "text-left"}>
-          {hasText(t(section.eyebrow)) && (
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-brand-gold">
-              {t(section.eyebrow)}
-            </p>
-          )}
-          {hasText(t(section.title)) && (
-            <h2 className="font-title text-2xl leading-tight text-brand-primary md:text-3xl">
-              {t(section.title)}
-            </h2>
-          )}
-          {hasText(t(section.subtitle)) && (
-            <p className="mt-3 max-w-3xl text-sm leading-7 text-brand-muted md:text-base">
-              {t(section.subtitle)}
-            </p>
-          )}
-        </div>
-
-        <div className="mt-7 grid gap-4 md:grid-cols-3">
-          {items.map((item, index) => (
-            <div key={`${t(item.title)}-${index}`} className="rounded-lg border border-brand-border/70 bg-white p-5">
-              <h3 className="text-base font-semibold text-brand-primary">{t(item.title)}</h3>
-              {hasText(t(item.description)) && (
-                <p className="mt-3 text-sm leading-6 text-brand-muted">{t(item.description)}</p>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
 }
 
 function FAQSection({
@@ -222,17 +171,30 @@ async function NewProductsSection({ locale, isRTL, dictionary, homeSettings, cur
   currency: Currency;
   frontendHost: string;
 }) {
+  /*
+    The English copy of the list exists only to map each product id to its
+    English slug, so that a visitor reading Arabic still gets canonical URLs.
+    On the English storefront it is the very same request — around 100KB of
+    product JSON fetched twice per section, on by far the busiest locale.
+    Fetch it only when the locale actually differs.
+  */
+  const needsEnglishSlugs = locale !== "en";
+
   const [
     { products: newProductsRaw },
-    { products: newProductsEn },
+    englishList,
     giftProductInfo,
     bundleProductSlugs,
   ] = await Promise.all([
     getNewProducts({ per_page: 20, locale, currency, frontendHost }),
-    getNewProducts({ per_page: 20, locale: "en", currency, frontendHost }),
+    needsEnglishSlugs
+      ? getNewProducts({ per_page: 20, locale: "en", currency, frontendHost })
+      : Promise.resolve(null),
     getFreeGiftProductInfo(currency, frontendHost),
     getBundleEnabledProductSlugs(frontendHost),
   ]);
+
+  const newProductsEn = englishList ? englishList.products : newProductsRaw;
 
   const newProducts = newProductsRaw.filter(
     (product) =>
@@ -294,17 +256,30 @@ async function BestsellerProductsSection({ locale, isRTL, dictionary, homeSettin
   currency: Currency;
   frontendHost: string;
 }) {
+  /*
+    The English copy of the list exists only to map each product id to its
+    English slug, so that a visitor reading Arabic still gets canonical URLs.
+    On the English storefront it is the very same request — around 100KB of
+    product JSON fetched twice per section, on by far the busiest locale.
+    Fetch it only when the locale actually differs.
+  */
+  const needsEnglishSlugs = locale !== "en";
+
   const [
     { products: bestsellerProductsRaw },
-    { products: bestsellerProductsEn },
+    englishList,
     giftProductInfo,
     bundleProductSlugs,
   ] = await Promise.all([
     getBestsellerProducts({ per_page: 20, locale, currency, frontendHost }),
-    getBestsellerProducts({ per_page: 20, locale: "en", currency, frontendHost }),
+    needsEnglishSlugs
+      ? getBestsellerProducts({ per_page: 20, locale: "en", currency, frontendHost })
+      : Promise.resolve(null),
     getFreeGiftProductInfo(currency, frontendHost),
     getBundleEnabledProductSlugs(frontendHost),
   ]);
+
+  const bestsellerProductsEn = englishList ? englishList.products : bestsellerProductsRaw;
 
   const bestsellerEnglishSlugs: Record<number, string> = {};
   bestsellerProductsEn.forEach((product) => {
@@ -347,65 +322,6 @@ async function BestsellerProductsSection({ locale, isRTL, dictionary, homeSettin
 }
 
 // Async server component: Featured products section
-async function FeaturedProductsSection({ locale, isRTL, dictionary, homeSettings, currency, frontendHost }: {
-  locale: Locale;
-  isRTL: boolean;
-  dictionary: Awaited<ReturnType<typeof getDictionary>>;
-  homeSettings: Awaited<ReturnType<typeof getHomePageSettings>>;
-  currency: Currency;
-  frontendHost: string;
-}) {
-  const [
-    { products: featuredProductsRaw },
-    { products: featuredProductsEn },
-    giftProductInfo,
-    bundleProductSlugs,
-  ] = await Promise.all([
-    getFeaturedProducts({ per_page: 20, locale, currency, frontendHost }),
-    getFeaturedProducts({ per_page: 20, locale: "en", currency, frontendHost }),
-    getFreeGiftProductInfo(currency, frontendHost),
-    getBundleEnabledProductSlugs(frontendHost),
-  ]);
-
-  const featuredEnglishSlugs: Record<number, string> = {};
-  featuredProductsEn.forEach((product) => {
-    featuredEnglishSlugs[product.id] = product.slug;
-  });
-
-  const featuredProducts = featuredProductsRaw.filter(
-    (product) =>
-      !giftProductInfo.ids.includes(product.id) &&
-      !giftProductInfo.slugs.includes(product.slug)
-  );
-
-  const settings = {
-    ...homeSettings.featured_products,
-    section_title:
-      homeSettings.featured_products.section_title || dictionary.sections.featuredProducts.title,
-    section_subtitle:
-      homeSettings.featured_products.section_subtitle || dictionary.sections.featuredProducts.subtitle,
-    products_count: HOME_PRODUCT_COUNT,
-    responsive_columns: {
-      desktop: HOME_PRODUCT_COUNT,
-      tablet: homeSettings.featured_products.responsive_columns?.tablet ?? 3,
-      mobile: homeSettings.featured_products.responsive_columns?.mobile ?? 2,
-    },
-  };
-
-  return (
-    <ProductSection
-      settings={settings}
-      products={featuredProducts}
-      locale={locale}
-      isRTL={isRTL}
-      viewAllText={dictionary.common.viewAll}
-      fullView
-      bundleProductSlugs={bundleProductSlugs}
-      englishProductSlugs={featuredEnglishSlugs}
-    />
-  );
-}
-
 export default async function HomePage({ params, searchParams }: HomePageProps) {
   const { locale } = await params;
   const marketHint = getMarketHintFromSearchParams(await searchParams);
@@ -494,33 +410,18 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
           />
         </Suspense>
 
-        <Suspense fallback={<ProductSectionSkeleton fullView />}>
-          <FeaturedProductsSection
-            locale={validLocale}
-            isRTL={isRTL}
-            dictionary={dictionary}
-            homeSettings={homeSettings}
-            currency={market.defaultCurrency}
-            frontendHost={frontendHost}
-          />
-        </Suspense>
+        {/*
+          Featured Products, Why Choose Us and Fragrance Story were taken off
+          the home page. The first of them also cost four backend calls of its
+          own — featured products in both languages, the free-gift lookup and
+          the bundle slugs — so removing it takes those off every home page
+          render as well. The sections themselves are untouched and can be put
+          back by restoring these lines.
+        */}
 
         <CollectionsSection settings={homeSettings.collections} locale={validLocale} marketPrefix={marketPrefix} />
 
         <BannersSection settings={homeSettings.banners} />
-
-        <WhyChooseSection section={homeSections.whyChooseUs} locale={validLocale} isRTL={isRTL} />
-
-        {homeSections.ourStory?.enabled !== false && (t(homeSections.ourStory?.title) || homeSections.ourStory?.image) && (
-          <OurStorySection
-            eyebrow={t(homeSections.ourStory?.eyebrow)}
-            title={t(homeSections.ourStory?.title)}
-            description1={t(homeSections.ourStory?.description1)}
-            description2={t(homeSections.ourStory?.description2)}
-            image={homeSections.ourStory?.image}
-            stats={homeSections.ourStory?.stats?.map((s) => ({ value: s.value, label: t(s.label) }))}
-          />
-        )}
 
         <FAQSection section={homeSections.faq} locale={validLocale} isRTL={isRTL} />
 

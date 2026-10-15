@@ -256,14 +256,39 @@ export function Footer({ locale, dictionary, siteSettings, footerSettings, featu
           <p className="text-center text-xs text-brand-ivory/55 md:text-left">
             &copy; {currentYear}{displaySiteName ? ` ${displaySiteName}.` : ""} {copyrightText}
           </p>
-          <Image
-            src="/images/payment-cards.png"
-            alt="Visa & Mastercard accepted"
-            width={120}
-            height={40}
-            style={{ width: "auto", height: "28px" }}
-            loading="lazy"
-          />
+          {/*
+            Tabby and Tamara sit alongside the card logos: both are offered at
+            checkout, and a customer deciding whether they can pay in
+            instalments should not have to reach the payment step to find out.
+            The badges already shipped with the project, so nothing new is
+            downloaded for them.
+          */}
+          <div className="flex items-center gap-3">
+            <Image
+              src="/images/payment-cards.png"
+              alt="Visa & Mastercard accepted"
+              width={120}
+              height={40}
+              style={{ width: "auto", height: "28px" }}
+              loading="lazy"
+            />
+            <Image
+              src="/images/payment/tabby-badge.svg"
+              alt="Pay in instalments with Tabby"
+              width={254}
+              height={100}
+              style={{ width: "auto", height: "26px" }}
+              loading="lazy"
+            />
+            <Image
+              src="/images/payment/tamara-badge.png"
+              alt="Pay later with Tamara"
+              width={1354}
+              height={687}
+              style={{ width: "auto", height: "26px" }}
+              loading="lazy"
+            />
+          </div>
           {poweredByText && poweredByName && (
             <p className="text-center text-xs text-brand-ivory/55">
               {poweredByText}{" "}
