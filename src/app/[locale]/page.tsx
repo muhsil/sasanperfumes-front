@@ -3,7 +3,6 @@ import { getDictionary } from "@/i18n";
 import {
   buildMarketSeoKeywords,
   generateMetadata as generateSeoMetadata,
-  getMarketHomeSeoContent,
   getMarketSeoDescription,
 } from "@/lib/utils/seo";
 import {
@@ -24,7 +23,6 @@ import {
   AdsSection,
   CategorySection,
   CollectionsSection,
-  SeoContentSection,
 } from "@/components/sections";
 import { ProductSectionSkeleton } from "@/components/sections/ProductSection";
 import { siteConfig, type Currency, type Locale } from "@/config/site";
@@ -348,8 +346,6 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
   const t = (bi: { en: string; ar: string }) => isRTL ? bi.ar : bi.en;
   const h1Text = siteSettings.site_name || siteConfig.name;
   const marketPrefix = getMarketPathPrefix(market.code);
-  const marketSeoContent = getMarketHomeSeoContent(market.code, validLocale);
-  const cmsSeoParagraphs = homeSections.seoContent?.paragraphs?.map((p) => t(p)).filter(hasText) || [];
   const mainCategoryBySlug = new Map(mainSiteCategories.map((category) => [category.slug, category]));
   const mainCategorySlugAliases: Record<string, string> = {
     "hair-mist": "sasan-hair-mist",
@@ -426,16 +422,6 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
 
         <FAQSection section={homeSections.faq} locale={validLocale} isRTL={isRTL} />
 
-        {homeSections.seoContent?.enabled !== false && (
-          <SeoContentSection
-            title={homeSections.seoContent?.title && hasText(t(homeSections.seoContent.title))
-              ? t(homeSections.seoContent.title)
-              : marketSeoContent.heading}
-            paragraphs={cmsSeoParagraphs.length > 0 ? cmsSeoParagraphs : marketSeoContent.paragraphs}
-            backgroundImage={homeSections.seoContent.backgroundImage}
-            isRTL={isRTL}
-          />
-        )}
       </div>
     </>
   );
