@@ -23,7 +23,54 @@ import { revalidateTag, revalidatePath } from "next/cache";
  *   REVALIDATE_SECRET_TOKEN - Secret token for authentication
  */
 
-// Cache tags used in the application
+// Cache tags used in the application.
+//
+// This list had eight entries while the code was tagging thirty-seven, so a
+// "revalidate everything" request cleared roughly a fifth of the cache and left
+// the rest to expire on its own — which is why a change made in wp-admin could
+// still take the full ten minutes to appear. Built from the tags the code
+// actually passes to its fetches; revalidating a tag nothing uses is harmless,
+// missing one is not.
+const ALL_CACHE_TAGS = [
+  "ad-settings",
+  "brands",
+  "brands-page",
+  "bundle-config",
+  "bundle-enabled-products",
+  "bundles",
+  "categories",
+  "category-seo",
+  "category-subtitle",
+  "favicon",
+  "feature-toggles",
+  "featured-products",
+  "footer-settings",
+  "free-gifts",
+  "gift-wrap",
+  "guides",
+  "header-settings",
+  "home-page-settings",
+  "home-sections",
+  "home-settings",
+  "intl",
+  "live-chat",
+  "logo",
+  "menu-primary",
+  "menus",
+  "mobile-bar-settings",
+  "pages",
+  "popup",
+  "product-addons",
+  "product-detail-settings",
+  "product-pages",
+  "products",
+  "seo-settings",
+  "site-settings",
+  "static-pages",
+  "topbar-settings",
+  "whatsapp-settings",
+] as const;
+
 const CACHE_TAGS = {
   products: "products",
   categories: "categories",
@@ -212,7 +259,7 @@ export async function POST(request: NextRequest) {
 
       case "all":
         // Revalidate everything
-        Object.values(CACHE_TAGS).forEach((tag) => {
+        ALL_CACHE_TAGS.forEach((tag) => {
           revalidateTag(tag, revalidateOptions);
           revalidatedTags.push(tag);
         });
