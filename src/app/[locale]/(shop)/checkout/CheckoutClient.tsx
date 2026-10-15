@@ -1498,6 +1498,28 @@ export default function CheckoutClient() {
 
       const couponLines = selectedCoupons.map(coupon => ({ code: coupon.code }));
 
+      /*
+        A basket that needs delivery must carry a rate. The rates are fetched
+        after the address is known, so an order placed in the seconds before
+        they arrive was written with no shipping line at all and no delivery
+        charged — order #18126 went out for 150.00 where it should have been
+        180.00. Apple Pay reaches Place Order in a single tap, which is how it
+        got there first.
+
+        Wait for the rate rather than writing the order without one. Charging a
+        figure the customer was never shown is not an option, so the order is
+        held back instead.
+      */
+      if (cart?.needs_shipping && !hasResolvedShippingRate) {
+        setError(
+          isRTL
+            ? "جاري حساب تكلفة التوصيل. يرجى المحاولة مرة أخرى بعد لحظات."
+            : "Delivery cost is still being calculated. Please try again in a moment."
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
       const shippingLines: Array<{ method_id: string; method_title: string; total: string }> = [];
       if (selectedShippingRate && shippingPackages.length > 0) {
         const allRates = shippingPackages.flatMap((pkg) => pkg.shipping_rates || []);
