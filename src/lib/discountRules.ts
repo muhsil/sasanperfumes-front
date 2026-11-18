@@ -1,4 +1,3 @@
-import type { CoCartItem } from "@/lib/api/cocart";
 import type { DiscountRule } from "@/types/discount";
 
 export interface CartDiscount {
@@ -157,7 +156,24 @@ export function includesNumericId(values: readonly unknown[] | null | undefined,
   return values.some((value) => Number(value) === id);
 }
 
-function getCartItemCandidateIds(item: CoCartItem): number[] {
+/**
+ * The part of a cart line these rules actually read.
+ *
+ * CoCartItem satisfies it, so the storefront passes its cart straight in. The
+ * order endpoint builds the same shape out of catalogue prices, which lets it
+ * check a claimed discount against this exact code rather than a second copy
+ * of the rules that would drift from it.
+ */
+export interface DiscountCartItem {
+  item_key: string;
+  id: number;
+  price: string;
+  quantity: { value: number };
+  variation_id?: number;
+  meta?: { variation?: Record<string, string> };
+}
+
+function getCartItemCandidateIds(item: DiscountCartItem): number[] {
   const ids = new Set<number>();
   if (Number.isFinite(item.id)) ids.add(item.id);
   if (item.variation_id && Number.isFinite(item.variation_id)) ids.add(item.variation_id);
@@ -169,7 +185,7 @@ function getCartItemCandidateIds(item: CoCartItem): number[] {
   return Array.from(ids);
 }
 
-function isRuleApplicableToItem(rule: DiscountRule, item: CoCartItem, options?: CartDiscountOptions): boolean {
+function isRuleApplicableToItem(rule: DiscountRule, item: DiscountCartItem, options?: CartDiscountOptions): boolean {
   if (rule.applies_to === "all") return true;
 
   const productIds = rule.product_ids || [];
@@ -189,7 +205,7 @@ function isRuleApplicableToItem(rule: DiscountRule, item: CoCartItem, options?: 
   return false;
 }
 
-function getCartItemUnitPrice(item: CoCartItem): number {
+function getCartItemUnitPrice(item: DiscountCartItem): number {
   const price = Math.round(parseFloat(item.price || "0") || 0);
   return price > 0 ? price : 0;
 }
@@ -203,15 +219,15 @@ function toMinorUnits(value: number, minorUnit: number): number {
   return Math.round(value * Math.pow(10, minorUnit));
 }
 
-function getCartItemQuantity(item: CoCartItem): number {
+function getCartItemQuantity(item: DiscountCartItem): number {
   return Math.max(0, Math.floor(item.quantity?.value || 0));
 }
 
 function getRuleEligibleItems(
   rule: DiscountRule,
-  items: CoCartItem[],
+  items: DiscountCartItem[],
   options?: CartDiscountOptions
-): Array<{ item: CoCartItem; unitPrice: number; quantity: number; total: number }> {
+): Array<{ item: DiscountCartItem; unitPrice: number; quantity: number; total: number }> {
   return items
     .filter((item) => !item.item_key.startsWith("temp-"))
     .filter((item) => isRuleApplicableToItem(rule, item, options))
@@ -312,7 +328,7 @@ function calculateBulkDiscount(
 }
 
 export function calculateCartDiscounts(
-  items: CoCartItem[],
+  items: DiscountCartItem[],
   rules: DiscountRule[],
   options?: CartDiscountOptions
 ): CartDiscount[] {

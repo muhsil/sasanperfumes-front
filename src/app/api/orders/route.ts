@@ -6,7 +6,9 @@ import { verifyAuth, unauthorizedResponse, forbiddenResponse } from "@/lib/secur
 import { API_BASE, backendHeaders, backendMarketHeaders, backendPostHeaders, noCacheUrl, parseBackendJson, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
 import { getRequestMarket, getRequestFrontendHost } from "@/lib/market/server";
 import { getDiscountRules } from "@/lib/api/wordpress";
-import { qualifiesForPromotionFreeDelivery } from "@/lib/discountRules";
+import { calculateCartDiscounts, getCartDiscountTotal, qualifiesForPromotionFreeDelivery } from "@/lib/discountRules";
+import type { DiscountCartItem } from "@/lib/discountRules";
+import type { DiscountRule } from "@/types/discount";
 
 function getOrdersApiBase(marketCode?: string | null): string {
   return `${wpJsonBaseForMarket(marketCode)}/wc/v3`;
@@ -408,6 +410,128 @@ async function findUnavailableLineItems(
   } catch {
     // A lookup that times out or errors must not stop a real customer buying.
     return [];
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+const DISCOUNT_CHECK_TIMEOUT_MS = 4000;
+
+interface DiscountVerdict {
+  claimed: number;
+  allowed: number;
+}
+
+/**
+ * Checks the discount an order claims against the one its contents earn.
+ *
+ * The cart works the discount out in the browser and sends it as a negative
+ * fee line. Nothing here recomputed it, so a request that claimed a larger
+ * figure than the offer allows was written to the order as sent.
+ *
+ * The entitlement is re-derived from the catalogue's own prices and the rules
+ * as configured, through the same calculateCartDiscounts the cart runs, so the
+ * two cannot drift apart. Only a claim that exceeds the entitlement is
+ * reported; an honest order matches it and passes untouched.
+ *
+ * Prices come from the catalogue rather than the request, because the amounts
+ * in the request are the very thing in question.
+ */
+async function findOverstatedDiscount(
+  lineItems: OrderLineItem[],
+  feeLines: FeeLine[],
+  marketCode: string | undefined,
+  currencyCode: string | undefined,
+  destinationCountry: string | undefined,
+  rules: DiscountRule[]
+): Promise<DiscountVerdict | null> {
+  const claimed = feeLines.reduce((sum, fee) => {
+    const total = parseMoney(fee.total);
+    return total !== null && total < 0 ? sum + Math.abs(total) : sum;
+  }, 0);
+
+  // Nothing is being claimed, so there is nothing to earn.
+  if (claimed <= 0) return null;
+
+  const productIds = Array.from(
+    new Set(
+      lineItems
+        .map((item) => Number(item.variation_id) || Number(item.product_id))
+        .filter((id) => Number.isFinite(id) && id > 0)
+    )
+  );
+
+  if (productIds.length === 0) return null;
+
+  const url = `${getOrdersApiBase(marketCode)}/products?include=${productIds.join(",")}&per_page=${productIds.length}&${getBasicAuthParams(marketCode)}`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), DISCOUNT_CHECK_TIMEOUT_MS);
+
+  try {
+    const res = await fetchOrdersBackend(url, {
+      method: "GET",
+      headers: backendHeaders(),
+      signal: controller.signal,
+    }, marketCode);
+    if (!res.ok) return null;
+
+    const products = await res.json();
+    if (!Array.isArray(products)) return null;
+
+    const byId = new Map<number, { price?: string; categories?: Array<{ id?: number }> }>();
+    for (const product of products) {
+      if (product?.id) byId.set(Number(product.id), product);
+    }
+
+    const decimals = getCurrencyDecimals(currencyCode);
+    const categoryIdsByProductId: Record<number, number[]> = {};
+    const cartItems: DiscountCartItem[] = [];
+
+    for (const [index, item] of lineItems.entries()) {
+      const id = Number(item.variation_id) || Number(item.product_id);
+      const product = byId.get(id);
+      const price = product ? parseMoney(product.price) : null;
+
+      // One unpriced line and the entitlement would come out too low, which
+      // would refuse an order that is perfectly good. Say so and stand aside.
+      if (price === null || price <= 0) {
+        console.error("[orders] could not price a line item, skipping the discount check:", {
+          market: marketCode,
+          productId: id,
+        });
+        return null;
+      }
+
+      categoryIdsByProductId[id] = (product?.categories || [])
+        .map((category) => Number(category?.id))
+        .filter((categoryId) => Number.isFinite(categoryId));
+
+      cartItems.push({
+        item_key: `line-${index}`,
+        id,
+        // The rules read prices in minor units, as CoCart reports them.
+        price: String(Math.round(price * Math.pow(10, decimals))),
+        quantity: { value: Math.max(0, Number(item.quantity) || 0) },
+      });
+    }
+
+    const allowedMinor = getCartDiscountTotal(
+      calculateCartDiscounts(cartItems, rules, {
+        categoryIdsByProductId,
+        currencyMinorUnit: decimals,
+        destinationCountry,
+      })
+    );
+    const allowed = allowedMinor / Math.pow(10, decimals);
+
+    if (claimed > allowed + getOrderTotalTolerance(currencyCode)) {
+      return { claimed, allowed };
+    }
+
+    return null;
+  } catch {
+    // As with the stock check, a lookup that fails must not stop a real sale.
+    return null;
   } finally {
     clearTimeout(timer);
   }
@@ -1167,6 +1291,50 @@ export async function POST(request: NextRequest) {
             error: {
               code: "free_delivery_not_eligible",
               message: "Free delivery applies to the Buy 6 Get 1 Free offer. Please refresh the page to see the correct delivery charge.",
+            },
+          },
+          { status: 409 }
+        );
+      }
+    }
+
+    // The discount is worked out in the browser and arrives as a negative fee
+    // line. Until this check nothing re-derived it, so an order could claim a
+    // larger discount than the offer gives and be written with it. Compared
+    // against body.fee_lines rather than orderData.fee_lines because the
+    // latter has already been converted to net, while the rules — and the
+    // prices they read — are VAT-inclusive.
+    if (Array.isArray(body.fee_lines) && body.fee_lines.length > 0) {
+      let overstated: DiscountVerdict | null = null;
+      try {
+        const rules = await getDiscountRules(await getRequestFrontendHost());
+        overstated = await findOverstatedDiscount(
+          orderData.line_items,
+          body.fee_lines,
+          market.code,
+          currencyCode,
+          orderData.shipping?.country || orderData.billing?.country,
+          rules
+        );
+      } catch {
+        // The entitlement could not be established. Let the order through
+        // rather than lose a real sale to a lookup, but leave a trail.
+        console.error("[orders] could not verify the discount, allowing:", { market: market.code });
+      }
+
+      if (overstated) {
+        console.error("[orders] refused: discount larger than the offer allows:", {
+          market: market.code,
+          claimed: overstated.claimed,
+          allowed: overstated.allowed,
+        });
+
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "discount_not_eligible",
+              message: "The discount on this order does not match the current offer. Please refresh the page and try again.",
             },
           },
           { status: 409 }
