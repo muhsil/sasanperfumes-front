@@ -9,6 +9,7 @@ import { getDiscountRules } from "@/lib/api/wordpress";
 import { calculateCartDiscounts, getCartDiscountTotal, qualifiesForPromotionFreeDelivery } from "@/lib/discountRules";
 import type { DiscountCartItem } from "@/lib/discountRules";
 import type { DiscountRule } from "@/types/discount";
+import { chargesCheckoutCustoms, isCheckoutImportFee, isGccDestination } from "@/lib/utils/cityCountry";
 import { calculateCrossBorderShipping, countShippingBottles, getCrossBorderShippingPolicy, getShippingQuantityLimitMessage } from "@/config/shipping";
 
 function getOrdersApiBase(marketCode?: string | null): string {
@@ -197,9 +198,6 @@ interface CreateOrderRequest {
   customer_id?: number;
   meta_data?: Array<{ key: string; value: string }>;
 }
-
-/** Destinations where the fee charged at checkout is the only import charge. */
-const GCC_DESTINATIONS = new Set(["AE", "SA", "QA", "OM", "BH", "KW"]);
 
 const INCLUSIVE_VAT_RATES_BY_COUNTRY: Record<string, number> = {
   AE: 0.05,
@@ -1129,6 +1127,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const submittedFees: FeeLine[] = Array.isArray(body.fee_lines) ? body.fee_lines : [];
+    if (shippingCountry && !isGccDestination(shippingCountry) && submittedFees.some((fee) => isCheckoutImportFee(fee?.name))) {
+      // An older checkout tab can still include the retired fee in the total the customer saw.
+      return NextResponse.json(
+        { success: false, error: { code: "checkout_fee_changed", message: "The checkout fees have changed. Please refresh checkout to see the current total." } },
+        { status: 409 }
+      );
+    }
+
     const orderData: CreateOrderRequest = {
       payment_method: paymentMethod,
       payment_method_title: resolvePaymentMethodTitle(paymentMethod, body.payment_method_title),
@@ -1171,30 +1178,12 @@ export async function POST(request: NextRequest) {
       orderData.coupon_lines = body.coupon_lines;
     }
 
-    if (Array.isArray(body.fee_lines) && body.fee_lines.length > 0) {
-      orderData.fee_lines = normalizeFeeLinesForNoTax(body.fee_lines, inclusiveVatRate, currencyCode);
+    if (submittedFees.length > 0) {
+      orderData.fee_lines = normalizeFeeLinesForNoTax(submittedFees, inclusiveVatRate, currencyCode);
     }
 
-    /**
-     * Customs is decided in the browser, so a request that simply omits the fee
-     * has it skipped entirely. Re-derive it here and add it when it is missing.
-     *
-     * Deliberately one-directional: an amount the storefront already sent is
-     * left alone. The server sees the same country field the customer chose, so
-     * it cannot detect an honest mis-selection — only a fee that never arrived.
-     */
-    const customsCountry = normalizeCountryCode(
-      orderData.shipping?.country || orderData.billing?.country
-    );
-    if (customsCountry && customsCountry !== "AE") {
+    if (chargesCheckoutCustoms(shippingCountry)) {
       const existingFees = orderData.fee_lines || [];
-      /**
-       * The storefront names this fee "Customs fees" inside the GCC and
-       * "Handling & export fee" everywhere else. Matching only "customs" missed
-       * the second name, so a fee the storefront had already sent looked absent
-       * and a duplicate was added — order #16069 to London carried two 45.00
-       * lines. Match both names.
-       */
       const hasCustoms = existingFees.some((fee) => {
         const name = String(fee.name || "").toLowerCase();
         return name.includes("customs") || name.includes("handling");
@@ -1218,16 +1207,14 @@ export async function POST(request: NextRequest) {
           orderData.fee_lines = [
             ...existingFees,
             {
-              // Outside the GCC the destination levies its own duty on arrival,
-              // so this is a handling charge, not customs already settled.
-              name: GCC_DESTINATIONS.has(customsCountry) ? "Customs fees" : "Handling & export fee",
+              name: "Customs fees",
               total: customsTotal.toFixed(decimals),
               tax_status: "none",
               tax_class: "",
             },
           ];
           console.error("[orders] Customs fee was missing and has been added:", {
-            country: customsCountry,
+            country: shippingCountry,
             customsTotal: customsTotal.toFixed(decimals),
           });
         }

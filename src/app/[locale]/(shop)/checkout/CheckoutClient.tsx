@@ -17,8 +17,8 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { getCustomer, getSavedAddressesFromCustomer, saveSavedAddresses, generateAddressId, resolveCountryCode, type Customer, type SavedAddress } from "@/lib/api/customer";
 import { featureFlags, type Currency, type Locale } from "@/config/site";
 import { Apple, MapPin, Check, ChevronDown, ChevronUp, Tag, X, Truck, Phone, TriangleAlert } from "lucide-react";
-import { countShippingBottles, getCrossBorderShippingPolicy, getShippingQuantityLimitMessage } from "@/config/shipping";
-import { getCityCountryMismatch, getPostcodeCountryWarning, getImportFeeLabel, isGccDestination } from "@/lib/utils/cityCountry";
+import { countShippingBottles, getCrossBorderShippingPolicy, getShippingCurrencyForCountry, getShippingQuantityLimitMessage } from "@/config/shipping";
+import { chargesCheckoutCustoms, getCityCountryMismatch, getPostcodeCountryWarning, isCheckoutImportFee, isGccDestination } from "@/lib/utils/cityCountry";
 import { BundleItemsList, getBundleItems, getBundleItemsTotal, getBoxPrice, getPricingMode, getFixedPrice, getBundleTotal } from "@/components/cart/BundleItemsList";
 import { PhoneInput } from "@/components/common/PhoneInput";
 import { useProductMeta } from "@/hooks/useProductCategories";
@@ -126,16 +126,6 @@ const COUNTRY_TO_MARKET: Record<string, string> = {
   QA: "qa",
   OM: "om",
   SA: "sa",
-};
-
-const COUNTRY_TO_CURRENCY: Record<string, string> = {
-  AE: "AED",
-  BH: "BHD",
-  KW: "KWD",
-  QA: "QAR",
-  OM: "OMR",
-  SA: "SAR",
-  US: "USD",
 };
 
 const CURRENCY_MINOR_UNITS: Record<string, number> = {
@@ -398,7 +388,7 @@ export default function CheckoutClient() {
 
   const shippingCountryCode = (formData.shipping.country || "").trim().toUpperCase();
   const checkoutMarketCode = COUNTRY_TO_MARKET[shippingCountryCode] || marketCode;
-  const checkoutCurrency = COUNTRY_TO_CURRENCY[shippingCountryCode] || currency || marketCurrency;
+  const checkoutCurrency = getShippingCurrencyForCountry(shippingCountryCode) || currency || marketCurrency;
   const checkoutMarketPrefix = checkoutMarketCode === marketCode ? marketPrefix : `/${checkoutMarketCode}`;
   const checkoutCurrencyMinorUnit = CURRENCY_MINOR_UNITS[checkoutCurrency] ?? getCurrencyInfo().decimals;
 
@@ -575,7 +565,7 @@ export default function CheckoutClient() {
         }, [buildCheckoutApiUrl]);
 
         useEffect(() => {
-          const mappedCurrency = COUNTRY_TO_CURRENCY[shippingCountryCode];
+          const mappedCurrency = getShippingCurrencyForCountry(shippingCountryCode);
           if (mappedCurrency && mappedCurrency !== currency) {
             setCurrency(mappedCurrency);
           }
@@ -845,29 +835,16 @@ export default function CheckoutClient() {
           [formData.shipping.postalCode, formData.shipping.country]
         );
 
-        // Calculate customs fee client-side from the discounted merchandise
-        // subtotal so promo discounts are reflected before customs are applied.
         const customsFee = useMemo(() => {
-          const country = formData.shipping.country;
-          if (!country || country === "AE") return null;
-          // 20% of discounted cart subtotal (subtotal is in minor units)
-          const subtotal = discountedCartSubtotal || 0;
-          if (subtotal <= 0) return null;
-          const feeAmount = Math.round(subtotal * 0.20);
-          return {
-            // Outside the GCC the destination charges its own duty and VAT on
-            // arrival, so this is a handling charge and must not be presented as
-            // customs already settled.
-            name: getImportFeeLabel(country),
-            fee: String(feeAmount),
-          };
-        }, [discountedCartSubtotal, formData.shipping.country]);
+          if (!chargesCheckoutCustoms(shippingCountryCode) || discountedCartSubtotal <= 0) return null;
+          return { name: "Customs fees", fee: String(Math.round(discountedCartSubtotal * 0.20)) };
+        }, [discountedCartSubtotal, shippingCountryCode]);
 
-        // Duties are payable to the courier on delivery outside the GCC.
-        const showImportDutyNotice = useMemo(
-          () => Boolean(formData.shipping.country) && !isGccDestination(formData.shipping.country),
-          [formData.shipping.country]
-        );
+        const showImportDutyNotice = Boolean(shippingCountryCode) && !isGccDestination(shippingCountryCode);
+        const cartFees = Array.isArray(cart?.fees) ? cart.fees : [];
+        const applicableCartFees = showImportDutyNotice
+          ? cartFees.filter((fee) => !isCheckoutImportFee(fee?.name))
+          : cartFees;
 
         const handleSelectShippingRate = async (rateId: string, packageId: number = 0) => {
           setSelectedShippingRate(rateId);
@@ -920,13 +897,12 @@ export default function CheckoutClient() {
     const cartFeeTotal = (() => {
       try {
         let total = 0;
-        const fees = Array.isArray(cart?.fees) ? cart.fees : [];
-        const nonCustomsFeesTotal = fees
+        const nonCustomsFeesTotal = applicableCartFees
           .filter(fee => fee?.name?.toLowerCase() !== "customs fees")
           .reduce((sum, fee) => sum + (parseFloat(fee?.fee) || 0), 0);
         const customsFeesTotal = customsFee
           ? (parseFloat(customsFee.fee) || 0)
-          : fees
+          : applicableCartFees
               .filter(fee => fee?.name?.toLowerCase() === "customs fees")
               .reduce((sum, fee) => sum + (parseFloat(fee?.fee) || 0), 0);
         total += nonCustomsFeesTotal + customsFeesTotal + bnplConvenienceFee;
@@ -989,7 +965,7 @@ export default function CheckoutClient() {
       billing: prev.sameAsShipping ? { ...prev.shipping, [field]: value } : prev.billing,
     }));
     if (field === "country") {
-      const mappedCurrency = COUNTRY_TO_CURRENCY[value.trim().toUpperCase()];
+      const mappedCurrency = getShippingCurrencyForCountry(value);
       if (mappedCurrency && mappedCurrency !== currency) {
         setCurrency(mappedCurrency);
       }
@@ -1188,7 +1164,7 @@ export default function CheckoutClient() {
     };
 
     if (resolvedCountry) {
-      const mappedCurrency = COUNTRY_TO_CURRENCY[resolvedCountry];
+      const mappedCurrency = getShippingCurrencyForCountry(resolvedCountry);
       if (mappedCurrency && mappedCurrency !== currency) {
         setCurrency(mappedCurrency);
       }
@@ -1595,16 +1571,14 @@ export default function CheckoutClient() {
         ...(() => {
           const feeLines: Array<{ name: string; total: string }> = [];
           // Add non-customs fees from cart.fees
-          if (Array.isArray(cart?.fees) && cart.fees.length > 0) {
-            cart.fees
-              .filter(fee => fee?.name?.toLowerCase() !== "customs fees")
-              .forEach(fee => {
-                feeLines.push({
-                  name: fee.name,
-                  total: convertPrice(parseFloat(fee.fee) / divisor).toFixed(checkoutCurrencyMinorUnit),
-                });
+          applicableCartFees
+            .filter(fee => fee?.name?.toLowerCase() !== "customs fees")
+            .forEach(fee => {
+              feeLines.push({
+                name: fee.name,
+                total: convertPrice(parseFloat(fee.fee) / divisor).toFixed(checkoutCurrencyMinorUnit),
               });
-          }
+            });
           cartDiscounts.forEach((discount) => {
             const discountAmount = convertPrice(discount.amount / divisor);
             if (discountAmount > 0) {
@@ -1626,8 +1600,8 @@ export default function CheckoutClient() {
               name: customsFee.name,
               total: convertPrice(parseFloat(customsFee.fee) / divisor).toFixed(checkoutCurrencyMinorUnit),
             });
-          } else if (Array.isArray(cart?.fees) && cart.fees.length > 0) {
-            cart.fees
+          } else {
+            applicableCartFees
               .filter(fee => fee?.name?.toLowerCase() === "customs fees")
               .forEach(fee => {
                 feeLines.push({
@@ -2293,7 +2267,7 @@ export default function CheckoutClient() {
               <div className="grid gap-3 md:gap-4 sm:grid-cols-2">
                 {/*
                   Country comes first: it determines the shipping rates and the
-                  20% customs fee, and it arrives pre-filled with the market
+                  rate and any customs fees, and it arrives pre-filled with the market
                   default. Left at the end of the form it was routinely never
                   looked at, which is how an order shipped to Jeddah was recorded
                   as United Arab Emirates and skipped customs entirely.
@@ -2985,7 +2959,7 @@ export default function CheckoutClient() {
                                 )}
                               </div>
                               {/* Fees -- show non-customs fees from cart, plus client-side customs fee */}
-                              {Array.isArray(cart?.fees) && cart.fees.length > 0 && cart.fees
+                              {applicableCartFees
                                 .filter(fee => fee?.name?.toLowerCase() !== "customs fees")
                                 .map((fee, index) => (
                                 <div key={`cart-fee-${index}`} className="flex justify-between text-sm text-brand-muted">
@@ -3008,16 +2982,14 @@ export default function CheckoutClient() {
                               {customsFee ? (
                                 <div className="flex justify-between text-sm text-brand-muted">
                                   <span>
-                                    {isRTL
-                                      ? (isGccDestination(formData.shipping.country) ? "رسوم جمركية" : "رسوم مناولة وتصدير")
-                                      : customsFee.name}
+                                    {isRTL ? "رسوم جمركية" : customsFee.name}
                                   </span>
                                   <FormattedPrice
                                     price={parseFloat(customsFee.fee) / divisor}
                                     iconSize="xs"
                                   />
                                 </div>
-                              ) : Array.isArray(cart?.fees) && cart.fees.length > 0 && cart.fees
+                              ) : applicableCartFees
                                 .filter(fee => fee?.name?.toLowerCase() === "customs fees")
                                 .map((fee, index) => (
                                 <div key={`customs-fee-${index}`} className="flex justify-between text-sm text-brand-muted">
@@ -3028,13 +3000,6 @@ export default function CheckoutClient() {
                                   />
                                 </div>
                               ))}
-                              {/*
-                                Shown as its own line so the customer can see at
-                                a glance which amount we collect now and which
-                                one the courier will collect on delivery. An
-                                order to Italy paid our fee and was then billed
-                                EUR 31.18 on arrival, having had no warning.
-                              */}
                               {showImportDutyNotice && (
                                 <>
                                   <div className="flex justify-between text-sm text-brand-muted">

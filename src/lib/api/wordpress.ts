@@ -3131,16 +3131,10 @@ function buildStaticPageFallbackContent(slug: string): StaticPageResponse | null
             ),
           },
           {
-            /**
-             * Nothing on the site said import duty could be charged on arrival,
-             * while the checkout fee was labelled "Customs fees" — so a customer
-             * in Italy paid the fee and was billed EUR 31.18 by the courier as
-             * well. Stated here so it is visible before an order is placed.
-             */
             title: bi("International orders (outside the GCC)", "الطلبات الدولية (خارج دول مجلس التعاون)"),
             content: bi(
-              "Import duty and tax are set by the destination country and are collected by the courier on delivery. These charges are not included in your order total and are payable by the recipient. The handling and export fee shown at checkout covers our export processing only and does not cover destination customs.",
-              "تحدد الدولة المستقبِلة الرسوم الجمركية وضريبة الاستيراد، وتقوم شركة الشحن بتحصيلها عند التسليم. هذه الرسوم غير مشمولة في إجمالي الطلب ويتحملها المستلم. أما رسوم المناولة والتصدير الظاهرة عند الدفع فتغطي إجراءات التصدير لدينا فقط ولا تشمل جمارك بلد الوجهة."
+              "Import duty and tax are set by the destination country and are collected by the courier on delivery. These charges are not included in your order total and are payable by the recipient.",
+              "تحدد الدولة المستقبِلة الرسوم الجمركية وضريبة الاستيراد، وتقوم شركة الشحن بتحصيلها عند التسليم. هذه الرسوم غير مشمولة في إجمالي الطلب ويتحملها المستلم."
             ),
           },
           {

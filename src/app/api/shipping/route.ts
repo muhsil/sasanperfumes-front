@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { getRequestMarket, getRequestFrontendHost } from "@/lib/market/server";
-import { calculateCrossBorderShipping, convertCurrencyAmount, getCrossBorderShippingPolicy, getGccShippingCountries, getShippingQuantityLimitMessage } from "@/config/shipping";
+import { calculateCrossBorderShipping, convertCurrencyAmount, getCrossBorderShippingPolicy, getGccShippingCountries, getShippingCurrencyDecimals, getShippingQuantityLimitMessage } from "@/config/shipping";
 import { getDiscountRules } from "@/lib/api/wordpress";
 import { qualifiesForPromotionFreeDelivery } from "@/lib/discountRules";
 import { backendMarketHeaders, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
@@ -108,10 +108,6 @@ function getCurrencySymbolForCode(code: string): string {
   return CURRENCY_SYMBOLS[code.toUpperCase()] || code.toUpperCase();
 }
 
-function getCurrencyMinorUnitForCode(code: string): number {
-  return ["BHD", "KWD", "OMR"].includes(code.toUpperCase()) ? 3 : 2;
-}
-
 const SHIPPING_BRAND_PATTERNS = [/jeebly/i, /aramex/i, /جيبلي/i, /أرامكس/i];
 
 function containsShippingBrand(value: string): boolean {
@@ -215,7 +211,7 @@ function buildFixedShippingRate(
   currencyCode: string,
   currencySymbol: string
 ): ShippingRate {
-  const currencyMinorUnit = getCurrencyMinorUnitForCode(currencyCode);
+  const currencyMinorUnit = getShippingCurrencyDecimals(currencyCode);
   const multiplier = Math.pow(10, currencyMinorUnit);
   const price = String(Math.round(amount * multiplier));
 
@@ -296,7 +292,7 @@ function buildShippingRates(
   crossBorderPrice?: number
 ): ShippingRate[] {
   const rates: ShippingRate[] = [];
-  const currencyMinorUnit = getCurrencyMinorUnitForCode(currencyCode);
+  const currencyMinorUnit = getShippingCurrencyDecimals(currencyCode);
   const priceMultiplier = Math.pow(10, currencyMinorUnit);
 
   // Zone costs come out of WooCommerce as bare numbers in the store's own

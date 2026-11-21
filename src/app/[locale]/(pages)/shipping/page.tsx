@@ -7,7 +7,7 @@ import { getDictionary } from "@/i18n";
 import { siteConfig } from "@/config/site";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { getPageSeo, getStaticPageContent, pickLocale, mapRepeater, mapFAQGroups, getFeatureToggles } from "@/lib/api/wordpress";
-import { getCrossBorderShippingPolicy, getShippingQuantityLimitMessage } from "@/config/shipping";
+import { convertCurrencyAmount, getCrossBorderShippingPolicy, getShippingCurrencyDecimals, getShippingCurrencyForCountry, getShippingQuantityLimitMessage } from "@/config/shipping";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
 import { getRequestMarket } from "@/lib/market/server";
@@ -214,15 +214,16 @@ export default async function ShippingPage({ params }: ShippingPageProps) {
 
   const crossBorderRegions = [
     { country: "SA", name: locale === "ar" ? "السعودية" : "Saudi Arabia" },
-    { country: "QA", name: locale === "ar" ? "البحرين والكويت وعُمان وقطر" : "Bahrain, Kuwait, Oman and Qatar" },
-    { country: "GB", name: locale === "ar" ? "الوجهات المتاحة خارج دول مجلس التعاون" : "Available destinations outside the GCC" },
-  ];
-  const marketRegions = {
-    sa: crossBorderRegions[0],
-    qa: { country: "QA", name: locale === "ar" ? "قطر" : "Qatar" },
-    om: { country: "OM", name: locale === "ar" ? "عُمان" : "Oman" },
-  };
-  const displayedRegions = market.code === "intl" ? crossBorderRegions : [marketRegions[market.code]];
+    { country: "BH", name: locale === "ar" ? "البحرين" : "Bahrain" },
+    { country: "KW", name: locale === "ar" ? "الكويت" : "Kuwait" },
+    { country: "OM", name: locale === "ar" ? "عُمان" : "Oman" },
+    { country: "QA", name: locale === "ar" ? "قطر" : "Qatar" },
+    { country: "US", name: locale === "ar" ? "الولايات المتحدة" : "United States" },
+    { country: "GB", name: locale === "ar" ? "الوجهات الأخرى المتاحة خارج دول مجلس التعاون" : "Other available destinations outside the GCC" },
+  ].map((region) => ({ ...region, currency: getShippingCurrencyForCountry(region.country) ?? "AED" }));
+  const displayedRegions = isInternationalMarket
+    ? crossBorderRegions
+    : crossBorderRegions.filter((region) => region.currency === currencyCode);
   const internationalLimit = getCrossBorderShippingPolicy("GB")?.maxBottles;
 
   const breadcrumbItems = [
@@ -277,26 +278,34 @@ export default async function ShippingPage({ params }: ShippingPageProps) {
             )}
             <div className="space-y-3">
               <h2 className="text-lg font-light text-brand-primary">
-                {locale === "ar" ? "الشحن خارج الإمارات بالدرهم الإماراتي" : "Shipping outside the UAE in AED"}
+                {locale === "ar" ? "الشحن خارج الإمارات" : "Shipping outside the UAE"}
               </h2>
               <dl className="divide-y divide-[#e7ded7] border border-[#e7ded7]">
-                {displayedRegions.map(({ country, name }) => {
+                {displayedRegions.map(({ country, currency, name }) => {
                   const policy = getCrossBorderShippingPolicy(country);
                   if (!policy) return null;
+                  const decimals = getShippingCurrencyDecimals(currency);
+                  const base = convertCurrencyAmount(policy.baseAed, "AED", currency).toFixed(decimals);
+                  const perBottle = convertCurrencyAmount(policy.perBottleAed, "AED", currency).toFixed(decimals);
                   return (
                     <div key={country} className="flex flex-wrap justify-between gap-x-4 gap-y-1 p-4 text-sm">
                       <dt className="font-medium text-brand-primary">{name}</dt>
                       <dd className="text-brand-primary/75">
                         {locale === "ar"
-                          ? `${policy.baseAed} درهم${policy.perBottleAed ? ` + ${policy.perBottleAed} درهم لكل زجاجة` : " لكل طلب"}`
-                          : `AED ${policy.baseAed}${policy.perBottleAed ? ` + AED ${policy.perBottleAed} per bottle` : " per order"}`}
+                          ? `${base} ${currency} + ${perBottle} ${currency} لكل زجاجة`
+                          : `${currency} ${base} + ${currency} ${perBottle} per bottle`}
                       </dd>
                     </div>
                   );
                 })}
               </dl>
               {isInternationalMarket && internationalLimit && (
-                <p className="text-sm text-brand-primary/75">{getShippingQuantityLimitMessage(internationalLimit, locale)}</p>
+                <p className="text-sm text-brand-primary/75">
+                  {getShippingQuantityLimitMessage(internationalLimit, locale)}{" "}
+                  {locale === "ar"
+                    ? "يُعرض مبلغ الشحن النهائي بعملة الدفع."
+                    : "Checkout shows the final shipping amount in the order currency."}
+                </p>
               )}
             </div>
           </section>

@@ -1,5 +1,23 @@
 const GCC_SHIPPING_COUNTRIES: readonly string[] = ["SA", "OM", "BH", "KW", "QA"];
 
+const SHIPPING_CURRENCY_BY_COUNTRY: Readonly<Record<string, string>> = {
+  AE: "AED",
+  BH: "BHD",
+  KW: "KWD",
+  QA: "QAR",
+  OM: "OMR",
+  SA: "SAR",
+  US: "USD",
+};
+
+export function getShippingCurrencyForCountry(country: string): string | undefined {
+  return SHIPPING_CURRENCY_BY_COUNTRY[country.trim().toUpperCase()];
+}
+
+export function getShippingCurrencyDecimals(currency: string): number {
+  return ["BHD", "KWD", "OMR"].includes(currency.toUpperCase()) ? 3 : 2;
+}
+
 interface ShippingPolicy {
   baseAed: number;
   perBottleAed: number;
