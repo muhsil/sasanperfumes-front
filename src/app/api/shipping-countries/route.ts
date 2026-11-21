@@ -4,7 +4,7 @@ export const revalidate = 0;
 
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { getRequestMarket } from "@/lib/market/server";
-import { getShippingFreightCountries } from "@/config/shipping";
+import { getGccShippingCountries } from "@/config/shipping";
 import { backendMarketHeaders, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
 
 function getBasicAuthParams(marketCode?: string): string {
@@ -146,7 +146,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    for (const freightCountry of getShippingFreightCountries()) {
+    for (const freightCountry of getGccShippingCountries()) {
       countryCodes.add(freightCountry);
     }
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { getRequestMarket, getRequestFrontendHost } from "@/lib/market/server";
-import { resolveFreightPrice, convertFreightPrice, convertCurrencyAmount, type FreightCountryCode } from "@/config/shipping";
+import { calculateCrossBorderShipping, convertCurrencyAmount, getCrossBorderShippingPolicy, getGccShippingCountries, getShippingQuantityLimitMessage } from "@/config/shipping";
 import { getDiscountRules } from "@/lib/api/wordpress";
 import { qualifiesForPromotionFreeDelivery } from "@/lib/discountRules";
 import { backendMarketHeaders, wpJsonBaseForMarket } from "@/lib/utils/backendFetch";
@@ -77,14 +77,6 @@ interface ZoneLocation {
   code: string;
   type: "country" | "state" | "postcode" | "continent";
 }
-
-const FREIGHT_COUNTRY_LABELS: Record<string, string> = {
-  SA: "Saudi Arabia",
-  OM: "Oman",
-  BH: "Bahrain",
-  KW: "Kuwait",
-  QA: "Qatar",
-};
 
 const MARKET_DEFAULT_COUNTRIES: Record<string, string> = {
   qa: "QA",
@@ -214,56 +206,6 @@ async function getZoneMethods(zoneId: number, marketCode?: string): Promise<Zone
   return response.json();
 }
 
-function buildFreightRate(
-  country: string,
-  cartWeight: number,
-  currencyCode: string,
-  currencySymbol: string
-): ShippingRate | null {
-  const freightMatch = resolveFreightPrice(country, cartWeight);
-  if (!freightMatch) {
-    return null;
-  }
-
-  const countryLabel = FREIGHT_COUNTRY_LABELS[country.toUpperCase()] || country.toUpperCase();
-  const currencyMinorUnit = getCurrencyMinorUnitForCode(currencyCode);
-  const multiplier = Math.pow(10, currencyMinorUnit);
-
-  // The table is written in the destination's currency; the order may be priced
-  // in another one.
-  const converted = convertFreightPrice(
-    freightMatch.price,
-    country.toUpperCase() as FreightCountryCode,
-    currencyCode
-  );
-  const ratePrice = String(Math.round(converted * multiplier));
-  const weightLabel = freightMatch.row.weightLabel;
-
-  return {
-    rate_id: `aramex_freight:${country.toUpperCase()}:${weightLabel}`,
-    name: `Shipping ${countryLabel} ${weightLabel}`.trim(),
-    description: `${countryLabel} shipping charge`,
-    delivery_time: "",
-    price: ratePrice,
-    taxes: "0",
-    instance_id: 0,
-      method_id: "aramex_freight",
-      meta_data: [
-        { key: "country", value: country.toUpperCase() },
-        { key: "weight", value: weightLabel },
-        { key: "pcs", value: String(freightMatch.row.pcs) },
-      ],
-      selected: true,
-      currency_code: currencyCode,
-      currency_symbol: currencySymbol,
-      currency_minor_unit: currencyMinorUnit,
-      currency_decimal_separator: ".",
-      currency_thousand_separator: ",",
-      currency_prefix: currencySymbol,
-      currency_suffix: "",
-  };
-}
-
 function buildFixedShippingRate(
   rateId: string,
   methodId: string,
@@ -350,7 +292,8 @@ function buildShippingRates(
   cartWeight: number,
   marketCode?: string,
   storeCurrency?: string,
-  promotionFreeDelivery?: boolean
+  promotionFreeDelivery?: boolean,
+  crossBorderPrice?: number
 ): ShippingRate[] {
   const rates: ShippingRate[] = [];
   const currencyMinorUnit = getCurrencyMinorUnitForCode(currencyCode);
@@ -368,7 +311,10 @@ function buildShippingRates(
     let price = "0";
     const name = getShippingMethodDisplayName(method, marketCode);
 
-    if (method.method_id === "flat_rate") {
+    if (crossBorderPrice !== undefined &&
+      ["flat_rate", "flexible_shipping_single", "flexible_shipping"].includes(method.method_id)) {
+      price = String(Math.round(crossBorderPrice * priceMultiplier));
+    } else if (method.method_id === "flat_rate") {
       const rules = parseFlexibleShippingRules(method.settings);
       if (rules.length > 0 && cartWeight > 0) {
         const weightCost = calculateWeightBasedCost(rules, cartWeight);
@@ -481,176 +427,66 @@ export async function GET(request: NextRequest) {
     const marketHint = request.nextUrl.searchParams.get("market");
     const market = await getRequestMarket(marketHint);
     const shippingMarketCode = market.code;
-    const isOmanMarket = String(shippingMarketCode).toLowerCase() === "om";
-    const requestedCountry = (request.nextUrl.searchParams.get("country") || "AE").toUpperCase();
+    const requestedCountry = (request.nextUrl.searchParams.get("country") || "AE").trim().toUpperCase();
     const marketCountry = MARKET_DEFAULT_COUNTRIES[String(shippingMarketCode).toLowerCase()] || "";
     const country = marketCountry || requestedCountry;
     const city = request.nextUrl.searchParams.get("city") || "";
     const postcode = request.nextUrl.searchParams.get("postcode") || "";
-    // cart_subtotal arrives in minor units — the cart keeps its totals that way
-    // and the checkout forwards them unchanged. Comparing it against a shipping
-    // method's minimum, which is written in whole currency, made every basket
-    // over about four dirhams clear a 400.00 threshold: that is how free
-    // delivery reached baskets of three, four and five bottles. Nothing decides
-    // anything from it now, and it is left out of the rate builder entirely so
-    // the mismatch cannot be reintroduced by reaching for it.
     const cartWeight = parseFloat(request.nextUrl.searchParams.get("cart_weight") || "0");
     const currencyCode = request.nextUrl.searchParams.get("currency_code") || market.defaultCurrency;
-    // How many items are in the basket decides free delivery, so it is read
-    // here rather than inferred from the basket's value.
-    const cartQuantity = parseInt(request.nextUrl.searchParams.get("cart_qty") || "0", 10);
-    const promotionFreeDelivery = await (async () => {
-      if (!Number.isFinite(cartQuantity) || cartQuantity <= 0) return false;
-      try {
-        const rules = await getDiscountRules(await getRequestFrontendHost());
-        return qualifiesForPromotionFreeDelivery(rules, cartQuantity, country);
-      } catch {
-        // The offer cannot be confirmed, so it is not given away.
-        return false;
-      }
-    })();
     const currencySymbol = request.nextUrl.searchParams.get("currency_symbol") || getCurrencySymbolForCode(currencyCode);
-    const buildOmanFallbackRate = () =>
-      buildFixedShippingRate(
-        "flat_rate:om:fixed",
-        "flat_rate",
+    const suppliedQuantity = Number(request.nextUrl.searchParams.get("cart_qty") || "0");
+    const cartQuantity = Number.isSafeInteger(suppliedQuantity) && suppliedQuantity > 0 ? suppliedQuantity : 0;
+    const policy = getCrossBorderShippingPolicy(country);
+
+    if (policy?.maxBottles && cartQuantity > policy.maxBottles) {
+      return NextResponse.json(
+        { success: false, error: { code: "shipping_quantity_limit", message: getShippingQuantityLimitMessage(policy.maxBottles) } },
+        { status: 422 }
+      );
+    }
+
+    const crossBorderPrice = policy ? calculateCrossBorderShipping(policy, cartQuantity, currencyCode) : undefined;
+    let shippingRates: ShippingRate[];
+    if (crossBorderPrice !== undefined && getGccShippingCountries().includes(country)) {
+      shippingRates = [buildFixedShippingRate(
+        `aramex_freight:${country}`,
+        "aramex_freight",
         "Shipping",
-        "Oman shipping charge",
-        3,
+        "",
+        crossBorderPrice,
         currencyCode,
         currencySymbol
-      );
-
-    const freightRate = buildFreightRate(country, cartWeight, currencyCode, currencySymbol);
-    if (freightRate) {
-      const pkg: ShippingPackage = {
-        package_id: 0,
-        name: "Shipping",
-        destination: {
-          address_1: "",
-          address_2: "",
-          city,
-          state: "",
-          postcode,
-          country,
-        },
-        items: [],
-        shipping_rates: [freightRate],
-      };
-
-      return NextResponse.json({
-        success: true,
-        needs_shipping: true,
-        shipping_rates: [pkg],
-        totals: {
-          shipping_total: freightRate.price,
-          shipping_tax: "0",
-        },
-      });
-    }
-
-    if (isOmanMarket) {
-      const fallbackRate = buildOmanFallbackRate();
-      const pkg: ShippingPackage = {
-        package_id: 0,
-        name: "Shipping",
-        destination: {
-          address_1: "",
-          address_2: "",
-          city,
-          state: "",
-          postcode,
-          country,
-        },
-        items: [],
-        shipping_rates: [fallbackRate],
-      };
-
-      return NextResponse.json({
-        success: true,
-        needs_shipping: true,
-        shipping_rates: [pkg],
-        totals: {
-          shipping_total: fallbackRate.price,
-          shipping_tax: "0",
-        },
-      });
-    }
-
-    const zoneId = await findZoneForCountry(country, shippingMarketCode);
-
-    if (zoneId === null) {
-      if (isOmanMarket) {
-        const fallbackRate = buildOmanFallbackRate();
-        const pkg: ShippingPackage = {
-          package_id: 0,
-          name: "Shipping",
-          destination: {
-            address_1: "",
-            address_2: "",
-            city,
-            state: "",
-            postcode,
-            country,
-          },
-          items: [],
-          shipping_rates: [fallbackRate],
-        };
-
-        return NextResponse.json({
-          success: true,
-          needs_shipping: true,
-          shipping_rates: [pkg],
-          totals: {
-            shipping_total: fallbackRate.price,
-            shipping_tax: "0",
-          },
-        });
+      )];
+    } else {
+      const zoneId = await findZoneForCountry(country, shippingMarketCode);
+      if (zoneId === null) {
+        return NextResponse.json(
+          { success: false, error: { code: "no_credentials", message: "WooCommerce API credentials not configured" } },
+          { status: 500 }
+        );
       }
 
-      return NextResponse.json(
-        { success: false, error: { code: "no_credentials", message: "WooCommerce API credentials not configured" } },
-        { status: 500 }
+      let promotionFreeDelivery = false;
+      if (cartQuantity > 0 && crossBorderPrice === undefined) {
+        try {
+          const rules = await getDiscountRules(await getRequestFrontendHost());
+          promotionFreeDelivery = qualifiesForPromotionFreeDelivery(rules, cartQuantity, country);
+        } catch {
+          // Free delivery requires a confirmed promotion.
+        }
+      }
+
+      shippingRates = buildShippingRates(
+        await getZoneMethods(zoneId, shippingMarketCode),
+        currencyCode,
+        currencySymbol,
+        cartWeight,
+        shippingMarketCode,
+        market.defaultCurrency,
+        promotionFreeDelivery,
+        crossBorderPrice
       );
-    }
-
-    const methods = await getZoneMethods(zoneId, shippingMarketCode);
-    const shippingRates = buildShippingRates(
-      methods,
-      currencyCode,
-      currencySymbol,
-      cartWeight,
-      shippingMarketCode,
-      market.defaultCurrency,
-      promotionFreeDelivery
-    );
-
-    if (shippingRates.length === 0 && isOmanMarket) {
-      const fallbackRate = buildOmanFallbackRate();
-      const pkg: ShippingPackage = {
-        package_id: 0,
-        name: "Shipping",
-        destination: {
-          address_1: "",
-          address_2: "",
-          city,
-          state: "",
-          postcode,
-          country,
-        },
-        items: [],
-        shipping_rates: [fallbackRate],
-      };
-
-      return NextResponse.json({
-        success: true,
-        needs_shipping: true,
-        shipping_rates: [pkg],
-        totals: {
-          shipping_total: fallbackRate.price,
-          shipping_tax: "0",
-        },
-      });
     }
 
     const selectedRate = shippingRates.find(r => r.selected);

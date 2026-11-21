@@ -17,6 +17,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { getCustomer, getSavedAddressesFromCustomer, saveSavedAddresses, generateAddressId, resolveCountryCode, type Customer, type SavedAddress } from "@/lib/api/customer";
 import { featureFlags, type Currency, type Locale } from "@/config/site";
 import { Apple, MapPin, Check, ChevronDown, ChevronUp, Tag, X, Truck, Phone, TriangleAlert } from "lucide-react";
+import { countShippingBottles, getCrossBorderShippingPolicy, getShippingQuantityLimitMessage } from "@/config/shipping";
 import { getCityCountryMismatch, getPostcodeCountryWarning, getImportFeeLabel, isGccDestination } from "@/lib/utils/cityCountry";
 import { BundleItemsList, getBundleItems, getBundleItemsTotal, getBoxPrice, getPricingMode, getFixedPrice, getBundleTotal } from "@/components/cart/BundleItemsList";
 import { PhoneInput } from "@/components/common/PhoneInput";
@@ -333,7 +334,7 @@ export default function CheckoutClient() {
         const [shippingTotal, setShippingTotal] = useState<string>("0");
         // Whether a rate has actually come back, so a genuine zero can be told
         // apart from nothing having been fetched yet.
-        const [hasResolvedShippingRate, setHasResolvedShippingRate] = useState(false);
+        const [resolvedShippingQuoteKey, setResolvedShippingQuoteKey] = useState<string | null>(null);
         const [shippingCountries, setShippingCountries] = useState<CountryOption[] | undefined>(undefined);
         
         const [createAccount, setCreateAccount] = useState(false);
@@ -751,6 +752,20 @@ export default function CheckoutClient() {
           (sum, item) => sum + (item.quantity?.value || 0),
           0
         );
+        const shippingPolicy = getCrossBorderShippingPolicy(shippingCountryCode);
+        const shippingBottleCount = shippingPolicy
+          ? cartItems.reduce((sum, item) => sum + countShippingBottles(
+              item.quantity.value, getBundleItems(item), { sku: item.meta?.sku, slug: item.slug }
+            ), 0)
+          : cartItemCount;
+        const shippingQuantityLimit = shippingPolicy?.maxBottles;
+        const exceedsShippingLimit = shippingQuantityLimit !== undefined && shippingBottleCount > shippingQuantityLimit;
+        const shippingLimitMessage = exceedsShippingLimit ? getShippingQuantityLimitMessage(shippingQuantityLimit, locale) : "";
+        const shippingQuoteKey = JSON.stringify([
+          shippingCountryCode, formData.shipping.city, formData.shipping.postalCode, shippingBottleCount,
+          cart?.items_weight, checkoutCurrency,
+        ]);
+        const hasResolvedShippingRate = resolvedShippingQuoteKey === shippingQuoteKey;
         const cartItemDisplayTotals = useMemo(() => new Map(
           cartItems.map((item) => {
             const unitPrice = convertPrice((parseFloat(item.price) || 0) / divisor);
@@ -765,62 +780,53 @@ export default function CheckoutClient() {
           formData.paymentMethod
         );
 
-        const fetchShippingMethods = async (country: string, city: string, postcode: string) => {
-          setIsLoadingShipping(true);
-          try {
-            const subtotal = discountedCartSubtotal;
-            const weight = cart?.items_weight || 0;
-            const shippingCountry = country || defaultCheckoutCountry;
-            const params = new URLSearchParams({
-              country: shippingCountry,
-              city: city || "",
-              postcode: postcode || "",
-              cart_subtotal: String(subtotal),
-              cart_weight: String(weight),
-              // Free delivery goes with the Buy 6 Get 1 Free offer, so the
-              // basket's size is what decides it, not what it is worth.
-              cart_qty: String(cartItemCount),
-              currency_code: checkoutCurrency,
-            });
-            const response = await fetch(buildCheckoutApiUrl("/api/shipping", Object.fromEntries(params.entries())));
-            const data = await response.json();
-            if (data.success && data.shipping_rates) {
-              setShippingPackages(data.shipping_rates);
-              if (data.totals?.shipping_total !== undefined && data.totals?.shipping_total !== null) {
-                setShippingTotal(String(data.totals.shipping_total));
-                setHasResolvedShippingRate(true);
-              }
-              const allRates = data.shipping_rates.flatMap((pkg: ShippingPackage) => pkg.shipping_rates || []);
-              const selectedRate = allRates.find((rate: ShippingRate) => rate.selected);
-              if (selectedRate) {
-                setSelectedShippingRate(selectedRate.rate_id);
-              } else if (allRates.length > 0) {
-                setSelectedShippingRate(allRates[0].rate_id);
-                // Selection helper is declared below but invoked only after this async response.
-                // eslint-disable-next-line react-hooks/immutability
-                handleSelectShippingRate(allRates[0].rate_id, 0);
-              }
-            }
-          } catch (err) {
-            console.error("Failed to fetch shipping methods:", err);
-          } finally {
-            setIsLoadingShipping(false);
-          }
-        };
-
         useEffect(() => {
-          if (formData.shipping.country) {
-            const timeoutId = setTimeout(() => {
-              fetchShippingMethods(
-                formData.shipping.country,
-                formData.shipping.city,
-                formData.shipping.postalCode
-              );
-            }, 500);
-            return () => clearTimeout(timeoutId);
-          }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        }, [couponDiscount, promotionalDiscountTotal, formData.shipping.country, formData.shipping.city, formData.shipping.postalCode, cartSubtotal]);
+          if (!shippingCountryCode || exceedsShippingLimit) return;
+
+          const controller = new AbortController();
+          const timeoutId = setTimeout(async () => {
+            setIsLoadingShipping(true);
+            try {
+              const params = {
+                country: shippingCountryCode,
+                city: formData.shipping.city,
+                postcode: formData.shipping.postalCode,
+                cart_subtotal: String(discountedCartSubtotal),
+                cart_weight: String(cart?.items_weight || 0),
+                cart_qty: String(shippingBottleCount),
+                currency_code: checkoutCurrency,
+              };
+              const response = await fetch(buildCheckoutApiUrl("/api/shipping", params), { signal: controller.signal });
+              const data = await response.json();
+              if (controller.signal.aborted) return;
+
+              const packages: ShippingPackage[] = data.success && Array.isArray(data.shipping_rates) ? data.shipping_rates : [];
+              const rates = packages.flatMap((pkg) => pkg.shipping_rates || []);
+              const rate = rates.find((entry) => entry.selected) || rates[0];
+              setShippingPackages(packages);
+              setSelectedShippingRate(rate?.rate_id || null);
+              setShippingTotal(rate?.price ?? "0");
+              setResolvedShippingQuoteKey(rate ? shippingQuoteKey : null);
+            } catch (err) {
+              if (!controller.signal.aborted) {
+                console.error("Failed to fetch shipping methods:", err);
+                setShippingPackages([]);
+                setSelectedShippingRate(null);
+                setShippingTotal("0");
+                setResolvedShippingQuoteKey(null);
+              }
+            } finally {
+              if (!controller.signal.aborted) setIsLoadingShipping(false);
+            }
+          }, 500);
+          return () => {
+            clearTimeout(timeoutId);
+            controller.abort();
+          };
+        }, [
+          buildCheckoutApiUrl, cart?.items_weight, checkoutCurrency, discountedCartSubtotal, shippingBottleCount,
+          exceedsShippingLimit, formData.shipping.city, formData.shipping.postalCode, shippingCountryCode, shippingQuoteKey,
+        ]);
 
         /**
          * Customs is decided by the country dropdown alone, so a wrong selection
@@ -883,7 +889,6 @@ export default function CheckoutClient() {
               }
               if (data.totals?.shipping_total !== undefined && data.totals?.shipping_total !== null) {
                 setShippingTotal(String(data.totals.shipping_total));
-                setHasResolvedShippingRate(true);
               }
 
               if (shippingInfoTrackedRef.current !== shippingInfoKey && selectedRate) {
@@ -944,7 +949,7 @@ export default function CheckoutClient() {
         // the customer saw one total and was billed another.
         const shippingMajor = hasResolvedShippingRate
           ? selectedShippingMinor / shippingDivisor
-          : convertPrice(cartShippingMinor / divisor);
+          : shippingPolicy ? 0 : convertPrice(cartShippingMinor / divisor);
         const feesMajor = convertPrice((cartFeeTotal || 0) / divisor);
         return subtotalMajor + shippingMajor + feesMajor;
       } catch (err) {
@@ -1199,6 +1204,10 @@ export default function CheckoutClient() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (exceedsShippingLimit) {
+      setError(shippingLimitMessage);
+      return;
+    }
     const checkoutForm = e.currentTarget as HTMLFormElement;
     if (!checkoutForm.checkValidity()) {
       checkoutForm.reportValidity();
@@ -2381,7 +2390,11 @@ export default function CheckoutClient() {
                 {isRTL ? "طريقة الشحن" : "Shipping Method"}
               </h2>
               
-              {isLoadingShipping ? (
+              {exceedsShippingLimit ? (
+                <p role="alert" className="rounded-lg border border-brand-primary bg-brand-beige p-4 text-sm text-brand-primary">
+                  {shippingLimitMessage}
+                </p>
+              ) : isLoadingShipping || (shippingPolicy && selectedShippingRate && !hasResolvedShippingRate) ? (
                 <div className="flex items-center justify-center py-4">
                   <CheckoutLoader />
                   <span className="ml-2 text-brand-muted">{isRTL ? "جاري تحميل طرق الشحن..." : "Loading shipping methods..."}</span>
@@ -2958,6 +2971,10 @@ export default function CheckoutClient() {
                                     sourceCurrency={checkoutCurrency as Currency}
                                     iconSize="xs"
                                   />
+                                ) : exceedsShippingLimit ? (
+                                  <span>{isRTL ? "غير متاح" : "Unavailable"}</span>
+                                ) : !hasResolvedShippingRate && shippingPolicy ? (
+                                  <span>{isRTL ? "قيد الحساب" : "Pending"}</span>
                                 ) : !hasResolvedShippingRate && parseFloat(cart?.totals?.shipping_total || "0") > 0 ? (
                                   <FormattedPrice
                                     price={(parseFloat(cart?.totals?.shipping_total || "0") || 0) / shippingDivisor}
@@ -3049,7 +3066,7 @@ export default function CheckoutClient() {
                 className="hidden w-full lg:flex"
                 size="lg"
                 isLoading={isSubmitting || isAuthLoading}
-                disabled={isAuthLoading}
+                disabled={isAuthLoading || exceedsShippingLimit}
               >
                 {isRTL ? "تأكيد الطلب" : "Place Order"}
               </Button>
@@ -3118,7 +3135,7 @@ export default function CheckoutClient() {
             size="lg" 
             className="h-10 max-w-[180px] flex-1 px-4 text-xs"
             isLoading={isSubmitting || isAuthLoading}
-            disabled={isAuthLoading}
+            disabled={isAuthLoading || exceedsShippingLimit}
           >
             {isRTL ? "تأكيد الطلب" : "Place Order"}
           </Button>

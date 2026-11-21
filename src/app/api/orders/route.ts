@@ -9,6 +9,7 @@ import { getDiscountRules } from "@/lib/api/wordpress";
 import { calculateCartDiscounts, getCartDiscountTotal, qualifiesForPromotionFreeDelivery } from "@/lib/discountRules";
 import type { DiscountCartItem } from "@/lib/discountRules";
 import type { DiscountRule } from "@/types/discount";
+import { calculateCrossBorderShipping, countShippingBottles, getCrossBorderShippingPolicy, getShippingQuantityLimitMessage } from "@/config/shipping";
 
 function getOrdersApiBase(marketCode?: string | null): string {
   return `${wpJsonBaseForMarket(marketCode)}/wc/v3`;
@@ -1094,10 +1095,39 @@ export async function POST(request: NextRequest) {
     
     const isCod = paymentMethod.toLowerCase() === "cod";
     const inclusiveVatRate = getInclusiveVatRate(body);
-    const lineItems = Array.isArray(body.line_items) ? body.line_items : [];
+    const lineItems: OrderLineItem[] = Array.isArray(body.line_items) ? body.line_items : [];
     const currencyCode = typeof body.currency === "string" && body.currency.trim()
       ? body.currency.trim().toUpperCase()
       : undefined;
+
+    const shippingCountry = normalizeOrderCountryCode(body.shipping?.country || body.billing?.country);
+    const shippingPolicy = getCrossBorderShippingPolicy(shippingCountry);
+    if (shippingPolicy) {
+      const quantity = lineItems.reduce((sum, item) => {
+        const metadata = item?.meta_data;
+        const bundle = Array.isArray(metadata) ? metadata.find((entry) => entry?.key === "_bundle_items")?.value : undefined;
+        return sum + countShippingBottles(Number(item?.quantity), bundle, item);
+      }, 0);
+      if (shippingPolicy.maxBottles && quantity > shippingPolicy.maxBottles) {
+        return NextResponse.json(
+          { success: false, error: { code: "shipping_quantity_limit", message: getShippingQuantityLimitMessage(shippingPolicy.maxBottles) } },
+          { status: 422 }
+        );
+      }
+
+      // An outdated quote must be refreshed before an order or payment is created.
+      const orderCurrency = currencyCode || market.defaultCurrency;
+      const decimals = getCurrencyDecimals(orderCurrency);
+      const multiplier = 10 ** decimals;
+      const expectedShipping = Math.round(calculateCrossBorderShipping(shippingPolicy, quantity, orderCurrency) * multiplier) / multiplier;
+      const shippingLines = Array.isArray(body.shipping_lines) ? body.shipping_lines : [];
+      if (shippingLines.length !== 1 || parseMoney(shippingLines[0]?.total) !== expectedShipping) {
+        return NextResponse.json(
+          { success: false, error: { code: "shipping_rate_changed", message: "The shipping rate has changed. Please refresh checkout to see the current total." } },
+          { status: 409 }
+        );
+      }
+    }
 
     const orderData: CreateOrderRequest = {
       payment_method: paymentMethod,

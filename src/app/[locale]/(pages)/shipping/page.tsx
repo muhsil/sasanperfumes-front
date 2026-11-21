@@ -7,7 +7,7 @@ import { getDictionary } from "@/i18n";
 import { siteConfig } from "@/config/site";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { getPageSeo, getStaticPageContent, pickLocale, mapRepeater, mapFAQGroups, getFeatureToggles } from "@/lib/api/wordpress";
-import { getShippingFreightDisplayRows } from "@/config/shipping";
+import { getCrossBorderShippingPolicy, getShippingQuantityLimitMessage } from "@/config/shipping";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
 import { getRequestMarket } from "@/lib/market/server";
@@ -28,16 +28,6 @@ type ShippingDisplayRow = {
   location: string;
   cost: string;
   delivery: string;
-};
-
-type FreightDisplayRow = {
-  weight: string;
-  pcs: string;
-  saudi_arabia: string;
-  oman: string;
-  bahrain: string;
-  kuwait: string;
-  qatar: string;
 };
 
 function pickShippingRowValue(row: Record<string, unknown>, key: string, locale: string, fallback = ""): string {
@@ -222,16 +212,18 @@ export default async function ShippingPage({ params }: ShippingPageProps) {
         : await fetchInternationalShippingPreview(currencyCode, locale as Locale))
     : [];
 
-  /**
-   * Freight is charged from the table in src/config/shipping.ts, so the page
-   * has to display that same table. These rates were also stored in WordPress,
-   * and the two drifted: Qatar and Oman advertised the old flat 30 while
-   * checkout charged the current Aramex rate. Code is the single source now —
-   * whatever is charged is what is shown.
-   */
-  const freightRows: FreightDisplayRow[] = !isInternationalMarket
-    ? getShippingFreightDisplayRows()
-    : [];
+  const crossBorderRegions = [
+    { country: "SA", name: locale === "ar" ? "السعودية" : "Saudi Arabia" },
+    { country: "QA", name: locale === "ar" ? "البحرين والكويت وعُمان وقطر" : "Bahrain, Kuwait, Oman and Qatar" },
+    { country: "GB", name: locale === "ar" ? "الوجهات المتاحة خارج دول مجلس التعاون" : "Available destinations outside the GCC" },
+  ];
+  const marketRegions = {
+    sa: crossBorderRegions[0],
+    qa: { country: "QA", name: locale === "ar" ? "قطر" : "Qatar" },
+    om: { country: "OM", name: locale === "ar" ? "عُمان" : "Oman" },
+  };
+  const displayedRegions = market.code === "intl" ? crossBorderRegions : [marketRegions[market.code]];
+  const internationalLimit = getCrossBorderShippingPolicy("GB")?.maxBottles;
 
   const breadcrumbItems = [
     { name: dictionary.footer.shippingInfo, href: `${pathPrefix}/${locale}/shipping` },
@@ -245,11 +237,13 @@ export default async function ShippingPage({ params }: ShippingPageProps) {
       <div className="px-4 pt-8 md:pt-10 pb-16">
         <div className="max-w-3xl mx-auto space-y-16">
           <section className="space-y-4">
-            <div className="space-y-2">
-              <h2 className="text-2xl font-light text-brand-primary">{normalizedRatesTitle}</h2>
-              {ratesNote && <p className="text-sm leading-7 text-brand-primary/70">{ratesNote}</p>}
-            </div>
-            {isInternationalMarket ? (
+            {isInternationalMarket && (
+              <div className="space-y-2">
+                <h2 className="text-2xl font-light text-brand-primary">{normalizedRatesTitle}</h2>
+                {ratesNote && <p className="text-sm leading-7 text-brand-primary/70">{ratesNote}</p>}
+              </div>
+            )}
+            {isInternationalMarket && (
               intlRows.length > 0 ? (
                 <div className="overflow-x-auto border border-[#e7ded7]">
                   <table className="w-full min-w-[560px] border-collapse text-sm">
@@ -280,36 +274,31 @@ export default async function ShippingPage({ params }: ShippingPageProps) {
                   </p>
                 </div>
               )
-            ) : (
-              <div className="overflow-x-auto border border-[#e7ded7]">
-                <table className="w-full min-w-[840px] border-collapse text-sm">
-                  <thead>
-                    <tr className="border-b border-[#e7ded7] bg-[#faf7f3] text-brand-primary">
-                      <th className="px-4 py-3 text-left font-medium">{locale === "ar" ? "الوزن" : "Weight"}</th>
-                      <th className="px-4 py-3 text-left font-medium">{locale === "ar" ? "القطع" : "PCS"}</th>
-                      <th className="px-4 py-3 text-left font-medium">{locale === "ar" ? "السعودية" : "Saudi Arabia"}</th>
-                      <th className="px-4 py-3 text-left font-medium">{locale === "ar" ? "عمان" : "Oman"}</th>
-                      <th className="px-4 py-3 text-left font-medium">{locale === "ar" ? "البحرين" : "Bahrain"}</th>
-                      <th className="px-4 py-3 text-left font-medium">{locale === "ar" ? "الكويت" : "Kuwait"}</th>
-                      <th className="px-4 py-3 text-left font-medium">{locale === "ar" ? "قطر" : "Qatar"}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {freightRows.map((row, index) => (
-                      <tr key={`${row.weight}-${row.pcs}-${index}`} className="border-b border-[#e7ded7] last:border-b-0">
-                        <td className="px-4 py-3 text-brand-primary">{row.weight}</td>
-                        <td className="px-4 py-3 text-brand-primary">{row.pcs}</td>
-                        <td className="px-4 py-3 text-brand-primary/75">{row.saudi_arabia}</td>
-                        <td className="px-4 py-3 text-brand-primary/75">{row.oman}</td>
-                        <td className="px-4 py-3 text-brand-primary/75">{row.bahrain}</td>
-                        <td className="px-4 py-3 text-brand-primary/75">{row.kuwait}</td>
-                        <td className="px-4 py-3 text-brand-primary/75">{row.qatar}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
             )}
+            <div className="space-y-3">
+              <h2 className="text-lg font-light text-brand-primary">
+                {locale === "ar" ? "الشحن خارج الإمارات بالدرهم الإماراتي" : "Shipping outside the UAE in AED"}
+              </h2>
+              <dl className="divide-y divide-[#e7ded7] border border-[#e7ded7]">
+                {displayedRegions.map(({ country, name }) => {
+                  const policy = getCrossBorderShippingPolicy(country);
+                  if (!policy) return null;
+                  return (
+                    <div key={country} className="flex flex-wrap justify-between gap-x-4 gap-y-1 p-4 text-sm">
+                      <dt className="font-medium text-brand-primary">{name}</dt>
+                      <dd className="text-brand-primary/75">
+                        {locale === "ar"
+                          ? `${policy.baseAed} درهم${policy.perBottleAed ? ` + ${policy.perBottleAed} درهم لكل زجاجة` : " لكل طلب"}`
+                          : `AED ${policy.baseAed}${policy.perBottleAed ? ` + AED ${policy.perBottleAed} per bottle` : " per order"}`}
+                      </dd>
+                    </div>
+                  );
+                })}
+              </dl>
+              {isInternationalMarket && internationalLimit && (
+                <p className="text-sm text-brand-primary/75">{getShippingQuantityLimitMessage(internationalLimit, locale)}</p>
+              )}
+            </div>
           </section>
 
           <PolicyContent

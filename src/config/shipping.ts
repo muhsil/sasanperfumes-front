@@ -1,114 +1,79 @@
-export type FreightCountryCode = "SA" | "OM" | "BH" | "KW" | "QA";
+const GCC_SHIPPING_COUNTRIES: readonly string[] = ["SA", "OM", "BH", "KW", "QA"];
 
-export interface FreightChargeRow {
-  weightKg: number;
-  weightLabel: string;
-  pcs: number;
-  charges: Record<FreightCountryCode, number>;
+interface ShippingPolicy {
+  baseAed: number;
+  perBottleAed: number;
+  maxBottles?: number;
 }
 
-export interface FreightChargeDisplayRow {
-  weight: string;
-  pcs: string;
-  saudi_arabia: string;
-  oman: string;
-  bahrain: string;
-  kuwait: string;
-  qatar: string;
+const SAUDI_SHIPPING: ShippingPolicy = { baseAed: 160, perBottleAed: 30 };
+const OTHER_GCC_SHIPPING: ShippingPolicy = { baseAed: 150, perBottleAed: 30 };
+const INTERNATIONAL_SHIPPING: ShippingPolicy = { baseAed: 200, perBottleAed: 30, maxBottles: 7 };
+
+export function getGccShippingCountries(): readonly string[] {
+  return GCC_SHIPPING_COUNTRIES;
 }
 
-/**
- * Aramex freight, held in each destination's own currency.
- *
- * Every figure is the Aramex charge in AED plus a 5 AED handling allowance,
- * converted at the market rate (SAR 1.02, QAR 0.99, BHD 0.103, KWD 0.083). The
- * allowance is part of the published rate — the customer sees a single shipping
- * amount, never a breakdown.
- *
- * Oman uses Bahrain's column as a stand-in. The supplied sheet carries no Oman
- * figures, and none exist in the Aramex plugin (its freight fields are empty and
- * the rate calculator is off) or in the shipping zones, which are unconfigured
- * on that site. Bahrain is the closest comparable — the cheapest destination on
- * the sheet and the nearest to Oman — so it is the least-wrong basis available.
- * Replace these ten values once the real Oman rates are to hand.
- */
-const DEFAULT_FREIGHT_TABLE: FreightChargeRow[] = [
-  { weightKg: 0.5, weightLabel: "0.5KG", pcs: 1, charges: { SA: 107.1, OM: 10.08, BH: 9.888, KW: 9.296, QA: 102.96 } },
-  { weightKg: 1, weightLabel: "1KG", pcs: 2, charges: { SA: 114.24, OM: 12.075, BH: 11.845, KW: 11.039, QA: 110.88 } },
-  { weightKg: 1.5, weightLabel: "1.5KG", pcs: 3, charges: { SA: 122.4, OM: 13.65, BH: 13.39, KW: 12.45, QA: 116.82 } },
-  { weightKg: 1.5, weightLabel: "1.5KG", pcs: 4, charges: { SA: 122.4, OM: 13.65, BH: 13.39, KW: 12.45, QA: 116.82 } },
-  { weightKg: 2, weightLabel: "2KG", pcs: 5, charges: { SA: 128.52, OM: 15.225, BH: 14.935, KW: 13.861, QA: 123.75 } },
-  { weightKg: 2.5, weightLabel: "2.5KG", pcs: 6, charges: { SA: 134.64, OM: 16.695, BH: 16.377, KW: 15.189, QA: 130.68 } },
-  { weightKg: 3, weightLabel: "3KG", pcs: 8, charges: { SA: 142.8, OM: 18.27, BH: 17.922, KW: 16.6, QA: 136.62 } },
-  { weightKg: 3.5, weightLabel: "3.5KG", pcs: 9, charges: { SA: 148.92, OM: 19.74, BH: 19.364, KW: 18.011, QA: 143.55 } },
-  { weightKg: 4, weightLabel: "4KG", pcs: 10, charges: { SA: 155.04, OM: 21.525, BH: 21.115, KW: 19.422, QA: 150.48 } },
-  { weightKg: 5, weightLabel: "5KG", pcs: 12, charges: { SA: 169.32, OM: 24.255, BH: 23.793, KW: 22.244, QA: 163.35 } },
-];
-
-function formatNumber(value: number): string {
-  return Number.isFinite(value) ? value.toFixed(2) : "0.00";
+export function getCrossBorderShippingPolicy(country: string): ShippingPolicy | null {
+  const code = country.trim().toUpperCase();
+  if (!/^[A-Z]{2}$/.test(code) || code === "AE") return null;
+  if (code === "SA") return SAUDI_SHIPPING;
+  if (GCC_SHIPPING_COUNTRIES.includes(code)) return OTHER_GCC_SHIPPING;
+  return INTERNATIONAL_SHIPPING;
 }
 
-function normalizeCountryCode(value: unknown): FreightCountryCode | null {
-  const code = String(value || "").trim().toUpperCase();
-  if (code === "SA" || code === "OM" || code === "BH" || code === "KW" || code === "QA") {
-    return code;
+// Fixed gift sets are single WooCommerce products. Match their portable SKU,
+// using the catalog slug for the two sets currently sold without a SKU.
+const FIXED_SET_BOTTLES = new Map([
+  ["SA00040", 3], // The Secret Garden
+  ["SA00041", 3], // The Regal Code
+  ["SA00043", 4], // 24 Signature Collection
+  ["SA00048", 3], // Vibrant Collection
+  ["SA00049", 3], // Signature Collection
+  ["SA00049-1", 3], // L'essense Royale
+  ["SA00734", 4], // Eternal Bloom Set Box 50ML
+  ["SASAN-5612", 3], // Box 100ML
+  ["eternal-bloom-set-box-edp-50ml-x-4-2", 4],
+  ["eternal-bloom-set-box-edp-50ml-x-4", 3], // Box Women Edition
+]);
+
+export function countShippingBottles(
+  quantity: number,
+  bundleContents?: unknown,
+  product?: { sku?: string; slug?: string }
+): number {
+  if (!Number.isSafeInteger(quantity) || quantity <= 0) return 0;
+  const fixedContents = FIXED_SET_BOTTLES.get(product?.sku?.trim().toUpperCase() || "")
+    ?? FIXED_SET_BOTTLES.get(product?.slug?.trim().toLowerCase() || "");
+  if (fixedContents) return quantity * fixedContents;
+
+  if (typeof bundleContents === "string") {
+    try {
+      bundleContents = JSON.parse(bundleContents);
+    } catch {
+      return quantity;
+    }
   }
-  return null;
-}
+  if (!Array.isArray(bundleContents)) return quantity;
 
-export function getShippingFreightTable(): FreightChargeRow[] {
-  return [...DEFAULT_FREIGHT_TABLE].sort((a, b) => a.weightKg - b.weightKg || a.pcs - b.pcs);
-}
-
-export function getShippingFreightCountries(): FreightCountryCode[] {
-  return ["SA", "OM", "BH", "KW", "QA"];
-}
-
-export function getShippingFreightDisplayRows(): FreightChargeDisplayRow[] {
-  return getShippingFreightTable().map((row) => ({
-    weight: row.weightLabel,
-    pcs: String(row.pcs),
-    saudi_arabia: formatNumber(row.charges.SA),
-    oman: formatNumber(row.charges.OM),
-    bahrain: formatNumber(row.charges.BH),
-    kuwait: formatNumber(row.charges.KW),
-    qatar: formatNumber(row.charges.QA),
-  }));
-}
-
-export function resolveFreightRow(country: string, cartWeight: number): FreightChargeRow | null {
-  const code = normalizeCountryCode(country);
-  if (!code) return null;
-
-  const rows = getShippingFreightTable();
-  if (rows.length === 0) return null;
-
-  const sorted = [...rows].sort((a, b) => a.weightKg - b.weightKg || a.pcs - b.pcs);
-  let matched = sorted.find((row) => cartWeight <= row.weightKg);
-  if (!matched) {
-    matched = sorted[sorted.length - 1] || null;
+  let bottlesPerBundle = 0;
+  for (const item of bundleContents) {
+    if (!item || typeof item.product_id !== "number" || item.product_id <= 0) continue;
+    const bottleQuantity = Number(item.quantity ?? 1);
+    if (Number.isSafeInteger(bottleQuantity) && bottleQuantity > 0) bottlesPerBundle += bottleQuantity;
   }
-
-  return matched || null;
+  return quantity * Math.max(1, bottlesPerBundle);
 }
 
-/**
- * The freight table is written in each destination's own currency, which is
- * correct for that market's own storefront. An order placed on the AED store
- * and shipped to one of these countries was charged the figure as-is, so a
- * parcel to Oman collected 13.65 AED against a 13.65 OMR rate — about a tenth
- * of the intended amount. Bahrain and Kuwait were the same.
- *
- * Rates are units of the destination currency per AED, matching the storefront.
- */
-const FREIGHT_CURRENCY_BY_COUNTRY: Record<FreightCountryCode, string> = {
-  SA: "SAR",
-  QA: "QAR",
-  OM: "OMR",
-  BH: "BHD",
-  KW: "KWD",
-};
+export function getShippingQuantityLimitMessage(limit: number, locale = "en"): string {
+  return locale === "ar"
+    ? `يمكن شحن ما يصل إلى ${limit} زجاجات في الطلب الدولي الواحد. يرجى تقديم طلب منفصل للزجاجات الإضافية.`
+    : `International orders can ship up to ${limit} bottles per order. Please place a separate order for additional bottles.`;
+}
+
+export function calculateCrossBorderShipping(policy: ShippingPolicy, quantity: number, currency: string): number {
+  return convertCurrencyAmount(policy.baseAed + policy.perBottleAed * quantity, "AED", currency);
+}
 
 const CURRENCY_RATE_FROM_AED: Record<string, number> = {
   AED: 1,
@@ -143,32 +108,4 @@ export function convertCurrencyAmount(
   if (!from || !to || !Number.isFinite(amount)) return amount;
 
   return (amount / from) * to;
-}
-
-/** Converts a freight charge into the currency the order is priced in. */
-export function convertFreightPrice(
-  price: number,
-  country: FreightCountryCode,
-  targetCurrency: string
-): number {
-  const sourceRate = CURRENCY_RATE_FROM_AED[FREIGHT_CURRENCY_BY_COUNTRY[country]];
-  const targetRate = CURRENCY_RATE_FROM_AED[String(targetCurrency || "AED").toUpperCase()];
-
-  // An unknown currency is left alone rather than converted by a guessed rate.
-  if (!sourceRate || !targetRate) return price;
-
-  return (price / sourceRate) * targetRate;
-}
-
-export function resolveFreightPrice(country: string, cartWeight: number): { row: FreightChargeRow; price: number } | null {
-  const code = normalizeCountryCode(country);
-  if (!code) return null;
-
-  const row = resolveFreightRow(code, cartWeight);
-  if (!row) return null;
-
-  const price = row.charges[code];
-  if (!Number.isFinite(price)) return null;
-
-  return { row, price };
 }

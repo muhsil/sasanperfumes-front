@@ -10,7 +10,8 @@ import { Input } from "@/components/common/Input";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { MarketCartTransfer } from "@/components/cart/MarketCartTransfer";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
-import { BundleItemsList } from "@/components/cart/BundleItemsList";
+import { BundleItemsList, getBundleItems } from "@/components/cart/BundleItemsList";
+import { countShippingBottles, getCrossBorderShippingPolicy } from "@/config/shipping";
 import { useCart } from "@/contexts/CartContext";
 import { useFreeGift, getLocalizedProduct, containsArabic } from "@/contexts/FreeGiftContext";
 import { useDiscountRules } from "@/contexts/DiscountRulesContext";
@@ -91,6 +92,12 @@ export default function CartPage() {
     0
   );
 
+  const shippingBottleCount = getCrossBorderShippingPolicy(marketDestinationCountry)
+    ? cartItems.reduce((sum, item) => sum + countShippingBottles(
+        item.quantity.value, getBundleItems(item), { sku: item.meta?.sku, slug: item.slug }
+      ), 0)
+    : cartItemCount;
+
   /**
    * What delivery will actually cost, asked of the same endpoint checkout asks.
    *
@@ -108,7 +115,7 @@ export default function CartPage() {
   });
 
   useEffect(() => {
-    if (cartItemCount <= 0) {
+    if (shippingBottleCount <= 0) {
       setCartShipping({ amount: 0, resolved: false });
       return;
     }
@@ -116,7 +123,7 @@ export default function CartPage() {
     let cancelled = false;
     const params = new URLSearchParams({
       country: marketDestinationCountry,
-      cart_qty: String(cartItemCount),
+      cart_qty: String(shippingBottleCount),
       cart_weight: String(cart?.items_weight || 0),
       currency_code: cart?.currency?.currency_code || "AED",
     });
@@ -141,7 +148,7 @@ export default function CartPage() {
     return () => {
       cancelled = true;
     };
-  }, [cartItemCount, marketDestinationCountry, cart?.items_weight, cart?.currency?.currency_code]);
+  }, [shippingBottleCount, marketDestinationCountry, cart?.items_weight, cart?.currency?.currency_code]);
 
   const hasFreeDelivery = cartShipping.resolved && cartShipping.amount === 0;
 
