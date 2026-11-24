@@ -34,6 +34,7 @@ import { triggerHaptic } from "@/lib/utils/haptics";
 import { fbTrackViewContent } from "@/lib/utils/fbpixel";
 import { trackAnalyticsEvent } from "@/lib/utils/analytics";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
+import { getFragranceNotePresentation } from "@/lib/utils/fragranceNotes";
 
 function getDisplayPrice(product: WCProduct, selectedVariation?: WCProductVariation | null) {
   if (selectedVariation?.prices) {
@@ -1013,7 +1014,7 @@ export function ProductDetail({ product, locale, addonForms = [], englishCategor
     () =>
       [
         {
-          label: isRTL ? "الافتتاحية" : "Top",
+          label: isRTL ? "المقدمة" : "Top",
           value: (fragranceNotes.top || (noteTerms.length > 0 ? noteTerms.slice(0, 1).join(", ") : "")).trim(),
         },
         {
@@ -1024,7 +1025,7 @@ export function ProductDetail({ product, locale, addonForms = [], englishCategor
           label: isRTL ? "القاعدة" : "Base",
           value: (fragranceNotes.base || (noteTerms.length > 2 ? noteTerms.slice(2, 3).join(", ") : "")).trim(),
         },
-      ].filter((note) => isMeaningfulDisplayText(note.value)),
+      ].filter((note) => isMeaningfulDisplayText(note.value) && !/^none\b/i.test(note.value)),
     [fragranceNotes.base, fragranceNotes.middle, fragranceNotes.top, isRTL, noteTerms]
   );
   const characteristics = useMemo(
@@ -1802,34 +1803,36 @@ export function ProductDetail({ product, locale, addonForms = [], englishCategor
           </div>
           </div>
 
-          {/* Fragrance notes shown before purchase controls */}
           {fragranceNoteRows.length > 0 && (
-            <section className="mt-5 rounded-2xl border border-brand-border/70 bg-transparent p-4">
-              <h3 className="text-[14px] font-semibold text-brand-primary">
-                {isRTL ? "النوتات العطرية" : "Fragrance Notes"}
+            <section className="mt-4 border-t border-brand-border/70 pt-4" aria-label={isRTL ? "المكونات العطرية" : "Fragrance notes"}>
+              <h3 className="mb-3 text-sm font-medium text-brand-primary">
+                {isRTL ? "المكونات العطرية" : "Fragrance Notes"}
               </h3>
-              <div className="mt-3 divide-y divide-brand-border/60 border-y border-brand-border/60">
-                {fragranceNoteRows.map((note) => (
-                  <div
-                    key={note.label}
-                    className="flex items-start justify-between gap-4 py-3"                  >
-                    <span className="shrink-0 text-[12px] font-semibold uppercase tracking-[0.08em] text-brand-muted">
-                      {note.label}
-                    </span>
-                    {noteValueToSlug(note.value) ? (
-                      <Link
-                        href={`${marketPrefix}/${locale}/notes/${noteValueToSlug(note.value)}`}
-                        className="max-w-[68%] text-right text-sm leading-6 text-brand-primary/75 underline-offset-4 hover:underline rtl:text-left"
-                      >
-                        {note.value}
-                      </Link>
-                    ) : (
-                      <span className="max-w-[68%] text-right text-sm leading-6 text-brand-primary/75 rtl:text-left">
-                        {note.value}
-                      </span>
-                    )}
-                  </div>
-                ))}
+              <div className="grid w-full max-w-[280px] grid-cols-3 gap-2 sm:max-w-[312px] sm:gap-3">
+                {fragranceNoteRows.map((note) => {
+                  const presentation = getFragranceNotePresentation(note.value, isRTL);
+                  const content = (
+                    <>
+                      {presentation.image && (
+                        <div className="relative aspect-square">
+                          <Image src={presentation.image} alt={isRTL ? `صورة تعبيرية عن ${presentation.label}` : `Representative fragrance image for ${presentation.label}`} fill sizes="(max-width: 639px) 86px, 96px" className="object-cover" />
+                        </div>
+                      )}
+                      <div className="px-1 py-2 text-center" title={presentation.allNotes}>
+                        <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-brand-muted">{note.label}</p>
+                        <p className="mt-0.5 break-words text-xs font-medium text-brand-primary">{presentation.label}</p>
+                      </div>
+                    </>
+                  );
+                  const noteSlug = noteValueToSlug(presentation.original);
+                  return noteSlug ? (
+                    <Link key={note.label} href={`${marketPrefix}/${locale}/notes/${noteSlug}`} className="min-w-0 overflow-hidden rounded-lg border border-brand-border/60 bg-[#faf7f3] transition-colors hover:border-brand-primary/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary">
+                      {content}
+                    </Link>
+                  ) : (
+                    <div key={note.label} className="min-w-0 overflow-hidden rounded-lg border border-brand-border/60 bg-[#faf7f3]">{content}</div>
+                  );
+                })}
               </div>
             </section>
           )}
