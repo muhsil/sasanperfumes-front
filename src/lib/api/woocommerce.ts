@@ -806,7 +806,7 @@ export const getProductBySlug = cache(async function getProductBySlug(
             frontendHost,
             revalidate: 300,
           },
-          undefined
+          market
         );
 
         const products = rebrandApiContent(data);
@@ -828,7 +828,7 @@ export const getProductBySlug = cache(async function getProductBySlug(
       }
     }
 
-    if (!market && targetLocale && targetLocale !== "en") {
+    if (targetLocale && targetLocale !== "en") {
       return fetchBySlug(targetSlug, "en");
     }
 
@@ -875,7 +875,9 @@ export const getProductBySlug = cache(async function getProductBySlug(
         }
       }
 
-      if (!market && locale !== "en") {
+      // English slugs are shared by storefront URLs. Keep the same market when
+      // an Arabic record uses a different slug, then localize its saved notes.
+      if (locale !== "en") {
         const englishProducts = await fetchAPI<WCProduct[]>(`/products?slug=${encodedSlug}`, {
           tags: ["products", `product-${slug}-en-fallback`],
           locale: "en",
@@ -901,7 +903,7 @@ export const getProductBySlug = cache(async function getProductBySlug(
 
     return hydrateWithLegacyCopy(null, slug);
   } catch {
-    if (!market && locale && locale !== "en") {
+    if (locale && locale !== "en") {
       try {
         const englishProducts = await fetchAPI<WCProduct[]>(`/products?slug=${encodedSlug}`, {
           tags: ["products", `product-${slug}-en-fallback`],
