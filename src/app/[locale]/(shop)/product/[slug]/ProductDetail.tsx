@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
-import { Heart, Minus, Plus, X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Move, Check, Star } from "lucide-react";
+import { Heart, Minus, Plus, X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Move, Check, Star, Wind } from "lucide-react";
 import { Badge } from "@/components/common/Badge";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { CountdownTimer } from "@/components/common/CountdownTimer";
@@ -1814,9 +1814,14 @@ export function ProductDetail({ product, locale, addonForms = [], englishCategor
                   const presentation = getFragranceNotePresentation(note.value, isRTL);
                   const content = (
                     <>
-                      {presentation.image && (
+                      {presentation.image ? (
                         <div className="relative aspect-square">
                           <Image src={presentation.image} alt={isRTL ? `صورة تعبيرية عن ${presentation.label}` : `Representative fragrance image for ${presentation.label}`} fill sizes="(max-width: 639px) 86px, 96px" className="object-cover" />
+                        </div>
+                      ) : (
+                        <div className="flex aspect-square flex-col items-center justify-center gap-2 bg-[#eee8df]" role="img" aria-label={isRTL ? `رمز نفحة عطرية: ${presentation.label}` : `Fragrance note symbol: ${presentation.label}`}>
+                          <Wind className="h-7 w-7 text-brand-muted/60" aria-hidden="true" />
+                          <span className="text-[9px] tracking-wide text-brand-muted">{isRTL ? "نفحة عطرية" : "Fragrance Note"}</span>
                         </div>
                       )}
                       <div className="px-1 py-2 text-center" title={presentation.allNotes}>
