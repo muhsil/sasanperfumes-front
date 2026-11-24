@@ -7,6 +7,7 @@ import { getProducts, getFreeGiftProductIds } from "@/lib/api/woocommerce";
 import { getMarketHintFromSearchParams, getRequestFrontendHost, getRequestMarket } from "@/lib/market/server";
 import { generateCollectionPageJsonLd, generateItemListJsonLd, generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { decodeHtmlEntities, htmlToPlainText } from "@/lib/utils";
+import { getFragranceNotePresentation, parseFragranceKeyNotes } from "@/lib/utils/fragranceNotes";
 import { getMarketPathPrefix } from "@/config/market";
 import { siteConfig, type Currency, type Locale } from "@/config/site";
 import type { WCProduct } from "@/types/woocommerce";
@@ -28,6 +29,7 @@ const ARABIC_NOTE_LABELS: Record<string, string> = {
 
 function noteLabel(note: string, locale: string): string {
   if (locale === "ar" && ARABIC_NOTE_LABELS[note]) return ARABIC_NOTE_LABELS[note];
+  if (locale === "ar") return getFragranceNotePresentation(note.replace(/-/g, " "), true).label;
   return note.split("-").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
 }
 
@@ -43,11 +45,16 @@ function dedupeProducts(products: WCProduct[]): WCProduct[] {
 
 function productMatchesNote(product: WCProduct, note: string): boolean {
   const needle = note.replace(/-/g, " ").toLowerCase();
+  const fields = product.extensions?.sasan_fragrance;
+  const fragranceNotes = [fields?.top, fields?.middle, fields?.base, ...parseFragranceKeyNotes(fields?.notes_raw)]
+    .filter((value): value is string => Boolean(value))
+    .flatMap((value) => [value, getFragranceNotePresentation(value, false).original]);
   const attributes = (product.attributes || []).flatMap((attribute) =>
     (attribute.terms || []).map((term) => decodeHtmlEntities(term.name))
   );
   const searchable = [
     ...attributes,
+    ...fragranceNotes,
     htmlToPlainText(product.short_description || ""),
     htmlToPlainText(product.description || ""),
   ].join(" ").toLowerCase();
