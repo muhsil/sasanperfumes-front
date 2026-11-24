@@ -1821,7 +1821,7 @@ export function ProductDetail({ product, locale, addonForms = [], englishCategor
                       )}
                       <div className="px-1 py-2 text-center" title={presentation.allNotes}>
                         <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-brand-muted">{note.label}</p>
-                        <p className="mt-0.5 break-words text-xs font-medium text-brand-primary">{presentation.label}</p>
+                        <p className="mt-0.5 break-words text-xs font-medium capitalize text-brand-primary">{presentation.label}</p>
                       </div>
                     </>
                   );
