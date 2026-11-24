@@ -4,6 +4,7 @@ import https from "https";
 import { disableRuntimeCache, siteConfig, API_BASE_CURRENCY, type Locale, type Currency } from "@/config/site";
 import { getWcCredentials } from "@/lib/utils/loadEnv";
 import { decodeHtmlEntities } from "@/lib/utils";
+import { buildArabicFragranceCopy } from "@/lib/utils/fragranceNotes";
 import {
   buildProductSearchAliases,
   localizeProductAttributes,
@@ -401,6 +402,8 @@ function getArabicProductLabels() {
 }
 
 function buildArabicProductFallbackCopy(product: WCProduct): { shortDescription: string; description: string } {
+  const fragranceCopy = buildArabicFragranceCopy(product.extensions?.sasan_fragrance);
+  if (fragranceCopy) return fragranceCopy;
   const name = decodeHtmlEntities(product.name || "").trim();
   const category = product.categories?.[0]?.name
     ? localizeProductText(product.categories[0].name, "ar")

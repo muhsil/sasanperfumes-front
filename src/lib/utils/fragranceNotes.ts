@@ -7,6 +7,7 @@ const ingredientEntries: Array<[string, string, string]> = [
   ['Cashmeran', 'الكشميران', 'woods'],
   ['Oolong Tea', 'شاي أولونغ', 'green'],
   ['Lemon Verbena', 'اللويزة الليمونية', 'green'],
+  ['Pepper', 'الفلفل', 'spices'],
   ['Coconut Powder', 'مسحوق جوز الهند', 'sweet'],
   ['Cranberry', 'التوت البري', 'berries'],
   ['White Amber', 'العنبر الأبيض', 'amber'],
@@ -407,4 +408,23 @@ export function parseFragranceKeyNotes(raw?: string): string[] {
   if (!raw || !/^(?:Key notes|النفحات الرئيسية):\s*/i.test(raw)) return [];
   return raw.replace(/^(?:Key notes|النفحات الرئيسية):\s*/i, "")
     .split(/[,،]/).map((note) => note.trim()).filter(Boolean).slice(0, 3);
+}
+
+export function buildArabicFragranceCopy(fields?: {
+  inspired_by?: string; top?: string; middle?: string; base?: string; notes_raw?: string;
+}): { shortDescription: string; description: string } | null {
+  if (!fields?.inspired_by || /sasan|creation/i.test(fields.inspired_by)) return null;
+  const keyNotes = parseFragranceKeyNotes(fields.notes_raw);
+  const source = keyNotes.length ? keyNotes : [fields.top, fields.middle, fields.base];
+  if (source.some((value) => !value || /^none\b/i.test(value))) return null;
+  const notes = source.map((value) => getFragranceNotePresentation(value!, true).label);
+  if (notes.some((value) => !/[\u0600-\u06ff]/.test(value))) return null;
+  const escape = (value: string) => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const safe = notes.map(escape);
+  return {
+    shortDescription: `<p>مستوحى من ${escape(fields.inspired_by)}</p>`,
+    description: keyNotes.length
+      ? `<p>تركيبة عطرية تجمع نفحات ${safe.join("، ")}.</p>`
+      : `<p>تبدأ التركيبة بنفحات ${safe[0]}، وتتطور إلى قلب من ${safe[1]}، ثم تستقر على قاعدة من ${safe[2]}.</p>`,
+  };
 }
