@@ -34,7 +34,7 @@ import { triggerHaptic } from "@/lib/utils/haptics";
 import { fbTrackViewContent } from "@/lib/utils/fbpixel";
 import { trackAnalyticsEvent } from "@/lib/utils/analytics";
 import { useMarketPrefix } from "@/hooks/useMarketPrefix";
-import { getFragranceNotePresentation } from "@/lib/utils/fragranceNotes";
+import { getFragranceNotePresentation, parseFragranceKeyNotes } from "@/lib/utils/fragranceNotes";
 
 function getDisplayPrice(product: WCProduct, selectedVariation?: WCProductVariation | null) {
   if (selectedVariation?.prices) {
@@ -1010,9 +1010,10 @@ export function ProductDetail({ product, locale, addonForms = [], englishCategor
     const familyName = familyAttribute?.terms?.[0]?.name;
     return familyName ? decodeHtmlEntities(familyName) : "";
   }, [product.attributes]);
+  const keyNotes = useMemo(() => parseFragranceKeyNotes(fragranceFields?.notes_raw), [fragranceFields?.notes_raw]);
   const fragranceNoteRows = useMemo(
     () =>
-      [
+      keyNotes.length > 0 ? keyNotes.map((value, index) => ({ label: isRTL ? `نفحة ${index + 1}` : `Note ${index + 1}`, value })) : [
         {
           label: isRTL ? "المقدمة" : "Top",
           value: (fragranceNotes.top || (noteTerms.length > 0 ? noteTerms.slice(0, 1).join(", ") : "")).trim(),
@@ -1026,7 +1027,7 @@ export function ProductDetail({ product, locale, addonForms = [], englishCategor
           value: (fragranceNotes.base || (noteTerms.length > 2 ? noteTerms.slice(2, 3).join(", ") : "")).trim(),
         },
       ].filter((note) => isMeaningfulDisplayText(note.value) && !/^none\b/i.test(note.value)),
-    [fragranceNotes.base, fragranceNotes.middle, fragranceNotes.top, isRTL, noteTerms]
+    [fragranceNotes.base, fragranceNotes.middle, fragranceNotes.top, isRTL, noteTerms, keyNotes]
   );
   const characteristics = useMemo(
     () =>
@@ -1806,7 +1807,7 @@ export function ProductDetail({ product, locale, addonForms = [], englishCategor
           {fragranceNoteRows.length > 0 && (
             <section className="mt-4 border-t border-brand-border/70 pt-4" aria-label={isRTL ? "المكونات العطرية" : "Fragrance notes"}>
               <h3 className="mb-3 text-sm font-medium text-brand-primary">
-                {isRTL ? "المكونات العطرية" : "Fragrance Notes"}
+                {keyNotes.length > 0 ? (isRTL ? "النفحات الرئيسية" : "Key Notes") : (isRTL ? "المكونات العطرية" : "Fragrance Notes")}
               </h3>
               <div className="grid w-full max-w-[280px] grid-cols-3 gap-2 sm:max-w-[312px] sm:gap-3">
                 {fragranceNoteRows.map((note) => {

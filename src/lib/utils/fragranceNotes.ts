@@ -1,6 +1,15 @@
 type NoteEntry = { arabic: string; image: string; english: string };
 
 const ingredientEntries: Array<[string, string, string]> = [
+  ['Tiare Flower', 'زهرة التياري', 'floral'],
+  ['Palo Santo', 'خشب البالو سانتو', 'woods'],
+  ['Juniper Berry', 'توت العرعر', 'spices'],
+  ['Cashmeran', 'الكشميران', 'woods'],
+  ['Oolong Tea', 'شاي أولونغ', 'green'],
+  ['Lemon Verbena', 'اللويزة الليمونية', 'green'],
+  ['Coconut Powder', 'مسحوق جوز الهند', 'sweet'],
+  ['Cranberry', 'التوت البري', 'berries'],
+  ['White Amber', 'العنبر الأبيض', 'amber'],
   ['Berries', 'التوت', 'berries'],
   ['Raspberry', 'توت العليق', 'berries'],
   ['Blackcurrant', 'الكشمش الأسود', 'berries'],
@@ -391,4 +400,11 @@ export function getFragranceNotePresentation(value: string, arabic: boolean) {
     image: entry ? `/images/fragrance-notes/${entry.image}.webp` : null,
     allNotes: value,
   };
+}
+
+/** Some houses publish key ingredients without a top/heart/base pyramid. */
+export function parseFragranceKeyNotes(raw?: string): string[] {
+  if (!raw || !/^(?:Key notes|النفحات الرئيسية):\s*/i.test(raw)) return [];
+  return raw.replace(/^(?:Key notes|النفحات الرئيسية):\s*/i, "")
+    .split(/[,،]/).map((note) => note.trim()).filter(Boolean).slice(0, 3);
 }
