@@ -177,7 +177,7 @@ function SlideContent({ slide, index, locale }: { slide: HeroSliderSettings["sli
   const isUaeOfferPortrait = slide.mobile_image?.url.includes("uae-b3g1-20261126-mobile-");
   const mobileMediaSize = isUaeOfferPortrait ? "h-auto aspect-[3/4]" : "h-[400px] sm:h-[500px]";
   const mediaContent = (
-    <div className={`home-view-section--media home-hero-media relative ${mobileMediaSize} w-full overflow-hidden bg-[#1a1714] md:h-auto md:aspect-[16/5]`}>
+    <div data-offer-portrait={isUaeOfferPortrait ? "true" : undefined} className={`home-view-section--media home-hero-media relative ${mobileMediaSize} w-full overflow-hidden bg-[#1a1714] md:h-auto md:aspect-[16/5]`}>
       {isVideo ? (
         <>
           {renderVideo(true)}

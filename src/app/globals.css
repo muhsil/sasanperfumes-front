@@ -501,6 +501,12 @@ body.gallery-fullscreen-open .whatsapp-floating-button {
     min-height: 320px;
   }
 
+  .home-hero-media[data-offer-portrait="true"] {
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 3 / 4;
+  }
+
   .home-hero-media :where(img, video, iframe) {
     object-fit: cover;
     object-position: center center;
