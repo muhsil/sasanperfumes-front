@@ -85,8 +85,8 @@ export function countShippingBottles(
 
 export function getShippingQuantityLimitMessage(limit: number, locale = "en"): string {
   return locale === "ar"
-    ? `يمكن شحن ما يصل إلى ${limit} زجاجات في الطلب الدولي الواحد. يرجى تقديم طلب منفصل للزجاجات الإضافية.`
-    : `International orders can ship up to ${limit} bottles per order. Please place a separate order for additional bottles.`;
+    ? `الحد الأقصى ${limit} زجاجات لكل طلب خارج دول مجلس التعاون الخليجي. يرجى تقسيم المشتريات إلى طلبات منفصلة.`
+    : `Maximum ${limit} bottles per order outside the GCC. Please split into separate orders.`;
 }
 
 export function calculateCrossBorderShipping(policy: ShippingPolicy, quantity: number, currency: string): number {

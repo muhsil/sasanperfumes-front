@@ -2365,9 +2365,12 @@ export default function CheckoutClient() {
               </h2>
               
               {exceedsShippingLimit ? (
-                <p role="alert" className="rounded-lg border border-brand-primary bg-brand-beige p-4 text-sm text-brand-primary">
-                  {shippingLimitMessage}
-                </p>
+                <div role="alert" className="rounded-lg border border-brand-primary bg-brand-beige p-4 text-sm text-brand-primary">
+                  <p>{shippingLimitMessage}</p>
+                  <a href={`${marketPrefix}/${locale}/cart`} className="mt-2 inline-block font-medium underline underline-offset-4">
+                    {isRTL ? "تعديل السلة" : "Edit cart"}
+                  </a>
+                </div>
               ) : isLoadingShipping || (shippingPolicy && selectedShippingRate && !hasResolvedShippingRate) ? (
                 <div className="flex items-center justify-center py-4">
                   <CheckoutLoader />
@@ -2939,14 +2942,19 @@ export default function CheckoutClient() {
                               ))}
                               <div className="flex justify-between text-sm text-brand-muted">
                                 <span>{isRTL ? "الشحن" : "Shipping"}</span>
-                                {hasResolvedShippingRate && parseFloat(shippingTotal) > 0 ? (
+                                {exceedsShippingLimit ? (
+                                  <div role="alert" className="max-w-[75%] text-end text-amber-800">
+                                    <p>{shippingLimitMessage}</p>
+                                    <a href={`${marketPrefix}/${locale}/cart`} className="mt-2 inline-block font-medium underline underline-offset-4">
+                                      {isRTL ? "تعديل السلة" : "Edit cart"}
+                                    </a>
+                                  </div>
+                                ) : hasResolvedShippingRate && parseFloat(shippingTotal) > 0 ? (
                                   <FormattedPrice
                                     price={(parseFloat(shippingTotal) || 0) / shippingDivisor}
                                     sourceCurrency={checkoutCurrency as Currency}
                                     iconSize="xs"
                                   />
-                                ) : exceedsShippingLimit ? (
-                                  <span>{isRTL ? "غير متاح" : "Unavailable"}</span>
                                 ) : !hasResolvedShippingRate && shippingPolicy ? (
                                   <span>{isRTL ? "قيد الحساب" : "Pending"}</span>
                                 ) : !hasResolvedShippingRate && parseFloat(cart?.totals?.shipping_total || "0") > 0 ? (
