@@ -172,16 +172,12 @@ function SlideContent({ slide, index, locale }: { slide: HeroSliderSettings["sli
     </div>
   ) : null;
 
-  /*
-   * Below 768px the picture element serves the mobile artwork (1080x1350), so
-   * those heights are left alone. From 768px up it serves the desktop artwork,
-   * which is 2560x800 — a 16/5 ratio. The old fixed heights gave the container
-   * a different shape at every width (2.43 at lg against the image's 3.2), so
-   * object-cover cropped about a quarter off the sides. Matching the artwork's
-   * own ratio scales it with the viewport and crops nothing.
-   */
+  // These campaign portraits are 1080x1440. Keep their dates and Shop Now
+  // artwork visible at every mobile width, without changing other campaigns.
+  const isUaeOfferPortrait = slide.mobile_image?.url.includes("uae-b3g1-20261126-mobile-");
+  const mobileMediaSize = isUaeOfferPortrait ? "h-auto aspect-[3/4]" : "h-[400px] sm:h-[500px]";
   const mediaContent = (
-    <div className="home-view-section--media home-hero-media relative h-[400px] w-full overflow-hidden bg-[#1a1714] sm:h-[500px] md:h-auto md:aspect-[16/5]">
+    <div className={`home-view-section--media home-hero-media relative ${mobileMediaSize} w-full overflow-hidden bg-[#1a1714] md:h-auto md:aspect-[16/5]`}>
       {isVideo ? (
         <>
           {renderVideo(true)}
