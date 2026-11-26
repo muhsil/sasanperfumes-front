@@ -3,6 +3,7 @@
 import { Tag } from "lucide-react";
 import { useDiscountRules } from "@/contexts/DiscountRulesContext";
 import type { DiscountRule } from "@/types/discount";
+import { getLocalizedDiscountRuleLabel } from "@/lib/discountRules";
 
 interface DiscountInfoProps {
   productId: number;
@@ -11,6 +12,9 @@ interface DiscountInfoProps {
 }
 
 function formatRuleDescription(rule: DiscountRule, isAr: boolean): string {
+  if (isAr && rule.type === "bogo") {
+    return `اشترِ ${rule.buy_quantity} واحصل على ${rule.get_quantity} مجاناً، أو اشترِ ${rule.buy_quantity * 2} واحصل على ${rule.get_quantity * 2} مجاناً. المنتجات الأقل سعراً مجانية. العرض داخل الإمارات فقط.`;
+  }
   if (rule.description) return rule.description;
 
   switch (rule.type) {
@@ -50,7 +54,7 @@ export function DiscountInfo({ productId, categoryIds, locale }: DiscountInfoPro
           <Tag className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
           <div>
             <p className="text-sm font-semibold text-green-800">
-              {rule.badge_text || rule.name}
+              {getLocalizedDiscountRuleLabel(rule, locale || "en")}
             </p>
             <p className="text-xs text-green-700">
               {formatRuleDescription(rule, isAr)}

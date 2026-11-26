@@ -1307,7 +1307,7 @@ export async function POST(request: NextRequest) {
             success: false,
             error: {
               code: "free_delivery_not_eligible",
-              message: "Free delivery applies to the Buy 6 Get 1 Free offer. Please refresh the page to see the correct delivery charge.",
+              message: "Free UAE delivery requires at least 7 items during an active promotion. Please refresh the page to see the correct delivery charge.",
             },
           },
           { status: 409 }

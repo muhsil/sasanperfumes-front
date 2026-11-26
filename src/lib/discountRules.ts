@@ -10,6 +10,13 @@ export interface CartDiscount {
   freeQuantity: number;
 }
 
+export function getLocalizedDiscountRuleLabel(rule: DiscountRule, locale: string): string {
+  const label = rule.badge_text || rule.name;
+  return locale === "ar"
+    ? label.replace(/Buy\s+(\d+)\s+Get\s+(\d+)\s+Free/gi, "اشترِ $1 واحصل على $2 مجاناً")
+    : label;
+}
+
 export function getLocalizedCartDiscountLabel(discount: CartDiscount, locale: string): string {
   if (locale === "ar" && discount.type === "bogo") {
     return `اشترِ ${discount.buyQuantity} واحصل على ${discount.getQuantity} مجاناً`;
@@ -55,13 +62,9 @@ export function getMarketDestinationCountry(marketPrefix: string | null | undefi
 }
 
 /**
- * Free delivery rides on the Buy 6 Get 1 Free offer, so it is earned by
- * qualifying for that offer and not by how much the basket is worth. A value
- * threshold let five bottles of a pricier line reach it, and let a basket that
- * had briefly held six keep the free rate after one was taken back out.
- *
- * The size of a qualifying group comes from the rule itself — buy 6 get 1 is
- * seven items — so changing the offer changes this with it.
+ * UAE free delivery keeps its existing minimum of seven items. A smaller
+ * promotional group must not lower the delivery threshold when an offer changes.
+ * Larger qualifying groups still need enough items to earn the promotion.
  */
 export function getPromotionFreeDeliveryQuantity(rules: DiscountRule[] | null | undefined): number | null {
   const active = getActiveDiscountRules(rules).filter((rule) => rule.type === "bogo");
@@ -73,7 +76,7 @@ export function getPromotionFreeDeliveryQuantity(rules: DiscountRule[] | null | 
     return buy + get;
   });
 
-  return Math.min(...sizes);
+  return Math.max(7, Math.min(...sizes));
 }
 
 export function qualifiesForPromotionFreeDelivery(
