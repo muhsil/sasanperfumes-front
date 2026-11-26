@@ -18,8 +18,12 @@ export function getLocalizedDiscountRuleLabel(rule: DiscountRule, locale: string
 }
 
 export function getLocalizedCartDiscountLabel(discount: CartDiscount, locale: string): string {
-  if (locale === "ar" && discount.type === "bogo") {
-    return `اشترِ ${discount.buyQuantity} واحصل على ${discount.getQuantity} مجاناً`;
+  if (discount.type === "bogo" && discount.freeQuantity > 0) {
+    const groups = Math.ceil(discount.freeQuantity / Math.max(1, discount.getQuantity));
+    const paidQuantity = discount.buyQuantity * groups;
+    return locale === "ar"
+      ? `اشترِ ${paidQuantity} واحصل على ${discount.freeQuantity} مجاناً`
+      : `Buy ${paidQuantity} Get ${discount.freeQuantity} Free`;
   }
 
   return discount.label;

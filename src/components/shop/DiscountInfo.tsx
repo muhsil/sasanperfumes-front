@@ -13,7 +13,10 @@ interface DiscountInfoProps {
 
 function formatRuleDescription(rule: DiscountRule, isAr: boolean): string {
   if (isAr && rule.type === "bogo") {
-    return `اشترِ ${rule.buy_quantity} واحصل على ${rule.get_quantity} مجاناً، أو اشترِ ${rule.buy_quantity * 2} واحصل على ${rule.get_quantity * 2} مجاناً. المنتجات الأقل سعراً مجانية. العرض داخل الإمارات فقط.`;
+    const tiers = [1, 2, 3, 4].map((multiple) =>
+      `اشترِ ${rule.buy_quantity * multiple} واحصل على ${rule.get_quantity * multiple} مجاناً`
+    );
+    return `${tiers.join("، ")}، وهكذا. يتكرر العرض تلقائياً، والمنتجات الأقل سعراً مجانية. العرض داخل الإمارات فقط.`;
   }
   if (rule.description) return rule.description;
 
